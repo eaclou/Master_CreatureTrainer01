@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class CritterPhenotype : MonoBehaviour {
+public class CritterPhenotypeTranscription : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
