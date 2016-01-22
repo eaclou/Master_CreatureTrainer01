@@ -4,6 +4,9 @@ using System.Collections;
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class CritterSegment : MonoBehaviour {
 
+    public int id;
+    public CritterNode sourceNode;
+
     public bool meshBuilt = false;
 
     //public virtual Mesh BuildMesh() {

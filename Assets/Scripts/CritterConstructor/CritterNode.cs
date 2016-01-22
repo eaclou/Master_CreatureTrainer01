@@ -14,6 +14,8 @@ public class CritterNode {
     private List<CritterJointLink> attachedJointLinkList;
     private CritterJointLink parentJointLink;
 
+    public Vector3 dimensions = new Vector3(1f, 1f, 1f);
+
     public CritterNode() {
         Debug.Log("CritterNode Constructor()!");
 
