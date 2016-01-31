@@ -5,16 +5,90 @@ using UnityEngine.UI;
 
 public class CritterConstructorManager : MonoBehaviour {
 
+    public CritterEditorInputManager critterEditorInputManager;
     public Button tempButtonReset;
+    
+    private GameObject masterCritterGO;
+    public Critter masterCritter;
+    //public List<GameObject> critterSegmentList; //moved to critter
+
+    // Update is called once per frame
+    void Update() {
+        if(critterEditorInputManager != null) {
+            critterEditorInputManager.CheckInputs();
+        }
+    }
+
+    public void PressButtonTempReset() {
+        ResetToBlankCritter();
+    }
+
+    public void ResetToBlankCritter() {  // Check how to make sure no memory is leaked!
+        Debug.Log("ResetToBlankCritter()");
+
+        if(masterCritter == null) {  // first time!!!
+            masterCritterGO = new GameObject("masterCritterGO");
+            masterCritter = masterCritterGO.AddComponent<Critter>();
+            masterCritter.InitializeBlankCritter();
+        }
+        else {
+            masterCritter.InitializeBlankCritter();
+        }
+
+        /*masterCritterGenome = new CritterGenome();
+        if (critterGroup == null) {  // create gameObject transform to hold critter's segments
+            critterGroup = new GameObject("critterGroup");
+            critterGroup.transform.localScale = new Vector3(1, 1, 1);
+        }
+        else {
+            var children = new List<GameObject>();
+            foreach (Transform child in critterGroup.gameObject.transform) children.Add(child.gameObject);
+            children.ForEach(child => Destroy(child));
+        }
+        if (critterSegmentMaterial == null) {
+            critterSegmentMaterial = new Material(Shader.Find("Custom/CritterSegmentBasic"));
+        }
+        //if (critterSelectedSegmentMaterial == null) {
+        //critterSelectedSegmentMaterial = new Material(Shader.Find("Custom/CritterSegmentBasic"));
+        //critterSelectedSegmentMaterial.color = new Color(0.7f, 1f, 0.75f);
+        //}
+
+
+        RebuildCritter();
+        */
+    }
+
+    public void UpdateSegmentSelectionVis() {
+        // Change the material colors/attrs on critterSegments to show which are selected
+        if(masterCritter != null) {
+            for (int i = 0; i < masterCritter.critterSegmentList.Count; i++) {
+                masterCritter.critterSegmentList[i].GetComponent<MeshRenderer>().material.SetFloat("_Selected", 0f);
+            }
+            if (critterEditorInputManager.critterEditorState.isSegmentSelected) {
+                critterEditorInputManager.critterEditorState.selectedSegment.GetComponent<MeshRenderer>().material.SetFloat("_Selected", 1f);
+            }
+        }        
+    }
+
+    public void UpdateSegmentShaderStates() {
+        if (masterCritter != null) {
+            for (int i = 0; i < masterCritter.critterSegmentList.Count; i++) {
+                masterCritter.critterSegmentList[i].GetComponent<MeshRenderer>().material.SetFloat("_DisplayTarget", 0f);
+            }
+        }
+    }
+
+    /*public Button tempButtonReset;
 
     private CritterGenome masterCritterGenome;
     private GameObject critterGroup;
     public Material critterSegmentMaterial;
-    public Material critterSelectedSegmentMaterial;
+    //public Material critterSelectedSegmentMaterial;
     public List<GameObject> critterSegmentList;
     
 
     public GameObject selectedObject;
+    private GameObject gizmoScaleGO;
 
     // Use this for initialization
     void Start () {
@@ -40,12 +114,12 @@ public class CritterConstructorManager : MonoBehaviour {
             children.ForEach(child => Destroy(child));
         }
         if(critterSegmentMaterial == null) {
-            critterSegmentMaterial = new Material(Shader.Find("Diffuse"));
+            critterSegmentMaterial = new Material(Shader.Find("Custom/CritterSegmentBasic"));
         }
-        if (critterSelectedSegmentMaterial == null) {
-            critterSelectedSegmentMaterial = new Material(Shader.Find("Diffuse"));
-            critterSelectedSegmentMaterial.color = new Color(0.7f, 1f, 0.75f);
-        }
+        //if (critterSelectedSegmentMaterial == null) {
+            //critterSelectedSegmentMaterial = new Material(Shader.Find("Custom/CritterSegmentBasic"));
+            //critterSelectedSegmentMaterial.color = new Color(0.7f, 1f, 0.75f);
+        //}
 
 
         RebuildCritter();
@@ -65,6 +139,7 @@ public class CritterConstructorManager : MonoBehaviour {
         rootNode.GetComponent<CritterSegment>().sourceNode = masterCritterGenome.CritterNodeList[0];
         rootNode.GetComponent<CritterSegment>().id = masterCritterGenome.CritterNodeList[0].ID;
         rootNode.GetComponent<MeshRenderer>().material = critterSegmentMaterial;
+        //rootNode.GetComponent<MeshRenderer>().material.SetFloat("_TargetPosX", 0.5f);
         rootNode.transform.SetParent(critterGroup.gameObject.transform);        
         rootNode.AddComponent<BoxCollider>();        
     }
@@ -72,26 +147,38 @@ public class CritterConstructorManager : MonoBehaviour {
     public void UpdateSegmentSelectionVis() {
         // Change the material colors on critterSegments to show which are selected
         for(int i = 0; i < critterSegmentList.Count; i++) {
-            critterSegmentList[i].GetComponent<MeshRenderer>().material = critterSegmentMaterial;
+            //critterSegmentList[i].GetComponent<MeshRenderer>().material = critterSegmentMaterial;
+            critterSegmentList[i].GetComponent<MeshRenderer>().material.SetFloat("_Selected", 0f);
         }
         if (selectedObject != null) {
-            selectedObject.GetComponent<MeshRenderer>().material = critterSelectedSegmentMaterial;
+            //selectedObject.GetComponent<MeshRenderer>().material = critterSelectedSegmentMaterial;
+            selectedObject.GetComponent<MeshRenderer>().material.SetFloat("_Selected", 1f);
         }
+    }
+
+    public void UpdateSegmentShaderStates() {
+        for (int i = 0; i < critterSegmentList.Count; i++) {
+            //critterSegmentList[i].GetComponent<MeshRenderer>().material = critterSegmentMaterial;
+            critterSegmentList[i].GetComponent<MeshRenderer>().material.SetFloat("_DisplayTarget", 0f);
+        }
+
+
     }
 
     public void AddNewCritterNode(Vector3 attachPosition) {
         Debug.Log("AddNewCritterNode() " + selectedObject.ToString() + ", " + attachPosition.ToString());
 
         CritterNode parentNode;
-        if(selectedObject != null) {
+        CritterNode newCritterNode = new CritterNode();
+        if (selectedObject != null) {
             if(selectedObject.GetComponent<CritterSegment>() != null) {
                 parentNode = selectedObject.GetComponent<CritterSegment>().sourceNode;
-                if(parentNode != null) {
+                //newCritterNode.parentJointLink.parentNode = parentNode;
+                if (parentNode != null) {
                     Debug.Log("parentNode: " + selectedObject.GetComponent<CritterSegment>().ToString() + ", LIST: " + masterCritterGenome.CritterNodeList[0].ToString());
                 }
             }
-        }
-        CritterNode newCritterNode = new CritterNode();
+        }        
 
         GameObject newSegment = new GameObject("newSegment" + newCritterNode.ID.ToString());
         critterSegmentList.Add(newSegment);        
@@ -105,18 +192,21 @@ public class CritterConstructorManager : MonoBehaviour {
         float x = Vector3.Dot(pointParentToAttachPos, selectedObject.GetComponent<CritterSegment>().transform.right);
         float y = Vector3.Dot(pointParentToAttachPos, selectedObject.GetComponent<CritterSegment>().transform.up);
         float z = Vector3.Dot(pointParentToAttachPos, selectedObject.GetComponent<CritterSegment>().transform.forward);
+
+        //newCritterNode.parentJointLink.attachCoordinates = new Vector3(x, y, z);
+
         Vector3 normalDirection = new Vector3(0f, 0f, 0f);
         if(Mathf.Abs(x) > Mathf.Abs(y)) {
             if(Mathf.Abs(x) > Mathf.Abs(z)) {  // x is largest
                 if (x != 0)
                     x = x / Mathf.Abs(x); // make either -1 or 1 
-                Debug.Log("x " + x.ToString() + ", y " + y.ToString() + ", z " + z.ToString() + "... " + selectedObject.GetComponent<CritterSegment>().transform.forward.ToString());
+                //Debug.Log("x " + x.ToString() + ", y " + y.ToString() + ", z " + z.ToString() + "... " + selectedObject.GetComponent<CritterSegment>().transform.forward.ToString());
                 normalDirection = x * selectedObject.GetComponent<CritterSegment>().transform.right;
             }
             else {  // z is largest
                 if (z != 0)
                     z = z / Mathf.Abs(z); // make either -1 or 1 
-                Debug.Log("x " + x.ToString() + ", y " + y.ToString() + ", z " + z.ToString() + "... " + selectedObject.GetComponent<CritterSegment>().transform.forward.ToString());
+                //Debug.Log("x " + x.ToString() + ", y " + y.ToString() + ", z " + z.ToString() + "... " + selectedObject.GetComponent<CritterSegment>().transform.forward.ToString());
                 normalDirection = z * selectedObject.GetComponent<CritterSegment>().transform.forward;
             }
         }
@@ -124,7 +214,7 @@ public class CritterConstructorManager : MonoBehaviour {
             if(Mathf.Abs(x) > Mathf.Abs(z)) {  // y is largest
                 if (y != 0)
                     y = y / Mathf.Abs(y); // make either -1 or 1 
-                Debug.Log("x " + x.ToString() + ", y " + y.ToString() + ", z " + z.ToString() + "... " + selectedObject.GetComponent<CritterSegment>().transform.forward.ToString());
+                //Debug.Log("x " + x.ToString() + ", y " + y.ToString() + ", z " + z.ToString() + "... " + selectedObject.GetComponent<CritterSegment>().transform.forward.ToString());
                 normalDirection = y * selectedObject.GetComponent<CritterSegment>().transform.up;
             }  
             else {  // z>x
@@ -132,26 +222,36 @@ public class CritterConstructorManager : MonoBehaviour {
                 if (Mathf.Abs(y) > Mathf.Abs(z)) {  // y is largest
                     if (y != 0)
                         y = y / Mathf.Abs(y); // make either -1 or 1 
-                    Debug.Log("x " + x.ToString() + ", y " + y.ToString() + ", z " + z.ToString() + "... " + selectedObject.GetComponent<CritterSegment>().transform.forward.ToString());
+                    //Debug.Log("x " + x.ToString() + ", y " + y.ToString() + ", z " + z.ToString() + "... " + selectedObject.GetComponent<CritterSegment>().transform.forward.ToString());
                     normalDirection = y * selectedObject.GetComponent<CritterSegment>().transform.up;
                 }
                 else { // z is largest
                     if (z != 0)
                         z = z / Mathf.Abs(z); // make either -1 or 1 
-                    Debug.Log("x " + x.ToString() + ", y " + y.ToString() + ", z " + z.ToString() + "... " + selectedObject.GetComponent<CritterSegment>().transform.forward.ToString());
+                    //Debug.Log("x " + x.ToString() + ", y " + y.ToString() + ", z " + z.ToString() + "... " + selectedObject.GetComponent<CritterSegment>().transform.forward.ToString());
                     normalDirection = z * selectedObject.GetComponent<CritterSegment>().transform.forward;
                 }                
             }
         }
         
         Vector3 newSegmentPos = attachPosition + normalDirection * newCritterNode.dimensions.x / 2f; // REVISIT
-        Debug.Log("normalDirection() " + normalDirection.ToString() + ", newSegmentPos: " + newSegmentPos.ToString() + ", attachPosition: " + attachPosition.ToString() + ", pointParentToAttachPos: " + pointParentToAttachPos.ToString());
+        //Debug.Log("normalDirection() " + normalDirection.ToString() + ", newSegmentPos: " + newSegmentPos.ToString() + ", attachPosition: " + attachPosition.ToString() + ", pointParentToAttachPos: " + pointParentToAttachPos.ToString());
         newSegment.transform.position = newSegmentPos; // + selectedObject.GetComponent<CritterSegment>().transform.position;
         //newSegment.transform.LookAt(newSegmentPos + normalDirection);
         newSegment.transform.rotation = Quaternion.LookRotation(normalDirection);
         newSegment.AddComponent<BoxCollider>();
         selectedObject = newSegment;
+        
         UpdateSegmentSelectionVis();
         //masterCritterGenome.CritterNodeList[0]
     }
+
+    public void ScaleCritterNode() {
+        gizmoScaleGO = new GameObject("gizmoScaleGO");
+        gizmoScaleGO.AddComponent<MeshFilter>().sharedMesh = EditorGizmoMeshShapes.GetCubeMesh();
+        gizmoScaleGO.AddComponent<MeshRenderer>();
+        //gizmoScaleGO.transform.position = selectedObject.GetComponent<CritterSegment>().sourceNode.  // GET ATTACH POSITION
+    }
+    */
+
 }

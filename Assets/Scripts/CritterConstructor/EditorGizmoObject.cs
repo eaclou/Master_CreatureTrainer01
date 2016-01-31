@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class CritterPhenotypeTranscription : MonoBehaviour {
+public class EditorGizmoObject : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {

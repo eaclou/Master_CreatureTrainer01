@@ -37,6 +37,27 @@ public class CritterConstructorCameraController : MonoBehaviour {
     public void SetFocalPoint(Vector3 focus) {
         cameraFocalPoint = focus;
     }
+    public void SetFocalPoint(GameObject selectedSegment) {
+        if(selectedSegment != null) {  // if something selected
+            cameraFocalPoint = selectedSegment.transform.position;  // focus cam on selectedSegment
+        }
+        else {  // nothing selected, default to origin
+            cameraFocalPoint = new Vector3(0f, 0f, 0f);
+        }
+        ReframeCamera(); // reframe the camera
+    }
+
+    public void UpdateCamera(CritterEditorState editorState) {
+        if (editorState.GetCurrentCameraState() == CritterEditorState.CurrentCameraState.Pan) {  // PAN
+            PanCamera(editorState.mouseInput);
+        }
+        if (editorState.GetCurrentCameraState() == CritterEditorState.CurrentCameraState.Rotate) {  // Rotate:
+            RotateCamera(editorState.mouseInput);
+        }
+        if (editorState.GetCurrentCameraState() == CritterEditorState.CurrentCameraState.Zoom) {  // Zoom:
+            ZoomCamera(editorState.mouseInput);
+        }
+    }
 
     public void PanCamera(Vector2 mouseInput) {
         Vector2 mouseDirection = mouseInput.normalized;

@@ -1,11 +1,14 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class CritterSegment : MonoBehaviour {
 
     public int id;
     public CritterNode sourceNode;
+    public CritterSegment parentSegment;
+    public List<CritterSegment> childSegments;
 
     public bool meshBuilt = false;
 
