@@ -6,7 +6,7 @@ public class CritterJointLink {
     public CritterNode childNode;
     public CritterNode parentNode;
 
-    public Vector3 attachCoords;
+    public Vector3 attachDir;
 
     public CritterJointLink() {
         Debug.Log("CritterJointLink Constructor()!");

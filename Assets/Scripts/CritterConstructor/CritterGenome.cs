@@ -28,13 +28,12 @@ public class CritterGenome {
         Debug.Log("AddNewNode(CritterNode parentNode, CritterJointLink jointLink)");
 
     }
-    public void AddNewNode(CritterNode parentNode, Vector3 attachCoords) {
-        Debug.Log("AddNewNode(CritterNode parentNode = " + parentNode.ToString() + ", Vector3 attachCoords = " + attachCoords.ToString() + ")");
-        CritterNode newCritterNode = new CritterNode();
-        newCritterNode.parentJointLink.parentNode = parentNode;
-        newCritterNode.parentJointLink.attachCoords = attachCoords;
-        CritterNodeList.Add(newCritterNode);        
-            
+    public void AddNewNode(CritterNode parentNode, Vector3 attachDir, int id) {        
+        CritterNode newCritterNode = new CritterNode(id);
+        newCritterNode.parentJointLink.parentNode = parentNode;        
+        newCritterNode.parentJointLink.attachDir = attachDir.normalized;        
+        CritterNodeList.Add(newCritterNode);
+        Debug.Log("AddNewNode(CritterNode parentNode = " + parentNode.ID.ToString() + ", Vector3 attachDir = " + newCritterNode.parentJointLink.attachDir.ToString() + ")");
     }
 
     public void DeleteNode(CritterNode node) {  // Removes the specified node from the genome -- its orphan nodes are attached to the ParentNode of the deleted node.

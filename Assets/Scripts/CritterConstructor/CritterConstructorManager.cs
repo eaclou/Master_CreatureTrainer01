@@ -34,28 +34,6 @@ public class CritterConstructorManager : MonoBehaviour {
         else {
             masterCritter.InitializeBlankCritter();
         }
-
-        /*masterCritterGenome = new CritterGenome();
-        if (critterGroup == null) {  // create gameObject transform to hold critter's segments
-            critterGroup = new GameObject("critterGroup");
-            critterGroup.transform.localScale = new Vector3(1, 1, 1);
-        }
-        else {
-            var children = new List<GameObject>();
-            foreach (Transform child in critterGroup.gameObject.transform) children.Add(child.gameObject);
-            children.ForEach(child => Destroy(child));
-        }
-        if (critterSegmentMaterial == null) {
-            critterSegmentMaterial = new Material(Shader.Find("Custom/CritterSegmentBasic"));
-        }
-        //if (critterSelectedSegmentMaterial == null) {
-        //critterSelectedSegmentMaterial = new Material(Shader.Find("Custom/CritterSegmentBasic"));
-        //critterSelectedSegmentMaterial.color = new Color(0.7f, 1f, 0.75f);
-        //}
-
-
-        RebuildCritter();
-        */
     }
 
     public void UpdateSegmentSelectionVis() {

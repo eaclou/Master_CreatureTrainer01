@@ -7,7 +7,13 @@ public class CritterEditorUI : MonoBehaviour {
     public GameObject panelRightClickSegmentMenu;
     public GameObject panelRightClickJointMenu;
 
-    
+    public Button buttonDisplayCameraMode;
+    public Button buttonDisplayRCMenuMode;
+    public Button buttonDisplayView;
+    public Button buttonDisplayScale;
+    public Button buttonDisplayMoveJoint;
+    public Button buttonDisplayJointSettings;
+
 
     // Use this for initialization
     void Start () {

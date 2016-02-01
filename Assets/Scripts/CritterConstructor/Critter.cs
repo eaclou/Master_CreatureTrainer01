@@ -47,7 +47,7 @@ public class Critter : MonoBehaviour {
             newSegment.InitGamePiece();
             newSegment.sourceNode = masterCritterGenome.CritterNodeList[i];
             newSegment.id = i;
-            
+
             Vector3 parentPos = new Vector3(0f, 0f, 0f);
             Vector3 newSegmentPos = new Vector3(0f, 0f, 0f);
             // if Root node:
@@ -56,16 +56,11 @@ public class Critter : MonoBehaviour {
             }
             else { // not root node!!                
                 newSegment.parentSegment = critterSegmentList[masterCritterGenome.CritterNodeList[i].parentJointLink.parentNode.ID].GetComponent<CritterSegment>();  // !!! RE-VISIT!!!!
-                parentPos = newSegment.parentSegment.transform.position;
-                Vector3 attachPosition = new Vector3(0f, 0f, 0f);
-                //Vector3 pointParentToAttachPos = attachPosition - parentPos;
-                float x = newSegment.sourceNode.parentJointLink.attachCoords.x;
-                float y = newSegment.sourceNode.parentJointLink.attachCoords.y;
-                float z = newSegment.sourceNode.parentJointLink.attachCoords.z;
-                attachPosition = x * newSegment.parentSegment.gameObject.transform.right +
-                    y * newSegment.parentSegment.gameObject.transform.up +
-                    z * newSegment.parentSegment.gameObject.transform.forward +
-                    x * newSegment.parentSegment.gameObject.transform.position;
+                parentPos = newSegment.parentSegment.transform.position;                
+                float x = newSegment.sourceNode.parentJointLink.attachDir.x;
+                float y = newSegment.sourceNode.parentJointLink.attachDir.y;
+                float z = newSegment.sourceNode.parentJointLink.attachDir.z;
+                //Debug.Log("$$$$$$$$ parentPos: " + parentPos.ToString() + "attachDir: ( " + x.ToString() + ", " + y.ToString() + ", " + z.ToString() + " )");                
                 Vector3 normalDirection = new Vector3(0f, 0f, 0f);
                 if (Mathf.Abs(x) > Mathf.Abs(y)) {
                     if (Mathf.Abs(x) > Mathf.Abs(z)) {  // x is largest
@@ -103,12 +98,27 @@ public class Critter : MonoBehaviour {
                             normalDirection = z * newSegment.parentSegment.transform.forward;
                         }
                     }
-                }                
+                }
+                Vector3 right = newSegment.parentSegment.transform.right;
+                Vector3 up = newSegment.parentSegment.transform.up;
+                Vector3 forward = newSegment.parentSegment.transform.forward;                              
+                right *= newSegment.sourceNode.parentJointLink.attachDir.x;
+                up *= newSegment.sourceNode.parentJointLink.attachDir.y;
+                forward *= newSegment.sourceNode.parentJointLink.attachDir.z;
 
-                newSegmentPos = attachPosition + normalDirection * newSegment.sourceNode.dimensions.x / 2f; // REVISIT -- will only work for cubes!  
+                Vector3 attachDirWorld = new Vector3(0f, 0f, 0f);
+                attachDirWorld = right + up + forward;
+                float a = Vector3.Dot(normalDirection, attachDirWorld); // proportion of normalDirection that attachDirWorld reaches. This will determine how far to extend the ray to hit the cube face
+                float ratio = 1f / a;
+                attachDirWorld *= ratio;
+
+                Vector3 attachPosWorld = new Vector3(0f, 0f, 0f);
+                attachPosWorld = newSegment.parentSegment.transform.position + attachDirWorld * newSegment.parentSegment.sourceNode.dimensions.x * 0.5f;
+                newSegmentPos = attachPosWorld + normalDirection * newSegment.sourceNode.dimensions.z * 0.5f;  // REVISIT -- will only work for cubes! 
                 newSegment.transform.rotation = Quaternion.LookRotation(normalDirection);
 
-                Debug.Log("CreateNewSegment(sourceNode = " + newSegment.sourceNode.ToString() + ", attachPosition = " + attachPosition.ToString() + ") newSegmentPos = " + newSegmentPos.ToString());
+                Debug.Log("attachPosWorld = " + attachPosWorld.ToString() + ", attachPosition = " + ") newSegmentPos = " + newSegmentPos.ToString());
+                Debug.Log("a= " + a.ToString() + ", normalDirection = " + normalDirection.ToString() + ") attachDirWorld= " + attachDirWorld.ToString() + ", parentPos " + newSegment.parentSegment.gameObject.transform.position.ToString());
             }            
                                                                                                           
             newSegment.transform.position = newSegmentPos; // + selectedObject.GetComponent<CritterSegment>().transform.position;

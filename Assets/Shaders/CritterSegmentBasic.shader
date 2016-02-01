@@ -79,10 +79,10 @@
 				float gradient = i.wpos.x + i.wpos.y + i.wpos.z;
 				gradient = (gradient + 3) / 6;
 				//float4 newColor = float4(gradient, gradient, gradient, 1.0);
-				float4 baseColor = float4(0.35, 0.35, 0.35, 1.0);
+				float4 baseColor = float4(0.30, 0.30, 0.30, 1.0);
 				//baseColor = float4(0.8, 0.8, 0.8, 1.0);
 				if (_Selected) {
-					baseColor = float4(0.55, 0.65, 0.58, 1.0);
+					baseColor = float4(0.5, 0.6, 0.52, 1.0);
 				}
 				i.color = baseColor;
 				float4 edgeColor = float4(0.7, 0.7, 0.7, 1.0);
@@ -108,7 +108,7 @@
 					float targetdist = sqrt(targetDeltaX * targetDeltaX + targetDeltaY * targetDeltaY + targetDeltaZ * targetDeltaZ);
 
 					float targetEdgeWidth = 0.01;
-					float4 targetEdgeColor = float4(0.75, 1.0, 0.8, 1.0);
+					float4 targetEdgeColor = float4(0.75, 1.0, 0.8, 1.0) * 0.75;
 					//float txy = sqrt(pow(0.5 - abs(i.wpos.x), 2.0) + pow(0.5 - abs(i.wpos.y), 2.0));
 					//float txz = sqrt(pow(0.5 - abs(i.wpos.x), 2.0) + pow(0.5 - abs(i.wpos.z), 2.0));
 					//float tyz = sqrt(pow(0.5 - abs(i.wpos.y), 2.0) + pow(0.5 - abs(i.wpos.z), 2.0));
@@ -147,75 +147,18 @@
 						if (z < targetEdgeWidth) {
 							i.color = targetEdgeColor;
 						}
-					}
-						
+					}						
+					i.color += float4(0.16, 0.16, 0.16, 0.0);  // brighten segment being hovered over
 					
-					/*
-					bool stop = false;  // FIX THIS LATER
-					if (stop == false) {
-						if (tx < onFaceThreshold) { // On X Face
-							stop = true;
-							if (ty < targetEdgeWidth) {
-								i.color = targetEdgeColor;
-							}
-							if (tz < targetEdgeWidth) {
-								i.color = targetEdgeColor;
-							}
-						}
-						else {
-							if (ty < targetEdgeWidth) {
-								i.color = targetEdgeColor;
-							}
-							if (tz < targetEdgeWidth) {
-								i.color = targetEdgeColor;
-							}
-						}
-					}
-					if (stop == false) {
-						if (ty < targetEdgeWidth) {  // On Y Face
-							stop = true;
-							if (tx < targetEdgeWidth) {
-								i.color = targetEdgeColor;
-							}
-							if (tz < targetEdgeWidth) {
-								i.color = targetEdgeColor;
-							}
-						}
-						else {
-							if (tx < targetEdgeWidth) {
-								i.color = targetEdgeColor;
-							}
-							if (tz < targetEdgeWidth) {
-								i.color = targetEdgeColor;
-							}
-						}
-					}
-					if (stop == false) {
-						if (tz < targetEdgeWidth) { // On Z Face
-							stop = true;
-							if (tx < targetEdgeWidth) {
-								i.color = targetEdgeColor;
-							}
-							if (ty < targetEdgeWidth) {
-								i.color = targetEdgeColor;
-							}
-						}
-						else {
-							if (tx < targetEdgeWidth) {
-								i.color = targetEdgeColor;
-							}
-							if (ty < targetEdgeWidth) {
-								i.color = targetEdgeColor;
-							}
-						}
-					}*/					
-
 					if (targetdist < targetRadius)
 					{
 						i.color = lerp(float4(2.0, 3.0, 2.25, 1.0), i.color, pow((targetdist / targetRadius), 0.1));
 						//i.color = lerp(float4(0.0, 0.0, 0.0, 1.0), i.color, 0.0);
 					}
-				}							
+				}
+
+				i.color += float4(i.wpos * 0.02, 0.0);
+				i.color += i.wpos.z * 0.1;
 				
 				//return float4(xy, yz, _TargetPosZ, 1.0);
 				return i.color;
