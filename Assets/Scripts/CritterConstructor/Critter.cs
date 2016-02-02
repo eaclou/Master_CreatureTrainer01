@@ -40,9 +40,12 @@ public class Critter : MonoBehaviour {
         for(int i = 0; i < masterCritterGenome.CritterNodeList.Count; i++) {  // cycle through ChildNodes of currentNode
             GameObject newNode = new GameObject("Node" + i.ToString());
             CritterSegment newSegment = newNode.AddComponent<CritterSegment>();
+            //int layer = 10;  // editorSegment
+            //int layermask = 1 << layer;
+            newNode.layer = LayerMask.NameToLayer("editorSegment"); ; // set segmentGO layer to editorSegment, to distinguish it from Gizmos
             newNode.GetComponent<MeshRenderer>().material = critterSegmentMaterial;
             newNode.transform.SetParent(this.gameObject.transform);
-            newNode.AddComponent<BoxCollider>();
+            newNode.AddComponent<BoxCollider>().isTrigger = true;
             critterSegmentList.Add(newNode);            
             newSegment.InitGamePiece();
             newSegment.sourceNode = masterCritterGenome.CritterNodeList[i];
@@ -133,6 +136,7 @@ public class Critter : MonoBehaviour {
     private void InitializeSegmentMaterial() {
         if (critterSegmentMaterial == null) {
             critterSegmentMaterial = new Material(Shader.Find("Custom/CritterSegmentBasic"));
+            critterSegmentMaterial.renderQueue = 2000;
         }
     }
 

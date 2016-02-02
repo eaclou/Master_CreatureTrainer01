@@ -11,9 +11,12 @@
 	}
 	SubShader {
 		Tags { "Queue"="Overlay" }
-		LOD 200
+		
 		
 		pass {
+			ZWrite Off
+
+
 			CGPROGRAM
 			// Physically based Standard lighting model, and enable shadows on all light types
 			#pragma vertex vert

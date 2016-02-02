@@ -71,7 +71,9 @@ public class CritterEditorState : MonoBehaviour {
 
         // Check for updated States:
         if (currentCameraState == CurrentCameraState.Off) {  // if Not in CAMERA mode, then check for other stuff:
+
             
+
             // Check Right-click menu state:
             //======= If Right-click menu is on: ======================================================
             if (rightClickMenuOn) {
@@ -83,9 +85,10 @@ public class CritterEditorState : MonoBehaviour {
             }
             else {   // right-click menu OFF
                 // Check for Gizmos:
-                ShootGizmoRaycast();
+                //ShootGizmoRaycast();
                 // Check for Segment:
-                ShootSegmentRaycast();
+                //ShootSegmentRaycast();
+                ShootEditorRaycasts();
                 UpdateHoverState();  // Using raycast information, determine the status of the hover state -- did mouse cursor enter, exit, or switch hover targets?
 
                 if (critterEditorInputManager.mouseRightClickDown) {  // right-clicked this frame
@@ -328,12 +331,27 @@ public class CritterEditorState : MonoBehaviour {
 
     private void ShootGizmoRaycast() {
         //RaycastHit hitInfo = new RaycastHit();
-        bool hit = Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out gizmoRayHitInfo);  // ADD LAYERMASK FOR GIZMO OBJECTS
+        //int layer = 9;  // ignore editorSegments!
+        //int layermask = ~(1 << layer);
+        Ray cameraRay = Camera.main.ScreenPointToRay(Input.mousePosition);
+        bool hit = Physics.Raycast(cameraRay, out gizmoRayHitInfo);  // ADD LAYERMASK FOR GIZMO OBJECTS
         if (hit) {
+            Debug.Log("ShootGizmoRaycast()Hit " + gizmoRayHitInfo.transform.gameObject.name + ", layer: " + gizmoRayHitInfo.transform.gameObject.layer.ToString() + ", pos: " + gizmoRayHitInfo.point.ToString());
             //Debug.Log("Hit " + gizmoRayHitInfo.transform.gameObject.name);
             if (gizmoRayHitInfo.transform.gameObject != null) {
-                gizmoRayHitPos = gizmoRayHitInfo.point;
-                //isGizmoHover = true;
+
+                if(gizmoRayHitInfo.transform.gameObject.layer != LayerMask.NameToLayer("gizmo")) {
+                    // keep trying!
+                    Debug.Log(" keep trying! ");
+                    Ray extendedRay = new Ray(gizmoRayHitInfo.point, cameraRay.direction);
+                    hit = Physics.Raycast(cameraRay, out gizmoRayHitInfo);
+                    if (hit) {
+                        Debug.Log("We hit something!" + gizmoRayHitInfo.transform.gameObject.name + ", layer: " + gizmoRayHitInfo.transform.gameObject.layer.ToString() + ", pos: " + gizmoRayHitInfo.point.ToString());
+                    }
+                }
+                else {
+                    gizmoRayHitPos = gizmoRayHitInfo.point;
+                }
             }
         }
         else {
@@ -343,9 +361,12 @@ public class CritterEditorState : MonoBehaviour {
 
     private void ShootSegmentRaycast() {
         //RaycastHit hitInfo = new RaycastHit();
-        bool hit = Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out mouseRayHitInfo);  // ADD LAYERMASK FOR CRITTERSEGMENT OBJECTS
+        //int layerAntiGizmo = ~(1 << 8);   // ignore gizmos!
+        //int layerProSegment = ~(1 << 8);   // CheckSegments!
+        int layermask = (1 << 9); // Or, (1 << layer1) | (1 << layer2)
+        bool hit = Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out mouseRayHitInfo, layermask); 
         if (hit) {
-            //Debug.Log("ShootSegmentRaycast()Hit " + mouseRayHitInfo.transform.gameObject.name);
+            Debug.Log("ShootSegmentRaycast()Hit " + mouseRayHitInfo.transform.gameObject.name + ", layer: " + mouseRayHitInfo.transform.gameObject.layer.ToString());
             if (mouseRayHitInfo.transform.gameObject != null) {
                 mouseRayHitPos = mouseRayHitInfo.point;
                 
@@ -364,6 +385,90 @@ public class CritterEditorState : MonoBehaviour {
                 //selectedSegment.GetComponent<MeshRenderer>().material.SetFloat("_Selected", 0f);
             }
             //Debug.Log("No hit| critterConstructorManager.selectedSegment = " + "ShootSegmentRaycast()");
+        }        
+    }
+
+    private void ShootEditorRaycasts() {
+        int maxRays = 5;
+        int rays = 0;
+        bool hitSegment = false;
+        bool hitGizmo = false;
+        //bool hitNeither = false;
+        bool keepCasting = true;
+
+        Ray cameraRay = Camera.main.ScreenPointToRay(Input.mousePosition);
+        Ray currentRay = new Ray(cameraRay.origin, cameraRay.direction);
+        Vector3 offset = currentRay.direction * 0.00001f;
+        RaycastHit editorRayHitInfo; // = new RaycastHit();
+
+        while (keepCasting) {            
+            rays++;
+            bool hit = Physics.Raycast(currentRay, out editorRayHitInfo);
+            Debug.Log("while(!hitNeither) { " + rays.ToString() + hit.ToString() + ", " + hitSegment.ToString() + ", " + hitGizmo.ToString());
+            if (hit) {  // ray hit SOMETHING
+                if (editorRayHitInfo.transform.gameObject != null) {  // make sure it hit a gameObject and logged its information
+                    if (editorRayHitInfo.transform.gameObject.layer == LayerMask.NameToLayer("gizmo")) {  // if it hit a gizmo!
+                        if (!hitGizmo) {  // first time hitting gizmo
+                            gizmoRayHitPos = editorRayHitInfo.point;
+                            gizmoRayHitInfo = editorRayHitInfo;
+                            currentRay.origin = editorRayHitInfo.point + offset;  // update start of ray
+                            //Debug.Log("ShootGizmoRaycast()Hit " + editorRayHitInfo.transform.gameObject.name + ", layer: " + editorRayHitInfo.transform.gameObject.layer.ToString() + ", pos: " + currentRay.origin.ToString());
+                            hitGizmo = true;
+                            
+                        }
+                        else {  // Then we're done with Gizmos!  -- i.e we already hit one, and we're only interested in one
+                            keepCasting = false; // <--- NOPE
+                        }                        
+                    }
+                    
+                    
+                    if (editorRayHitInfo.transform.gameObject.layer == LayerMask.NameToLayer("editorSegment")) {  // if it hit a CritterSegment!
+                        if (!hitSegment) {
+                            currentRay.origin = editorRayHitInfo.point + offset;  // update start of ray
+                            mouseRayHitInfo = editorRayHitInfo; // CHECK that it's not a reference!
+                            mouseRayHitPos = mouseRayHitInfo.point;
+                            
+                            Vector3 segmentLocalHitPos = new Vector3(0f, 0f, 0f);
+                            segmentLocalHitPos.x = Vector3.Dot(mouseRayHitPos - mouseRayHitInfo.transform.gameObject.transform.position, mouseRayHitInfo.transform.gameObject.transform.right);
+                            segmentLocalHitPos.y = Vector3.Dot(mouseRayHitPos - mouseRayHitInfo.transform.gameObject.transform.position, mouseRayHitInfo.transform.gameObject.transform.up);
+                            segmentLocalHitPos.z = Vector3.Dot(mouseRayHitPos - mouseRayHitInfo.transform.gameObject.transform.position, mouseRayHitInfo.transform.gameObject.transform.forward);
+                            mouseRayHitInfo.transform.gameObject.GetComponent<MeshRenderer>().material.SetFloat("_TargetPosX", segmentLocalHitPos.x);
+                            mouseRayHitInfo.transform.gameObject.GetComponent<MeshRenderer>().material.SetFloat("_TargetPosY", segmentLocalHitPos.y);
+                            mouseRayHitInfo.transform.gameObject.GetComponent<MeshRenderer>().material.SetFloat("_TargetPosZ", segmentLocalHitPos.z);
+                            mouseRayHitInfo.transform.gameObject.GetComponent<MeshRenderer>().material.SetFloat("_DisplayTarget", 1f);
+
+                            //Debug.Log("ShootSegmentRaycast()Hit " + editorRayHitInfo.transform.gameObject.name + ", layer: " + editorRayHitInfo.transform.gameObject.layer.ToString() + ", pos: " + currentRay.origin.ToString());
+                            hitSegment = true;
+                        }
+                        else {  // Then we're done with Segments!  -- i.e we already hit one, and we're only interested in one
+                            if (hitGizmo) {
+                                keepCasting = false; // <--- NOPE
+                            }                           
+                        }                        
+                    }
+                }
+            }
+            else {  // hit NOTHING!!
+                keepCasting = false;
+                if (!hitGizmo) {
+                    gizmoRayHitInfo = editorRayHitInfo;
+                }
+                if (!hitSegment) {
+                    mouseRayHitInfo = editorRayHitInfo;
+                }
+            }
+
+            if(hitGizmo && hitSegment) {
+                keepCasting = false;
+            }
+            if(rays >= maxRays) {
+                keepCasting = false;
+            }
+            //keepCasting = false; // safeguard
+
+            if (keepCasting == false) {
+                
+            }            
         }        
     }
 
@@ -463,6 +568,13 @@ public class CritterEditorState : MonoBehaviour {
         //critterConstructorManager.ScaleCritterNode();
         rightClickMenuScaleHover = false;
         currentToolState = CurrentToolState.ScaleSegment;
+
+        GameObject group = new GameObject("gizmoGroup");
+        GameObject scaleCore = new GameObject("gizmoScaleCore");
+        scaleCore.transform.SetParent(group.transform);
+        scaleCore.layer = LayerMask.NameToLayer("gizmo"); ; // set segmentGO layer to gizmo, to distinguish it from segments
+        EditorGizmoObject gizmoScaleCore = scaleCore.AddComponent<EditorGizmoObject>();        
+        gizmoScaleCore.CreateMesh(EditorGizmoObject.GizmoMeshShape.Cube);
     }
     
 }
