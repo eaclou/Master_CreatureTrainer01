@@ -91,7 +91,7 @@ public class CritterConstructorCameraController : MonoBehaviour {
         Vector3 moveOffset = moveDirection * defaultMoveSpeed * mouseSpeed * Time.deltaTime;
         Vector3 cameraPosition = transform.position += moveOffset;
         transform.position = cameraPosition;
-        cameraFocalPoint += moveOffset;
+        //cameraFocalPoint += moveOffset;
     }
 
     private void UpdateCameraTransform() {

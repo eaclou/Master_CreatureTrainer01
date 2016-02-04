@@ -2,20 +2,20 @@
 	Properties {
 		_Color ("Color", Color) = (1,1,1,1)
 		//_MainTex ("Albedo (RGB)", 2D) = "white" {}
-		_TargetPosX ("TargetPosX", Range(-1,1)) = 0.0
-		_TargetPosY ("TargetPosY", Range(-1,1)) = 0.0
-		_TargetPosZ ("TargetPosZ", Range(-1,1)) = 0.0
+		_AxisX ("AxisX", Range(0,1)) = 0.0
+		_AxisY ("AxisY", Range(0,1)) = 0.0
+		_AxisZZ ("AxisZ", Range(0,1)) = 0.0
 		_Selected ("Selected", Range(0.0,1.0)) = 0.0
 		//_MouseOver("MouseOver", Range(0.0,1.0)) = 0.0
 		_DisplayTarget ("DisplayTarget", Range(0.0,1.0)) = 0.0
 	}
 	SubShader {
-		Tags { "Queue"="Overlay" }
+		Tags { "Queue"="Transparent" }
 		
 		
 		pass {
 			ZWrite Off
-
+			ZTest Always
 
 			CGPROGRAM
 			// Physically based Standard lighting model, and enable shadows on all light types
@@ -62,7 +62,7 @@
 				//o.color = _Color;
 				
 				// DEBUG options - sets color to other variables
-				o.color = i.vertex;
+				o.color = i.color * _Color;
 				o.uv = i.texcoord;
 				//o.color = i.texcoord1;
 				//o.color = i.vertex;
@@ -87,7 +87,7 @@
 				if (_Selected) {
 					baseColor = float4(0.55, 0.65, 0.58, 1.0);
 				}
-				i.color = baseColor;
+				//i.color = baseColor;
 				float4 edgeColor = float4(0.7, 0.7, 0.7, 1.0);
 				float edgeWidth = 0.025;
 				float xy = sqrt(pow(0.5 - abs(i.wpos.x), 2.0) + pow(0.5 - abs(i.wpos.y), 2.0));
@@ -102,125 +102,9 @@
 				if (yz < edgeWidth) {
 					i.color = edgeColor;
 				}
-				// Target:
-				if (_DisplayTarget >= 0.5) {
-					float targetRadius = 0.4;
-					float targetDeltaX = _TargetPosX - i.wpos.x;
-					float targetDeltaY = _TargetPosY - i.wpos.y;
-					float targetDeltaZ = _TargetPosZ - i.wpos.z;
-					float targetdist = sqrt(targetDeltaX * targetDeltaX + targetDeltaY * targetDeltaY + targetDeltaZ * targetDeltaZ);
-
-					float targetEdgeWidth = 0.01;
-					float4 targetEdgeColor = float4(0.75, 1.0, 0.8, 1.0);
-					//float txy = sqrt(pow(0.5 - abs(i.wpos.x), 2.0) + pow(0.5 - abs(i.wpos.y), 2.0));
-					//float txz = sqrt(pow(0.5 - abs(i.wpos.x), 2.0) + pow(0.5 - abs(i.wpos.z), 2.0));
-					//float tyz = sqrt(pow(0.5 - abs(i.wpos.y), 2.0) + pow(0.5 - abs(i.wpos.z), 2.0));
-					float onFaceThreshold = 0.01;
-					float tx = abs(0.5 - abs(_TargetPosX));
-					float ty = abs(0.5 - abs(_TargetPosY));
-					float tz = abs(0.5 - abs(_TargetPosZ));
-					float x = abs(i.wpos.x - _TargetPosX);
-					float y = abs(i.wpos.y - _TargetPosY);
-					float z = abs(i.wpos.z - _TargetPosZ);
-					bool onFaceX = false;
-					bool onFaceY = false;
-					bool onFaceZ = false;
-					if (tx < onFaceThreshold) { // On X Face
-						onFaceX = true;
-					}
-					if (ty < onFaceThreshold) { // On Y Face
-						onFaceY = true;
-					}
-						
-					if (tz < onFaceThreshold) { // On Z Face
-						onFaceZ = true;
-					}
-
-					if (!onFaceX) {
-						if (x < targetEdgeWidth) {
-							i.color = targetEdgeColor;
-						}
-					}
-					if (!onFaceY) {
-						if (y < targetEdgeWidth) {
-							i.color = targetEdgeColor;
-						}
-					}
-					if (!onFaceZ) {
-						if (z < targetEdgeWidth) {
-							i.color = targetEdgeColor;
-						}
-					}
-						
-					
-					/*
-					bool stop = false;  // FIX THIS LATER
-					if (stop == false) {
-						if (tx < onFaceThreshold) { // On X Face
-							stop = true;
-							if (ty < targetEdgeWidth) {
-								i.color = targetEdgeColor;
-							}
-							if (tz < targetEdgeWidth) {
-								i.color = targetEdgeColor;
-							}
-						}
-						else {
-							if (ty < targetEdgeWidth) {
-								i.color = targetEdgeColor;
-							}
-							if (tz < targetEdgeWidth) {
-								i.color = targetEdgeColor;
-							}
-						}
-					}
-					if (stop == false) {
-						if (ty < targetEdgeWidth) {  // On Y Face
-							stop = true;
-							if (tx < targetEdgeWidth) {
-								i.color = targetEdgeColor;
-							}
-							if (tz < targetEdgeWidth) {
-								i.color = targetEdgeColor;
-							}
-						}
-						else {
-							if (tx < targetEdgeWidth) {
-								i.color = targetEdgeColor;
-							}
-							if (tz < targetEdgeWidth) {
-								i.color = targetEdgeColor;
-							}
-						}
-					}
-					if (stop == false) {
-						if (tz < targetEdgeWidth) { // On Z Face
-							stop = true;
-							if (tx < targetEdgeWidth) {
-								i.color = targetEdgeColor;
-							}
-							if (ty < targetEdgeWidth) {
-								i.color = targetEdgeColor;
-							}
-						}
-						else {
-							if (tx < targetEdgeWidth) {
-								i.color = targetEdgeColor;
-							}
-							if (ty < targetEdgeWidth) {
-								i.color = targetEdgeColor;
-							}
-						}
-					}*/					
-
-					if (targetdist < targetRadius)
-					{
-						i.color = lerp(float4(2.0, 3.0, 2.25, 1.0), i.color, pow((targetdist / targetRadius), 0.1));
-						//i.color = lerp(float4(0.0, 0.0, 0.0, 1.0), i.color, 0.0);
-					}
-				}							
+									
 				
-				//return float4(xy, yz, _TargetPosZ, 1.0);
+				//return float4(1, 0, 0, 1.0);
 				return i.color;
 			}
 			ENDCG

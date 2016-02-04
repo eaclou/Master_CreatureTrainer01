@@ -8,6 +8,10 @@ public class EditorGizmoObject : MonoBehaviour {
     public Collider collider;
     public Material gizmoMaterial;
 
+    public bool affectsAxisX = false;
+    public bool affectsAxisY = false;
+    public bool affectsAxisZ = false;
+
     public enum GizmoMeshShape {
         None,
         Cube,
@@ -33,7 +37,7 @@ public class EditorGizmoObject : MonoBehaviour {
             collider.isTrigger = true;
             if (gizmoMaterial == null) {
                 gizmoMaterial = new Material(Shader.Find("Custom/CritterEditorGizmo"));
-                gizmoMaterial.renderQueue = 4000;
+                //gizmoMaterial.renderQueue = 4000;
             }
             GetComponent<MeshRenderer>().material = gizmoMaterial;
         }

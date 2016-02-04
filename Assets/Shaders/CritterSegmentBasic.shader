@@ -10,7 +10,7 @@
 		_DisplayTarget ("DisplayTarget", Range(0.0,1.0)) = 0.0
 	}
 	SubShader {
-		Tags { "RenderType"="Opaque" }
+		Tags { "RenderType"="Opaque"  "RenderQueue" = "Opaque" }
 		//LOD 200
 		
 		pass {
