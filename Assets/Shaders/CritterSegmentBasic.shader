@@ -5,6 +5,9 @@
 		_TargetPosX ("TargetPosX", Range(-1,1)) = 0.0
 		_TargetPosY ("TargetPosY", Range(-1,1)) = 0.0
 		_TargetPosZ ("TargetPosZ", Range(-1,1)) = 0.0
+		_SizeX("SizeX", Float) = 1.0
+		_SizeY("SizeY", Float) = 1.0
+		_SizeZ("SizeZ", Float) = 1.0
 		_Selected ("Selected", Range(0.0,1.0)) = 0.0
 		//_MouseOver("MouseOver", Range(0.0,1.0)) = 0.0
 		_DisplayTarget ("DisplayTarget", Range(0.0,1.0)) = 0.0
@@ -29,8 +32,12 @@
 			uniform fixed _TargetPosX;
 			uniform fixed _TargetPosY;	
 			uniform fixed _TargetPosZ;	
+			uniform fixed _SizeX;
+			uniform fixed _SizeY;
+			uniform fixed _SizeZ;
 			uniform fixed _Selected;
 			uniform fixed _DisplayTarget;
+			uniform fixed4 _LightColor0;
 
 			struct vertexInput {
 				float4 vertex : POSITION; // position in object coordinates
@@ -53,13 +60,18 @@
 			{
 				fragmentInput o;
 				o.pos = mul( UNITY_MATRIX_MVP, i.vertex );
+				float3 normalDirection = normalize(mul(float4(i.normal, 1.0), _World2Object).xyz);
+				//float3 lightDirection = normalize(_WorldSpaceLightPos0.xyz);
+				float3 lightDirection = float3(0.2, 1.0, 0.3);
+				float3 diffuse = _LightColor0.xyz * max(0.0, dot(normalDirection, lightDirection));
+				//diffuse = lightDirection;
 				//o.wpos = mul( _Object2World, i.vertex ).xyz;
 				o.wpos = i.vertex.xyz;
 				//o.pos = i.vertex;
 				//o.color = _Color;
 				
 				// DEBUG options - sets color to other variables
-				o.color = i.vertex;
+				o.color = float4(diffuse, 1.0);
 				o.uv = i.texcoord;
 				//o.color = i.texcoord1;
 				//o.color = i.vertex;
@@ -75,7 +87,7 @@
 			half4 frag( fragmentInput i ) : COLOR
 			{
 				//i.color = lerp(float4(0.8, 0.8, 0.8, 1.0), i.color, 0.1);	
-				
+				float4 diffuse = i.color;
 				float gradient = i.wpos.x + i.wpos.y + i.wpos.z;
 				gradient = (gradient + 3) / 6;
 				//float4 newColor = float4(gradient, gradient, gradient, 1.0);
@@ -87,9 +99,17 @@
 				i.color = baseColor;
 				float4 edgeColor = float4(0.7, 0.7, 0.7, 1.0);
 				float edgeWidth = 0.025;
-				float xy = sqrt(pow(0.5 - abs(i.wpos.x), 2.0) + pow(0.5 - abs(i.wpos.y), 2.0));
-				float xz = sqrt(pow(0.5 - abs(i.wpos.x), 2.0) + pow(0.5 - abs(i.wpos.z), 2.0));
-				float yz = sqrt(pow(0.5 - abs(i.wpos.y), 2.0) + pow(0.5 - abs(i.wpos.z), 2.0));
+				i.color += float4(i.wpos * 0.02, 0.0);
+				i.color += i.wpos.z * 0.1;
+				i.wpos.x *= _SizeX;
+				i.wpos.y *= _SizeY;
+				i.wpos.z *= _SizeZ;
+				_TargetPosX *= _SizeX;
+				_TargetPosY *= _SizeY;
+				_TargetPosZ *= _SizeZ;
+				float xy = sqrt(pow(0.5 * _SizeX - abs(i.wpos.x), 2.0) + pow(0.5 * _SizeY - abs(i.wpos.y), 2.0));
+				float xz = sqrt(pow(0.5 * _SizeX - abs(i.wpos.x), 2.0) + pow(0.5 * _SizeZ - abs(i.wpos.z), 2.0));
+				float yz = sqrt(pow(0.5 * _SizeY - abs(i.wpos.y), 2.0) + pow(0.5 * _SizeZ - abs(i.wpos.z), 2.0));
 				if (xy < edgeWidth) {
 					i.color = edgeColor;
 				}
@@ -108,14 +128,15 @@
 					float targetdist = sqrt(targetDeltaX * targetDeltaX + targetDeltaY * targetDeltaY + targetDeltaZ * targetDeltaZ);
 
 					float targetEdgeWidth = 0.01;
+					float targetEdgeFadeWidth = 0.005;
 					float4 targetEdgeColor = float4(0.75, 1.0, 0.8, 1.0) * 0.75;
 					//float txy = sqrt(pow(0.5 - abs(i.wpos.x), 2.0) + pow(0.5 - abs(i.wpos.y), 2.0));
 					//float txz = sqrt(pow(0.5 - abs(i.wpos.x), 2.0) + pow(0.5 - abs(i.wpos.z), 2.0));
 					//float tyz = sqrt(pow(0.5 - abs(i.wpos.y), 2.0) + pow(0.5 - abs(i.wpos.z), 2.0));
 					float onFaceThreshold = 0.01;
-					float tx = abs(0.5 - abs(_TargetPosX));
-					float ty = abs(0.5 - abs(_TargetPosY));
-					float tz = abs(0.5 - abs(_TargetPosZ));
+					float tx = abs(0.5 * _SizeX - abs(_TargetPosX));
+					float ty = abs(0.5 * _SizeY - abs(_TargetPosY));
+					float tz = abs(0.5 * _SizeZ - abs(_TargetPosZ));
 					float x = abs(i.wpos.x - _TargetPosX);
 					float y = abs(i.wpos.y - _TargetPosY);
 					float z = abs(i.wpos.z - _TargetPosZ);
@@ -152,15 +173,14 @@
 					
 					if (targetdist < targetRadius)
 					{
-						i.color = lerp(float4(2.0, 3.0, 2.25, 1.0), i.color, pow((targetdist / targetRadius), 0.1));
+						i.color = lerp(float4(2.0, 3.0, 2.25, 1.0), i.color, pow((targetdist / targetRadius), 0.05));
 						//i.color = lerp(float4(0.0, 0.0, 0.0, 1.0), i.color, 0.0);
 					}
 				}
-
-				i.color += float4(i.wpos * 0.02, 0.0);
-				i.color += i.wpos.z * 0.1;
 				
 				//return float4(xy, yz, _TargetPosZ, 1.0);
+				//i.color = diffuse;
+				i.color = lerp(diffuse, i.color, 0.5);
 				return i.color;
 			}
 			ENDCG

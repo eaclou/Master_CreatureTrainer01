@@ -7,17 +7,57 @@ public class EditorGizmoMeshShapes {
         // Constructor
     }
 
-    public static Mesh GetCubeMesh() {  // SIMPLE CUBE!
-        MeshBuilder meshBuilder = new MeshBuilder();
+    public static MeshBuilder GetCubeMesh(MeshBuilder meshBuilder) {  // SIMPLE CUBE!
+        MeshBuilderPrimitiveShapes.BuildQuad(meshBuilder, new Vector3(-0.5f, -0.5f, -0.5f), Vector3.right, Vector3.up); // FRONT
+        MeshBuilderPrimitiveShapes.BuildQuad(meshBuilder, new Vector3(-0.5f, -0.5f, 0.5f), Vector3.back, Vector3.up); // LEFT
+        MeshBuilderPrimitiveShapes.BuildQuad(meshBuilder, new Vector3(-0.5f, 0.5f, 0.5f), Vector3.back, Vector3.right); // TOP
+        MeshBuilderPrimitiveShapes.BuildQuad(meshBuilder, new Vector3(0.5f, -0.5f, 0.5f), Vector3.left, Vector3.up); // BACK
+        MeshBuilderPrimitiveShapes.BuildQuad(meshBuilder, new Vector3(0.5f, -0.5f, -0.5f), Vector3.forward, Vector3.up); // RIGHT
+        MeshBuilderPrimitiveShapes.BuildQuad(meshBuilder, new Vector3(-0.5f, -0.5f, 0.5f), Vector3.right, Vector3.back); // BOTTOM
+        return meshBuilder;
+    }
 
-        BuildQuad(meshBuilder, new Vector3(-0.5f, -0.5f, -0.5f), Vector3.right, Vector3.up); // FRONT
-        BuildQuad(meshBuilder, new Vector3(-0.5f, -0.5f, 0.5f), Vector3.back, Vector3.up); // LEFT
-        BuildQuad(meshBuilder, new Vector3(-0.5f, 0.5f, 0.5f), Vector3.back, Vector3.right); // TOP
-        BuildQuad(meshBuilder, new Vector3(0.5f, -0.5f, 0.5f), Vector3.left, Vector3.up); // BACK
-        BuildQuad(meshBuilder, new Vector3(0.5f, -0.5f, -0.5f), Vector3.forward, Vector3.up); // RIGHT
-        BuildQuad(meshBuilder, new Vector3(-0.5f, -0.5f, 0.5f), Vector3.right, Vector3.back); // BOTTOM
+    public static MeshBuilder GetArrowMesh(MeshBuilder meshBuilder) {
+        MeshBuilderPrimitiveShapes.BuildQuad(meshBuilder, new Vector3(-0.5f, -0.5f, -0.5f), Vector3.right, Vector3.up); // FRONT
+        MeshBuilderPrimitiveShapes.BuildTriangle(meshBuilder, new Vector3(-0.5f, 0.5f, -0.5f), new Vector3(0f, 0f, 1f), new Vector3(0.5f, 0.5f, -0.5f)); // TOP  // clockwise triangle?
+        MeshBuilderPrimitiveShapes.BuildTriangle(meshBuilder, new Vector3(-0.5f, 0.5f, -0.5f), new Vector3(-0.5f, -0.5f, -0.5f), new Vector3(0f, 0f, 1f)); // LEFT
+        MeshBuilderPrimitiveShapes.BuildTriangle(meshBuilder, new Vector3(-0.5f, -0.5f, -0.5f), new Vector3(0.5f, -0.5f, -0.5f), new Vector3(0f, 0f, 1f)); // BOTTOM
+        MeshBuilderPrimitiveShapes.BuildTriangle(meshBuilder, new Vector3(0.5f, 0.5f, -0.5f), new Vector3(0f, 0f, 1f), new Vector3(0.5f, -0.5f, -0.5f)); // RIGHT
+        return meshBuilder;
+    }
 
-        return meshBuilder.CreateMesh();
+    public static MeshBuilder GetOmniArrowMesh(MeshBuilder meshBuilder) {
+        //MeshBuilderPrimitiveShapes.BuildQuad(meshBuilder, new Vector3(-0.5f, -0.5f, -0.5f), Vector3.right, Vector3.up); // FRONT
+        MeshBuilderPrimitiveShapes.BuildTriangle(meshBuilder, new Vector3(0.5f, 0.5f, -0.5f), new Vector3(0f, 0f, -1f), new Vector3(-0.5f, 0.5f, -0.5f)); // TOP  // clockwise triangle?
+        MeshBuilderPrimitiveShapes.BuildTriangle(meshBuilder, new Vector3(0f, 0f, -1f), new Vector3(-0.5f, -0.5f, -0.5f), new Vector3(-0.5f, 0.5f, -0.5f)); // LEFT
+        MeshBuilderPrimitiveShapes.BuildTriangle(meshBuilder, new Vector3(0f, 0f, -1f), new Vector3(0.5f, -0.5f, -0.5f), new Vector3(-0.5f, -0.5f, -0.5f)); // BOTTOM
+        MeshBuilderPrimitiveShapes.BuildTriangle(meshBuilder, new Vector3(0.5f, -0.5f, -0.5f), new Vector3(0f, 0f, -1f), new Vector3(0.5f, 0.5f, -0.5f)); // RIGHT
+        // Front:
+        MeshBuilderPrimitiveShapes.BuildTriangle(meshBuilder, new Vector3(0f, 0f, 1f), new Vector3(0.5f, 0.5f, 0.5f), new Vector3(-0.5f, 0.5f, 0.5f)); // TOP  // clockwise triangle?
+        MeshBuilderPrimitiveShapes.BuildTriangle(meshBuilder, new Vector3(-0.5f, -0.5f, 0.5f), new Vector3(0f, 0f, 1f), new Vector3(-0.5f, 0.5f, 0.5f)); // LEFT
+        MeshBuilderPrimitiveShapes.BuildTriangle(meshBuilder, new Vector3(0.5f, -0.5f, 0.5f), new Vector3(0f, 0f, 1f), new Vector3(-0.5f, -0.5f, 0.5f)); // BOTTOM
+        MeshBuilderPrimitiveShapes.BuildTriangle(meshBuilder, new Vector3(0f, 0f, 1f), new Vector3(0.5f, -0.5f, 0.5f), new Vector3(0.5f, 0.5f, 0.5f)); // RIGHT
+        // LEFT:
+        MeshBuilderPrimitiveShapes.BuildTriangle(meshBuilder, new Vector3(-0.5f, 0.5f, -0.5f), new Vector3(-1f, 0f, 0f), new Vector3(-0.5f, 0.5f, 0.5f)); // TOP  // clockwise winding?
+        MeshBuilderPrimitiveShapes.BuildTriangle(meshBuilder, new Vector3(-0.5f, 0.5f, -0.5f), new Vector3(-0.5f, -0.5f, -0.5f), new Vector3(-1f, 0f, 0f)); // LEFT
+        MeshBuilderPrimitiveShapes.BuildTriangle(meshBuilder, new Vector3(-0.5f, -0.5f, -0.5f), new Vector3(-0.5f, -0.5f, 0.5f), new Vector3(-1f, 0f, 0f)); // BOTTOM
+        MeshBuilderPrimitiveShapes.BuildTriangle(meshBuilder, new Vector3(-0.5f, 0.5f, 0.5f), new Vector3(-1f, 0f, 0f), new Vector3(-0.5f, -0.5f, 0.5f)); // RIGHT
+        // Right:
+        MeshBuilderPrimitiveShapes.BuildTriangle(meshBuilder, new Vector3(1f, 0f, 0f), new Vector3(0.5f, 0.5f, -0.5f), new Vector3(0.5f, 0.5f, 0.5f)); // TOP  // clockwise winding?
+        MeshBuilderPrimitiveShapes.BuildTriangle(meshBuilder, new Vector3(0.5f, -0.5f, -0.5f), new Vector3(0.5f, 0.5f, -0.5f), new Vector3(1f, 0f, 0f)); // LEFT
+        MeshBuilderPrimitiveShapes.BuildTriangle(meshBuilder, new Vector3(0.5f, -0.5f, 0.5f), new Vector3(0.5f, -0.5f, -0.5f), new Vector3(1f, 0f, 0f)); // BOTTOM
+        MeshBuilderPrimitiveShapes.BuildTriangle(meshBuilder, new Vector3(1f, 0f, 0f), new Vector3(0.5f, 0.5f, 0.5f), new Vector3(0.5f, -0.5f, 0.5f)); // RIGHT
+        // TOP:
+        MeshBuilderPrimitiveShapes.BuildTriangle(meshBuilder, new Vector3(0.5f, 0.5f, 0.5f), new Vector3(0f, 1f, 0f), new Vector3(-0.5f, 0.5f, 0.5f)); // front
+        MeshBuilderPrimitiveShapes.BuildTriangle(meshBuilder, new Vector3(-0.5f, 0.5f, 0.5f), new Vector3(0f, 1f, 0f), new Vector3(-0.5f, 0.5f, -0.5f)); // left
+        MeshBuilderPrimitiveShapes.BuildTriangle(meshBuilder, new Vector3(0f, 1f, 0f), new Vector3(0.5f, 0.5f, 0.5f), new Vector3(0.5f, 0.5f, -0.5f)); // right
+        MeshBuilderPrimitiveShapes.BuildTriangle(meshBuilder, new Vector3(-0.5f, 0.5f, -0.5f), new Vector3(0f, 1f, 0f), new Vector3(0.5f, 0.5f, -0.5f)); // back
+        // BOTTOM:
+        MeshBuilderPrimitiveShapes.BuildTriangle(meshBuilder, new Vector3(0f, -1f, 0f), new Vector3(0.5f, -0.5f, 0.5f), new Vector3(-0.5f, -0.5f, 0.5f)); // front
+        MeshBuilderPrimitiveShapes.BuildTriangle(meshBuilder, new Vector3(0f, -1f, 0f), new Vector3(-0.5f, -0.5f, 0.5f), new Vector3(-0.5f, -0.5f, -0.5f)); // left
+        MeshBuilderPrimitiveShapes.BuildTriangle(meshBuilder, new Vector3(0.5f, -0.5f, 0.5f), new Vector3(0f, -1f, 0f), new Vector3(0.5f, -0.5f, -0.5f)); // right
+        MeshBuilderPrimitiveShapes.BuildTriangle(meshBuilder, new Vector3(0f, -1f, 0f), new Vector3(-0.5f, -0.5f, -0.5f), new Vector3(0.5f, -0.5f, -0.5f)); // back
+        return meshBuilder;
     }
 
     /// <summary>

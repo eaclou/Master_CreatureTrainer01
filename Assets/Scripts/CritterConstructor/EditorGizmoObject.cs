@@ -7,34 +7,76 @@ public class EditorGizmoObject : MonoBehaviour {
     public bool meshBuilt = false;
     public Collider collider;
     public Material gizmoMaterial;
-
-    public bool affectsAxisX = false;
-    public bool affectsAxisY = false;
-    public bool affectsAxisZ = false;
+    
+    public enum GizmoType {
+        none,
+        axisX,
+        axisY,
+        axisZ,
+        axisAll
+    };
+    public GizmoType gizmoType = GizmoType.none;
 
     public enum GizmoMeshShape {
         None,
         Cube,
         Sphere,
-        Capsule
+        Capsule,
+        Arrow,
+        OmniArrow
     };
 
     //public virtual Mesh BuildMesh() {
     //    return new Mesh();
     //}
-    public Mesh BuildMesh(GizmoMeshShape shape) {  // SIMPLE CUBE!
+    public Mesh BuildMesh(GizmoMeshShape shape, GizmoType type) {  // SIMPLE CUBE!
         MeshBuilder meshBuilder = new MeshBuilder();
 
         if(shape == GizmoMeshShape.Cube) {
-            BuildQuad(meshBuilder, new Vector3(-0.5f, -0.5f, -0.5f), Vector3.right, Vector3.up); // FRONT
-            BuildQuad(meshBuilder, new Vector3(-0.5f, -0.5f, 0.5f), Vector3.back, Vector3.up); // LEFT
-            BuildQuad(meshBuilder, new Vector3(-0.5f, 0.5f, 0.5f), Vector3.back, Vector3.right); // TOP
-            BuildQuad(meshBuilder, new Vector3(0.5f, -0.5f, 0.5f), Vector3.left, Vector3.up); // BACK
-            BuildQuad(meshBuilder, new Vector3(0.5f, -0.5f, -0.5f), Vector3.forward, Vector3.up); // RIGHT
-            BuildQuad(meshBuilder, new Vector3(-0.5f, -0.5f, 0.5f), Vector3.right, Vector3.back); // BOTTOM
+            meshBuilder = EditorGizmoMeshShapes.GetCubeMesh(meshBuilder);
+            //BuildQuad(meshBuilder, new Vector3(-0.5f, -0.5f, -0.5f), Vector3.right, Vector3.up); // FRONT
+            //BuildQuad(meshBuilder, new Vector3(-0.5f, -0.5f, 0.5f), Vector3.back, Vector3.up); // LEFT
+            //BuildQuad(meshBuilder, new Vector3(-0.5f, 0.5f, 0.5f), Vector3.back, Vector3.right); // TOP
+            //BuildQuad(meshBuilder, new Vector3(0.5f, -0.5f, 0.5f), Vector3.left, Vector3.up); // BACK
+            //BuildQuad(meshBuilder, new Vector3(0.5f, -0.5f, -0.5f), Vector3.forward, Vector3.up); // RIGHT
+            //BuildQuad(meshBuilder, new Vector3(-0.5f, -0.5f, 0.5f), Vector3.right, Vector3.back); // BOTTOM
 
-            collider = this.gameObject.AddComponent<BoxCollider>();
-            collider.isTrigger = true;
+            if(type != GizmoType.none) {
+                collider = this.gameObject.AddComponent<BoxCollider>();
+                collider.isTrigger = true;
+            }
+            
+            if (gizmoMaterial == null) {
+                gizmoMaterial = new Material(Shader.Find("Custom/CritterEditorGizmo"));
+                //gizmoMaterial.renderQueue = 4000;
+            }
+            GetComponent<MeshRenderer>().material = gizmoMaterial;
+        }
+        else if(shape == GizmoMeshShape.Arrow) {
+            EditorGizmoMeshShapes.GetArrowMesh(meshBuilder);
+
+            if (type != GizmoType.none) {
+                MeshCollider meshCollider = this.gameObject.AddComponent<MeshCollider>();
+                meshCollider.sharedMesh = meshBuilder.CreateMesh();
+                collider = meshCollider;
+                //collider.isTrigger = true;
+            }
+
+            if (gizmoMaterial == null) {
+                gizmoMaterial = new Material(Shader.Find("Custom/CritterEditorGizmo"));
+                //gizmoMaterial.renderQueue = 4000;
+            }
+            GetComponent<MeshRenderer>().material = gizmoMaterial;
+        }
+        else if (shape == GizmoMeshShape.OmniArrow) {
+            EditorGizmoMeshShapes.GetOmniArrowMesh(meshBuilder);
+
+            if (type != GizmoType.none) {
+                MeshCollider meshCollider = this.gameObject.AddComponent<MeshCollider>();
+                meshCollider.sharedMesh = meshBuilder.CreateMesh();
+                collider = meshCollider;
+            }
+
             if (gizmoMaterial == null) {
                 gizmoMaterial = new Material(Shader.Find("Custom/CritterEditorGizmo"));
                 //gizmoMaterial.renderQueue = 4000;
@@ -42,20 +84,15 @@ public class EditorGizmoObject : MonoBehaviour {
             GetComponent<MeshRenderer>().material = gizmoMaterial;
         }
         else {
-            BuildQuad(meshBuilder, new Vector3(-0.5f, -0.5f, -0.5f), Vector3.right, Vector3.up); // FRONT
-            BuildQuad(meshBuilder, new Vector3(-0.5f, -0.5f, 0.5f), Vector3.back, Vector3.up); // LEFT
-            BuildQuad(meshBuilder, new Vector3(-0.5f, 0.5f, 0.5f), Vector3.back, Vector3.right); // TOP
-            BuildQuad(meshBuilder, new Vector3(0.5f, -0.5f, 0.5f), Vector3.left, Vector3.up); // BACK
-            BuildQuad(meshBuilder, new Vector3(0.5f, -0.5f, -0.5f), Vector3.forward, Vector3.up); // RIGHT
-            BuildQuad(meshBuilder, new Vector3(-0.5f, -0.5f, 0.5f), Vector3.right, Vector3.back); // BOTTOM
+            Debug.Log("No Gizmo Shape!!!");
         }
 
         return meshBuilder.CreateMesh();
     }
 
-    public void CreateMesh(GizmoMeshShape shape) {
+    public void CreateMesh(GizmoMeshShape shape, GizmoType type) {
         if (meshBuilt == false) {
-            Mesh mesh = BuildMesh(shape);
+            Mesh mesh = BuildMesh(shape, type);
 
             MeshFilter filter = GetComponent<MeshFilter>();
 

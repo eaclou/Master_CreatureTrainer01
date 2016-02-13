@@ -14,7 +14,7 @@
 		
 		
 		pass {
-			ZWrite Off
+			//ZWrite Off
 			ZTest Always
 
 			CGPROGRAM

@@ -9,28 +9,16 @@ public class CritterConstructorCameraController : MonoBehaviour {
     private float maxMouseSpeed = 100f;    
     private Vector3 cameraFocalPoint = new Vector3(0f, 0f, 0f);
 
-    // Use this for initialization
-    void Start () {
-        //movementSpeed = defaultMoveSpeed;
-        
-    }
-	
-	// Update is called once per frame
-	void Update () {        
-
-        CheckForInput();
-        //Debug.Log("Horizontal= " + horizontalInput.ToString() + ", Vertical= " + verticalInput.ToString());
-    }
-
-    private void CheckForInput() {
-        
-        
-    }
-
     public void ReframeCamera() {
         //Debug.Log("Reframe Camera()");
         Vector3 forward = this.gameObject.transform.forward;
-        Vector3 cameraPosition = cameraFocalPoint - forward * 5f;
+        Vector3 cameraPosition = cameraFocalPoint - forward * 4f;
+        transform.position = cameraPosition;
+    }
+    public void ReframeCamera(float distance) {
+        //Debug.Log("Reframe Camera()");
+        Vector3 forward = this.gameObject.transform.forward;
+        Vector3 cameraPosition = cameraFocalPoint - forward * distance;
         transform.position = cameraPosition;
     }
 
@@ -38,13 +26,17 @@ public class CritterConstructorCameraController : MonoBehaviour {
         cameraFocalPoint = focus;
     }
     public void SetFocalPoint(GameObject selectedSegment) {
+        float camDist = 4f;
         if(selectedSegment != null) {  // if something selected
-            cameraFocalPoint = selectedSegment.transform.position;  // focus cam on selectedSegment
+            cameraFocalPoint = selectedSegment.transform.position;  // focus cam on selectedSegment            
+            Vector3 segmentSize = selectedSegment.GetComponent<CritterSegment>().sourceNode.dimensions;
+            float maxDimension = Mathf.Max(segmentSize.x, segmentSize.y, segmentSize.z);
+            camDist *= maxDimension; // zooms further out for larger segments
         }
         else {  // nothing selected, default to origin
             cameraFocalPoint = new Vector3(0f, 0f, 0f);
         }
-        ReframeCamera(); // reframe the camera
+        ReframeCamera(camDist); // reframe the camera
     }
 
     public void UpdateCamera(CritterEditorState editorState) {

@@ -35,14 +35,20 @@ public class CritterEditorState : MonoBehaviour {
     public CurrentCameraState currentCameraState = CurrentCameraState.Off;
 
     // GIZMOS!!! -- eventually move to their own class/script!!!
-    GameObject group;
-    GameObject scaleCore;
-    GameObject scaleX;
-    GameObject scaleY;
-    GameObject scaleZ;
-    GameObject axisX;
-    GameObject axisY;
-    GameObject axisZ;
+    GameObject gizmoGroupGO;
+    GameObject gizmoScaleCoreGO;
+    GameObject gizmoScaleXGO;
+    GameObject gizmoScaleYGO;
+    GameObject gizmoScaleZGO;
+    GameObject gizmoAxisXGO;
+    GameObject gizmoAxisYGO;
+    GameObject gizmoAxisZGO;
+    GameObject gizmoMoveCoreGO;
+    GameObject gizmoMoveXGO;
+    GameObject gizmoMoveYGO;
+    GameObject gizmoMoveZGO;
+    GameObject gizmoForceShaftGO;
+    GameObject gizmoForceArrowGO;
 
     public GameObject selectedSegment;  // the CritterSegment that is currently selected
     public bool isSegmentSelected = false;
@@ -50,18 +56,25 @@ public class CritterEditorState : MonoBehaviour {
     public GameObject hoverSegment;
     public bool isSegmentHover = false; // is the mouse hovering over a critterSegment on this frame?
     public int hoverSegmentID = -1;
+    public Vector3 raycastSegmentLocalHitPos = new Vector3(0f, 0f, 0f);
     public GameObject engagedGizmo;  // the gizmo object/sub-object that is currently being manipulated
     public bool isGizmoEngaged = false;  // is the user currently interacting with a Gizmo?
     public GameObject hoverGizmo;  // the gizmo GameObject that the mouse is currently hovering over
     public bool isGizmoHover = false;  // is the mouse cursor currently hovering over a Gizmo?
-    public Vector2 gizmoEngagedInitialMousePos = new Vector2(0f, 0f);
+    public Vector2 gizmoEngagedInitialMouseClickPos = new Vector2(0f, 0f);
+    public Vector2 gizmoEngagedInitialMouseDelta = new Vector2(0f, 0f);
+    public Vector2 gizmoEngagedInitialScreenPos = new Vector2(0f, 0f);
+    public Vector2 gizmoEngagedInitialScreenDir = new Vector2(0f, 0f);
     public Vector3 gizmoEngagedInitialLocalPos = new Vector3(0f, 0f, 0f);
-    public Vector3 gizmoEngagedInitialLocalScale = new Vector3(1f, 1f, 1f);
+    public Vector3 gizmoSegmentInitialLocalScale = new Vector3(1f, 1f, 1f);
+    public Vector3 gizmoSegmentInitialJointAttachDir = new Vector3(1f, 1f, 1f);
 
     private bool rightClickMenuOn = false;  // is the right-click context-driven menu currently active?
     private bool rightClickMenuAddHover = false;  // is the mouse cursor currently over the 'Add Segment' button?
-    private bool rightClickMenuScaleHover = false;
     private bool rightClickMenuDeleteHover = false;
+    private bool rightClickMenuViewHover = false;
+    private bool rightClickMenuScaleHover = false;
+    private bool rightClickMenuMoveHover = false;
     
     //   v v v (not necessarily pressed this frame, it could be being held) v v v 
     private bool mouseLeftIsDown = false;
@@ -69,9 +82,22 @@ public class CritterEditorState : MonoBehaviour {
     private bool mouseRightIsDown = false;
     private bool altIsDown = false;  // is the alt key in a down state? (not necessarily pressed this frame, it could be being held)
 
+    private Vector3 gravityStrength0 = new Vector3(0f, 0f, 0f);
+    private Vector3 gravityStrength1 = new Vector3(0f, 0f, 0f);
+    private int floorValue = -1; // used to track how many cycles of gravity-random
+    private bool recalcGravityRandom = true;
+    private bool isPhysicsPreview = false;
+
+    public bool mouseOverUI = false;
+
     public void Start() {
         InitGizmos();
         UpdateGizmos();
+
+        // TEMP:
+        //Debug.Log(GetDistanceLineLine3D(new Vector3(-5f, 0f, 0f), new Vector3(-4f, 0f, 0f), new Vector3(0f, -6f, 0f), new Vector3(0f, 1f, 0f)).ToString());
+
+        //Debug.Log(GetDistanceLinePoint2D(new Vector2(1f, 1f), new Vector2(0f, 0f), new Vector2(0f, 1f)).ToString());
     }
 
     public CurrentCameraState GetCurrentCameraState() {
@@ -85,7 +111,39 @@ public class CritterEditorState : MonoBehaviour {
         mouseInput = newVel;
     }
 
+    private void UpdateGravityStrength() { // !!
+        float currentTime = Time.fixedTime;
+        float gravityMaxAmplitude = 5f;
+        float lerpFrequency = 2.6f;
+        float lerpValue = (currentTime % lerpFrequency) / lerpFrequency;
+        int curFloorValue = (int)Mathf.Floor(currentTime / lerpFrequency);
+        if(curFloorValue == floorValue) {  // still on same cycle
+
+        }
+        else {
+            gravityStrength0 = gravityStrength1;
+            gravityStrength1 = new Vector3(Random.Range(-gravityMaxAmplitude, gravityMaxAmplitude), Random.Range(-gravityMaxAmplitude, gravityMaxAmplitude), Random.Range(-gravityMaxAmplitude, gravityMaxAmplitude));
+            floorValue = curFloorValue;
+            recalcGravityRandom = true;
+        }
+        if (recalcGravityRandom) {
+
+        }
+        Physics.gravity = Vector3.Lerp(gravityStrength0, gravityStrength1, lerpValue);
+        //Debug.Log("curTime: " + currentTime.ToString() + ", lerpValue: " + lerpValue.ToString() + ", g1: " + gravityStrength1.ToString());
+        Vector3 gravityDir = Physics.gravity.normalized;
+        float gravityMag = 1f;
+        gizmoForceArrowGO.transform.position = gravityDir * gravityMag;
+        gizmoForceArrowGO.transform.rotation = Quaternion.LookRotation(gravityDir);
+        gizmoForceShaftGO.transform.position = gravityDir * gravityMag * 0.5f;
+        gizmoForceShaftGO.transform.localScale = new Vector3(0.05f, 0.05f, gravityMag); ;
+        gizmoForceShaftGO.transform.rotation = Quaternion.LookRotation(gravityDir);
+        
+        
+    }
+
     public void UpdateStatesFromInput(CritterEditorInputManager critterEditorInputManager) {
+        UpdateGravityStrength();
         //Debug.Log("UpdateStatesFromInput(CritterEditorInputManager critterEditorInputManager)");
         
         CheckKeyPresses(critterEditorInputManager);
@@ -113,35 +171,40 @@ public class CritterEditorState : MonoBehaviour {
                 //ShootGizmoRaycast();
                 // Check for Segment:
                 //ShootSegmentRaycast();
-                ShootEditorRaycasts();
-                UpdateHoverState();  // Using raycast information, determine the status of the hover state -- did mouse cursor enter, exit, or switch hover targets?
+                if(mouseOverUI) {
 
-                if (critterEditorInputManager.mouseRightClickDown) {  // right-clicked this frame
-                    // right click menu was entered this frame:
-                    CommandRCMenuOn();                    
                 }
+                else {
+                    ShootEditorRaycasts();
+                    UpdateHoverState();  // Using raycast information, determine the status of the hover state -- did mouse cursor enter, exit, or switch hover targets?
 
-                if (critterEditorInputManager.mouseLeftClickDown) {  // left-clicked this frame
-                    if (isGizmoHover) {
-                        CommandLeftClickGizmoDown();
+                    if (critterEditorInputManager.mouseRightClickDown) {  // right-clicked this frame
+                                                                          // right click menu was entered this frame:
+                        CommandRCMenuOn();
                     }
-                    else {
-                        if (isSegmentHover) {  //if left-Click on a segment
-                            CommandLeftClickSegment();
+
+                    if (critterEditorInputManager.mouseLeftClickDown) {  // left-clicked this frame
+                        if (isGizmoHover) {
+                            CommandLeftClickGizmoDown();
                         }
-                        else {  // left-clicked on emptiness:
-                            CommandLeftClickNone();
+                        else {
+                            if (isSegmentHover) {  //if left-Click on a segment
+                                CommandLeftClickSegment();
+                            }
+                            else {  // left-clicked on emptiness:
+                                CommandLeftClickNone();
+                            }
                         }
                     }
-                }
-                if(isGizmoEngaged) {
-                    if (critterEditorInputManager.mouseLeftClickUp) {
-                        CommandLeftClickGizmoUp();
+                    if (isGizmoEngaged) {
+                        if (critterEditorInputManager.mouseLeftClickUp) {
+                            CommandLeftClickGizmoUp();
+                        }
+                        else {
+                            CommandGizmoOn();
+                        }
                     }
-                    else {
-                        CommandGizmoOn();
-                    }
-                }
+                }                
             }            
         }
         else {
@@ -172,6 +235,7 @@ public class CritterEditorState : MonoBehaviour {
         }
 
         critterEditorUI.UpdateSelectedDisplayText(isSegmentSelected, selectedSegment, isGizmoEngaged, engagedGizmo);
+        critterEditorUI.UpdateSegmentSettingsPanel(isSegmentSelected, selectedSegment);
     }
 
     private void SetHoverAndSelectedFromID() {
@@ -187,7 +251,7 @@ public class CritterEditorState : MonoBehaviour {
     private void CheckKeyPresses(CritterEditorInputManager critterEditorInputManager) {
         if (critterEditorInputManager.keyFDown) {  // pressing 'f' centers the camera on the currently selected segment, or entire critter is nothing selected
             critterEditorInputManager.critterConstructorCameraController.SetFocalPoint(selectedSegment);
-            critterEditorInputManager.critterConstructorCameraController.ReframeCamera();
+            //critterEditorInputManager.critterConstructorCameraController.ReframeCamera();
         }
         if (critterEditorInputManager.keyAltDown) {  // pressing 'alt' enters camera mode  -- any clicks will control camera and nothing else
             altIsDown = true;
@@ -250,6 +314,7 @@ public class CritterEditorState : MonoBehaviour {
             critterEditorUI.buttonDisplayCameraMode.interactable = true;
         }
         critterEditorInputManager.critterConstructorCameraController.UpdateCamera(this);  // pan, zoom, rotate, or do nothing
+        UpdateGizmos();
     }
 
 
@@ -332,16 +397,118 @@ public class CritterEditorState : MonoBehaviour {
     private void CommandGizmoEnter() {
         isGizmoEngaged = true;
         engagedGizmo = hoverGizmo;
-        gizmoEngagedInitialMousePos = mousePosition;
-        gizmoEngagedInitialLocalPos = engagedGizmo.transform.localPosition;
-        gizmoEngagedInitialLocalScale = selectedSegment.transform.localScale;
-        //gizmoEngagedInitialWorldPos = gizmoRayHitPos;
+        SetGizmoStartConditions();
+        
     }
     private void CommandGizmoOn() {
         // Check current mouse position
         // Compare mouse position to initialMousePos
         // Figure out how gizmo has been moved
-        GetGizmoMultiplier();
+        Vector2 mousePositionDelta = mousePosition - gizmoEngagedInitialMouseClickPos;  // where mouse is NOW, compared to where it was first clicked
+
+        float multiplier = GetGizmoMultiplier();
+        Vector3 newSegmentScale = gizmoSegmentInitialLocalScale;
+
+        if (engagedGizmo.GetComponent<EditorGizmoObject>().gizmoType != EditorGizmoObject.GizmoType.none) {
+            if (engagedGizmo.GetComponent<EditorGizmoObject>().gizmoType == EditorGizmoObject.GizmoType.axisX) {
+                if (currentToolState == CurrentToolState.ScaleSegment) {                    
+                    newSegmentScale.x *= multiplier;
+                    selectedSegment.GetComponent<CritterSegment>().sourceNode.dimensions = newSegmentScale;
+                    gizmoAxisXGO.transform.localScale = new Vector3(gizmoEngagedInitialLocalPos.x * multiplier, 0.02f, 0.02f);
+                    gizmoAxisXGO.transform.localPosition = gizmoEngagedInitialLocalPos * multiplier * 0.5f;
+                }
+                else if (currentToolState == CurrentToolState.MoveAttachPoint) {
+                    Vector3 newAttachDir = new Vector3(0f, 0f, 0f);
+                    float effectMagnitude = Vector2.Dot(mousePositionDelta, gizmoEngagedInitialScreenDir); // amount of mouse movement projected onto gizmo screen vector
+                    float effectSign = 1f;
+                    if (effectMagnitude != 0f) {
+                        effectSign = effectMagnitude / Mathf.Abs(effectMagnitude);  // either 1f or -1f
+                    }                        
+                    newAttachDir = Vector3.Lerp(gizmoSegmentInitialJointAttachDir, new Vector3(1f, 0f, 0f) * effectSign, Mathf.Abs(effectMagnitude) * 0.01f);
+                    selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.attachDir = newAttachDir;
+                }                
+            }
+            else if (engagedGizmo.GetComponent<EditorGizmoObject>().gizmoType == EditorGizmoObject.GizmoType.axisY) {
+                if (currentToolState == CurrentToolState.ScaleSegment) {
+                    newSegmentScale.y *= multiplier;
+                    selectedSegment.GetComponent<CritterSegment>().sourceNode.dimensions = newSegmentScale;
+                    gizmoAxisYGO.transform.localScale = new Vector3(0.02f, gizmoEngagedInitialLocalPos.y * multiplier, 0.02f);
+                    gizmoAxisYGO.transform.localPosition = gizmoEngagedInitialLocalPos * multiplier * 0.5f;
+                }
+                else if (currentToolState == CurrentToolState.MoveAttachPoint) {
+                    Vector3 newAttachDir = new Vector3(0f, 0f, 0f);
+                    float effectMagnitude = Vector2.Dot(mousePositionDelta, gizmoEngagedInitialScreenDir); // amount of mouse movement projected onto gizmo screen vector
+                    float effectSign = 1f;
+                    if (effectMagnitude != 0f) {
+                        effectSign = effectMagnitude / Mathf.Abs(effectMagnitude);  // either 1f or -1f
+                    }
+                    newAttachDir = Vector3.Lerp(gizmoSegmentInitialJointAttachDir, new Vector3(0f, 1f, 0f) * effectSign, Mathf.Abs(effectMagnitude) * 0.01f);
+                    selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.attachDir = newAttachDir;
+                }                
+            }
+            else if (engagedGizmo.GetComponent<EditorGizmoObject>().gizmoType == EditorGizmoObject.GizmoType.axisZ) {
+                if (currentToolState == CurrentToolState.ScaleSegment) {
+                    newSegmentScale.z *= multiplier;
+                    selectedSegment.GetComponent<CritterSegment>().sourceNode.dimensions = newSegmentScale;
+                    gizmoAxisZGO.transform.localScale = new Vector3(0.02f, 0.02f, gizmoEngagedInitialLocalPos.z * multiplier);
+                    gizmoAxisZGO.transform.localPosition = gizmoEngagedInitialLocalPos * multiplier * 0.5f;
+                }
+                else if (currentToolState == CurrentToolState.MoveAttachPoint) {
+                    Vector3 newAttachDir = new Vector3(0f, 0f, 0f);                    
+                    float effectMagnitude = Vector2.Dot(mousePositionDelta, gizmoEngagedInitialScreenDir); // amount of mouse movement projected onto gizmo screen vector
+                    float effectSign = 1f;
+                    if (effectMagnitude != 0f) {
+                        effectSign = effectMagnitude / Mathf.Abs(effectMagnitude);  // either 1f or -1f
+                    }
+                    newAttachDir = Vector3.Lerp(gizmoSegmentInitialJointAttachDir, new Vector3(0f, 0f, 1f) * effectSign, Mathf.Abs(effectMagnitude) * 0.01f);
+                    selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.attachDir = newAttachDir;
+                }                
+            }
+            else if (engagedGizmo.GetComponent<EditorGizmoObject>().gizmoType == EditorGizmoObject.GizmoType.axisAll) {                
+                if (currentToolState == CurrentToolState.ScaleSegment) {
+                    multiplier = Mathf.Max(1f + Vector2.Dot(mousePositionDelta, new Vector2(1f, 1f)) * 0.02f, 0.01f);
+                    newSegmentScale.x *= multiplier;
+                    newSegmentScale.y *= multiplier;
+                    newSegmentScale.z *= multiplier;
+                    gizmoScaleXGO.transform.localPosition = new Vector3(multiplier, 0f, 0f);
+                    gizmoScaleYGO.transform.localPosition = new Vector3(0f, multiplier, 0f);
+                    gizmoScaleZGO.transform.localPosition = new Vector3(0f, 0f, multiplier);
+                    gizmoAxisXGO.transform.localScale = new Vector3(multiplier, 0.02f, 0.02f);
+                    gizmoAxisXGO.transform.localPosition = new Vector3(1f, 0f, 0f) * multiplier * 0.5f;
+                    gizmoAxisYGO.transform.localScale = new Vector3(0.02f, multiplier, 0.02f);
+                    gizmoAxisYGO.transform.localPosition = new Vector3(0f, 1f, 0f) * multiplier * 0.5f;
+                    gizmoAxisZGO.transform.localScale = new Vector3(0.02f, 0.02f, multiplier);
+                    gizmoAxisZGO.transform.localPosition = new Vector3(0f, 0f, 1f) * multiplier * 0.5f;
+                    selectedSegment.GetComponent<CritterSegment>().sourceNode.dimensions = newSegmentScale;
+                }
+                else if (currentToolState == CurrentToolState.MoveAttachPoint) {
+                    if(isSegmentHover) {
+                        Collider coll = critterConstructorManager.masterCritter.critterSegmentList[selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.parentNode.ID].gameObject.GetComponent<Collider>();
+                        Ray ray = Camera.main.ScreenPointToRay(mousePosition - gizmoEngagedInitialMouseDelta);
+                        RaycastHit hit;
+                        Vector3 rayHitPos = new Vector3(0f, 0f, 0f);
+                        if (coll.Raycast(ray, out hit, 100.0F)) {
+                            rayHitPos = hit.point;
+
+                            Vector3 newAttachDir = ConvertWorldSpaceToAttachDir(critterConstructorManager.masterCritter.critterSegmentList[selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.parentNode.ID].gameObject, rayHitPos);
+                            Camera mainCam = critterConstructorManager.critterEditorInputManager.critterConstructorCameraController.gameObject.GetComponent<Camera>();
+                            Vector2 mouseDir = mousePositionDelta.normalized;
+                            Vector3 mouseDragWorldDir = Vector3.Normalize(mainCam.transform.right * mouseDir.x + mainCam.transform.up * mouseDir.y);
+                            Debug.Log("newAttachDir: " + newAttachDir.ToString() + ", mouseDir: " + mouseDir.ToString() + ", mouseDragWorldDir: " + mouseDragWorldDir.ToString() + ", rayHitPos: " + rayHitPos.ToString());
+                            selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.attachDir = newAttachDir;
+                        }                        
+                    }
+                }
+            }
+
+            if (currentToolState == CurrentToolState.ScaleSegment) {
+                Vector3 newGizmoPos = gizmoEngagedInitialLocalPos * multiplier; // update gizmo
+                engagedGizmo.transform.localPosition = newGizmoPos;
+            }
+            
+
+            critterConstructorManager.masterCritter.UpdateCritterFromGenome();
+        }
     }
     private void CommandGizmoExit() {
         // Figure out current Gizmo position
@@ -351,35 +518,215 @@ public class CritterEditorState : MonoBehaviour {
         isGizmoEngaged = false;
         engagedGizmo = null;
     }
-
-    private void GetGizmoMultiplier() {
-        Vector2 mousePositionDelta = mousePosition - gizmoEngagedInitialMousePos;
-        Vector3 gizmoWorldVector = new Vector3(0f, 0f, 0f);
-        Vector3 gizmoOriginScreenPos = critterConstructorManager.critterEditorInputManager.critterConstructorCameraController.gameObject.GetComponent<Camera>().WorldToScreenPoint(group.transform.position);  // 'group' = gizmo group
-        Vector3 gizmoHandleScreenPos = critterConstructorManager.critterEditorInputManager.critterConstructorCameraController.gameObject.GetComponent<Camera>().WorldToScreenPoint(engagedGizmo.transform.position);
+    private void SetGizmoStartConditions() {
+        gizmoEngagedInitialMouseClickPos = mousePosition; // where the user actually clicked when engagint he gizmo        
+        gizmoEngagedInitialScreenPos = critterConstructorManager.critterEditorInputManager.critterConstructorCameraController.gameObject.GetComponent<Camera>().WorldToScreenPoint(engagedGizmo.transform.position);  // center of the gizmo that was clicked
+        gizmoEngagedInitialMouseDelta = mousePosition - gizmoEngagedInitialScreenPos;
+        gizmoEngagedInitialLocalPos = engagedGizmo.transform.localPosition;
+        gizmoSegmentInitialLocalScale = selectedSegment.GetComponent<CritterSegment>().sourceNode.dimensions;  // change to sourceNode.dimensions ???
+        Camera mainCam = critterConstructorManager.critterEditorInputManager.critterConstructorCameraController.gameObject.GetComponent<Camera>();
+        Vector2 gizmoOriginScreenPos = new Vector2(mainCam.WorldToScreenPoint(gizmoGroupGO.transform.position).x, mainCam.WorldToScreenPoint(gizmoGroupGO.transform.position).y);  // 'group' = gizmo group
+        Vector2 gizmoHandleScreenPos = new Vector2(mainCam.WorldToScreenPoint(engagedGizmo.transform.position).x, mainCam.WorldToScreenPoint(engagedGizmo.transform.position).y);
+        gizmoEngagedInitialScreenDir = (gizmoHandleScreenPos - gizmoOriginScreenPos).normalized;
+        gizmoSegmentInitialJointAttachDir = selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.attachDir;
+    }
+    private float GetGizmoMultiplier() {
+        //Vector2 mousePositionDelta = mousePosition - gizmoEngagedInitialMouseClickPos;  // where mouse is NOW, compared to where it was first clicked
+        //Vector3 gizmoHandleWorldDirection = new Vector3(0f, 0f, 0f);
+        Camera mainCam = critterConstructorManager.critterEditorInputManager.critterConstructorCameraController.gameObject.GetComponent<Camera>();
+        Vector2 gizmoOriginScreenPos = new Vector2(mainCam.WorldToScreenPoint(gizmoGroupGO.transform.position).x, mainCam.WorldToScreenPoint(gizmoGroupGO.transform.position).y);  // 'group' = gizmo group
+        Vector3 gizmoHandleScreenPos = mainCam.WorldToScreenPoint(engagedGizmo.transform.position);
         Vector2 cursorToGizmoOriginScreen = new Vector2(mousePosition.x - gizmoOriginScreenPos.x, mousePosition.y - gizmoOriginScreenPos.y);
-        Vector2 handleToGizmoOriginScreen = new Vector2(gizmoEngagedInitialMousePos.x - gizmoOriginScreenPos.x, gizmoEngagedInitialMousePos.y - gizmoOriginScreenPos.y);
-        cursorToGizmoOriginScreen /= handleToGizmoOriginScreen.magnitude;
-        handleToGizmoOriginScreen /= handleToGizmoOriginScreen.magnitude;
-        float multiplier = 1f * Vector2.Dot(handleToGizmoOriginScreen, cursorToGizmoOriginScreen);
-        if(engagedGizmo.GetComponent<EditorGizmoObject>().affectsAxisX) {
-            gizmoWorldVector = group.transform.right;
-        }
-        if (engagedGizmo.GetComponent<EditorGizmoObject>().affectsAxisY) {
-            gizmoWorldVector = group.transform.up;
-        }
-        if (engagedGizmo.GetComponent<EditorGizmoObject>().affectsAxisZ) {
-            gizmoWorldVector = group.transform.forward;
-        }
-        Vector2 gizmoVectorToScreenProjection = new Vector2(Vector3.Dot(critterConstructorManager.critterEditorInputManager.critterConstructorCameraController.gameObject.transform.right, gizmoWorldVector), 
-            Vector3.Dot(critterConstructorManager.critterEditorInputManager.critterConstructorCameraController.gameObject.transform.up, gizmoWorldVector));
+        Vector2 handleToGizmoOriginScreen = new Vector2(gizmoEngagedInitialMouseClickPos.x - gizmoOriginScreenPos.x, gizmoEngagedInitialMouseClickPos.y - gizmoOriginScreenPos.y);
+        //Vector2 gizmoScreenVector = handleToGizmoOriginScreen;
+        //Vector3 handleWorldDirection = new Vector3(0f, 0f, 0f);
 
-        Vector3 newGizmoPos = gizmoEngagedInitialLocalPos * multiplier;
-        engagedGizmo.transform.localPosition = newGizmoPos;
-        //selectedSegment.transform.localScale = gizmoEngagedInitialLocalScale * multiplier;
-        selectedSegment.GetComponent<CritterSegment>().sourceNode.dimensions = gizmoEngagedInitialLocalScale * multiplier;
-        critterConstructorManager.masterCritter.UpdateCritterFromGenome();
-        Debug.Log("GetGizmoMultiplier() " + gizmoVectorToScreenProjection.ToString() + ", multiplier= " + multiplier.ToString() + ", mousePos: " + mousePosition.ToString() + ", cursorToOrigin: " + cursorToGizmoOriginScreen.ToString());
+        float multiplier = 1f * Vector2.Dot(handleToGizmoOriginScreen / handleToGizmoOriginScreen.magnitude, cursorToGizmoOriginScreen / handleToGizmoOriginScreen.magnitude); // ORIGINAL!
+        multiplier = Mathf.Max(multiplier, 0.01f);  // minimum multiplier
+       
+        return multiplier;
+        //Debug.Log("gizmoVectorToScreenProjection() " + gizmoVectorToScreenProjection.ToString() + ", multiplier= " + multiplier.ToString() + ", gizT: " + gizT.ToString() + ", targetHandleScreenPos: " + targetHandleScreenPos.ToString());
+    }
+    private float GetDistanceLineLine3D(Vector3 lineOrigin1, Vector3 lineEnd1, Vector3 lineOrigin2, Vector3 lineEnd2) {
+        //float pa;  // point on line a that is closest
+        //float pb;  // point on line b that is closest
+        float t = 0f;  // paramter on line 1 that is closest
+        float s = 0f;
+        float epsilon = 0.00001f;
+
+        Vector3 p13, p43, p21;
+        float d1343, d4321, d1321, d4343, d2121;
+        float numer, denom;
+
+        p13.x = lineOrigin1.x - lineOrigin2.x;
+        p13.y = lineOrigin1.y - lineOrigin2.y;
+        p13.z = lineOrigin1.z - lineOrigin2.z;
+        p43.x = lineEnd2.x - lineOrigin2.x;
+        p43.y = lineEnd2.y - lineOrigin2.y;
+        p43.z = lineEnd2.z - lineOrigin2.z;
+        if (Mathf.Abs(p43.x) < epsilon && Mathf.Abs(p43.y) < epsilon && Mathf.Abs(p43.z) < epsilon) {
+            Debug.Log("CASE1");
+        }
+            //return (FALSE);
+        p21.x = lineEnd1.x - lineOrigin1.x;
+        p21.y = lineEnd1.y - lineOrigin1.y;
+        p21.z = lineEnd1.z - lineOrigin1.z;
+        if (Mathf.Abs(p21.x) < epsilon && Mathf.Abs(p21.y) < epsilon && Mathf.Abs(p21.z) < epsilon) {
+            Debug.Log("CASE2");
+        }
+            //return (FALSE);
+
+        d1343 = p13.x * p43.x + p13.y * p43.y + p13.z * p43.z;
+        d4321 = p43.x * p21.x + p43.y * p21.y + p43.z * p21.z;
+        d1321 = p13.x * p21.x + p13.y * p21.y + p13.z * p21.z;
+        d4343 = p43.x * p43.x + p43.y * p43.y + p43.z * p43.z;
+        d2121 = p21.x * p21.x + p21.y * p21.y + p21.z * p21.z;
+
+        denom = d2121 * d4343 - d4321 * d4321;
+        if (Mathf.Abs(denom) < epsilon) {
+            Debug.Log("CASE3");
+        }
+            //return (FALSE);
+        numer = d1343 * d4321 - d1321 * d4343;
+
+        t = numer / denom;
+        s = (d1343 + d4321 * (t)) / d4343;
+
+        Vector3 closestPoint1 = new Vector3(lineOrigin1.x + t * p21.x, lineOrigin1.y + t * p21.y, lineOrigin1.z + t * p21.z);
+        //pa->x = lineOrigin1.x + t * p21.x;
+        //pa->y = lineOrigin1.y + t * p21.y;
+        //pa->z = lineOrigin1.z + t * p21.z;
+        //pb->x = lineOrigin2.x + s * p43.x;
+        //pb->y = lineOrigin2.y + s * p43.y;
+        //pb->z = lineOrigin2.z + s * p43.z;
+
+        //return (TRUE);
+        Debug.Log("V1: " + lineOrigin1.ToString() + lineEnd1.ToString() + ", V2: " + lineOrigin2.ToString() + lineEnd2.ToString() + ", t: " + t.ToString() + ", s: " + s.ToString() + ", numer: " + numer.ToString() + ", denom: " + denom.ToString());
+        return t;
+    }
+    private float GetDistanceLinePoint2D(Vector2 point, Vector2 lineOrigin, Vector2 lineEnd) {
+        // Calculate the distance between
+        // point pt and the segment p1 --> p2.
+        //private double FindDistanceToSegment(
+        //PointF pt, PointF p1, PointF p2, out PointF closest) {
+        Vector2 closest;
+        float dx = lineEnd.x - lineOrigin.x;
+        float dy = lineEnd.y - lineOrigin.y;
+        if ((dx == 0) && (dy == 0)) {
+            // It's a point not a line segment.
+            closest = lineOrigin;
+            dx = point.x - lineOrigin.x;
+            dy = point.y - lineOrigin.y;
+            return Mathf.Sqrt(dx * dx + dy * dy);
+        }
+
+        // Calculate the t that minimizes the distance.
+        float t = ((point.x - lineOrigin.x) * dx + (point.y - lineOrigin.y) * dy) /
+            (dx * dx + dy * dy);
+
+        // See if this represents one of the segment's
+        // end points or a point in the middle.
+        if (t < 0) {
+            closest = new Vector2(lineOrigin.x, lineOrigin.y);
+            dx = point.x - lineOrigin.x;
+            dy = point.y - lineOrigin.y;
+        }
+        else if (t > 1) {
+            closest = new Vector2(lineEnd.x, lineEnd.y);
+            dx = point.x - lineEnd.x;
+            dy = point.y - lineEnd.y;
+        }
+        else {
+            closest = new Vector2(lineOrigin.x + t * dx, lineOrigin.y + t * dy);
+            dx = point.x - closest.x;
+            dy = point.y - closest.y;
+        }
+
+        //return Mathf.Sqrt(dx * dx + dy * dy);
+        Debug.Log("GetDistanceLinePoint2D | t: " + t.ToString() + ", closest: " + closest.ToString());
+        return t;
+        /*import numpy as np
+
+def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False, clampA1 = False, clampB0 = False, clampB1 = False):
+    ''' Given two lines defined by numpy.array pairs (a0,a1,b0,b1)
+        Return distance, the two closest points, and their average
+    '''
+
+    # If clampAll=True, set all clamps to True
+        if clampAll:
+        clampA0 = True
+        clampA1 = True
+        clampB0 = True
+        clampB1 = True
+
+    # Calculate denomitator
+        A = a1 - a0
+    B = b1 - b0
+
+    _A = A / np.linalg.norm(A)
+    _B = B / np.linalg.norm(B)
+    cross = np.cross(_A, _B);
+
+        denom = np.linalg.norm(cross) * *2
+
+
+    # If denominator is 0, lines are parallel: Calculate distance with a projection
+# and evaluate clamp edge cases
+        if (denom == 0):
+        d0 = np.dot(_A, (b0 - a0))
+        d = np.linalg.norm(((d0 * _A) + a0) - b0)
+
+        # If clamping: the only time we'll get closest points will be when lines don't overlap at all.
+# Find if segments overlap using dot products.
+        if clampA0 or clampA1 or clampB0 or clampB1:
+            d1 = np.dot(_A, (b1 - a0))
+
+            # Is segment B before A?
+        if d0 <= 0 >= d1:
+                if clampA0 == True and clampB1 == True:
+                    if np.absolute(d0) < np.absolute(d1):
+                        return b0,a0,np.linalg.norm(b0 - a0)
+                    return b1,a0,np.linalg.norm(b1 - a0)
+
+            # Is segment B after A?
+        elif d0 >= np.linalg.norm(A) <= d1:
+                if clampA1 == True and clampB0 == True:
+                    if np.absolute(d0) < np.absolute(d1):
+                        return b0,a1,np.linalg.norm(b0 - a1)
+                    return b1,a1,np.linalg.norm(b1, a1)
+
+        # If clamping is off, or segments overlapped, we have infinite results, just return position.
+        return None,None,d
+
+
+
+# Lines criss-cross: Calculate the dereminent and return points
+    t = (b0 - a0);
+        det0 = np.linalg.det([t, _B, cross])
+    det1 = np.linalg.det([t, _A, cross])
+
+    t0 = det0 / denom;
+        t1 = det1 / denom;
+
+        pA = a0 + (_A * t0);
+        pB = b0 + (_B * t1);
+
+# Clamp results to line segments if needed
+        if clampA0 or clampA1 or clampB0 or clampB1:
+
+        if t0 < 0 and clampA0:
+            pA = a0
+        elif t0 > np.linalg.norm(A) and clampA1:
+            pA = a1
+
+        if t1 < 0 and clampB0:
+            pB = b0
+        elif t1 > np.linalg.norm(B) and clampB1:
+            pB = b1
+
+    d = np.linalg.norm(pA - pB)
+
+    return pA,pB,d*/
     }
 
     private void CommandLeftClickNone() {
@@ -445,8 +792,17 @@ public class CritterEditorState : MonoBehaviour {
         if (rightClickMenuAddHover) {
             RightClickMenuSegmentAdd();
         }
+        if (rightClickMenuDeleteHover) {
+            RightClickMenuSegmentDelete();
+        }
+        if (rightClickMenuViewHover) {
+            RightClickMenuSegmentView();
+        }
         if (rightClickMenuScaleHover) {
             RightClickMenuSegmentScale();
+        }
+        if(rightClickMenuMoveHover) {
+            RightClickMenuSegmentMove();
         }
         // If so, perform actions:
 
@@ -503,7 +859,6 @@ public class CritterEditorState : MonoBehaviour {
             //isGizmoHover = false;
         }
     }
-
     private void ShootSegmentRaycast() {
         //RaycastHit hitInfo = new RaycastHit();
         //int layerAntiGizmo = ~(1 << 8);   // ignore gizmos!
@@ -515,13 +870,13 @@ public class CritterEditorState : MonoBehaviour {
             if (mouseRayHitInfo.transform.gameObject != null) {
                 mouseRayHitPos = mouseRayHitInfo.point;
                 
-                Vector3 segmentLocalHitPos = new Vector3(0f, 0f, 0f);
-                segmentLocalHitPos.x = Vector3.Dot(mouseRayHitPos - mouseRayHitInfo.transform.gameObject.transform.position, mouseRayHitInfo.transform.gameObject.transform.right);
-                segmentLocalHitPos.y = Vector3.Dot(mouseRayHitPos - mouseRayHitInfo.transform.gameObject.transform.position, mouseRayHitInfo.transform.gameObject.transform.up);
-                segmentLocalHitPos.z = Vector3.Dot(mouseRayHitPos - mouseRayHitInfo.transform.gameObject.transform.position, mouseRayHitInfo.transform.gameObject.transform.forward);
-                mouseRayHitInfo.transform.gameObject.GetComponent<MeshRenderer>().material.SetFloat("_TargetPosX", segmentLocalHitPos.x);
-                mouseRayHitInfo.transform.gameObject.GetComponent<MeshRenderer>().material.SetFloat("_TargetPosY", segmentLocalHitPos.y);
-                mouseRayHitInfo.transform.gameObject.GetComponent<MeshRenderer>().material.SetFloat("_TargetPosZ", segmentLocalHitPos.z);
+                raycastSegmentLocalHitPos = new Vector3(0f, 0f, 0f);
+                raycastSegmentLocalHitPos.x = Vector3.Dot(mouseRayHitPos - mouseRayHitInfo.transform.gameObject.transform.position, mouseRayHitInfo.transform.gameObject.transform.right);
+                raycastSegmentLocalHitPos.y = Vector3.Dot(mouseRayHitPos - mouseRayHitInfo.transform.gameObject.transform.position, mouseRayHitInfo.transform.gameObject.transform.up);
+                raycastSegmentLocalHitPos.z = Vector3.Dot(mouseRayHitPos - mouseRayHitInfo.transform.gameObject.transform.position, mouseRayHitInfo.transform.gameObject.transform.forward);
+                mouseRayHitInfo.transform.gameObject.GetComponent<MeshRenderer>().material.SetFloat("_TargetPosX", raycastSegmentLocalHitPos.x);
+                mouseRayHitInfo.transform.gameObject.GetComponent<MeshRenderer>().material.SetFloat("_TargetPosY", raycastSegmentLocalHitPos.y);
+                mouseRayHitInfo.transform.gameObject.GetComponent<MeshRenderer>().material.SetFloat("_TargetPosZ", raycastSegmentLocalHitPos.z);
                 mouseRayHitInfo.transform.gameObject.GetComponent<MeshRenderer>().material.SetFloat("_DisplayTarget", 1f);
             }
         }
@@ -532,7 +887,6 @@ public class CritterEditorState : MonoBehaviour {
             //Debug.Log("No hit| critterConstructorManager.selectedSegment = " + "ShootSegmentRaycast()");
         }        
     }
-
     private void ShootEditorRaycasts() {
         int maxRays = 12;
         int rays = 0;
@@ -552,8 +906,10 @@ public class CritterEditorState : MonoBehaviour {
         while (keepCasting) {            
             rays++;
             bool hit = Physics.Raycast(currentRay, out editorRayHitInfo, Mathf.Infinity);
+            //Debug.Log(UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject(-1).ToString()); // returns false if not on a UI (GO w/ an EventSystem), true if hovering
             //Debug.Log("while(!hitNeither) { " + rays.ToString() + hit.ToString() + ", " + hitSegment.ToString() + ", " + hitGizmo.ToString() + "origin: " + currentRay.origin.ToString());
             if (hit) {  // ray hit SOMETHING
+                //Debug.Log("editorRayHitInfo: " + editorRayHitInfo.ToString());
                 if (editorRayHitInfo.transform.gameObject != null) {  // make sure it hit a gameObject and logged its information
                     Vector3 newOrigin = editorRayHitInfo.point + offset;  // update start of ray
                     currentRay.origin = newOrigin;
@@ -570,23 +926,30 @@ public class CritterEditorState : MonoBehaviour {
                             keepCasting = false; // <--- NOPE
                         }                        
                     }
-                    
-                    
-                    if (editorRayHitInfo.transform.gameObject.layer == LayerMask.NameToLayer("editorSegment")) {  // if it hit a CritterSegment!
+                    else if (editorRayHitInfo.transform.gameObject.layer == LayerMask.NameToLayer("editorSegment")) {  // if it hit a CritterSegment!
                         if (!hitSegment) {
                             currentRay.origin = editorRayHitInfo.point + offset;  // update start of ray
                             mouseRayHitInfo = editorRayHitInfo; // CHECK that it's not a reference!
                             mouseRayHitPos = mouseRayHitInfo.point;
-                            
 
-                            Vector3 segmentLocalHitPos = new Vector3(0f, 0f, 0f);
-                            segmentLocalHitPos.x = Vector3.Dot(mouseRayHitPos - mouseRayHitInfo.transform.gameObject.transform.position, mouseRayHitInfo.transform.gameObject.transform.right);
-                            segmentLocalHitPos.y = Vector3.Dot(mouseRayHitPos - mouseRayHitInfo.transform.gameObject.transform.position, mouseRayHitInfo.transform.gameObject.transform.up);
-                            segmentLocalHitPos.z = Vector3.Dot(mouseRayHitPos - mouseRayHitInfo.transform.gameObject.transform.position, mouseRayHitInfo.transform.gameObject.transform.forward);
-                            mouseRayHitInfo.transform.gameObject.GetComponent<MeshRenderer>().material.SetFloat("_TargetPosX", segmentLocalHitPos.x);
-                            mouseRayHitInfo.transform.gameObject.GetComponent<MeshRenderer>().material.SetFloat("_TargetPosY", segmentLocalHitPos.y);
-                            mouseRayHitInfo.transform.gameObject.GetComponent<MeshRenderer>().material.SetFloat("_TargetPosZ", segmentLocalHitPos.z);
-                            mouseRayHitInfo.transform.gameObject.GetComponent<MeshRenderer>().material.SetFloat("_DisplayTarget", 1f);
+
+                            //raycastSegmentLocalHitPos = new Vector3(0f, 0f, 0f);
+                            raycastSegmentLocalHitPos.x = Vector3.Dot(mouseRayHitPos - mouseRayHitInfo.transform.gameObject.transform.position, mouseRayHitInfo.transform.gameObject.transform.right) / mouseRayHitInfo.transform.gameObject.GetComponent<CritterSegment>().sourceNode.dimensions.x;
+                            raycastSegmentLocalHitPos.y = Vector3.Dot(mouseRayHitPos - mouseRayHitInfo.transform.gameObject.transform.position, mouseRayHitInfo.transform.gameObject.transform.up) / mouseRayHitInfo.transform.gameObject.GetComponent<CritterSegment>().sourceNode.dimensions.y;
+                            raycastSegmentLocalHitPos.z = Vector3.Dot(mouseRayHitPos - mouseRayHitInfo.transform.gameObject.transform.position, mouseRayHitInfo.transform.gameObject.transform.forward) / mouseRayHitInfo.transform.gameObject.GetComponent<CritterSegment>().sourceNode.dimensions.z;
+                            mouseRayHitInfo.transform.gameObject.GetComponent<MeshRenderer>().material.SetFloat("_TargetPosX", raycastSegmentLocalHitPos.x);
+                            mouseRayHitInfo.transform.gameObject.GetComponent<MeshRenderer>().material.SetFloat("_TargetPosY", raycastSegmentLocalHitPos.y);
+                            mouseRayHitInfo.transform.gameObject.GetComponent<MeshRenderer>().material.SetFloat("_TargetPosZ", raycastSegmentLocalHitPos.z);
+                            mouseRayHitInfo.transform.gameObject.GetComponent<MeshRenderer>().material.SetFloat("_SizeX", mouseRayHitInfo.transform.gameObject.GetComponent<CritterSegment>().sourceNode.dimensions.x);
+                            mouseRayHitInfo.transform.gameObject.GetComponent<MeshRenderer>().material.SetFloat("_SizeY", mouseRayHitInfo.transform.gameObject.GetComponent<CritterSegment>().sourceNode.dimensions.y);
+                            mouseRayHitInfo.transform.gameObject.GetComponent<MeshRenderer>().material.SetFloat("_SizeZ", mouseRayHitInfo.transform.gameObject.GetComponent<CritterSegment>().sourceNode.dimensions.z);
+                            if(!isGizmoEngaged) {
+                                mouseRayHitInfo.transform.gameObject.GetComponent<MeshRenderer>().material.SetFloat("_DisplayTarget", 1f);
+                            }
+                            else {
+                                mouseRayHitInfo.transform.gameObject.GetComponent<MeshRenderer>().material.SetFloat("_DisplayTarget", 0f);
+                            }
+                            
 
                             //Debug.Log("ShootSegmentRaycast()Hit " + editorRayHitInfo.transform.gameObject.name + ", layer: " + editorRayHitInfo.transform.gameObject.layer.ToString() + ", pos: " + currentRay.origin.ToString());
                             hitSegment = true;
@@ -597,6 +960,12 @@ public class CritterEditorState : MonoBehaviour {
                             }                           
                         }                        
                     }
+                    else {
+                        Debug.Log("ray hit a GO but not segment or gizmo");
+                    }
+                }
+                else {
+                    Debug.Log("ray hit SOMETHING but not a gameObject");
                 }
             }
             else {  // hit NOTHING!!
@@ -701,16 +1070,16 @@ public class CritterEditorState : MonoBehaviour {
         Debug.Log("MenuSegmentAddExit");
         rightClickMenuAddHover = false;
     }
-
     private void RightClickMenuSegmentAdd() {
-        Debug.Log("MenuSegmentAdd()" + critterConstructorManager.masterCritter.masterCritterGenome.ToString() + ", ss: " + selectedSegment.GetComponent<CritterSegment>().sourceNode.ID.ToString());
+        
         //critterConstructorManager.AddNewCritterNode(rayHitPos);
         // Determine attachCoords:
         Vector3 attachDir = ConvertWorldSpaceToAttachDir(selectedSegment, rightClickWorldPosition);
+        Debug.Log("MenuSegmentAdd() attachDir: " + attachDir.ToString() + ", ss: " + selectedSegment.GetComponent<CritterSegment>().sourceNode.ID.ToString());
         int nextID = critterConstructorManager.masterCritter.masterCritterGenome.CritterNodeList.Count;
         critterConstructorManager.masterCritter.masterCritterGenome.AddNewNode(selectedSegment.GetComponent<CritterSegment>().sourceNode, attachDir, nextID);
         selectedSegmentID = nextID;
-        critterConstructorManager.masterCritter.RebuildCritterFromGenome();
+        critterConstructorManager.masterCritter.RebuildCritterFromGenome(false);
         rightClickMenuAddHover = false;
 
         // TEMPORARY:  -- DUE to critter being fully destroyed and re-built, the references to selected/hoverSegments are broken:
@@ -719,15 +1088,45 @@ public class CritterEditorState : MonoBehaviour {
         critterConstructorManager.UpdateSegmentShaderStates();
     }
 
+    public void RightClickMenuDeleteEnter() {
+        Debug.Log("MenuSegmentDeleteEnter");
+        rightClickMenuDeleteHover = true;
+    }
+    public void RightClickMenuSegmentDeleteExit() {
+        Debug.Log("MenuSegmentDeleteExit");
+        rightClickMenuDeleteHover = false;
+    }
+    private void RightClickMenuSegmentDelete() {
+        Debug.Log("MenuSegmentDelete");
+    }
+
     private Vector3 ConvertWorldSpaceToAttachDir(GameObject segment, Vector3 worldSpacePos) {
         
-        Vector3 relativePos = worldSpacePos - segment.transform.position;
+        Vector3 relativePos = (worldSpacePos - segment.transform.position);
+        relativePos.Normalize();
         float x = Vector3.Dot(relativePos, segment.transform.right);
         float y = Vector3.Dot(relativePos, segment.transform.up);
         float z = Vector3.Dot(relativePos, segment.transform.forward);
+        x /= segment.GetComponent<CritterSegment>().sourceNode.dimensions.x;
+        y /= segment.GetComponent<CritterSegment>().sourceNode.dimensions.y;
+        z /= segment.GetComponent<CritterSegment>().sourceNode.dimensions.z;
         Vector3 attachDir = new Vector3(x, y, z).normalized;
         Debug.Log("WorldSpace2attachDir: " + attachDir.ToString());
         return attachDir;
+    }
+
+    public void RightClickMenuSegmentViewEnter() {
+        Debug.Log("MenuSegmentViewEnter");
+        rightClickMenuViewHover = true;
+    }
+    public void RightClickMenuSegmentViewExit() {
+        Debug.Log("MenuSegmentViewExit");
+        rightClickMenuViewHover = false;
+    }
+    private void RightClickMenuSegmentView() {
+        Debug.Log("MenuSegmentView()");
+        rightClickMenuViewHover = false;  // Right-click menu has been exited, no longer hovering
+        SetToolState(CurrentToolState.None);
     }
 
     public void RightClickMenuSegmentScaleEnter() {
@@ -743,6 +1142,20 @@ public class CritterEditorState : MonoBehaviour {
         Debug.Log("MenuSegmentScale()");
         rightClickMenuScaleHover = false;  // Right-click menu has been exited, no longer hovering
         SetToolState(CurrentToolState.ScaleSegment);        
+    }
+
+    public void RightClickMenuSegmentMoveEnter() {
+        Debug.Log("MenuSegmentMoveEnter");
+        rightClickMenuMoveHover = true;
+    }
+    public void RightClickMenuSegmentMoveExit() {
+        Debug.Log("MenuSegmentMoveExit");
+        rightClickMenuMoveHover = false;
+    }
+    private void RightClickMenuSegmentMove() {
+        Debug.Log("MenuSegmentMove()");
+        rightClickMenuMoveHover = false;  // Right-click menu has been exited, no longer hovering
+        SetToolState(CurrentToolState.MoveAttachPoint);
     }
 
     public void SetToolState(CurrentToolState toolState) {
@@ -776,115 +1189,269 @@ public class CritterEditorState : MonoBehaviour {
 
         if(currentToolState != CurrentToolState.None) {
             if (isSegmentSelected) {
+                if (currentToolState == CurrentToolState.ScaleSegment) {
+                    gizmoScaleCoreGO.SetActive(true);
+                    gizmoScaleXGO.SetActive(true);
+                    gizmoScaleYGO.SetActive(true);
+                    gizmoScaleZGO.SetActive(true);
+                    gizmoMoveCoreGO.SetActive(false);
+                    gizmoMoveXGO.SetActive(false);
+                    gizmoMoveYGO.SetActive(false);
+                    gizmoMoveZGO.SetActive(false);
+                    gizmoOrientation = selectedSegment.transform.rotation;
+                }
+                else if(currentToolState == CurrentToolState.MoveAttachPoint) {
+                    gizmoMoveCoreGO.SetActive(true);
+                    gizmoMoveXGO.SetActive(true);
+                    gizmoMoveYGO.SetActive(true);
+                    gizmoMoveZGO.SetActive(true);
+                    gizmoScaleCoreGO.SetActive(false);
+                    gizmoScaleXGO.SetActive(false);
+                    gizmoScaleYGO.SetActive(false);
+                    gizmoScaleZGO.SetActive(false);
+                    if(selectedSegment.GetComponent<CritterSegment>().sourceNode.ID != 0) {  // if not the Root Node:
+                        gizmoOrientation = critterConstructorManager.masterCritter.critterSegmentList[selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.parentNode.ID].gameObject.transform.rotation;
+                    }
+                    else {
+                        gizmoOrientation = selectedSegment.transform.rotation;
+                    }
+                }
                 gizmoPivotPoint = selectedSegment.transform.position - selectedSegment.transform.forward * selectedSegment.GetComponent<CritterSegment>().sourceNode.dimensions.z * 0.5f;
-                gizmoOrientation = selectedSegment.transform.rotation;
-                group.transform.position = gizmoPivotPoint;
-                group.transform.rotation = gizmoOrientation;
-                group.SetActive(true);  // a segment is selected and there is a tool active -- display the Gizmos!!!
+                //gizmoOrientation = critterConstructorManager.masterCritter.critterSegmentList[selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.parentNode.ID].gameObject.transform.rotation;
+                gizmoGroupGO.transform.position = gizmoPivotPoint;
+                gizmoGroupGO.transform.rotation = gizmoOrientation;
+                float distToCamera = Vector3.Distance(critterConstructorManager.critterEditorInputManager.critterConstructorCameraController.gameObject.transform.position, gizmoGroupGO.transform.position);
+                gizmoGroupGO.transform.localScale = Vector3.one * distToCamera * 0.12f;
+                gizmoGroupGO.SetActive(true);  // a segment is selected and there is a tool active -- display the Gizmos!!!
             }
             else {
-                group.SetActive(false); // nothing selected, so do not display gizmos!
+                gizmoGroupGO.SetActive(false); // nothing selected, so do not display gizmos!
             }
         }
         else {
-            group.SetActive(false);  // current tool is set to View, so do not display Gizmos!
+            gizmoGroupGO.SetActive(false);  // current tool is set to View, so do not display Gizmos!
+            if (isPhysicsPreview) {
+                gizmoForceShaftGO.SetActive(true);
+                gizmoForceArrowGO.SetActive(true);
+                gizmoGroupGO.SetActive(true);
+                gizmoMoveCoreGO.SetActive(false);
+                gizmoMoveXGO.SetActive(false);
+                gizmoMoveYGO.SetActive(false);
+                gizmoMoveZGO.SetActive(false);
+                gizmoScaleCoreGO.SetActive(false);
+                gizmoScaleXGO.SetActive(false);
+                gizmoScaleYGO.SetActive(false);
+                gizmoScaleZGO.SetActive(false);
+            }
+            else {
+                gizmoForceShaftGO.SetActive(false);
+                gizmoForceArrowGO.SetActive(false);
+                gizmoGroupGO.SetActive(false);
+            }
         }
+        
     }
 
     public void ResetGizmos() {
         
-        scaleCore.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+        gizmoScaleCoreGO.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
         
-        scaleX.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
-        scaleX.transform.localPosition = new Vector3(1f, 0f, 0f);
+        gizmoScaleXGO.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+        gizmoScaleXGO.transform.localPosition = new Vector3(1f, 0f, 0f);
         
-        scaleY.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
-        scaleY.transform.localPosition = new Vector3(0f, 1f, 0f);
+        gizmoScaleYGO.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+        gizmoScaleYGO.transform.localPosition = new Vector3(0f, 1f, 0f);
         
-        scaleZ.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
-        scaleZ.transform.localPosition = new Vector3(0f, 0f, 1f);
+        gizmoScaleZGO.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+        gizmoScaleZGO.transform.localPosition = new Vector3(0f, 0f, 1f);
         
-        axisX.transform.localScale = new Vector3(scaleX.transform.localPosition.x, 0.02f, 0.02f);
-        axisX.transform.localPosition = scaleX.transform.localPosition * 0.5f;
+        gizmoAxisXGO.transform.localScale = new Vector3(gizmoScaleXGO.transform.localPosition.x - 0.04f, 0.02f, 0.02f);
+        gizmoAxisXGO.transform.localPosition = gizmoScaleXGO.transform.localPosition * 0.5f;
         
-        axisY.transform.localScale = new Vector3(0.02f, scaleY.transform.localPosition.y, 0.02f);
-        axisY.transform.localPosition = scaleY.transform.localPosition * 0.5f;
+        gizmoAxisYGO.transform.localScale = new Vector3(0.02f, gizmoScaleYGO.transform.localPosition.y - 0.04f, 0.02f);
+        gizmoAxisYGO.transform.localPosition = gizmoScaleYGO.transform.localPosition * 0.5f;
         
-        axisZ.transform.localScale = new Vector3(0.02f, 0.02f, scaleZ.transform.localPosition.z);
-        axisZ.transform.localPosition = scaleZ.transform.localPosition * 0.5f;
+        gizmoAxisZGO.transform.localScale = new Vector3(0.02f, 0.02f, gizmoScaleZGO.transform.localPosition.z - 0.04f);
+        gizmoAxisZGO.transform.localPosition = gizmoScaleZGO.transform.localPosition * 0.5f;
+
+        gizmoMoveCoreGO.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+
+        gizmoMoveXGO.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+        gizmoMoveXGO.transform.localPosition = new Vector3(1f, 0f, 0f);
+
+        gizmoMoveYGO.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+        gizmoMoveYGO.transform.localPosition = new Vector3(0f, 1f, 0f);
+
+        gizmoMoveZGO.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+        gizmoMoveZGO.transform.localPosition = new Vector3(0f, 0f, 1f);
     }
 
     public void InitGizmos() {
-        if (group == null) {  // gizmo has already been created
-            group = new GameObject("gizmoGroup");  // initialize gizmo objects
-            scaleCore = new GameObject("gizmoScaleCore");
-            scaleX = new GameObject("gizmoScaleScaleX");
-            scaleY = new GameObject("gizmoScaleScaleY");
-            scaleZ = new GameObject("gizmoScaleScaleZ");
-            axisX = new GameObject("gizmoScaleAxisX");
-            axisY = new GameObject("gizmoScaleAxisY");
-            axisZ = new GameObject("gizmoScaleAxisZ");
+        if (gizmoGroupGO == null) {  // gizmo has already been created
+            // SHARED:
+            gizmoGroupGO = new GameObject("gizmoGroupGO");  // initialize gizmo objects
+            gizmoAxisXGO = new GameObject("gizmoAxisXGO");
+            gizmoAxisYGO = new GameObject("gizmoAxisYGO");
+            gizmoAxisZGO = new GameObject("gizmoAxisZGO");
+            // SCALE:
+            gizmoScaleCoreGO = new GameObject("gizmoScaleCoreGO");
+            gizmoScaleXGO = new GameObject("gizmoScaleXGO");
+            gizmoScaleYGO = new GameObject("gizmoScaleYGO");
+            gizmoScaleZGO = new GameObject("gizmoScaleZGO");
+            // MOVE:
+            gizmoMoveCoreGO = new GameObject("gizmoMoveCoreGO");
+            gizmoMoveXGO = new GameObject("gizmoMoveXGO");
+            gizmoMoveYGO = new GameObject("gizmoMoveYGO");
+            gizmoMoveZGO = new GameObject("gizmoMoveZGO");
+            // FORCE:
+            gizmoForceShaftGO = new GameObject("gizmoForceShaftGO");
+            gizmoForceArrowGO = new GameObject("gizmoForceArrowGO");
 
-            scaleCore.transform.SetParent(group.transform);
-            scaleCore.layer = LayerMask.NameToLayer("gizmo");  // set segmentGO layer to gizmo, to distinguish it from segments
-            scaleCore.AddComponent<EditorGizmoObject>();
-            scaleCore.GetComponent<EditorGizmoObject>().CreateMesh(EditorGizmoObject.GizmoMeshShape.Cube);
-            scaleCore.GetComponent<EditorGizmoObject>().affectsAxisX = true;
-            scaleCore.GetComponent<EditorGizmoObject>().affectsAxisY = true;
-            scaleCore.GetComponent<EditorGizmoObject>().affectsAxisZ = true;
-            scaleCore.GetComponent<MeshRenderer>().material.SetColor("_Color", new Color(1f, 1f, 0f));
-            scaleCore.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+            gizmoScaleCoreGO.transform.SetParent(gizmoGroupGO.transform);
+            gizmoScaleCoreGO.layer = LayerMask.NameToLayer("gizmo");  // set segmentGO layer to gizmo, to distinguish it from segments
+            gizmoScaleCoreGO.AddComponent<EditorGizmoObject>();
+            gizmoScaleCoreGO.GetComponent<EditorGizmoObject>().CreateMesh(EditorGizmoObject.GizmoMeshShape.Cube, EditorGizmoObject.GizmoType.axisAll);
+            gizmoScaleCoreGO.GetComponent<EditorGizmoObject>().gizmoType = EditorGizmoObject.GizmoType.axisAll;
+            gizmoScaleCoreGO.GetComponent<MeshRenderer>().material.SetColor("_Color", new Color(1f, 1f, 0f));
+            gizmoScaleCoreGO.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
 
-            scaleX.transform.SetParent(group.transform);
-            scaleX.layer = LayerMask.NameToLayer("gizmo");  // set segmentGO layer to gizmo, to distinguish it from segments
-            scaleX.AddComponent<EditorGizmoObject>();
-            scaleX.GetComponent<EditorGizmoObject>().CreateMesh(EditorGizmoObject.GizmoMeshShape.Cube);
-            scaleX.GetComponent<EditorGizmoObject>().affectsAxisX = true;
-            scaleX.GetComponent<MeshRenderer>().material.SetColor("_Color", new Color(1f, 0f, 0f));
-            scaleX.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
-            scaleX.transform.localPosition = new Vector3(1f, 0f, 0f);
+            gizmoScaleXGO.transform.SetParent(gizmoGroupGO.transform);
+            gizmoScaleXGO.layer = LayerMask.NameToLayer("gizmo");  // set segmentGO layer to gizmo, to distinguish it from segments
+            gizmoScaleXGO.AddComponent<EditorGizmoObject>();
+            gizmoScaleXGO.GetComponent<EditorGizmoObject>().CreateMesh(EditorGizmoObject.GizmoMeshShape.Cube, EditorGizmoObject.GizmoType.axisX);
+            gizmoScaleXGO.GetComponent<EditorGizmoObject>().gizmoType = EditorGizmoObject.GizmoType.axisX;
+            gizmoScaleXGO.GetComponent<MeshRenderer>().material.SetColor("_Color", new Color(1f, 0f, 0f));
+            gizmoScaleXGO.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+            gizmoScaleXGO.transform.localPosition = new Vector3(1f, 0f, 0f);
 
-            scaleY.transform.SetParent(group.transform);
-            scaleY.layer = LayerMask.NameToLayer("gizmo");  // set segmentGO layer to gizmo, to distinguish it from segments
-            scaleY.AddComponent<EditorGizmoObject>();
-            scaleY.GetComponent<EditorGizmoObject>().CreateMesh(EditorGizmoObject.GizmoMeshShape.Cube);
-            scaleY.GetComponent<EditorGizmoObject>().affectsAxisY = true;
-            scaleY.GetComponent<MeshRenderer>().material.SetColor("_Color", new Color(0f, 1f, 0f));
-            scaleY.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
-            scaleY.transform.localPosition = new Vector3(0f, 1f, 0f);
+            gizmoScaleYGO.transform.SetParent(gizmoGroupGO.transform);
+            gizmoScaleYGO.layer = LayerMask.NameToLayer("gizmo");  // set segmentGO layer to gizmo, to distinguish it from segments
+            gizmoScaleYGO.AddComponent<EditorGizmoObject>();
+            gizmoScaleYGO.GetComponent<EditorGizmoObject>().CreateMesh(EditorGizmoObject.GizmoMeshShape.Cube, EditorGizmoObject.GizmoType.axisY);
+            gizmoScaleYGO.GetComponent<EditorGizmoObject>().gizmoType = EditorGizmoObject.GizmoType.axisY;
+            gizmoScaleYGO.GetComponent<MeshRenderer>().material.SetColor("_Color", new Color(0f, 1f, 0f));
+            gizmoScaleYGO.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+            gizmoScaleYGO.transform.localPosition = new Vector3(0f, 1f, 0f);
 
-            scaleZ.transform.SetParent(group.transform);
-            scaleZ.layer = LayerMask.NameToLayer("gizmo");  // set segmentGO layer to gizmo, to distinguish it from segments
-            scaleZ.AddComponent<EditorGizmoObject>();
-            scaleZ.GetComponent<EditorGizmoObject>().CreateMesh(EditorGizmoObject.GizmoMeshShape.Cube);
-            scaleZ.GetComponent<EditorGizmoObject>().affectsAxisZ = true;
-            scaleZ.GetComponent<MeshRenderer>().material.SetColor("_Color", new Color(0f, 0f, 1f));
-            scaleZ.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
-            scaleZ.transform.localPosition = new Vector3(0f, 0f, 1f);
+            gizmoScaleZGO.transform.SetParent(gizmoGroupGO.transform);
+            gizmoScaleZGO.layer = LayerMask.NameToLayer("gizmo");  // set segmentGO layer to gizmo, to distinguish it from segments
+            gizmoScaleZGO.AddComponent<EditorGizmoObject>();
+            gizmoScaleZGO.GetComponent<EditorGizmoObject>().CreateMesh(EditorGizmoObject.GizmoMeshShape.Cube, EditorGizmoObject.GizmoType.axisZ);
+            gizmoScaleZGO.GetComponent<EditorGizmoObject>().gizmoType = EditorGizmoObject.GizmoType.axisZ;
+            gizmoScaleZGO.GetComponent<MeshRenderer>().material.SetColor("_Color", new Color(0f, 0f, 1f));
+            gizmoScaleZGO.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+            gizmoScaleZGO.transform.localPosition = new Vector3(0f, 0f, 1f);
 
-            axisX.transform.SetParent(group.transform);
-            axisX.layer = LayerMask.NameToLayer("gizmo");  // set segmentGO layer to gizmo, to distinguish it from segments
-            axisX.AddComponent<EditorGizmoObject>();
-            axisX.GetComponent<EditorGizmoObject>().CreateMesh(EditorGizmoObject.GizmoMeshShape.Cube);
-            axisX.GetComponent<MeshRenderer>().material.SetColor("_Color", new Color(0.75f, 0.75f, 0.75f));
-            axisX.transform.localScale = new Vector3(scaleX.transform.localPosition.x, 0.02f, 0.02f);
-            axisX.transform.localPosition = scaleX.transform.localPosition * 0.5f;
+            gizmoAxisXGO.transform.SetParent(gizmoGroupGO.transform);
+            gizmoAxisXGO.layer = LayerMask.NameToLayer("gizmo");  // set segmentGO layer to gizmo, to distinguish it from segments
+            gizmoAxisXGO.AddComponent<EditorGizmoObject>();
+            gizmoAxisXGO.GetComponent<EditorGizmoObject>().CreateMesh(EditorGizmoObject.GizmoMeshShape.Cube, EditorGizmoObject.GizmoType.none);
+            gizmoAxisXGO.GetComponent<MeshRenderer>().material.SetColor("_Color", new Color(0.75f, 0.75f, 0.75f));
+            gizmoAxisXGO.transform.localScale = new Vector3(gizmoScaleXGO.transform.localPosition.x, 0.02f, 0.02f);
+            gizmoAxisXGO.transform.localPosition = gizmoScaleXGO.transform.localPosition * 0.5f;
 
-            axisY.transform.SetParent(group.transform);
-            axisY.layer = LayerMask.NameToLayer("gizmo");  // set segmentGO layer to gizmo, to distinguish it from segments
-            axisY.AddComponent<EditorGizmoObject>();
-            axisY.GetComponent<EditorGizmoObject>().CreateMesh(EditorGizmoObject.GizmoMeshShape.Cube);
-            axisY.GetComponent<MeshRenderer>().material.SetColor("_Color", new Color(0.75f, 0.75f, 0.75f));
-            axisY.transform.localScale = new Vector3(0.02f, scaleY.transform.localPosition.y, 0.02f);
-            axisY.transform.localPosition = scaleY.transform.localPosition * 0.5f;
+            gizmoAxisYGO.transform.SetParent(gizmoGroupGO.transform);
+            gizmoAxisYGO.layer = LayerMask.NameToLayer("gizmo");  // set segmentGO layer to gizmo, to distinguish it from segments
+            gizmoAxisYGO.AddComponent<EditorGizmoObject>();
+            gizmoAxisYGO.GetComponent<EditorGizmoObject>().CreateMesh(EditorGizmoObject.GizmoMeshShape.Cube, EditorGizmoObject.GizmoType.none);
+            gizmoAxisYGO.GetComponent<MeshRenderer>().material.SetColor("_Color", new Color(0.75f, 0.75f, 0.75f));
+            gizmoAxisYGO.transform.localScale = new Vector3(0.02f, gizmoScaleYGO.transform.localPosition.y, 0.02f);
+            gizmoAxisYGO.transform.localPosition = gizmoScaleYGO.transform.localPosition * 0.5f;
 
-            axisZ.transform.SetParent(group.transform);
-            axisZ.layer = LayerMask.NameToLayer("gizmo");  // set segmentGO layer to gizmo, to distinguish it from segments
-            axisZ.AddComponent<EditorGizmoObject>();
-            axisZ.GetComponent<EditorGizmoObject>().CreateMesh(EditorGizmoObject.GizmoMeshShape.Cube);
-            axisZ.GetComponent<MeshRenderer>().material.SetColor("_Color", new Color(0.75f, 0.75f, 0.75f));
-            axisZ.transform.localScale = new Vector3(0.02f, 0.02f, scaleZ.transform.localPosition.z);
-            axisZ.transform.localPosition = scaleZ.transform.localPosition * 0.5f;
+            gizmoAxisZGO.transform.SetParent(gizmoGroupGO.transform);
+            gizmoAxisZGO.layer = LayerMask.NameToLayer("gizmo");  // set segmentGO layer to gizmo, to distinguish it from segments
+            gizmoAxisZGO.AddComponent<EditorGizmoObject>();
+            gizmoAxisZGO.GetComponent<EditorGizmoObject>().CreateMesh(EditorGizmoObject.GizmoMeshShape.Cube, EditorGizmoObject.GizmoType.none);
+            gizmoAxisZGO.GetComponent<MeshRenderer>().material.SetColor("_Color", new Color(0.75f, 0.75f, 0.75f));
+            gizmoAxisZGO.transform.localScale = new Vector3(0.02f, 0.02f, gizmoScaleZGO.transform.localPosition.z);
+            gizmoAxisZGO.transform.localPosition = gizmoScaleZGO.transform.localPosition * 0.5f;
+
+            gizmoMoveCoreGO.transform.SetParent(gizmoGroupGO.transform);
+            gizmoMoveCoreGO.layer = LayerMask.NameToLayer("gizmo");  // set segmentGO layer to gizmo, to distinguish it from segments
+            gizmoMoveCoreGO.AddComponent<EditorGizmoObject>();
+            gizmoMoveCoreGO.GetComponent<EditorGizmoObject>().CreateMesh(EditorGizmoObject.GizmoMeshShape.OmniArrow, EditorGizmoObject.GizmoType.axisAll);
+            gizmoMoveCoreGO.GetComponent<EditorGizmoObject>().gizmoType = EditorGizmoObject.GizmoType.axisAll;
+            gizmoMoveCoreGO.GetComponent<MeshRenderer>().material.SetColor("_Color", new Color(1f, 1f, 0f));
+            gizmoMoveCoreGO.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+
+            gizmoMoveXGO.transform.SetParent(gizmoGroupGO.transform);
+            gizmoMoveXGO.layer = LayerMask.NameToLayer("gizmo");  // set segmentGO layer to gizmo, to distinguish it from segments
+            gizmoMoveXGO.AddComponent<EditorGizmoObject>();
+            gizmoMoveXGO.GetComponent<EditorGizmoObject>().CreateMesh(EditorGizmoObject.GizmoMeshShape.Arrow, EditorGizmoObject.GizmoType.axisX);
+            gizmoMoveXGO.GetComponent<EditorGizmoObject>().gizmoType = EditorGizmoObject.GizmoType.axisX;
+            gizmoMoveXGO.GetComponent<MeshRenderer>().material.SetColor("_Color", new Color(1f, 0f, 0f));
+            gizmoMoveXGO.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+            gizmoMoveXGO.transform.localPosition = new Vector3(1f, 0f, 0f);
+            gizmoMoveXGO.transform.rotation = Quaternion.LookRotation(new Vector3(1f, 0f, 0f), new Vector3(0f, 1f, 0f));
+
+            gizmoMoveYGO.transform.SetParent(gizmoGroupGO.transform);
+            gizmoMoveYGO.layer = LayerMask.NameToLayer("gizmo");  // set segmentGO layer to gizmo, to distinguish it from segments
+            gizmoMoveYGO.AddComponent<EditorGizmoObject>();
+            gizmoMoveYGO.GetComponent<EditorGizmoObject>().CreateMesh(EditorGizmoObject.GizmoMeshShape.Arrow, EditorGizmoObject.GizmoType.axisY);
+            gizmoMoveYGO.GetComponent<EditorGizmoObject>().gizmoType = EditorGizmoObject.GizmoType.axisY;
+            gizmoMoveYGO.GetComponent<MeshRenderer>().material.SetColor("_Color", new Color(0f, 1f, 0f));
+            gizmoMoveYGO.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+            gizmoMoveYGO.transform.localPosition = new Vector3(0f, 1f, 0f);
+            gizmoMoveYGO.transform.rotation = Quaternion.LookRotation(new Vector3(0f, 1f, 0f), new Vector3(0f, 0f, -1f));
+
+            gizmoMoveZGO.transform.SetParent(gizmoGroupGO.transform);
+            gizmoMoveZGO.layer = LayerMask.NameToLayer("gizmo");  // set segmentGO layer to gizmo, to distinguish it from segments
+            gizmoMoveZGO.AddComponent<EditorGizmoObject>();
+            gizmoMoveZGO.GetComponent<EditorGizmoObject>().CreateMesh(EditorGizmoObject.GizmoMeshShape.Arrow, EditorGizmoObject.GizmoType.axisZ);
+            gizmoMoveZGO.GetComponent<EditorGizmoObject>().gizmoType = EditorGizmoObject.GizmoType.axisZ;
+            gizmoMoveZGO.GetComponent<MeshRenderer>().material.SetColor("_Color", new Color(0f, 0f, 1f));
+            gizmoMoveZGO.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+            gizmoMoveZGO.transform.localPosition = new Vector3(0f, 0f, 1f);
+            //gizmoMoveZGO.transform.rotation = Quaternion.LookRotation(new Vector3(1f, 0f, 0f), new Vector3(0f, 1f, 0f));
+            
+            gizmoForceShaftGO.layer = LayerMask.NameToLayer("gizmo");  // set segmentGO layer to gizmo, to distinguish it from segments
+            gizmoForceShaftGO.AddComponent<EditorGizmoObject>();
+            gizmoForceShaftGO.GetComponent<EditorGizmoObject>().CreateMesh(EditorGizmoObject.GizmoMeshShape.Cube, EditorGizmoObject.GizmoType.none);
+            gizmoForceShaftGO.GetComponent<EditorGizmoObject>().gizmoType = EditorGizmoObject.GizmoType.none;
+            gizmoForceShaftGO.GetComponent<MeshRenderer>().material.SetColor("_Color", new Color(1f, 1f, 0.5f));
+            gizmoForceShaftGO.transform.localScale = new Vector3(0.05f, 0.05f, 1f);
+            gizmoForceShaftGO.transform.localPosition = new Vector3(0f, 0f, 0f);
+
+            gizmoForceArrowGO.layer = LayerMask.NameToLayer("gizmo");  // set segmentGO layer to gizmo, to distinguish it from segments
+            gizmoForceArrowGO.AddComponent<EditorGizmoObject>();
+            gizmoForceArrowGO.GetComponent<EditorGizmoObject>().CreateMesh(EditorGizmoObject.GizmoMeshShape.Arrow, EditorGizmoObject.GizmoType.none);
+            gizmoForceArrowGO.GetComponent<EditorGizmoObject>().gizmoType = EditorGizmoObject.GizmoType.none;
+            gizmoForceArrowGO.GetComponent<MeshRenderer>().material.SetColor("_Color", new Color(1f, 1f, 0.5f));
+            gizmoForceArrowGO.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+            gizmoForceArrowGO.transform.localPosition = new Vector3(0f, 0f, 0f);
+        }
+    }
+
+    public void PreviewPhysicsEnter() {
+        critterConstructorManager.masterCritter.RebuildCritterFromGenome(true);
+        isPhysicsPreview = true;
+        SetHoverAndSelectedFromID();
+        critterConstructorManager.UpdateSegmentSelectionVis();
+        critterConstructorManager.UpdateSegmentShaderStates();
+    }
+    public void PreviewPhysicsExit() {
+        critterConstructorManager.masterCritter.RebuildCritterFromGenome(false);
+        isPhysicsPreview = false;
+        SetHoverAndSelectedFromID();
+        critterConstructorManager.UpdateSegmentSelectionVis();
+        critterConstructorManager.UpdateSegmentShaderStates();
+    }
+
+    public void ClickDropdownJointType(int val) {
+        
+        if(isSegmentSelected) {
+            CritterJointLink.JointType type = (CritterJointLink.JointType)val;
+            selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.jointType = type;
+            Debug.Log("val: " + val.ToString() + ", type: " + type.ToString());
+        }
+    }
+
+    public void TogglePhysicsPreview() {
+        if(isPhysicsPreview) {
+            PreviewPhysicsExit();
+        }
+        else {
+            PreviewPhysicsEnter();
         }
     }
 }
