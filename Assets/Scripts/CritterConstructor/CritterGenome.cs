@@ -30,7 +30,10 @@ public class CritterGenome {
     }
     public void AddNewNode(CritterNode parentNode, Vector3 attachDir, int id) {        
         CritterNode newCritterNode = new CritterNode(id);
-        newCritterNode.parentJointLink.parentNode = parentNode;        
+        newCritterNode.parentJointLink.parentNode = parentNode;
+        newCritterNode.parentJointLink.childNode = newCritterNode;
+        newCritterNode.parentJointLink.numberOfRecursions = 2;
+        parentNode.attachedJointLinkList.Add(newCritterNode.parentJointLink);
         newCritterNode.parentJointLink.attachDir = attachDir.normalized;        
         CritterNodeList.Add(newCritterNode);
         Debug.Log("AddNewNode(CritterNode parentNode = " + parentNode.ID.ToString() + ", Vector3 attachDir = " + newCritterNode.parentJointLink.attachDir.ToString() + ")");

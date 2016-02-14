@@ -32,7 +32,7 @@ public class CritterEditorUI : MonoBehaviour {
     public Dropdown dropdownJointType;
     public Text textAttachDir;
 
-    private bool isSegmentSettings = true;
+    private bool isSegmentSettings = false;
 
     // ======= UI Inputs ???:
     public bool isClickButtonView = false;

@@ -112,8 +112,10 @@ public class CritterEditorState : MonoBehaviour {
     }
 
     private void UpdateGravityStrength() { // !!
+        Time.timeScale = 3.3f;
+        Physics.solverIterationCount = 12;
         float currentTime = Time.fixedTime;
-        float gravityMaxAmplitude = 5f;
+        float gravityMaxAmplitude = 4f;
         float lerpFrequency = 2.6f;
         float lerpValue = (currentTime % lerpFrequency) / lerpFrequency;
         int curFloorValue = (int)Mathf.Floor(currentTime / lerpFrequency);
@@ -132,7 +134,7 @@ public class CritterEditorState : MonoBehaviour {
         Physics.gravity = Vector3.Lerp(gravityStrength0, gravityStrength1, lerpValue);
         //Debug.Log("curTime: " + currentTime.ToString() + ", lerpValue: " + lerpValue.ToString() + ", g1: " + gravityStrength1.ToString());
         Vector3 gravityDir = Physics.gravity.normalized;
-        float gravityMag = 1f;
+        float gravityMag = 2f;
         gizmoForceArrowGO.transform.position = gravityDir * gravityMag;
         gizmoForceArrowGO.transform.rotation = Quaternion.LookRotation(gravityDir);
         gizmoForceShaftGO.transform.position = gravityDir * gravityMag * 0.5f;
@@ -252,6 +254,16 @@ public class CritterEditorState : MonoBehaviour {
         if (critterEditorInputManager.keyFDown) {  // pressing 'f' centers the camera on the currently selected segment, or entire critter is nothing selected
             critterEditorInputManager.critterConstructorCameraController.SetFocalPoint(selectedSegment);
             //critterEditorInputManager.critterConstructorCameraController.ReframeCamera();
+        }
+        if (critterEditorInputManager.keyQDown) {
+            SetToolState(CurrentToolState.None);
+        }
+        if (critterEditorInputManager.keyWDown) {
+            SetToolState(CurrentToolState.MoveAttachPoint);
+        }
+        if (critterEditorInputManager.keyRDown) {
+            Debug.Log("key r down SETTOOLSTATE");
+            SetToolState(CurrentToolState.ScaleSegment);
         }
         if (critterEditorInputManager.keyAltDown) {  // pressing 'alt' enters camera mode  -- any clicks will control camera and nothing else
             altIsDown = true;
@@ -787,7 +799,7 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
     }
 
     private void CommandRCMenuOff() {
-        //Debug.Log("CommandRCMenuOff()" + hoverSegment.ToString());
+        Debug.Log("CommandRCMenuOff()" + rightClickMenuDeleteHover.ToString());
         // Check to see if any buttons were selected:
         if (rightClickMenuAddHover) {
             RightClickMenuSegmentAdd();
@@ -1079,7 +1091,8 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
         int nextID = critterConstructorManager.masterCritter.masterCritterGenome.CritterNodeList.Count;
         critterConstructorManager.masterCritter.masterCritterGenome.AddNewNode(selectedSegment.GetComponent<CritterSegment>().sourceNode, attachDir, nextID);
         selectedSegmentID = nextID;
-        critterConstructorManager.masterCritter.RebuildCritterFromGenome(false);
+        //critterConstructorManager.masterCritter.RebuildCritterFromGenome(false);
+        critterConstructorManager.masterCritter.RebuildCritterFromGenomeRecursive(false);
         rightClickMenuAddHover = false;
 
         // TEMPORARY:  -- DUE to critter being fully destroyed and re-built, the references to selected/hoverSegments are broken:
@@ -1098,6 +1111,19 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
     }
     private void RightClickMenuSegmentDelete() {
         Debug.Log("MenuSegmentDelete");
+        if (isSegmentHover) {
+            hoverSegmentID = selectedSegment.GetComponent<CritterSegment>().parentSegment.id;
+        }
+        if (isSegmentSelected) {
+            selectedSegmentID = selectedSegment.GetComponent<CritterSegment>().parentSegment.id;
+            critterConstructorManager.masterCritter.DeleteNode(selectedSegment.GetComponent<CritterSegment>().sourceNode);
+            critterConstructorManager.masterCritter.RenumberNodes();
+            critterConstructorManager.masterCritter.RebuildCritterFromGenome(false);
+            SetHoverAndSelectedFromID();
+            critterConstructorManager.UpdateSegmentSelectionVis();
+            critterConstructorManager.UpdateSegmentShaderStates();
+        }
+        rightClickMenuDeleteHover = false;
     }
 
     private Vector3 ConvertWorldSpaceToAttachDir(GameObject segment, Vector3 worldSpacePos) {
@@ -1174,13 +1200,13 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
     }
 
     public void SetToolView() {
-
+        critterEditorUI.buttonDisplayView.interactable = false; // update GUI display
     }
     public void SetToolScale() {
         critterEditorUI.buttonDisplayScale.interactable = false; // update GUI display
     }
     public void SetToolMove() {
-
+        critterEditorUI.buttonDisplayMoveJoint.interactable = false; // update GUI display
     }
 
     public void UpdateGizmos() {
@@ -1189,6 +1215,9 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
 
         if(currentToolState != CurrentToolState.None) {
             if (isSegmentSelected) {
+                gizmoAxisXGO.SetActive(true);
+                gizmoAxisYGO.SetActive(true);
+                gizmoAxisZGO.SetActive(true);
                 if (currentToolState == CurrentToolState.ScaleSegment) {
                     gizmoScaleCoreGO.SetActive(true);
                     gizmoScaleXGO.SetActive(true);
@@ -1242,6 +1271,9 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
                 gizmoScaleXGO.SetActive(false);
                 gizmoScaleYGO.SetActive(false);
                 gizmoScaleZGO.SetActive(false);
+                gizmoAxisXGO.SetActive(false);
+                gizmoAxisYGO.SetActive(false);
+                gizmoAxisZGO.SetActive(false);
             }
             else {
                 gizmoForceShaftGO.SetActive(false);
@@ -1417,7 +1449,7 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
             gizmoForceArrowGO.GetComponent<EditorGizmoObject>().CreateMesh(EditorGizmoObject.GizmoMeshShape.Arrow, EditorGizmoObject.GizmoType.none);
             gizmoForceArrowGO.GetComponent<EditorGizmoObject>().gizmoType = EditorGizmoObject.GizmoType.none;
             gizmoForceArrowGO.GetComponent<MeshRenderer>().material.SetColor("_Color", new Color(1f, 1f, 0.5f));
-            gizmoForceArrowGO.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+            gizmoForceArrowGO.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
             gizmoForceArrowGO.transform.localPosition = new Vector3(0f, 0f, 0f);
         }
     }

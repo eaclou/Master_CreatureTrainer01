@@ -9,6 +9,7 @@ public class CritterSegment : MonoBehaviour {
     public CritterNode sourceNode;
     public CritterSegment parentSegment;
     public List<CritterSegment> childSegments;
+    public int recursionNumber;
 
     public bool meshBuilt = false;
 

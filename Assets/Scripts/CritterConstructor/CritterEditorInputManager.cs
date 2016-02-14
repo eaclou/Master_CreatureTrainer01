@@ -87,6 +87,7 @@ public class CritterEditorInputManager : MonoBehaviour {
         }
         if (Input.GetKeyDown("r")) {
             keyRDown = true;
+            Debug.Log("key r down");
         }
 
         if (UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject(-1)) {

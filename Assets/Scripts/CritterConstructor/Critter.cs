@@ -154,7 +154,7 @@ public class Critter : MonoBehaviour {
             newSegment.InitGamePiece();
             newSegment.sourceNode = masterCritterGenome.CritterNodeList[i];
             newSegment.id = i;
-            
+            Debug.Log("RebuildCritter() newSegment.parentSegment: " + newSegment.ToString());
             newNode.transform.localScale = masterCritterGenome.CritterNodeList[i].dimensions;
             // if Root node:
             if (i == 0) {   // RE-VISIT!!!!
@@ -165,8 +165,9 @@ public class Critter : MonoBehaviour {
             }
             else { // not root node!!  
                 
+                //newSegment.parentSegment = critterSegmentList[0].GetComponent<CritterSegment>();
                 newSegment.parentSegment = critterSegmentList[newSegment.sourceNode.parentJointLink.parentNode.ID].GetComponent<CritterSegment>();
-                Debug.Log("RebuildCritter() newSegment.parentSegment: " + newSegment.parentSegment.ToString());
+                Debug.Log("RebuildCritter() newSegment.parentSegment: " + newSegment.parentSegment.ToString() + ", " + masterCritterGenome.CritterNodeList[i].parentJointLink.parentNode.ID.ToString());
                 SetSegmentTransform(newNode);
 
                 if(physicsOn) {
@@ -179,6 +180,94 @@ public class Critter : MonoBehaviour {
                     ConfigureJointSettings(newSegment.sourceNode, ref configJoint);
                 }                
             }
+        }        
+    }
+    public void RebuildCritterFromGenomeRecursive(bool physicsOn) {
+        // Delete existing Segment GameObjects
+        DeleteSegments();
+        InitializeSegmentMaterial();
+
+        //Debug.Log("RebuildCritter()");
+        critterSegmentList = new List<GameObject>();
+        // interpret Genome and construct critter in its bind pose
+        bool isChildren = true;
+        int currentDepth = 0; // start with RootNode
+        int nextSegmentID = 0;
+        //int currentParentNode = 0;
+        List<CritterNode> buildNodesQueue = new List<CritterNode>();
+        List<CritterNode> pendingChildNodesQueue = new List<CritterNode>();
+        //CritterNode currentProcessNode;  // the node currently being considered for Building
+        buildNodesQueue.Add(masterCritterGenome.CritterNodeList[0]);  // Add the root node to the Build Queue
+        
+
+        // Do a Breadth-first traversal??
+        while(isChildren) {
+            //int numberOfChildNodes = masterCritterGenome.CritterNodeList[currentNode].attachedJointLinkList.Count;
+            Debug.Log("currentDepth: " + currentDepth.ToString() + "buildNodesQueue.Count: " + buildNodesQueue.Count.ToString());
+            for (int i = 0; i < buildNodesQueue.Count; i++) {
+                // Iterate through Child nodes
+                // Build current Child node --> Segment, and add that node to a Queue for processing
+                GameObject newNode = new GameObject("Node" + nextSegmentID.ToString());
+                CritterSegment newSegment = newNode.AddComponent<CritterSegment>();
+                newNode.layer = LayerMask.NameToLayer("editorSegment"); ; // set segmentGO layer to editorSegment, to distinguish it from Gizmos
+                newNode.GetComponent<MeshRenderer>().material = critterSegmentMaterial;
+                newNode.GetComponent<MeshRenderer>().material.SetFloat("_DisplayTarget", 0f);
+                newNode.GetComponent<MeshRenderer>().material.SetFloat("_Selected", 0f);
+                newNode.transform.SetParent(this.gameObject.transform);
+                newNode.AddComponent<BoxCollider>().isTrigger = false;
+                critterSegmentList.Add(newNode);  // Add to master Linear list of Segments
+                newSegment.InitGamePiece();  // create the mesh and some other initialization stuff
+                newSegment.sourceNode = buildNodesQueue[i];
+                newSegment.id = nextSegmentID;  // !!!!!!!!!!!!!!!!!@$%@$#^@$^@$%^$%^#!!!!!!!!!!!!!!!!!!! REVISIT THIS!!!! should id's be different btw segments and nodes?
+                newNode.transform.localScale = masterCritterGenome.CritterNodeList[i].dimensions;
+                nextSegmentID++;
+                if (buildNodesQueue[i].parentJointLink.parentNode == null) {  // is ROOT segment
+                    newNode.transform.rotation = Quaternion.identity;
+                }
+                else {
+                    // How best to keep track of SEGMENT structure/parents/children???
+                    //  FIX PARENT SEGMENT!!!!! figure it out
+                    for(int p = 0; p < critterSegmentList.Count; p++) {
+                        if(critterSegmentList[p].GetComponent<CritterSegment>().sourceNode.ID == newSegment.sourceNode.parentJointLink.parentNode.ID) {
+                            // traverse all currently built segments -- if a segment's genome node id matches that of the new one, it's a parent
+                            // however, with recursion, this will return potentially multiple matches!!
+                            newSegment.parentSegment = critterSegmentList[p].GetComponent<CritterSegment>();
+                        }
+                    }     
+                    // +++++++ Also set CritterSegment. CHILD_Segments!!!!! *****************               
+                    //newSegment.parentSegment = critterSegmentList[newSegment.sourceNode.parentJointLink.parentNode.ID].GetComponent<CritterSegment>(); // OLD
+                    //Debug.Log("RebuildCritter() newSegment.parentSegment: " + newSegment.parentSegment.ToString() + ", " + masterCritterGenome.CritterNodeList[i].parentJointLink.parentNode.ID.ToString());
+                    SetSegmentTransform(newNode);
+                }
+                Debug.Log("BUILD SEGMENT: " + buildNodesQueue[i].ID.ToString());
+                // Figure out how many Child nodes this built node has:
+                
+                // CHECK FOR RECURSION:
+                if(buildNodesQueue[i].parentJointLink.numberOfRecursions > 0 && buildNodesQueue[i].parentJointLink.recursionInstances < buildNodesQueue[i].parentJointLink.numberOfRecursions) {
+                    // if this JointLink has recursion, AND the number of recursion instances created so far is below the max # of recursions
+                    // Then add this node itself into the childNodeQueue
+                    buildNodesQueue[i].parentJointLink.recursionInstances++;  // incrememt # times recursion has been used for this jointLink
+                    pendingChildNodesQueue.Add(buildNodesQueue[i]);
+                }
+                int numberOfChildNodes = buildNodesQueue[i].attachedJointLinkList.Count;
+                Debug.Log("currentNode: " + buildNodesQueue[i].ID.ToString() + "numberOfChildNodes: " + numberOfChildNodes.ToString());
+                for (int c = 0; c < numberOfChildNodes; c++) {
+                    pendingChildNodesQueue.Add(buildNodesQueue[i].attachedJointLinkList[c].childNode);  // Add each child node to the nodeQueue
+                }
+            }
+            // After all buildNodes have been built, and their subsequent childNodes Enqueued, copy pendingChildQueue into buildNodesQueue
+            buildNodesQueue.Clear();
+            if(pendingChildNodesQueue.Count > 0) {
+                for (int j = 0; j < pendingChildNodesQueue.Count; j++) {
+                    buildNodesQueue.Add(pendingChildNodesQueue[j]);
+                }
+                pendingChildNodesQueue.Clear();  // empty the childNodesQueue
+                Debug.Log("buildNodesQueue: " + buildNodesQueue.Count.ToString());
+            }
+            else {
+                isChildren = false;
+            }
+            currentDepth++;
         }        
     }
 
@@ -373,6 +462,59 @@ public class Critter : MonoBehaviour {
 
     public void RebuildBranchFromGenome(CritterNode node) {  // resets and re-constructs only a branch of the Critter, starting with specified node
 
+    }
+
+    public void DeleteNode(CritterNode node) {
+        int id = node.ID;
+        Debug.Log("DeleteNode before: " + masterCritterGenome.CritterNodeList.Count.ToString());
+        masterCritterGenome.CritterNodeList.RemoveAt(id);
+        Debug.Log("DeleteNode after: " + masterCritterGenome.CritterNodeList.Count.ToString());
+    }
+
+    public void RenumberNodes() {
+        if(masterCritterGenome != null) {
+            // traverse the main node List, if there is a gap in id's, change the id of next lowest node
+            int checkingID = 0;
+            //int nextFreeID = -1;
+            int lastConsecutiveID = 0;
+            for(int i = 0; i < masterCritterGenome.CritterNodeList.Count; i++) {
+                Debug.Log("RenumberNodesBEFORE checkingID: " + checkingID.ToString() + ", nodeID: " + masterCritterGenome.CritterNodeList[i].ID.ToString() + ", i: " + i.ToString());
+                if (masterCritterGenome.CritterNodeList[i].ID == checkingID) { // if node exists for each checkingID
+                    lastConsecutiveID = checkingID;
+                    // no need to renumber, node exists for this number
+                }
+                else {  //  nodeID didn't match checkingID - there is a gap!
+                    // Search for instances of references to this node -- i.e. children of this node
+                    for(int j = 1; j < masterCritterGenome.CritterNodeList.Count; j++) {  // make this less of a brute force algo later!!!
+                        // SKIP ROOT ^^^^
+                        Debug.Log("objectReference2: j: " + j.ToString() + ", " + masterCritterGenome.CritterNodeList[j].parentJointLink.parentNode.ToString() + ", " + masterCritterGenome.CritterNodeList[j].parentJointLink.parentNode.ID.ToString() + ", lci: " + lastConsecutiveID.ToString());
+                        //if (masterCritterGenome.CritterNodeList[j].parentJointLink.parentNode == null) { // was a child of the missing segment
+                        if (masterCritterGenome.CritterNodeList[j].parentJointLink.parentNode.ID == i) { // 
+                            // attach to current node?
+                            //Debug.Log("objectReference: " + masterCritterGenome.CritterNodeList[j].parentJointLink.parentNode.ToString() + ", " + masterCritterGenome.CritterNodeList[j].parentJointLink.parentNode.ID.ToString() + ", lci: " + lastConsecutiveID.ToString());
+                            
+                            masterCritterGenome.CritterNodeList[j].parentJointLink.parentNode = masterCritterGenome.CritterNodeList[lastConsecutiveID];
+                            masterCritterGenome.CritterNodeList[j].parentJointLink.parentNode.RenumberNodeID(lastConsecutiveID);
+                            
+
+                        }
+                           //if (masterCritterGenome.CritterNodeList[j].parentJointLink.parentNode.ID == masterCritterGenome.CritterNodeList[i].ID) {
+                            // update the referenced ID value to what the node is being renumbered to:
+                            //masterCritterGenome.CritterNodeList[j].parentJointLink.parentNode.ID = checkingID;
+                        //}
+                    }
+                    masterCritterGenome.CritterNodeList[i].RenumberNodeID(checkingID); // set id of node to newID
+                    // Set all other references:
+                    Debug.Log("RenumberNodesMIDDle checkingID: " + checkingID.ToString() + ", nodeID: " + masterCritterGenome.CritterNodeList[i].ID.ToString() + ", i: " + i.ToString());
+                }
+                if(i != 0) {
+                    Debug.Log("RenumberNodes checkingID: " + checkingID.ToString() + ", nodeID: " + masterCritterGenome.CritterNodeList[i].ID.ToString() + ", i: " + i.ToString() + ", " + masterCritterGenome.CritterNodeList[i].parentJointLink.parentNode.ID.ToString());
+                }
+                
+
+                checkingID++;
+            }
+        }
     }
 
 }

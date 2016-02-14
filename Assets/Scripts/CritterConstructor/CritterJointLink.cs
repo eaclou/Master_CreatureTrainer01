@@ -8,6 +8,8 @@ public class CritterJointLink {
 
     public Vector3 attachDir;
     public float jointLimitMaxTemp = 60f;
+    public int numberOfRecursions = 0;
+    public int recursionInstances = 0;
 
     public JointType jointType;
     public enum JointType {

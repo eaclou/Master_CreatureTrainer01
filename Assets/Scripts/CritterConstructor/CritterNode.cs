@@ -37,7 +37,7 @@ public class CritterNode {
     }
 
     public void RenumberNodeID(int newID) {
-
+        iD = newID;
     }
 
 
