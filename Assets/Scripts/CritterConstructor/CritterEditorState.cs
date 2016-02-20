@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class CritterEditorState : MonoBehaviour {
 
@@ -53,6 +54,10 @@ public class CritterEditorState : MonoBehaviour {
     public GameObject selectedSegment;  // the CritterSegment that is currently selected
     public bool isSegmentSelected = false;
     public int selectedSegmentID = -1;
+    public int selectedNodeID = -1;
+    public CritterNode selectedSourceNode;
+    public List<GameObject> selectedSegmentList = new List<GameObject>();
+    public GameObject selectedSegmentGizmo;
     public GameObject hoverSegment;
     public bool isSegmentHover = false; // is the mouse hovering over a critterSegment on this frame?
     public int hoverSegmentID = -1;
@@ -240,14 +245,28 @@ public class CritterEditorState : MonoBehaviour {
         critterEditorUI.UpdateSegmentSettingsPanel(isSegmentSelected, selectedSegment);
     }
 
-    private void SetHoverAndSelectedFromID() {
-        //Debug.Log(critterConstructorManager.masterCritter.critterSegmentList.ToString() + "#: " + critterConstructorManager.masterCritter.critterSegmentList.Count.ToString());
-        if (isSegmentSelected) {
-            selectedSegment = critterConstructorManager.masterCritter.critterSegmentList[selectedSegmentID];
-        }
+    private void SetHoverFromID() {
+        //Debug.Log("SetHoverAndSelectedFromID ID: " + selectedSegmentID.ToString() + ", " + critterConstructorManager.masterCritter.critterSegmentList.ToString() + "#: " + critterConstructorManager.masterCritter.critterSegmentList.Count.ToString());
+        /*if (isSegmentSelected) {
+            if(selectedSegmentID >= critterConstructorManager.masterCritter.critterSegmentList.Count) {
+                isSegmentSelected = false;
+            }
+            else {
+                selectedSegment = critterConstructorManager.masterCritter.critterSegmentList[selectedSegmentID];
+            }            
+        }*/
         if (isSegmentHover) {
-            hoverSegment = critterConstructorManager.masterCritter.critterSegmentList[hoverSegmentID];
+            if(hoverSegmentID >= critterConstructorManager.masterCritter.critterSegmentList.Count) {
+                isSegmentHover = false;
+            }
+            else {
+                hoverSegment = critterConstructorManager.masterCritter.critterSegmentList[hoverSegmentID];
+            }            
         }
+
+        //if (selectedSegmentID < critterConstructorManager.masterCritter.critterSegmentList.Count) {
+        //    CommandSetSelected(critterConstructorManager.masterCritter.critterSegmentList[selectedSegmentID]);
+        //}
     }
 
     private void CheckKeyPresses(CritterEditorInputManager critterEditorInputManager) {
@@ -380,7 +399,7 @@ public class CritterEditorState : MonoBehaviour {
         isGizmoHover = false;
     }
 
-    private void CommandSelectSegmentEnter() {
+    /*private void CommandSelectSegmentEnter() {
         selectedSegment = hoverSegment;
         Debug.Log("new selectedSegment = " + selectedSegment.GetComponent<CritterSegment>().ToString());
         selectedSegmentID = selectedSegment.GetComponent<CritterSegment>().id;
@@ -403,6 +422,93 @@ public class CritterEditorState : MonoBehaviour {
     
         selectedSegment = null;
         isSegmentSelected = false;
+        UpdateGizmos();
+    }*/
+    private void CommandSetSelected(GameObject clickedObject) {
+        
+        if (clickedObject == null) {
+            // Deselect all
+            CommandDeselectAll();
+        }
+        else {   // Clicked on a GameObject!
+            selectedSegment = clickedObject;
+            selectedSegmentID = selectedSegment.GetComponent<CritterSegment>().id;            
+            isSegmentSelected = true;
+            int sourceNodeID = selectedSegment.GetComponent<CritterSegment>().sourceNode.ID;
+            selectedNodeID = sourceNodeID;
+            int lowestMatchID = critterConstructorManager.masterCritter.critterSegmentList.Count;
+            // Brute force:
+            selectedSegmentList.Clear();  // clear list and repopulate it:
+            for (int i = 0; i < critterConstructorManager.masterCritter.critterSegmentList.Count; i++) {
+                // iterate through all of the current segments of the critter, add to selectionList
+                // check if they match the id of the clicked -- save the lowest index number for the segment that the Gizmo should be positioned at:
+                SetSegmentMaterialSelected(critterConstructorManager.masterCritter.critterSegmentList[i].GetComponent<CritterSegment>(), false);
+                if (critterConstructorManager.masterCritter.critterSegmentList[i].GetComponent<CritterSegment>().sourceNode.ID == sourceNodeID) {
+                    // it's a match!!
+                    if(i < lowestMatchID) {  // if this segment has a lower ID:
+                        lowestMatchID = i;
+                    }
+                    selectedSegmentList.Add(critterConstructorManager.masterCritter.critterSegmentList[i]);
+                    SetSegmentMaterialSelected(critterConstructorManager.masterCritter.critterSegmentList[i].GetComponent<CritterSegment>(), true);
+                    //critterConstructorManager.masterCritter.critterSegmentList[i].GetComponent<MeshRenderer>().material.SetFloat("_Selected", 1f);  // turn on selected
+                    //Debug.Log("CommandSetSelectedSegments: " + selectedSegmentList.Count.ToString() + ", lowestID: " + lowestMatchID.ToString() + ", i: " + i.ToString());
+                }
+                else {
+                    // who gives a shit
+                }
+            }
+            selectedSegmentGizmo = critterConstructorManager.masterCritter.critterSegmentList[lowestMatchID];
+            //Debug.Log("CommandSetSelectedSegments: selectedSegment.GetComponent<CritterSegment>().id " + selectedSegment.GetComponent<CritterSegment>().id.ToString() + ", co: " + clickedObject.ToString() + ", selNodeID: " + selectedNodeID.ToString());
+        }
+    }
+    private void CommandSetSelected(int nodeID) {
+
+        if(nodeID < critterConstructorManager.masterCritter.masterCritterGenome.CritterNodeList.Count) {  // valid ID
+            int lowestMatchID = critterConstructorManager.masterCritter.critterSegmentList.Count;
+            // Brute force:
+            selectedSegmentList.Clear();  // clear list and repopulate it:
+            for (int i = 0; i < critterConstructorManager.masterCritter.critterSegmentList.Count; i++) {
+                // iterate through all of the current segments of the critter, add to selectionList
+                // check if they match the id of the clicked -- save the lowest index number for the segment that the Gizmo should be positioned at:
+                SetSegmentMaterialSelected(critterConstructorManager.masterCritter.critterSegmentList[i].GetComponent<CritterSegment>(), false);
+                if (critterConstructorManager.masterCritter.critterSegmentList[i].GetComponent<CritterSegment>().sourceNode.ID == nodeID) {
+                    // it's a match!!
+                    if (i < lowestMatchID) {  // if this segment has a lower ID:
+                        lowestMatchID = i;
+                    }
+                    selectedSegmentList.Add(critterConstructorManager.masterCritter.critterSegmentList[i]);
+                    SetSegmentMaterialSelected(critterConstructorManager.masterCritter.critterSegmentList[i].GetComponent<CritterSegment>(), true);
+                    //critterConstructorManager.masterCritter.critterSegmentList[i].GetComponent<MeshRenderer>().material.SetFloat("_Selected", 1f);  // turn on selected
+                    //Debug.Log("CommandSetSelectedSegments: " + selectedSegmentList.Count.ToString() + ", lowestID: " + lowestMatchID.ToString() + ", i: " + i.ToString());
+                }
+                else {
+                    // who gives a shit
+                }
+            }
+            isSegmentSelected = true;
+            selectedSegmentID = lowestMatchID;
+            selectedNodeID = nodeID;
+            selectedSegment = critterConstructorManager.masterCritter.critterSegmentList[lowestMatchID];
+            selectedSegmentGizmo = critterConstructorManager.masterCritter.critterSegmentList[lowestMatchID];
+        }
+        else {
+            // Deselect all
+            CommandDeselectAll();
+        }
+    }
+    private void CommandDeselectAll() {
+        // Deselect ALL:
+        // Handle Multi-Select:
+        for (int i = 0; i < critterConstructorManager.masterCritter.critterSegmentList.Count; i++) {  // Deselect old segments:
+            SetSegmentMaterialSelected(critterConstructorManager.masterCritter.critterSegmentList[i].GetComponent<CritterSegment>(), false);
+        }
+        selectedSegmentList.Clear();
+
+        selectedSegment = null;
+        selectedSegmentGizmo = null;
+        isSegmentSelected = false;
+        selectedSegmentID = -1;  //  ??? should this be -1?
+        selectedNodeID = -1;
         UpdateGizmos();
     }
 
@@ -742,15 +848,18 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
     }
 
     private void CommandLeftClickNone() {
+        /*  OLD:
         if (isSegmentSelected) {  // something was selected at the beginning of this frame, so now we need to de-select it
             CommandSelectSegmentExit();            
         }
         else {
             // Do nothing???  
-        }
+        }*/
+        CommandSetSelected(hoverSegment);
     }
 
     private void CommandLeftClickSegment() {
+        /* OLD:
         if (isSegmentSelected) {
             if(selectedSegment == hoverSegment) {   // clicked on the same segment that is already selected!!
                 // do nothing???
@@ -762,7 +871,8 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
         else {
             CommandSelectSegmentEnter();
         }
-        
+        */
+        CommandSetSelected(hoverSegment);
     }
 
     private void CommandLeftClickGizmoDown() {
@@ -773,7 +883,8 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
     }
 
     private void CommandRCMenuOn() {
-        
+
+        /* OLD OLD OLD:::::
         if (isSegmentHover) {
             if (isSegmentSelected) {  // DE-SELECT OLD if another segment was selected:
                 //Debug.Log("OLD selectedSegment = " + selectedSegment.GetComponent<CritterSegment>().ToString());
@@ -792,7 +903,11 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
             }
             selectedSegment = null;
             isSegmentSelected = false;
-        }        
+        }*/
+        if (isSegmentHover) {
+            rightClickWorldPosition = mouseRayHitPos;
+            CommandSetSelected(hoverSegment);
+        }
         //  display menu; init buttons
         OpenRightClickMenu();
         critterEditorUI.buttonDisplayRCMenuMode.interactable = false;
@@ -827,18 +942,18 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
     private void SetSegmentMaterialHover(CritterSegment segment, bool on) {
         // bool on true=is hovering;   false=not hovering
         if(on) {
-            hoverSegment.GetComponent<MeshRenderer>().material.SetFloat("_DisplayTarget", 1f);  // turn on crosshairs
+            segment.GetComponent<MeshRenderer>().material.SetFloat("_DisplayTarget", 1f);  // turn on crosshairs
         }
         else {
-            hoverSegment.GetComponent<MeshRenderer>().material.SetFloat("_DisplayTarget", 0f);  // turn off crosshairs
+            segment.GetComponent<MeshRenderer>().material.SetFloat("_DisplayTarget", 0f);  // turn off crosshairs
         }
     }
     private void SetSegmentMaterialSelected(CritterSegment segment, bool on) {
         if(on) {
-            selectedSegment.GetComponent<MeshRenderer>().material.SetFloat("_Selected", 1f);  // turn on selected
+            segment.GetComponent<MeshRenderer>().material.SetFloat("_Selected", 1f);  // turn on selected
         }
         else {
-            selectedSegment.GetComponent<MeshRenderer>().material.SetFloat("_Selected", 0f);  // de-select
+            segment.GetComponent<MeshRenderer>().material.SetFloat("_Selected", 0f);  // de-select
         }
     }
 
@@ -1089,14 +1204,16 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
         Vector3 attachDir = ConvertWorldSpaceToAttachDir(selectedSegment, rightClickWorldPosition);
         Debug.Log("MenuSegmentAdd() attachDir: " + attachDir.ToString() + ", ss: " + selectedSegment.GetComponent<CritterSegment>().sourceNode.ID.ToString());
         int nextID = critterConstructorManager.masterCritter.masterCritterGenome.CritterNodeList.Count;
-        critterConstructorManager.masterCritter.masterCritterGenome.AddNewNode(selectedSegment.GetComponent<CritterSegment>().sourceNode, attachDir, nextID);
-        selectedSegmentID = nextID;
+        critterConstructorManager.masterCritter.masterCritterGenome.AddNewNode(selectedSegment.GetComponent<CritterSegment>().sourceNode, attachDir, new Vector3(0f, 0f, 1f), nextID);
+        //selectedSegmentID = critterConstructorManager.masterCritter.critterSegmentList.Count;
         //critterConstructorManager.masterCritter.RebuildCritterFromGenome(false);
         critterConstructorManager.masterCritter.RebuildCritterFromGenomeRecursive(false);
         rightClickMenuAddHover = false;
 
         // TEMPORARY:  -- DUE to critter being fully destroyed and re-built, the references to selected/hoverSegments are broken:
-        SetHoverAndSelectedFromID();
+        CommandSetSelected(nextID);
+        SetHoverFromID();
+        //SetHoverAndSelectedFromID();
         critterConstructorManager.UpdateSegmentSelectionVis();
         critterConstructorManager.UpdateSegmentShaderStates();
     }
@@ -1112,16 +1229,18 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
     private void RightClickMenuSegmentDelete() {
         Debug.Log("MenuSegmentDelete");
         if (isSegmentHover) {
-            hoverSegmentID = selectedSegment.GetComponent<CritterSegment>().parentSegment.id;
+            //hoverSegmentID = selectedSegment.GetComponent<CritterSegment>().parentSegment.id;
         }
         if (isSegmentSelected) {
-            selectedSegmentID = selectedSegment.GetComponent<CritterSegment>().parentSegment.id;
+            //selectedSegmentID = selectedSegment.GetComponent<CritterSegment>().parentSegment.id;
             critterConstructorManager.masterCritter.DeleteNode(selectedSegment.GetComponent<CritterSegment>().sourceNode);
             critterConstructorManager.masterCritter.RenumberNodes();
-            critterConstructorManager.masterCritter.RebuildCritterFromGenome(false);
-            SetHoverAndSelectedFromID();
-            critterConstructorManager.UpdateSegmentSelectionVis();
-            critterConstructorManager.UpdateSegmentShaderStates();
+            critterConstructorManager.masterCritter.DeleteSegments();
+            critterConstructorManager.masterCritter.RebuildCritterFromGenomeRecursive(false);
+            CommandSetSelected(0); // CHANGE THIS!!!!
+            SetHoverFromID();
+            //critterConstructorManager.UpdateSegmentSelectionVis();
+            //critterConstructorManager.UpdateSegmentShaderStates();
         }
         rightClickMenuDeleteHover = false;
     }
@@ -1227,7 +1346,7 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
                     gizmoMoveXGO.SetActive(false);
                     gizmoMoveYGO.SetActive(false);
                     gizmoMoveZGO.SetActive(false);
-                    gizmoOrientation = selectedSegment.transform.rotation;
+                    gizmoOrientation = selectedSegmentGizmo.transform.rotation;
                 }
                 else if(currentToolState == CurrentToolState.MoveAttachPoint) {
                     gizmoMoveCoreGO.SetActive(true);
@@ -1238,14 +1357,14 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
                     gizmoScaleXGO.SetActive(false);
                     gizmoScaleYGO.SetActive(false);
                     gizmoScaleZGO.SetActive(false);
-                    if(selectedSegment.GetComponent<CritterSegment>().sourceNode.ID != 0) {  // if not the Root Node:
-                        gizmoOrientation = critterConstructorManager.masterCritter.critterSegmentList[selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.parentNode.ID].gameObject.transform.rotation;
+                    if(selectedSegmentGizmo.GetComponent<CritterSegment>().sourceNode.ID != 0) {  // if not the Root Node:
+                        gizmoOrientation = critterConstructorManager.masterCritter.critterSegmentList[selectedSegmentGizmo.GetComponent<CritterSegment>().sourceNode.parentJointLink.parentNode.ID].gameObject.transform.rotation;
                     }
                     else {
-                        gizmoOrientation = selectedSegment.transform.rotation;
+                        gizmoOrientation = selectedSegmentGizmo.transform.rotation;
                     }
                 }
-                gizmoPivotPoint = selectedSegment.transform.position - selectedSegment.transform.forward * selectedSegment.GetComponent<CritterSegment>().sourceNode.dimensions.z * 0.5f;
+                gizmoPivotPoint = selectedSegmentGizmo.transform.position - selectedSegmentGizmo.transform.forward * selectedSegmentGizmo.GetComponent<CritterSegment>().sourceNode.dimensions.z * 0.5f;
                 //gizmoOrientation = critterConstructorManager.masterCritter.critterSegmentList[selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.parentNode.ID].gameObject.transform.rotation;
                 gizmoGroupGO.transform.position = gizmoPivotPoint;
                 gizmoGroupGO.transform.rotation = gizmoOrientation;
@@ -1455,16 +1574,20 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
     }
 
     public void PreviewPhysicsEnter() {
-        critterConstructorManager.masterCritter.RebuildCritterFromGenome(true);
+        critterConstructorManager.masterCritter.RebuildCritterFromGenomeRecursive(true);
         isPhysicsPreview = true;
-        SetHoverAndSelectedFromID();
+        //SetHoverAndSelectedFromID();
+        SetHoverFromID();
+        CommandSetSelected(selectedNodeID);
         critterConstructorManager.UpdateSegmentSelectionVis();
         critterConstructorManager.UpdateSegmentShaderStates();
     }
     public void PreviewPhysicsExit() {
-        critterConstructorManager.masterCritter.RebuildCritterFromGenome(false);
+        critterConstructorManager.masterCritter.RebuildCritterFromGenomeRecursive(false);
         isPhysicsPreview = false;
-        SetHoverAndSelectedFromID();
+        //SetHoverAndSelectedFromID();
+        SetHoverFromID();
+        CommandSetSelected(selectedNodeID);
         critterConstructorManager.UpdateSegmentSelectionVis();
         critterConstructorManager.UpdateSegmentShaderStates();
     }
@@ -1475,7 +1598,85 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
             CritterJointLink.JointType type = (CritterJointLink.JointType)val;
             selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.jointType = type;
             Debug.Log("val: " + val.ToString() + ", type: " + type.ToString());
+            RebuildCritterStatic();
         }
+    }
+    public void ClickDropdownSymmetryType(int val) {
+
+        if (isSegmentSelected) {
+            CritterJointLink.SymmetryType type = (CritterJointLink.SymmetryType)val;
+            selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.symmetryType = type;
+            Debug.Log("val: " + val.ToString() + ", type: " + type.ToString());
+            RebuildCritterStatic();
+        }
+    }
+    public void ClickRecursionPlus() {
+        int maxRecursion = 8;
+        if(isSegmentSelected) {
+            if(selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.numberOfRecursions >= maxRecursion) {
+
+            }
+            else {
+                selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.numberOfRecursions++;
+                RebuildCritterStatic();
+            }
+        }
+    }
+    public void ClickRecursionMinus() {
+        if (isSegmentSelected) {
+            if (selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.numberOfRecursions <= 0) {
+
+            }
+            else {
+                selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.numberOfRecursions--;
+                RebuildCritterStatic();
+            }
+        }
+    }
+    public void ClickSliderRecursionScaling(float value) {
+        if (isSegmentSelected) {
+            selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.recursionScalingFactor = value;
+            RebuildCritterStatic();
+        }
+    }
+    public void ClickSliderRecursionForward(float value) {
+        if (isSegmentSelected) {
+            selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.recursionForward = value;
+            RebuildCritterStatic();
+        }
+    }
+    public void ClickSliderRestAngleX(float value) {
+        if (isSegmentSelected) {
+            selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.restAngleDir.x = value;
+            RebuildCritterStatic();
+        }
+    }
+    public void ClickSliderRestAngleY(float value) {
+        if (isSegmentSelected) {
+            selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.restAngleDir.y = value;
+            RebuildCritterStatic();
+        }
+    }
+    public void ClickSliderJointAngleLimit(float value) {
+        if (isSegmentSelected) {
+            selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.jointLimitMaxTemp = value;
+            RebuildCritterStatic();
+        }
+    }
+    public void ClickToggleAttachToTail(bool value) {
+        if (isSegmentSelected) {
+            selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.onlyAttachToTailNode = value;
+            RebuildCritterStatic();
+        }
+    }
+
+    private void RebuildCritterStatic() {
+        critterConstructorManager.masterCritter.RebuildCritterFromGenomeRecursive(false);
+        //SetHoverAndSelectedFromID();
+        SetHoverFromID();
+        CommandSetSelected(selectedNodeID);
+        critterConstructorManager.UpdateSegmentSelectionVis();
+        critterConstructorManager.UpdateSegmentShaderStates();
     }
 
     public void TogglePhysicsPreview() {

@@ -32,11 +32,26 @@ public class CritterGenome {
         CritterNode newCritterNode = new CritterNode(id);
         newCritterNode.parentJointLink.parentNode = parentNode;
         newCritterNode.parentJointLink.childNode = newCritterNode;
-        newCritterNode.parentJointLink.numberOfRecursions = 2;
+        newCritterNode.parentJointLink.numberOfRecursions = 0;
+        Vector3 newSegmentDimensions = parentNode.dimensions;
+        newCritterNode.dimensions = newSegmentDimensions;
         parentNode.attachedJointLinkList.Add(newCritterNode.parentJointLink);
         newCritterNode.parentJointLink.attachDir = attachDir.normalized;        
         CritterNodeList.Add(newCritterNode);
         Debug.Log("AddNewNode(CritterNode parentNode = " + parentNode.ID.ToString() + ", Vector3 attachDir = " + newCritterNode.parentJointLink.attachDir.ToString() + ")");
+    }
+    public void AddNewNode(CritterNode parentNode, Vector3 attachDir, Vector3 restAngleDir, int id) {
+        CritterNode newCritterNode = new CritterNode(id);
+        newCritterNode.parentJointLink.parentNode = parentNode;
+        newCritterNode.parentJointLink.childNode = newCritterNode;
+        newCritterNode.parentJointLink.numberOfRecursions = 0;
+        Vector3 newSegmentDimensions = parentNode.dimensions;
+        newCritterNode.dimensions = newSegmentDimensions;
+        parentNode.attachedJointLinkList.Add(newCritterNode.parentJointLink);
+        newCritterNode.parentJointLink.attachDir = attachDir.normalized;
+        newCritterNode.parentJointLink.restAngleDir = restAngleDir.normalized;
+        CritterNodeList.Add(newCritterNode);
+        Debug.Log("AddNewNode(CritterNode parentNode = " + parentNode.ID.ToString() + ", attachDir = " + newCritterNode.parentJointLink.attachDir.ToString() + ")" + " restAngleDir: " + restAngleDir.ToString());
     }
 
     public void DeleteNode(CritterNode node) {  // Removes the specified node from the genome -- its orphan nodes are attached to the ParentNode of the deleted node.

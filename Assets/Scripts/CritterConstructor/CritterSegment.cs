@@ -10,6 +10,10 @@ public class CritterSegment : MonoBehaviour {
     public CritterSegment parentSegment;
     public List<CritterSegment> childSegments;
     public int recursionNumber;
+    public float scalingFactor = 1f;
+    public bool mirrorX = false; // defaults off -- keeps track of accumulated symmetry when constructing creature
+    public bool mirrorY = false;
+    public bool mirrorZ = false;
 
     public bool meshBuilt = false;
 

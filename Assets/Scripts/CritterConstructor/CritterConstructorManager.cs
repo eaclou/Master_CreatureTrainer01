@@ -38,14 +38,14 @@ public class CritterConstructorManager : MonoBehaviour {
 
     public void UpdateSegmentSelectionVis() {
         // Change the material colors/attrs on critterSegments to show which are selected
-        if(masterCritter != null) {
+        /*if(masterCritter != null) {
             for (int i = 0; i < masterCritter.critterSegmentList.Count; i++) {
                 masterCritter.critterSegmentList[i].GetComponent<MeshRenderer>().material.SetFloat("_Selected", 0f);
             }
             if (critterEditorInputManager.critterEditorState.isSegmentSelected) {
                 critterEditorInputManager.critterEditorState.selectedSegment.GetComponent<MeshRenderer>().material.SetFloat("_Selected", 1f);
             }
-        }        
+        }   */     
     }
 
     public void UpdateSegmentShaderStates() {
