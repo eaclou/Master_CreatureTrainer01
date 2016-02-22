@@ -92,10 +92,12 @@ public class CritterEditorState : MonoBehaviour {
     private int floorValue = -1; // used to track how many cycles of gravity-random
     private bool recalcGravityRandom = true;
     private bool isPhysicsPreview = false;
+    
 
     public bool mouseOverUI = false;
 
     public void Start() {
+        critterConstructorManager.ResetToBlankCritter();
         InitGizmos();
         UpdateGizmos();
 
@@ -242,7 +244,18 @@ public class CritterEditorState : MonoBehaviour {
         }
 
         critterEditorUI.UpdateSelectedDisplayText(isSegmentSelected, selectedSegment, isGizmoEngaged, engagedGizmo);
-        critterEditorUI.UpdateSegmentSettingsPanel(isSegmentSelected, selectedSegment);
+        if(isPhysicsPreview) {
+            critterEditorUI.UpdateSegmentSettingsPanel(isSegmentSelected, selectedSegment, false);
+        }
+        else {
+            if(isSegmentSelected) {
+                critterEditorUI.UpdateSegmentSettingsPanel(isSegmentSelected, selectedSegment, true);
+            }
+            else {
+                critterEditorUI.UpdateSegmentSettingsPanel(isSegmentSelected, selectedSegment, false);
+            }
+        }
+        
     }
 
     private void SetHoverFromID() {
@@ -1204,7 +1217,7 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
         Vector3 attachDir = ConvertWorldSpaceToAttachDir(selectedSegment, rightClickWorldPosition);
         Debug.Log("MenuSegmentAdd() attachDir: " + attachDir.ToString() + ", ss: " + selectedSegment.GetComponent<CritterSegment>().sourceNode.ID.ToString());
         int nextID = critterConstructorManager.masterCritter.masterCritterGenome.CritterNodeList.Count;
-        critterConstructorManager.masterCritter.masterCritterGenome.AddNewNode(selectedSegment.GetComponent<CritterSegment>().sourceNode, attachDir, new Vector3(0f, 0f, 1f), nextID);
+        critterConstructorManager.masterCritter.masterCritterGenome.AddNewNode(selectedSegment.GetComponent<CritterSegment>().sourceNode, attachDir, new Vector3(0f, 0f, 0f), nextID);
         //selectedSegmentID = critterConstructorManager.masterCritter.critterSegmentList.Count;
         //critterConstructorManager.masterCritter.RebuildCritterFromGenome(false);
         critterConstructorManager.masterCritter.RebuildCritterFromGenomeRecursive(false);
@@ -1334,43 +1347,52 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
 
         if(currentToolState != CurrentToolState.None) {
             if (isSegmentSelected) {
-                gizmoAxisXGO.SetActive(true);
-                gizmoAxisYGO.SetActive(true);
-                gizmoAxisZGO.SetActive(true);
-                if (currentToolState == CurrentToolState.ScaleSegment) {
-                    gizmoScaleCoreGO.SetActive(true);
-                    gizmoScaleXGO.SetActive(true);
-                    gizmoScaleYGO.SetActive(true);
-                    gizmoScaleZGO.SetActive(true);
-                    gizmoMoveCoreGO.SetActive(false);
-                    gizmoMoveXGO.SetActive(false);
-                    gizmoMoveYGO.SetActive(false);
-                    gizmoMoveZGO.SetActive(false);
-                    gizmoOrientation = selectedSegmentGizmo.transform.rotation;
-                }
-                else if(currentToolState == CurrentToolState.MoveAttachPoint) {
-                    gizmoMoveCoreGO.SetActive(true);
-                    gizmoMoveXGO.SetActive(true);
-                    gizmoMoveYGO.SetActive(true);
-                    gizmoMoveZGO.SetActive(true);
-                    gizmoScaleCoreGO.SetActive(false);
-                    gizmoScaleXGO.SetActive(false);
-                    gizmoScaleYGO.SetActive(false);
-                    gizmoScaleZGO.SetActive(false);
-                    if(selectedSegmentGizmo.GetComponent<CritterSegment>().sourceNode.ID != 0) {  // if not the Root Node:
-                        gizmoOrientation = critterConstructorManager.masterCritter.critterSegmentList[selectedSegmentGizmo.GetComponent<CritterSegment>().sourceNode.parentJointLink.parentNode.ID].gameObject.transform.rotation;
-                    }
-                    else {
+                if(!isPhysicsPreview) {
+                    // Turn off Physics Arrow
+                    gizmoForceShaftGO.SetActive(false);
+                    gizmoForceArrowGO.SetActive(false);
+
+                    gizmoAxisXGO.SetActive(true);
+                    gizmoAxisYGO.SetActive(true);
+                    gizmoAxisZGO.SetActive(true);
+                    if (currentToolState == CurrentToolState.ScaleSegment) {
+                        gizmoScaleCoreGO.SetActive(true);
+                        gizmoScaleXGO.SetActive(true);
+                        gizmoScaleYGO.SetActive(true);
+                        gizmoScaleZGO.SetActive(true);
+                        gizmoMoveCoreGO.SetActive(false);
+                        gizmoMoveXGO.SetActive(false);
+                        gizmoMoveYGO.SetActive(false);
+                        gizmoMoveZGO.SetActive(false);
                         gizmoOrientation = selectedSegmentGizmo.transform.rotation;
                     }
+                    else if (currentToolState == CurrentToolState.MoveAttachPoint) {
+                        gizmoMoveCoreGO.SetActive(true);
+                        gizmoMoveXGO.SetActive(true);
+                        gizmoMoveYGO.SetActive(true);
+                        gizmoMoveZGO.SetActive(true);
+                        gizmoScaleCoreGO.SetActive(false);
+                        gizmoScaleXGO.SetActive(false);
+                        gizmoScaleYGO.SetActive(false);
+                        gizmoScaleZGO.SetActive(false);
+                        if (selectedSegmentGizmo.GetComponent<CritterSegment>().sourceNode.ID != 0) {  // if not the Root Node:
+                            gizmoOrientation = critterConstructorManager.masterCritter.critterSegmentList[selectedSegmentGizmo.GetComponent<CritterSegment>().sourceNode.parentJointLink.parentNode.ID].gameObject.transform.rotation;
+                        }
+                        else {
+                            gizmoOrientation = selectedSegmentGizmo.transform.rotation;
+                        }
+                    }
+                    gizmoPivotPoint = selectedSegmentGizmo.transform.position - selectedSegmentGizmo.transform.forward * selectedSegmentGizmo.GetComponent<CritterSegment>().sourceNode.dimensions.z * 0.5f;
+                    //gizmoOrientation = critterConstructorManager.masterCritter.critterSegmentList[selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.parentNode.ID].gameObject.transform.rotation;
+                    gizmoGroupGO.transform.position = gizmoPivotPoint;
+                    gizmoGroupGO.transform.rotation = gizmoOrientation;
+                    float distToCamera = Vector3.Distance(critterConstructorManager.critterEditorInputManager.critterConstructorCameraController.gameObject.transform.position, gizmoGroupGO.transform.position);
+                    gizmoGroupGO.transform.localScale = Vector3.one * distToCamera * 0.12f;
+                    gizmoGroupGO.SetActive(true);  // a segment is selected and there is a tool active -- display the Gizmos!!!
                 }
-                gizmoPivotPoint = selectedSegmentGizmo.transform.position - selectedSegmentGizmo.transform.forward * selectedSegmentGizmo.GetComponent<CritterSegment>().sourceNode.dimensions.z * 0.5f;
-                //gizmoOrientation = critterConstructorManager.masterCritter.critterSegmentList[selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.parentNode.ID].gameObject.transform.rotation;
-                gizmoGroupGO.transform.position = gizmoPivotPoint;
-                gizmoGroupGO.transform.rotation = gizmoOrientation;
-                float distToCamera = Vector3.Distance(critterConstructorManager.critterEditorInputManager.critterConstructorCameraController.gameObject.transform.position, gizmoGroupGO.transform.position);
-                gizmoGroupGO.transform.localScale = Vector3.one * distToCamera * 0.12f;
-                gizmoGroupGO.SetActive(true);  // a segment is selected and there is a tool active -- display the Gizmos!!!
+                else {
+                    gizmoGroupGO.SetActive(false); // during physics preview, so do not display gizmos!
+                }
             }
             else {
                 gizmoGroupGO.SetActive(false); // nothing selected, so do not display gizmos!
@@ -1578,20 +1600,60 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
         isPhysicsPreview = true;
         //SetHoverAndSelectedFromID();
         SetHoverFromID();
-        CommandSetSelected(selectedNodeID);
-        critterConstructorManager.UpdateSegmentSelectionVis();
-        critterConstructorManager.UpdateSegmentShaderStates();
+        if(isSegmentSelected) {
+            CommandSetSelected(selectedNodeID);
+            critterConstructorManager.UpdateSegmentSelectionVis();
+            critterConstructorManager.UpdateSegmentShaderStates();
+        }        
     }
     public void PreviewPhysicsExit() {
         critterConstructorManager.masterCritter.RebuildCritterFromGenomeRecursive(false);
         isPhysicsPreview = false;
         //SetHoverAndSelectedFromID();
         SetHoverFromID();
-        CommandSetSelected(selectedNodeID);
-        critterConstructorManager.UpdateSegmentSelectionVis();
-        critterConstructorManager.UpdateSegmentShaderStates();
+        if(isSegmentSelected) {
+            CommandSetSelected(selectedNodeID);
+            critterConstructorManager.UpdateSegmentSelectionVis();
+            critterConstructorManager.UpdateSegmentShaderStates();
+        }        
     }
 
+    public void ClickSliderDimensionX(float value) {
+        if (isSegmentSelected) {
+            selectedSegment.GetComponent<CritterSegment>().sourceNode.dimensions.x = value;
+            RebuildCritterStatic();
+        }
+    }
+    public void ClickSliderDimensionY(float value) {
+        if (isSegmentSelected) {
+            selectedSegment.GetComponent<CritterSegment>().sourceNode.dimensions.y = value;
+            RebuildCritterStatic();
+        }
+    }
+    public void ClickSliderDimensionZ(float value) {
+        if (isSegmentSelected) {
+            selectedSegment.GetComponent<CritterSegment>().sourceNode.dimensions.z = value;
+            RebuildCritterStatic();
+        }
+    }
+    public void ClickSliderAttachDirX(float value) {
+        if (isSegmentSelected) {
+            selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.attachDir.x = value;
+            RebuildCritterStatic();
+        }
+    }
+    public void ClickSliderAttachDirY(float value) {
+        if (isSegmentSelected) {
+            selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.attachDir.y = value;
+            RebuildCritterStatic();
+        }
+    }
+    public void ClickSliderAttachDirZ(float value) {
+        if (isSegmentSelected) {
+            selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.attachDir.z = value;
+            RebuildCritterStatic();
+        }
+    }
     public void ClickDropdownJointType(int val) {
         
         if(isSegmentSelected) {
@@ -1657,9 +1719,21 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
             RebuildCritterStatic();
         }
     }
+    public void ClickSliderRestAngleZ(float value) {
+        if (isSegmentSelected) {
+            selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.restAngleDir.z = value;
+            RebuildCritterStatic();
+        }
+    }
     public void ClickSliderJointAngleLimit(float value) {
         if (isSegmentSelected) {
-            selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.jointLimitMaxTemp = value;
+            selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.jointLimitPrimary = value;
+            RebuildCritterStatic();
+        }
+    }
+    public void ClickSliderJointAngleLimitSecondary(float value) {
+        if (isSegmentSelected) {
+            selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.jointLimitSecondary = value;
             RebuildCritterStatic();
         }
     }
@@ -1671,12 +1745,14 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
     }
 
     private void RebuildCritterStatic() {
-        critterConstructorManager.masterCritter.RebuildCritterFromGenomeRecursive(false);
-        //SetHoverAndSelectedFromID();
-        SetHoverFromID();
-        CommandSetSelected(selectedNodeID);
-        critterConstructorManager.UpdateSegmentSelectionVis();
-        critterConstructorManager.UpdateSegmentShaderStates();
+        if(!isPhysicsPreview) {  // hack to prevent changing UI to interrupt physics preview simulation -- eventually this will be fixed with dedicated UI handler classes
+            critterConstructorManager.masterCritter.RebuildCritterFromGenomeRecursive(false);
+            //SetHoverAndSelectedFromID();
+            SetHoverFromID();
+            CommandSetSelected(selectedNodeID);
+            critterConstructorManager.UpdateSegmentSelectionVis();
+            critterConstructorManager.UpdateSegmentShaderStates();
+        }        
     }
 
     public void TogglePhysicsPreview() {

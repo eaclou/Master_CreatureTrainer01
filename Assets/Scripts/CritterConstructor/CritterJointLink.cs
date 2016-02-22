@@ -8,10 +8,11 @@ public class CritterJointLink {
 
     public Vector3 attachDir;
     public Vector3 restAngleDir;
-    public float jointLimitMaxTemp = 60f;
+    public float jointLimitPrimary = 45f;
+    public float jointLimitSecondary = 45f;
     public int numberOfRecursions = 0;
-    public float recursionScalingFactor = 0.8f;
-    public float recursionForward = 1.0f;
+    public float recursionScalingFactor = 1f;
+    public float recursionForward = 1f;  // might get rid of this?? only needed when using recursion and symmetry at the same time, which i might remove
     public bool onlyAttachToTailNode = true;
     //public int recursionInstances = 0;  // deprecated
 

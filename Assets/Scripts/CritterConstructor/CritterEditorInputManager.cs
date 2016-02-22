@@ -90,7 +90,7 @@ public class CritterEditorInputManager : MonoBehaviour {
             Debug.Log("key r down");
         }
 
-        if (UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject(-1)) {
+        if (UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject(-1)) {  // is the cursor over any unity UI element?
             critterEditorState.mouseOverUI = true;
         }
         else {

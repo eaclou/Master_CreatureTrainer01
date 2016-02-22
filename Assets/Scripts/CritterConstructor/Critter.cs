@@ -10,7 +10,9 @@ public class Critter : MonoBehaviour {
     public List<GameObject> critterSegmentList;
     
     public void InitializeBlankCritter() {
-        critterSegmentList = new List<GameObject>(); // the 'official' record of this critters Segments
+        if(critterSegmentList == null) {
+            critterSegmentList = new List<GameObject>(); // the 'official' record of this critters Segments
+        }        
         CreateBlankCritterGenome();        
     }
 
@@ -49,27 +51,11 @@ public class Critter : MonoBehaviour {
         CritterSegment newSegment = newSegmentGO.GetComponent<CritterSegment>();
 
         Vector3 newSegmentParentDimensions = newSegment.parentSegment.sourceNode.dimensions * newSegment.parentSegment.scalingFactor;
-        Vector3 newSegmentDimensions = newSegment.sourceNode.dimensions * newSegment.scalingFactor;
-
-        
-        parentPos = newSegment.parentSegment.transform.position;
-        // RECURSION SCALING:
-        /*if (newSegment.parentSegment.recursionNumber > 0) {
-            float scalingFactorParent = 1f;
-            for (int s = 0; s < newSegment.parentSegment.recursionNumber - 1; s++) {  // doesn't do it for Root of recursion chain
-                scalingFactorParent *= newSegment.parentSegment.sourceNode.parentJointLink.recursionScalingFactor;
-            }
-            newSegmentParentDimensions *= scalingFactorParent;
-        }
-        if (newSegment.recursionNumber > 0) {
-            float scalingFactor = 1f;
-            for (int s = 0; s < newSegment.recursionNumber - 1; s++) {  // doesn't do it for Root of recursion chain
-                scalingFactor *= newSegment.sourceNode.parentJointLink.recursionScalingFactor;
-            }
-            newSegmentDimensions *= scalingFactor;
-        }*/
+        Vector3 newSegmentDimensions = newSegment.sourceNode.dimensions * newSegment.scalingFactor;        
+        parentPos = newSegment.parentSegment.transform.position;        
         Vector3 attachDir = newSegment.sourceNode.parentJointLink.attachDir;
         Vector3 restAngleDir = newSegment.sourceNode.parentJointLink.restAngleDir;
+
         // MODIFY AttachDir based on recursion Forward:
         if (newSegment.recursionNumber > 1) {  // if segment is not the root of a recursion chain
             attachDir = Vector3.Lerp(attachDir, new Vector3(0f, 0f, 1f), newSegment.sourceNode.parentJointLink.recursionForward);
@@ -78,14 +64,15 @@ public class Critter : MonoBehaviour {
         if (newSegment.mirrorX) {
             attachDir.x *= -1f;
             restAngleDir.x *= -1f;
+            restAngleDir.z *= -1f;
         }
         if (newSegment.mirrorY) {
             attachDir.y *= -1f;
             restAngleDir.y *= -1f;
-        }
-        if (newSegment.mirrorZ) {
-            attachDir.z *= -1f;
             restAngleDir.z *= -1f;
+        }
+        if (newSegment.mirrorZ) { // deprecated??
+            attachDir.z *= -1f;            
         }       
 
         // These are different from attachDir because they're used to find the SIDE of the cube it's attached to, in order to calc attachNormalDir
@@ -93,8 +80,6 @@ public class Critter : MonoBehaviour {
         float y = attachDir.y;
         float z = attachDir.z;        
         
-        //Debug.Log("newSegment.parentSegment: " + newSegment.parentSegment.ToString() + ", parentRecursionNum: " + newSegment.parentSegment.recursionNumber.ToString() + ", newSegmentParentDimensions: " + newSegmentParentDimensions.ToString() + ", newSegmentDimensions: " + newSegmentDimensions.ToString());
-
         Vector3 normalDirection = new Vector3(0f, 0f, 0f);
         Vector3 localNormalDirection = new Vector3(0f, 0f, 0f);
         int attachSide = 0;  // 0 = X, 1 = Y, 2 = Z
@@ -172,17 +157,17 @@ public class Critter : MonoBehaviour {
         attachPosWorld = newSegment.parentSegment.transform.position + attachDirWorld * parentDepth;
         
         //Debug.Log("attachPosWorld = " + attachPosWorld.ToString() + ", parentDepth: " + parentDepth.ToString() + ", attachSide: " + attachSide.ToString());
-        Quaternion RestAngleOffset = Quaternion.FromToRotation(new Vector3(0f, 0f, 1f), newSegment.sourceNode.parentJointLink.restAngleDir);
+        Quaternion RestAngleOffset = Quaternion.FromToRotation(new Vector3(0f, 0f, 1f), new Vector3(restAngleDir.x, restAngleDir.y, 1f));
+        Quaternion RestAngleOffsetTwist = Quaternion.AngleAxis(restAngleDir.z * 45f, Vector3.forward); // 45f can be replaced with a max twist angle var
         //Quaternion newSegmentNormal = Quaternion.LookRotation(normalDirection) * RestAngleOffset;
         //normalDirection = newSegmentNormal * Vector3.forward;
         // Calculate LOCAL-SPACE normalDirection of parent face at attach point,
         // Then add (saved Parent Rotation (forward vector)) + (local-space attachDir Rotation) + (rest-angle Offset rotation)?
         Quaternion localAttachRotation = Quaternion.LookRotation(localNormalDirection);
-        Quaternion newSegmentRotation = newSegment.parentSegment.transform.rotation * localAttachRotation * RestAngleOffset;
+        Quaternion newSegmentRotation = newSegment.parentSegment.transform.rotation * localAttachRotation * RestAngleOffset * RestAngleOffsetTwist;
         Vector3 worldNormalDir = newSegmentRotation * Vector3.forward; 
 
         newSegmentPos = attachPosWorld + worldNormalDir * newSegmentDimensions.z * 0.5f;  // REVISIT -- will only work for cubes! 
-        //newSegment.transform.rotation = Quaternion.LookRotation(normalDirection); // OLD:
         newSegment.transform.rotation = newSegmentRotation;
         newSegmentGO.transform.position = newSegmentPos;
         newSegmentGO.transform.localScale = newSegmentDimensions;
@@ -300,10 +285,11 @@ public class Critter : MonoBehaviour {
                 newSegment.sourceNode = currentBuildSegmentList[i].sourceNode;
                 newSegment.id = nextSegmentID;  // !!!!!!!!!!!!!!!!!@$%@$#^@$^@$%^$%^#!!!!!!!!!!!!!!!!!!! REVISIT THIS!!!! should id's be different btw segments and nodes?
                 nextSegmentID++;
-                newGO.transform.localScale = currentBuildSegmentList[i].sourceNode.dimensions;
                 
                 if (currentBuildSegmentList[i].sourceNode.parentJointLink.parentNode == null) {  // is ROOT segment  -- Look into doing Root build BEFORE for loop to avoid the need to do this check
                     newGO.transform.rotation = Quaternion.identity;
+                    newSegment.scalingFactor = newSegment.sourceNode.parentJointLink.recursionScalingFactor;
+                    newGO.transform.localScale = currentBuildSegmentList[i].sourceNode.dimensions * newSegment.scalingFactor;
                     if (physicsOn) {
                         newGO.AddComponent<Rigidbody>().isKinematic = true;
                     }
@@ -317,8 +303,9 @@ public class Critter : MonoBehaviour {
                     newSegment.mirrorZ = newSegment.parentSegment.mirrorZ;
                     // inherit scaling factor from parent -- this is later adjusted again if it is part of a recursion chain
                     newSegment.scalingFactor = newSegment.parentSegment.scalingFactor;
+                    newSegment.scalingFactor *= currentBuildSegmentList[i].sourceNode.parentJointLink.recursionScalingFactor; // propagate scaling factor
                     // Check for if the segment currently being built is a Mirror COPY:
-                    if(currentBuildSegmentList[i].isMirror) {
+                    if (currentBuildSegmentList[i].isMirror) {
                         //Debug.Log("This is a MIRROR COPY segment - Wow!");
                         if(currentBuildSegmentList[i].sourceNode.parentJointLink.symmetryType == CritterJointLink.SymmetryType.MirrorX) {
                             // Invert the X-axis  (this will propagate down to all this segment's children
@@ -345,13 +332,13 @@ public class Critter : MonoBehaviour {
                         if (currentBuildSegmentList[i].parentSegment.recursionNumber >= currentBuildSegmentList[i].sourceNode.parentJointLink.numberOfRecursions) {
                             //Debug.Log("recursion number greater than numRecursions! ( " + currentBuildSegmentList[i].parentSegment.recursionNumber.ToString() + " vs " + currentBuildSegmentList[i].sourceNode.parentJointLink.numberOfRecursions.ToString());
                             newSegment.recursionNumber = currentBuildSegmentList[i].parentSegment.recursionNumber + 1; //
-                            newSegment.scalingFactor *= currentBuildSegmentList[i].sourceNode.parentJointLink.recursionScalingFactor;
+                            //newSegment.scalingFactor *= currentBuildSegmentList[i].sourceNode.parentJointLink.recursionScalingFactor;
                         }
                         else {  // create new recursion instance!!
                             BuildSegmentInfo newSegmentInfo = new BuildSegmentInfo();
                             newSegmentInfo.sourceNode = currentBuildSegmentList[i].sourceNode;  // request a segment to be built again based on the current sourceNode
                             newSegment.recursionNumber = currentBuildSegmentList[i].parentSegment.recursionNumber + 1;
-                            newSegment.scalingFactor *= currentBuildSegmentList[i].sourceNode.parentJointLink.recursionScalingFactor; // propagate scaling factor
+                            //newSegment.scalingFactor *= currentBuildSegmentList[i].sourceNode.parentJointLink.recursionScalingFactor; // propagate scaling factor
                             newSegmentInfo.parentSegment = newSegment; // parent of itself (the just-built Segment)
                             nextBuildSegmentList.Add(newSegmentInfo);
                             // If the node also has Symmetry:
@@ -381,13 +368,6 @@ public class Critter : MonoBehaviour {
                             nextBuildSegmentList.Add(newSegmentInfoMirror);
                         }
                     }
-                    // SCALING FACTOR:
-                    //float scalingFactor = 1f;
-                    //for (int s = 0; s < newSegment.recursionNumber - 1; s++) {  // doesn't do it for Root of recursion chain
-                    //    scalingFactor *= newSegment.sourceNode.parentJointLink.recursionScalingFactor;
-                    //}
-                    //newSegment.scalingFactor = scalingFactor;
-                    //newGO.transform.localScale = currentBuildSegmentList[i].sourceNode.dimensions * scalingFactor;
                 }
                 // Figure out how many unique Child nodes this built node has:
                 int numberOfChildNodes = currentBuildSegmentList[i].sourceNode.attachedJointLinkList.Count;
@@ -454,7 +434,7 @@ public class Critter : MonoBehaviour {
 
                 }
                 else {
-                    SetSegmentTransform(newGO);  // Properly position the SegmentGO where it should be
+                    SetSegmentTransform(newGO);  // Properly position the SegmentGO where it should be  && scale!
                     if (physicsOn) {
                         newGO.AddComponent<Rigidbody>().isKinematic = false;
                         ConfigurableJoint configJoint = newGO.AddComponent<ConfigurableJoint>();
@@ -467,19 +447,12 @@ public class Critter : MonoBehaviour {
                 }                
             }
             // After all buildNodes have been built, and their subsequent childNodes Enqueued, copy pendingChildQueue into buildNodesQueue
-            //currentBuildNodeList.Clear();
-            //currentBuildNodeParentSegmentList.Clear();
             currentBuildSegmentList.Clear();
             // SWAP LISTS:
             if (nextBuildSegmentList.Count > 0) {
                 for (int j = 0; j < nextBuildSegmentList.Count; j++) {
-                    //currentBuildNodeList.Add(pendingChildNodeList[j]);
-                    //currentBuildNodeParentSegmentList.Add(pendingBuildNodeParentSegmentList[j]);
                     currentBuildSegmentList.Add(nextBuildSegmentList[j]);
                 }
-                //pendingChildNodeList.Clear();  // empty the childNodesQueue
-                //pendingBuildNodeParentSegmentList.Clear();
-                //Debug.Log("buildNodesQueue: " + currentBuildNodeList.Count.ToString());
                 nextBuildSegmentList.Clear();  // empty this list for next depth-round
             }
             else {
@@ -496,7 +469,7 @@ public class Critter : MonoBehaviour {
         CritterNode node = segment.sourceNode;
 
         if (node.parentJointLink.jointType == CritterJointLink.JointType.Fixed) { // Fixed Joint
-                                                                           // Lock mobility:
+                                                                                  // Lock mobility:
             joint.xMotion = ConfigurableJointMotion.Locked;
             joint.yMotion = ConfigurableJointMotion.Locked;
             joint.zMotion = ConfigurableJointMotion.Locked;
@@ -516,15 +489,18 @@ public class Critter : MonoBehaviour {
             joint.xMotion = ConfigurableJointMotion.Locked;
             joint.yMotion = ConfigurableJointMotion.Locked;
             joint.zMotion = ConfigurableJointMotion.Locked;
-            joint.angularXMotion = ConfigurableJointMotion.Limited;
+            if (node.parentJointLink.jointLimitPrimary == 180)
+                joint.angularXMotion = ConfigurableJointMotion.Free;
+            else
+                joint.angularXMotion = ConfigurableJointMotion.Limited;
             joint.angularYMotion = ConfigurableJointMotion.Locked;
             joint.angularZMotion = ConfigurableJointMotion.Locked;
             // Joint Limits:
             SoftJointLimit limitXMin = joint.lowAngularXLimit;
-            limitXMin.limit = -node.parentJointLink.jointLimitMaxTemp;
+            limitXMin.limit = -node.parentJointLink.jointLimitPrimary;
             joint.lowAngularXLimit = limitXMin;
             SoftJointLimit limitXMax = joint.highAngularXLimit;
-            limitXMax.limit = node.parentJointLink.jointLimitMaxTemp;
+            limitXMax.limit = node.parentJointLink.jointLimitPrimary;
             joint.highAngularXLimit = limitXMax;
         }
         else if (node.parentJointLink.jointType == CritterJointLink.JointType.HingeY) { // Uni-Axis Hinge Joint
@@ -540,11 +516,14 @@ public class Critter : MonoBehaviour {
             joint.yMotion = ConfigurableJointMotion.Locked;
             joint.zMotion = ConfigurableJointMotion.Locked;
             joint.angularXMotion = ConfigurableJointMotion.Locked;
-            joint.angularYMotion = ConfigurableJointMotion.Limited;
+            if (node.parentJointLink.jointLimitPrimary == 180)
+                joint.angularYMotion = ConfigurableJointMotion.Free;
+            else
+                joint.angularYMotion = ConfigurableJointMotion.Limited;
             joint.angularZMotion = ConfigurableJointMotion.Locked;
             // Joint Limits:
             SoftJointLimit limitY = joint.angularYLimit;
-            limitY.limit = node.parentJointLink.jointLimitMaxTemp;
+            limitY.limit = node.parentJointLink.jointLimitPrimary;
             joint.angularYLimit = limitY;
         }
         else if (node.parentJointLink.jointType == CritterJointLink.JointType.HingeZ) { // Uni-Axis Hinge Joint
@@ -561,11 +540,50 @@ public class Critter : MonoBehaviour {
             joint.zMotion = ConfigurableJointMotion.Locked;
             joint.angularXMotion = ConfigurableJointMotion.Locked;
             joint.angularYMotion = ConfigurableJointMotion.Locked;
-            joint.angularZMotion = ConfigurableJointMotion.Limited;
+            if (node.parentJointLink.jointLimitPrimary == 180)
+                joint.angularZMotion = ConfigurableJointMotion.Free;
+            else
+                joint.angularZMotion = ConfigurableJointMotion.Limited;
             // Joint Limits:
             SoftJointLimit limitZ = joint.angularZLimit;
-            limitZ.limit = node.parentJointLink.jointLimitMaxTemp;
+            limitZ.limit = node.parentJointLink.jointLimitPrimary;
             joint.angularZLimit = limitZ;
+        }
+        else if (node.parentJointLink.jointType == CritterJointLink.JointType.DualXY) { // Uni-Axis Hinge Joint
+            joint.axis = new Vector3(1f, 0f, 0f);
+            joint.secondaryAxis = new Vector3(0f, 1f, 0f);
+            JointDrive jointDriveX = joint.angularXDrive;
+            JointDrive jointDriveY = joint.angularYZDrive;
+            //jointDrive.mode = JointDriveMode.Velocity;
+            jointDriveX.positionDamper = 1f;
+            jointDriveX.positionSpring = 1f;
+            joint.angularXDrive = jointDriveX;
+            jointDriveY.positionDamper = 1f;
+            jointDriveY.positionSpring = 1f;
+            joint.angularYZDrive = jointDriveY;
+            // Lock mobility:
+            joint.xMotion = ConfigurableJointMotion.Locked;
+            joint.yMotion = ConfigurableJointMotion.Locked;
+            joint.zMotion = ConfigurableJointMotion.Locked;
+            if (node.parentJointLink.jointLimitPrimary == 180) {
+                joint.angularXMotion = ConfigurableJointMotion.Free;
+                joint.angularYMotion = ConfigurableJointMotion.Free;
+            }                
+            else {
+                joint.angularXMotion = ConfigurableJointMotion.Limited;
+                joint.angularYMotion = ConfigurableJointMotion.Limited;
+            }
+            joint.angularZMotion = ConfigurableJointMotion.Locked;
+            // Joint Limits:
+            SoftJointLimit limitXMin = joint.lowAngularXLimit;
+            limitXMin.limit = -node.parentJointLink.jointLimitPrimary;
+            joint.lowAngularXLimit = limitXMin;
+            SoftJointLimit limitXMax = joint.highAngularXLimit;
+            limitXMax.limit = node.parentJointLink.jointLimitPrimary;
+            joint.highAngularXLimit = limitXMax;
+            SoftJointLimit limitYMax = joint.angularYLimit;
+            limitYMax.limit = node.parentJointLink.jointLimitSecondary;
+            joint.angularYLimit = limitYMax;
         }
     }
 

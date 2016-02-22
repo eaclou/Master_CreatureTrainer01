@@ -4,6 +4,8 @@ using UnityEngine.UI;
 
 public class PanelSegmentSettings : MonoBehaviour {
 
+    public GameObject panelOverlay;
+
     public Text textSegmentID;
     public Text textParentSegmentID;
     public Text textNodeID;
@@ -26,8 +28,10 @@ public class PanelSegmentSettings : MonoBehaviour {
 
     public Text textRestAngleX;
     public Text textRestAngleY;
+    public Text textRestAngleZ;
     public Slider sliderRestAngleX;
     public Slider sliderRestAngleY;
+    public Slider sliderRestAngleZ;
 
     public Dropdown dropdownJointType;
 
@@ -43,7 +47,9 @@ public class PanelSegmentSettings : MonoBehaviour {
     public Dropdown dropdownSymmetryType;
 
     public Text textJointAngleLimit;
+    public Text textJointAngleLimitSecondary;
     public Slider sliderJointAngleLimit;
+    public Slider sliderJointAngleLimitSecondary;
 
 
 

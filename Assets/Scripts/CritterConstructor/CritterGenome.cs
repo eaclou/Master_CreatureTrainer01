@@ -15,7 +15,12 @@ public class CritterGenome {
     }
 
     public void ResetToBlankGenome() {
-        CritterNodeList = new List<CritterNode>();
+        if(CritterNodeList == null) {
+            CritterNodeList = new List<CritterNode>();
+        }
+        else {
+            CritterNodeList.Clear();
+        }
         CritterNode critterRootNode = new CritterNode(0); // create root node
         CritterNodeList.Add(critterRootNode); // set it to first member of the list.
     }
