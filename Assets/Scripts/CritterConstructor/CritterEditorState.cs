@@ -243,16 +243,19 @@ public class CritterEditorState : MonoBehaviour {
             critterEditorUI.buttonDisplayMoveJoint.interactable = true;
         }
 
-        critterEditorUI.UpdateSelectedDisplayText(isSegmentSelected, selectedSegment, isGizmoEngaged, engagedGizmo);
+        critterEditorUI.UpdateSelectedDisplayText(isSegmentSelected, selectedSegment, isGizmoEngaged, engagedGizmo, selectedSegmentGizmo);
         if(isPhysicsPreview) {
             critterEditorUI.UpdateSegmentSettingsPanel(isSegmentSelected, selectedSegment, false);
+            critterEditorUI.UpdateNodeAddonsPanel(isSegmentSelected, selectedSegment, false);
         }
         else {
             if(isSegmentSelected) {
                 critterEditorUI.UpdateSegmentSettingsPanel(isSegmentSelected, selectedSegment, true);
+                critterEditorUI.UpdateNodeAddonsPanel(isSegmentSelected, selectedSegment, true);
             }
             else {
                 critterEditorUI.UpdateSegmentSettingsPanel(isSegmentSelected, selectedSegment, false);
+                critterEditorUI.UpdateNodeAddonsPanel(isSegmentSelected, selectedSegment, false);
             }
         }
         
@@ -470,7 +473,10 @@ public class CritterEditorState : MonoBehaviour {
                     // who gives a shit
                 }
             }
+            
             selectedSegmentGizmo = critterConstructorManager.masterCritter.critterSegmentList[lowestMatchID];
+
+            critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(selectedSegment.GetComponent<CritterSegment>().sourceNode);  // REVISIT?
             //Debug.Log("CommandSetSelectedSegments: selectedSegment.GetComponent<CritterSegment>().id " + selectedSegment.GetComponent<CritterSegment>().id.ToString() + ", co: " + clickedObject.ToString() + ", selNodeID: " + selectedNodeID.ToString());
         }
     }
@@ -502,7 +508,9 @@ public class CritterEditorState : MonoBehaviour {
             selectedSegmentID = lowestMatchID;
             selectedNodeID = nodeID;
             selectedSegment = critterConstructorManager.masterCritter.critterSegmentList[lowestMatchID];
+
             selectedSegmentGizmo = critterConstructorManager.masterCritter.critterSegmentList[lowestMatchID];
+            critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(selectedSegment.GetComponent<CritterSegment>().sourceNode);  // REVISIT?
         }
         else {
             // Deselect all
@@ -614,14 +622,14 @@ public class CritterEditorState : MonoBehaviour {
                 }
                 else if (currentToolState == CurrentToolState.MoveAttachPoint) {
                     if(isSegmentHover) {
-                        Collider coll = critterConstructorManager.masterCritter.critterSegmentList[selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.parentNode.ID].gameObject.GetComponent<Collider>();
+                        Collider coll = selectedSegmentGizmo.GetComponent<CritterSegment>().parentSegment.gameObject.GetComponent<Collider>();
                         Ray ray = Camera.main.ScreenPointToRay(mousePosition - gizmoEngagedInitialMouseDelta);
                         RaycastHit hit;
                         Vector3 rayHitPos = new Vector3(0f, 0f, 0f);
                         if (coll.Raycast(ray, out hit, 100.0F)) {
                             rayHitPos = hit.point;
 
-                            Vector3 newAttachDir = ConvertWorldSpaceToAttachDir(critterConstructorManager.masterCritter.critterSegmentList[selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.parentNode.ID].gameObject, rayHitPos);
+                            Vector3 newAttachDir = ConvertWorldSpaceToAttachDir(selectedSegmentGizmo.GetComponent<CritterSegment>().parentSegment.gameObject, rayHitPos);
                             Camera mainCam = critterConstructorManager.critterEditorInputManager.critterConstructorCameraController.gameObject.GetComponent<Camera>();
                             Vector2 mouseDir = mousePositionDelta.normalized;
                             Vector3 mouseDragWorldDir = Vector3.Normalize(mainCam.transform.right * mouseDir.x + mainCam.transform.up * mouseDir.y);
@@ -654,12 +662,12 @@ public class CritterEditorState : MonoBehaviour {
         gizmoEngagedInitialScreenPos = critterConstructorManager.critterEditorInputManager.critterConstructorCameraController.gameObject.GetComponent<Camera>().WorldToScreenPoint(engagedGizmo.transform.position);  // center of the gizmo that was clicked
         gizmoEngagedInitialMouseDelta = mousePosition - gizmoEngagedInitialScreenPos;
         gizmoEngagedInitialLocalPos = engagedGizmo.transform.localPosition;
-        gizmoSegmentInitialLocalScale = selectedSegment.GetComponent<CritterSegment>().sourceNode.dimensions;  // change to sourceNode.dimensions ???
+        gizmoSegmentInitialLocalScale = selectedSegmentGizmo.GetComponent<CritterSegment>().sourceNode.dimensions;  // change to sourceNode.dimensions ???
         Camera mainCam = critterConstructorManager.critterEditorInputManager.critterConstructorCameraController.gameObject.GetComponent<Camera>();
         Vector2 gizmoOriginScreenPos = new Vector2(mainCam.WorldToScreenPoint(gizmoGroupGO.transform.position).x, mainCam.WorldToScreenPoint(gizmoGroupGO.transform.position).y);  // 'group' = gizmo group
         Vector2 gizmoHandleScreenPos = new Vector2(mainCam.WorldToScreenPoint(engagedGizmo.transform.position).x, mainCam.WorldToScreenPoint(engagedGizmo.transform.position).y);
         gizmoEngagedInitialScreenDir = (gizmoHandleScreenPos - gizmoOriginScreenPos).normalized;
-        gizmoSegmentInitialJointAttachDir = selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.attachDir;
+        gizmoSegmentInitialJointAttachDir = selectedSegmentGizmo.GetComponent<CritterSegment>().sourceNode.parentJointLink.attachDir;
     }
     private float GetGizmoMultiplier() {
         //Vector2 mousePositionDelta = mousePosition - gizmoEngagedInitialMouseClickPos;  // where mouse is NOW, compared to where it was first clicked
@@ -1344,8 +1352,13 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
     public void UpdateGizmos() {
         //group.transform.position = gizmoPivotPoint;
         //group.transform.rotation = gizmoOrientation;
-
-        if(currentToolState != CurrentToolState.None) {
+        if (isSegmentSelected) {
+            selectedSegmentGizmo = selectedSegment;
+            if (currentToolState == CurrentToolState.MoveAttachPoint) {
+                //selectedSegmentGizmo = selectedSegment.GetComponent<CritterSegment>().parentSegment.gameObject;
+            }
+        }        
+        if (currentToolState != CurrentToolState.None) {
             if (isSegmentSelected) {
                 if(!isPhysicsPreview) {
                     // Turn off Physics Arrow
@@ -1376,16 +1389,17 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
                         gizmoScaleYGO.SetActive(false);
                         gizmoScaleZGO.SetActive(false);
                         if (selectedSegmentGizmo.GetComponent<CritterSegment>().sourceNode.ID != 0) {  // if not the Root Node:
-                            gizmoOrientation = critterConstructorManager.masterCritter.critterSegmentList[selectedSegmentGizmo.GetComponent<CritterSegment>().sourceNode.parentJointLink.parentNode.ID].gameObject.transform.rotation;
+                            gizmoOrientation = selectedSegmentGizmo.GetComponent<CritterSegment>().parentSegment.transform.rotation;
                         }
                         else {
                             gizmoOrientation = selectedSegmentGizmo.transform.rotation;
                         }
                     }
-                    gizmoPivotPoint = selectedSegmentGizmo.transform.position - selectedSegmentGizmo.transform.forward * selectedSegmentGizmo.GetComponent<CritterSegment>().sourceNode.dimensions.z * 0.5f;
+                    gizmoGroupGO.transform.rotation = gizmoOrientation;
+                    gizmoPivotPoint = selectedSegmentGizmo.transform.position - selectedSegmentGizmo.transform.forward * selectedSegmentGizmo.GetComponent<CritterSegment>().sourceNode.dimensions.z * selectedSegmentGizmo.GetComponent<CritterSegment>().scalingFactor * 0.5f;
                     //gizmoOrientation = critterConstructorManager.masterCritter.critterSegmentList[selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.parentNode.ID].gameObject.transform.rotation;
                     gizmoGroupGO.transform.position = gizmoPivotPoint;
-                    gizmoGroupGO.transform.rotation = gizmoOrientation;
+                    
                     float distToCamera = Vector3.Distance(critterConstructorManager.critterEditorInputManager.critterConstructorCameraController.gameObject.transform.position, gizmoGroupGO.transform.position);
                     gizmoGroupGO.transform.localScale = Vector3.one * distToCamera * 0.12f;
                     gizmoGroupGO.SetActive(true);  // a segment is selected and there is a tool active -- display the Gizmos!!!
@@ -1742,6 +1756,70 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
             selectedSegment.GetComponent<CritterSegment>().sourceNode.parentJointLink.onlyAttachToTailNode = value;
             RebuildCritterStatic();
         }
+    }
+
+    public void ClickAttachAddon() {
+        Debug.Log("Attach Addon");
+        CritterNodeAddonBase.CritterNodeAddonTypes addonType = (CritterNodeAddonBase.CritterNodeAddonTypes)critterEditorUI.panelNodeAddons.dropdownAddonType.value;
+        CritterNode sourceNode = selectedSegment.GetComponent<CritterSegment>().sourceNode;
+
+        CritterNodeAddonBase newAddon;
+        if(addonType == CritterNodeAddonBase.CritterNodeAddonTypes.JointMotor) {
+            AddonJointMotor newJointMotor = new AddonJointMotor();
+            newAddon = newJointMotor;
+            
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.JointAngleSensor) {
+            AddonJointAngleSensor newJointAngleSensor = new AddonJointAngleSensor();
+            newAddon = newJointAngleSensor;
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.ContactSensor) {
+            AddonContactSensor newContactSensor = new AddonContactSensor();
+            newAddon = newContactSensor;
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.RaycastSensor) {
+            AddonRaycastSensor newRaycastSensor = new AddonRaycastSensor();
+            newAddon = newRaycastSensor;
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.CompassSensor1D) {
+            AddonCompassSensor1D newCompassSensor1D = new AddonCompassSensor1D();
+            newAddon = newCompassSensor1D;
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.CompassSensor3D) {
+            AddonCompassSensor3D newCompassSensor3D = new AddonCompassSensor3D();
+            newAddon = newCompassSensor3D;
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.ThrusterEffector1D) {
+            AddonThrusterEffector1D newThrusterEffector1D = new AddonThrusterEffector1D();
+            newAddon = newThrusterEffector1D;
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.ThrusterEffector3D) {
+            AddonThrusterEffector3D newThrusterEffector3D = new AddonThrusterEffector3D();
+            newAddon = newThrusterEffector3D;
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.StickyEffector) {
+            AddonStickyEffector newStickyEffector = new AddonStickyEffector();
+            newAddon = newStickyEffector;
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.OscillatorInput) {
+            AddonOscillatorInput newOscillatorInput = new AddonOscillatorInput();
+            newAddon = newOscillatorInput;
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.ValueInput) {
+            AddonValueInput newValueInput = new AddonValueInput();
+            newAddon = newValueInput;
+        }
+        else {
+            newAddon = new CritterNodeAddonBase();
+        }
+        sourceNode.addonsList.Add(newAddon);
+        critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(sourceNode);
+    }
+    public void RemoveAddon(int index) {
+        CritterNode sourceNode = selectedSegment.GetComponent<CritterSegment>().sourceNode;
+        //Destroy(sourceNode.addonsList[index]);
+        sourceNode.addonsList.RemoveAt(index);
+        critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(sourceNode);
     }
 
     private void RebuildCritterStatic() {

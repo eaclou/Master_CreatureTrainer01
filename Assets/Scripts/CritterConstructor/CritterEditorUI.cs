@@ -27,7 +27,10 @@ public class CritterEditorUI : MonoBehaviour {
     // SEGMENT SETTINGS MENU:
     public PanelSegmentSettings panelSegmentSettings;
     public GameObject panelSegmentSettingsGO;
+    public PanelNodeAddons panelNodeAddons;
+    public GameObject panelNodeAddonsGO;
     private bool isSegmentSettings = false;
+    private bool isNodeAddons = false;
 
     // ======= UI Inputs ???:
     public bool isClickButtonView = false;
@@ -69,6 +72,15 @@ public class CritterEditorUI : MonoBehaviour {
         isSegmentSettings = false;
     }
 
+    public void ShowNodeAddonsPanel() {
+        panelNodeAddonsGO.SetActive(true);
+        isNodeAddons = true;
+    }
+    public void HideNodeAddonsPanel() {
+        panelNodeAddonsGO.SetActive(false);
+        isNodeAddons = false;
+    }
+
     public void ClickButtonToolView() {
         critterEditorState.changeStateFromEditorUI = true;
         critterEditorState.pendingToolStateFromEditorUI = CritterEditorState.CurrentToolState.None;
@@ -87,6 +99,16 @@ public class CritterEditorUI : MonoBehaviour {
         }
         else {
             ShowSegmentSettingsPanel();
+            HideNodeAddonsPanel();
+        }
+    }
+    public void ClickButtonNodeAddons() {
+        if (isNodeAddons) {
+            HideNodeAddonsPanel();
+        }
+        else {
+            ShowNodeAddonsPanel();
+            HideSegmentSettingsPanel();
         }
     }
 
@@ -116,9 +138,12 @@ public class CritterEditorUI : MonoBehaviour {
         }
     }
 
-    public void UpdateSelectedDisplayText(bool segmentOn, GameObject selectedSegment, bool gizmoOn, GameObject selectedGizmo) {
+    public void UpdateSelectedDisplayText(bool segmentOn, GameObject selectedSegment, bool gizmoOn, GameObject selectedGizmo, GameObject selectedSegmentGizmo) {
         if (selectedSegment != null) {
-            textSelectedSegment.text = "Selected Segment: " + selectedSegment.GetComponent<CritterSegment>().id.ToString() + " ( " + selectedSegment.GetComponent<CritterSegment>().sourceNode.ID.ToString() + " )";
+            if(selectedSegmentGizmo != null) {
+                textSelectedSegment.text = "Selected Segment: " + selectedSegment.GetComponent<CritterSegment>().id.ToString() + " ( " + selectedSegment.GetComponent<CritterSegment>().sourceNode.ID.ToString() + " )" + " giz: " + selectedSegmentGizmo.GetComponent<CritterSegment>().id.ToString();
+            }
+            
         }
         else {
             textSelectedSegment.text = "Selected Segment: NONE!";
@@ -228,6 +253,22 @@ public class CritterEditorUI : MonoBehaviour {
             panelSegmentSettings.textRestAngleZ.text = "Z: ";
 
         }        
+    }
+
+    public void UpdateNodeAddonsPanel(bool segmentOn, GameObject selectedSegment, bool active) {
+        if (active) {
+            panelNodeAddons.panelOverlay.SetActive(false);
+        }
+        else {
+            panelNodeAddons.panelOverlay.SetActive(true);
+        }
+        if (selectedSegment != null) {
+            CritterNode sourceNode = selectedSegment.GetComponent<CritterSegment>().sourceNode;
+            panelNodeAddons.textNodeID.text = "Selected Node ID: " + sourceNode.ID.ToString();            
+        }
+        else {
+            panelNodeAddons.textNodeID.text = "Selected Node ID: none";
+        }
     }
 
     public void ClickPreviewPhysics() {

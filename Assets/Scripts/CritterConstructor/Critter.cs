@@ -292,6 +292,34 @@ public class Critter : MonoBehaviour {
                     newGO.transform.localScale = currentBuildSegmentList[i].sourceNode.dimensions * newSegment.scalingFactor;
                     if (physicsOn) {
                         newGO.AddComponent<Rigidbody>().isKinematic = true;
+                        newGO.GetComponent<Rigidbody>().drag = 20f;
+                        newGO.GetComponent<Rigidbody>().angularDrag = 20f;
+                        // Bouncy Root:
+                        GameObject anchorGO = new GameObject("Anchor");
+                        anchorGO.transform.SetParent(this.gameObject.transform);
+                        anchorGO.AddComponent<Rigidbody>().isKinematic = true;
+                        
+                        ConfigurableJoint configJoint = newGO.AddComponent<ConfigurableJoint>();
+                        configJoint.autoConfigureConnectedAnchor = false;
+                        configJoint.connectedBody = anchorGO.GetComponent<Rigidbody>();
+                        configJoint.anchor = new Vector3(0f, 0f, 0f);
+                        configJoint.connectedAnchor = new Vector3(0f, 0f, 0f);
+                        configJoint.xMotion = ConfigurableJointMotion.Locked;
+                        configJoint.yMotion = ConfigurableJointMotion.Locked;
+                        configJoint.zMotion = ConfigurableJointMotion.Locked;
+                        configJoint.angularXMotion = ConfigurableJointMotion.Locked;
+                        configJoint.angularYMotion = ConfigurableJointMotion.Locked;
+                        configJoint.angularZMotion = ConfigurableJointMotion.Locked;
+                        SoftJointLimitSpring limitSpring = configJoint.linearLimitSpring;
+                        limitSpring.spring = 80f;
+                        limitSpring.damper = 800f;
+                        configJoint.linearLimitSpring = limitSpring;
+                        SoftJointLimit jointLimit = configJoint.linearLimit;
+                        jointLimit.limit = 0.01f;
+                        jointLimit.bounciness = 0.01f;
+                        configJoint.linearLimit = jointLimit;
+                        configJoint.angularXLimitSpring = limitSpring;
+                        configJoint.angularYZLimitSpring = limitSpring;
                     }
                 }
                 else {  // if NOT root segment, can consider parent-related stuff:
@@ -712,17 +740,17 @@ public class Critter : MonoBehaviour {
     public void DeleteSegments() {
         // Delete existing Segment GameObjects
         
-        //var children = new List<GameObject>();
-        //foreach (Transform child in this.gameObject.transform) children.Add(child.gameObject);
-        //children.ForEach(child => Destroy(child));
+        var children = new List<GameObject>();
+        foreach (Transform child in this.gameObject.transform) children.Add(child.gameObject);
+        children.ForEach(child => Destroy(child));
 
         //foreach (Transform child in this.gameObject.transform) children.Add(child.gameObject);
         //children.ForEach(child => Debug.Log("child!" + child.ToString()));
 
         //Debug.Log("DeleteSegments: " + critterSegmentList.Count.ToString());
-        for(int i = 0; i < critterSegmentList.Count; i++) {
-            Destroy(critterSegmentList[i]);
-        }
+        //for(int i = 0; i < critterSegmentList.Count; i++) {
+        //    Destroy(critterSegmentList[i]);
+        //}
         //Debug.Log("DeleteSegments: " + critterSegmentList.Count.ToString());
         critterSegmentList.Clear();
         //Debug.Log("DeleteSegments: " + critterSegmentList.Count.ToString());
