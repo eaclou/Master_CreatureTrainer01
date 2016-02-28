@@ -29,9 +29,11 @@ public class PanelAddonsList : MonoBehaviour {
             PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
             itemDisplay.panelAddonsList = this;
             itemDisplay.index = i;
+            itemDisplay.sourceAddon = sourceNode.addonsList[i];
             itemDisplayGO.transform.SetParent(this.transform);
 
-            itemDisplay.textHeader.text = sourceNode.addonsList[i].GetType().ToString();
+            //itemDisplay.textHeader.text = sourceNode.addonsList[i].GetType().ToString();
+            itemDisplay.Prime();
         }
     }
 }

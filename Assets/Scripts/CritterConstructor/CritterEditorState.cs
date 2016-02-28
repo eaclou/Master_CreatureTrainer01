@@ -1352,12 +1352,12 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
     public void UpdateGizmos() {
         //group.transform.position = gizmoPivotPoint;
         //group.transform.rotation = gizmoOrientation;
-        if (isSegmentSelected) {
+        /*if (isSegmentSelected) {
             selectedSegmentGizmo = selectedSegment;
             if (currentToolState == CurrentToolState.MoveAttachPoint) {
                 //selectedSegmentGizmo = selectedSegment.GetComponent<CritterSegment>().parentSegment.gameObject;
             }
-        }        
+        } */       
         if (currentToolState != CurrentToolState.None) {
             if (isSegmentSelected) {
                 if(!isPhysicsPreview) {
@@ -1763,57 +1763,87 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
         CritterNodeAddonBase.CritterNodeAddonTypes addonType = (CritterNodeAddonBase.CritterNodeAddonTypes)critterEditorUI.panelNodeAddons.dropdownAddonType.value;
         CritterNode sourceNode = selectedSegment.GetComponent<CritterSegment>().sourceNode;
 
-        CritterNodeAddonBase newAddon;
+        //CritterNodeAddonBase newAddon;
         if(addonType == CritterNodeAddonBase.CritterNodeAddonTypes.JointMotor) {
-            AddonJointMotor newJointMotor = new AddonJointMotor();
-            newAddon = newJointMotor;
-            
+            AddonJointMotor newJointMotor = new AddonJointMotor();      // Figure out how to get this to not create a new instance everytime -- check class type!      
+            //newAddon = newJointMotor;
+            if(!CheckListForAddon(newJointMotor, sourceNode.addonsList)) {  // only allows 1 instance of the JointMotor type
+                sourceNode.addonsList.Add(newJointMotor);
+                critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(sourceNode);
+            }            
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.JointAngleSensor) {
             AddonJointAngleSensor newJointAngleSensor = new AddonJointAngleSensor();
-            newAddon = newJointAngleSensor;
+            if (!CheckListForAddon(newJointAngleSensor, sourceNode.addonsList)) {  // only allows 1 instance of the newJointAngleSensor type
+                sourceNode.addonsList.Add(newJointAngleSensor);
+                critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(sourceNode);
+            }
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.ContactSensor) {
             AddonContactSensor newContactSensor = new AddonContactSensor();
-            newAddon = newContactSensor;
+            if (!CheckListForAddon(newContactSensor, sourceNode.addonsList)) {  // only allows 1 instance of the newContactSensor type
+                sourceNode.addonsList.Add(newContactSensor);
+                critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(sourceNode);
+            }
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.RaycastSensor) {
             AddonRaycastSensor newRaycastSensor = new AddonRaycastSensor();
-            newAddon = newRaycastSensor;
+            sourceNode.addonsList.Add(newRaycastSensor);
+            critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(sourceNode);
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.CompassSensor1D) {
             AddonCompassSensor1D newCompassSensor1D = new AddonCompassSensor1D();
-            newAddon = newCompassSensor1D;
+            sourceNode.addonsList.Add(newCompassSensor1D);
+            critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(sourceNode);
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.CompassSensor3D) {
             AddonCompassSensor3D newCompassSensor3D = new AddonCompassSensor3D();
-            newAddon = newCompassSensor3D;
+            if (!CheckListForAddon(newCompassSensor3D, sourceNode.addonsList)) {  // only allows 1 instance of the newCompassSensor3D type
+                sourceNode.addonsList.Add(newCompassSensor3D);
+                critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(sourceNode);
+            }
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.ThrusterEffector1D) {
             AddonThrusterEffector1D newThrusterEffector1D = new AddonThrusterEffector1D();
-            newAddon = newThrusterEffector1D;
+            sourceNode.addonsList.Add(newThrusterEffector1D);
+            critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(sourceNode);
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.ThrusterEffector3D) {
             AddonThrusterEffector3D newThrusterEffector3D = new AddonThrusterEffector3D();
-            newAddon = newThrusterEffector3D;
+            if (!CheckListForAddon(newThrusterEffector3D, sourceNode.addonsList)) {  // only allows 1 instance of the newThrusterEffector3D type
+                sourceNode.addonsList.Add(newThrusterEffector3D);
+                critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(sourceNode);
+            }
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.StickyEffector) {
             AddonStickyEffector newStickyEffector = new AddonStickyEffector();
-            newAddon = newStickyEffector;
+            if (!CheckListForAddon(newStickyEffector, sourceNode.addonsList)) {  // only allows 1 instance of the newThrusterEffector3D type
+                sourceNode.addonsList.Add(newStickyEffector);
+                critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(sourceNode);
+            }
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.OscillatorInput) {
             AddonOscillatorInput newOscillatorInput = new AddonOscillatorInput();
-            newAddon = newOscillatorInput;
+            sourceNode.addonsList.Add(newOscillatorInput);
+            critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(sourceNode);
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.ValueInput) {
             AddonValueInput newValueInput = new AddonValueInput();
-            newAddon = newValueInput;
+            sourceNode.addonsList.Add(newValueInput);
+            critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(sourceNode);
         }
-        else {
-            newAddon = new CritterNodeAddonBase();
+        //sourceNode.addonsList.Add(newAddon);
+        //critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(sourceNode);
+    }
+    public bool CheckListForAddon(CritterNodeAddonBase pendingAddon, List<CritterNodeAddonBase> list) {
+        bool listContainsType = false;
+        for(int i = 0; i < list.Count; i++) {
+            if(pendingAddon.GetType() == list[i].GetType()) {
+                // there already exists a jointMotor!!
+                listContainsType = true;
+            }
         }
-        sourceNode.addonsList.Add(newAddon);
-        critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(sourceNode);
+        return listContainsType;
     }
     public void RemoveAddon(int index) {
         CritterNode sourceNode = selectedSegment.GetComponent<CritterSegment>().sourceNode;
