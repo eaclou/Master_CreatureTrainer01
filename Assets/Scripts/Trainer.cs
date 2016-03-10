@@ -184,7 +184,7 @@ public class Trainer {
         //}
         //playerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].miniGameManager.miniGameInstance.PrintTestTargetBallPos();
         // Do whatever it is that it does for one frame -- Main play loop -- Tick Brain, Tick MiniGame:
-        Debug.Log("PlayRealTimeStep()Trainer: " + playerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].miniGameManager.miniGameInstance.agentBodyBeingTested.creatureBodySegmentGenomeList[0].addOn1.ToString());
+        //Debug.Log("PlayRealTimeStep()Trainer: " + playerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].miniGameManager.miniGameInstance.agentBodyBeingTested.creatureBodySegmentGenomeList[0].addOn1.ToString());
         CalculateOneStep();
 		// Increment Time Step!
 		playingCurMiniGameTimeStep++;

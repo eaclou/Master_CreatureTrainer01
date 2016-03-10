@@ -6,7 +6,6 @@ using UnityEngine.UI;
 public class CritterConstructorManager : MonoBehaviour {
 
     public CritterEditorInputManager critterEditorInputManager;
-    public Button tempButtonReset;
     
     private GameObject masterCritterGO;
     public Critter masterCritter;
@@ -14,8 +13,12 @@ public class CritterConstructorManager : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
+        //if (Debug.isDebugBuild) Debug.Log(" CritterConstructorManager Update!");
         if(critterEditorInputManager != null) {
             critterEditorInputManager.CheckInputs();
+        }
+        else {
+            //if (Debug.isDebugBuild) Debug.Log(" CritterConstructorManager Update INPUT NULL!");
         }
     }
 
@@ -24,7 +27,7 @@ public class CritterConstructorManager : MonoBehaviour {
     }
 
     public void ResetToBlankCritter() {  // Check how to make sure no memory is leaked!
-        Debug.Log("ResetToBlankCritter()");
+        //Debug.Log("ResetToBlankCritter()");
 
         if(masterCritter == null) {  // first time!!!
             masterCritterGO = new GameObject("masterCritterGO");
@@ -151,7 +154,7 @@ public class CritterConstructorManager : MonoBehaviour {
         if (selectedObject != null) {
             if(selectedObject.GetComponent<CritterSegment>() != null) {
                 parentNode = selectedObject.GetComponent<CritterSegment>().sourceNode;
-                //newCritterNode.parentJointLink.parentNode = parentNode;
+                //newCritterNode.jointLink.parentNode = parentNode;
                 if (parentNode != null) {
                     Debug.Log("parentNode: " + selectedObject.GetComponent<CritterSegment>().ToString() + ", LIST: " + masterCritterGenome.CritterNodeList[0].ToString());
                 }
@@ -171,7 +174,7 @@ public class CritterConstructorManager : MonoBehaviour {
         float y = Vector3.Dot(pointParentToAttachPos, selectedObject.GetComponent<CritterSegment>().transform.up);
         float z = Vector3.Dot(pointParentToAttachPos, selectedObject.GetComponent<CritterSegment>().transform.forward);
 
-        //newCritterNode.parentJointLink.attachCoordinates = new Vector3(x, y, z);
+        //newCritterNode.jointLink.attachCoordinates = new Vector3(x, y, z);
 
         Vector3 normalDirection = new Vector3(0f, 0f, 0f);
         if(Mathf.Abs(x) > Mathf.Abs(y)) {

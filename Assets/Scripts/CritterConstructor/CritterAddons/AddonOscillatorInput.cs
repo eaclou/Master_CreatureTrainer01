@@ -7,5 +7,6 @@ public class AddonOscillatorInput : CritterNodeAddonBase {
 
 	public AddonOscillatorInput() {
         Debug.Log("Constructor AddonOscillatorInput()");
+        addonType = CritterNodeAddonTypes.OscillatorInput;
     }
 }

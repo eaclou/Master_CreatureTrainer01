@@ -7,5 +7,6 @@ public class AddonValueInput : CritterNodeAddonBase {
 
 	public AddonValueInput() {
         Debug.Log("Constructor AddonValueInput()");
+        addonType = CritterNodeAddonTypes.ValueInput;
     }
 }

@@ -119,20 +119,21 @@ public class MiniGameManager {
 			miniGameInstance = newGameInstance;
 		}*/
 		else if(newGameType == MiniGameType.CreatureSwimBasic) {
-			// SHOULD the input/output Lists depend on the Agent's full Genome, or should the minigame have control over hookups?
-			// ... Maybe eventually the Agent's genome should dictate, but for now, to avoid a complete re-write, will leave the ability
-			// ... of miniGame's to choose which input/output neurons to hook up. Save that change for the big NEAT update where creature
-			// ... topologies can morph and differ within a population.
+            // SHOULD the input/output Lists depend on the Agent's full Genome, or should the minigame have control over hookups?
+            // ... Maybe eventually the Agent's genome should dictate, but for now, to avoid a complete re-write, will leave the ability
+            // ... of miniGame's to choose which input/output neurons to hook up. Save that change for the big NEAT update where creature
+            // ... topologies can morph and differ within a population.
+            Debug.Log("BROKEN!! MiniGameManager public void SetMiniGameType(MiniGameManager.MiniGameType newGameType)");
 			CreatureBodyGenome templateBody = playerRef.masterPopulation.templateBodyGenome;
-			MiniGameCreatureSwimBasic newGameInstance = new MiniGameCreatureSwimBasic(templateBody);
-			miniGameInstance = newGameInstance;
+			//MiniGameCreatureSwimBasic newGameInstance = new MiniGameCreatureSwimBasic(templateBody);
+			//miniGameInstance = newGameInstance;
 		}
 		else if(newGameType == MiniGameType.CreatureWalkBasic) {
 			CreatureBodyGenome templateBody = playerRef.masterPopulation.templateBodyGenome;
             //Debug.Log("playerRef.masterPopulation.templateBodyGenome: " + playerRef.masterPopulation.templateBodyGenome.creatureBodySegmentGenomeList[0].addOn1.ToString());
             //Debug.Log("templateBody: " + templateBody.creatureBodySegmentGenomeList[0].addOn1.ToString());
-			MiniGameCreatureWalkBasic newGameInstance = new MiniGameCreatureWalkBasic(templateBody);
-			miniGameInstance = newGameInstance;
+			//MiniGameCreatureWalkBasic newGameInstance = new MiniGameCreatureWalkBasic(templateBody);
+			//miniGameInstance = newGameInstance;
 		}
 		/*else if(newGameType == MiniGameType.RobotArmSimple) {
 			MiniGameRobotArm newGameInstance = new MiniGameRobotArm();

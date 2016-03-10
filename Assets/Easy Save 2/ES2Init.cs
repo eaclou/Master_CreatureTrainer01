@@ -23,7 +23,7 @@ public class ES2Init : MonoBehaviour
 	public static void Init()
 	{
 		ES2TypeManager.types = new Dictionary<Type, ES2Type>();
-				ES2TypeManager.types[typeof(UnityEngine.Vector2)] = new ES2_Vector2();
+		ES2TypeManager.types[typeof(UnityEngine.Vector2)] = new ES2_Vector2();
 		ES2TypeManager.types[typeof(UnityEngine.Vector3)] = new ES2_Vector3();
 		ES2TypeManager.types[typeof(UnityEngine.Vector4)] = new ES2_Vector4();
 		ES2TypeManager.types[typeof(UnityEngine.Texture2D)] = new ES2_Texture2D();
@@ -61,11 +61,14 @@ public class ES2Init : MonoBehaviour
 		ES2TypeManager.types[typeof(UnityEngine.Gradient)] = new ES2_Gradient();
 		ES2TypeManager.types[typeof(UnityEngine.Sprite)] = new ES2_Sprite();
 		ES2TypeManager.types[typeof(Agent)] = new ES2UserType_Agent();
-		ES2TypeManager.types[typeof(CreatureBodyGenome)] = new ES2UserType_CreatureBodyGenome();
-		ES2TypeManager.types[typeof(CreatureBodySegmentGenome)] = new ES2UserType_CreatureBodySegmentGenome();
+		ES2TypeManager.types[typeof(CritterGenome)] = new ES2UserType_CritterGenome();
+		ES2TypeManager.types[typeof(CritterJointLink)] = new ES2UserType_CritterJointLink();
+		ES2TypeManager.types[typeof(CritterNode)] = new ES2UserType_CritterNode();
+		ES2TypeManager.types[typeof(CritterNodeAddonBase)] = new ES2UserType_CritterNodeAddonBase();
 		ES2TypeManager.types[typeof(Genome)] = new ES2UserType_Genome();
 		ES2TypeManager.types[typeof(Population)] = new ES2UserType_Population();
 		ES2TypeManager.types[typeof(UnityEngine.AudioClip)] = new ES2_AudioClip();
+		ES2TypeManager.types[typeof(AddonJointMotor)] = new ES2UserType_AddonJointMotor();
 
 		ES2.initialised = true;
 	}

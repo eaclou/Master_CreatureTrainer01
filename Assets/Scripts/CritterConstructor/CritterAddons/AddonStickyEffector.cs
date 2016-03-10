@@ -7,5 +7,6 @@ public class AddonStickyEffector : CritterNodeAddonBase {
 
 	public AddonStickyEffector() {
         Debug.Log("Constructor AddonStickyEffector()");
+        addonType = CritterNodeAddonTypes.StickyEffector;
     }
 }

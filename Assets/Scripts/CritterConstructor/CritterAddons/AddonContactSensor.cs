@@ -7,5 +7,6 @@ public class AddonContactSensor : CritterNodeAddonBase {
 
 	public AddonContactSensor() {
         Debug.Log("Constructor AddonContactSensor()");
+        addonType = CritterNodeAddonTypes.ContactSensor;
     }
 }

@@ -167,19 +167,8 @@ public class CrossoverManager {
 	public CreatureBodyGenome[] MixBodyChromosomes(CreatureBodyGenome[] parentGenomes, int numOffspring) {  // takes A number of Genomes and returns new mixed up versions
 		//int geneArrayLength = parentGenomes.Length;
 		CreatureBodyGenome[] childGenomes = new CreatureBodyGenome[numOffspring];
-
-        /*if(parentGenomes.Length == 1) {  // SINGLE PARENT
-			for(int c = 0; c < numOffspring; c++) {  // for each childAgent:
-				//childFloatGenes[c] = new float[geneArrayLength]; // set child geneArray to proper length
-				for(int i = 0; i < geneArrayLength; i++) { // iterate through genes in geneArray
-					//childFloatGenes[c][i] = parentFloatGenes[0][i]; // only one parent, hence index=0
-					if(CheckForBodyMutation()) {
-						// MMMUUUUTTTTTAAAAATTTTIIIOOOOOOONNNNNNNN!!!!!!!!!!!!
-						//childFloatGenes[c][i] = MutateFloat(childFloatGenes[c][i]);
-					}
-				}
-			}
-		}*/
+        Debug.Log("CURRENTLY BROKEN! public CreatureBodyGenome[] MixBodyChromosomes(CreatureBodyGenome[] parentGenomes, int numOffspring)");
+        /*        
         if (parentGenomes.Length == 2)
         {  // TWO PARENTS
             int currentParentIndex = UnityEngine.Random.Range(0, 2); // 2 parents
@@ -245,28 +234,8 @@ public class CrossoverManager {
                 }
                 
             }
-            /*if(parentFloatGenes.Length > 2) {  // THREE OR MORE PARENTS
-                int currentParentIndex = UnityEngine.Random.Range (0,parentFloatGenes.Length);
-                for(int c = 0; c < numOffspring; c++) {  // for each childAgent:
-                    childFloatGenes[c] = new float[geneArrayLength];
-                    //currentParentIndex = 1 - currentParentIndex; // 2 parents, swaps at beginning of geneArray
-                    //Debug.Log ("currentParentIndex: " + currentParentIndex.ToString());
-                    for(int i = 0; i < geneArrayLength; i++) { // iterate through genes in geneArray
-                        // Do Crossover of Array HERE: !!!!!
-                        if(swapPositionsList.Contains(i)) { // if current array index is a swap position
-                            currentParentIndex = UnityEngine.Random.Range (0,parentFloatGenes.Length); // 3 parents, so picks next Parent Randomly
-                            //Debug.Log ("SWAP: currentParentIndex: " + currentParentIndex.ToString() + ", biasIndex: " + i.ToString());
-                        }
-                        childFloatGenes[c][i] = parentFloatGenes[currentParentIndex][i]; // 
-                        if(CheckForFloatMutation()) {
-                            // MMMUUUUTTTTTAAAAATTTTIIIOOOOOOONNNNNNNN!!!!!!!!!!!!
-                            childFloatGenes[c][i] = MutateFloat(childFloatGenes[c][i]);
-                        }
-                    }
-                }
-            }*/
         }
-
+        */
 		return childGenomes;
 	}
 

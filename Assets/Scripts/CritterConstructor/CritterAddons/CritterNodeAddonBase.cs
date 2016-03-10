@@ -1,9 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[System.Serializable]
 public class CritterNodeAddonBase {
 
-    public enum CritterNodeAddonTypes {
+    public CritterNodeAddonTypes addonType;
+    public enum CritterNodeAddonTypes {        
         JointMotor,
         JointAngleSensor,
         ContactSensor,     // includes collider?
@@ -14,10 +16,12 @@ public class CritterNodeAddonBase {
         ThrusterEffector3D,
         StickyEffector,
         OscillatorInput,
-        ValueInput        
+        ValueInput,
+        None
     };
 
 	public CritterNodeAddonBase() {
         Debug.Log("Constructor CritterNodeAddonBase()");
+        addonType = CritterNodeAddonTypes.None;
     }
 }

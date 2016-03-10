@@ -6,10 +6,10 @@ using System.Collections.Generic;
 public class CreatureBodyGenome {
 
     public float initialTotalVolume;
-	public List<CreatureBodySegmentGenome> creatureBodySegmentGenomeList;
+	//public List<CreatureBodySegmentGenome> creatureBodySegmentGenomeList;
 
 	// Constructor:
 	public CreatureBodyGenome() {
-		creatureBodySegmentGenomeList = new List<CreatureBodySegmentGenome>();
+		//creatureBodySegmentGenomeList = new List<CreatureBodySegmentGenome>();
 	}
 }

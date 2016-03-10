@@ -7,5 +7,6 @@ public class AddonRaycastSensor : CritterNodeAddonBase {
 
 	public AddonRaycastSensor() {
         Debug.Log("Constructor AddonRaycastSensor()");
+        addonType = CritterNodeAddonTypes.RaycastSensor;
     }
 }

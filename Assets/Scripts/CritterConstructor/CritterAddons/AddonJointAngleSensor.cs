@@ -7,5 +7,6 @@ public class AddonJointAngleSensor : CritterNodeAddonBase {
 
 	public AddonJointAngleSensor() {
         Debug.Log("Constructor AddonJointAngleSensor()");
+        addonType = CritterNodeAddonTypes.JointAngleSensor;
     }
 }

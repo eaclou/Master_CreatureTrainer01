@@ -7,9 +7,9 @@ public class AddonJointMotor : CritterNodeAddonBase {
     public float motorForceMin = 1f;
     public float motorForceMax = 1000f;
 
-
 	public AddonJointMotor() {
         Debug.Log("Constructor AddonJointMotor()");
+        addonType = CritterNodeAddonTypes.JointMotor;
         motorForce = new float[1];
         motorForce[0] = 100f;
     }

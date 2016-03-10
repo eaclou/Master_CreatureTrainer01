@@ -3,8 +3,10 @@ using System.Collections;
 
 public class CritterJointLink {
 
-    public CritterNode childNode;
-    public CritterNode parentNode;
+    //public CritterNode thisNode;
+    public int thisNodeID;
+    //public CritterNode parentNode;
+    public int parentNodeID = -1;  // defaults to -1 means root, other joints' parentID's should be set later
 
     public Vector3 attachDir;
     public Vector3 restAngleDir;
@@ -37,10 +39,22 @@ public class CritterJointLink {
     }
 
     public CritterJointLink() {
-        Debug.Log("CritterJointLink Constructor()!");
+        Debug.Log("CritterJointLink Constructor()! NO ID NO ID NO ID NO ID");
         jointType = JointType.HingeX;  // Default!
         symmetryType = SymmetryType.None;
     }
+    public CritterJointLink(int thisID) {
+        Debug.Log("CritterJointLink Constructor( " + thisID.ToString() + " )!");
+        this.thisNodeID = thisID;
+        jointType = JointType.HingeX;  // Default!
+        symmetryType = SymmetryType.None;
+    }
+    /*public CritterJointLink(CritterNode thisNode) {
+        Debug.Log("CritterJointLink Constructor()!");
+        this.thisNode = thisNode;
+        jointType = JointType.HingeX;  // Default!
+        symmetryType = SymmetryType.None;
+    }*/
 
     public void MoveAttachCoords(Vector3 newAttachCoords) { // sets the position where this joint attaches to its parent
 

@@ -7,5 +7,6 @@ public class AddonThrusterEffector3D : CritterNodeAddonBase {
 
 	public AddonThrusterEffector3D() {
         Debug.Log("Constructor AddonThrusterEffector3D()");
+        addonType = CritterNodeAddonTypes.ThrusterEffector3D;
     }
 }

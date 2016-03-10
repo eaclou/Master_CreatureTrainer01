@@ -34,7 +34,7 @@ public class Critter : MonoBehaviour {
             // if Root node:
             if (i == 0) {   // RE-VISIT!!!!
                 critterSegmentList[i].transform.rotation = Quaternion.identity;
-                critterSegmentList[i].transform.localScale = masterCritterGenome.CritterNodeList[i].dimensions;
+                critterSegmentList[i].transform.localScale = masterCritterGenome.CritterNodeList[i].dimensions * critterSegmentList[i].GetComponent<CritterSegment>().scalingFactor;
             }
             else { // not root node!!
                 SetSegmentTransform(critterSegmentList[i]); // update segment's position & orientation based on its Parent segment & both segments' dimensions
@@ -53,12 +53,12 @@ public class Critter : MonoBehaviour {
         Vector3 newSegmentParentDimensions = newSegment.parentSegment.sourceNode.dimensions * newSegment.parentSegment.scalingFactor;
         Vector3 newSegmentDimensions = newSegment.sourceNode.dimensions * newSegment.scalingFactor;        
         parentPos = newSegment.parentSegment.transform.position;        
-        Vector3 attachDir = newSegment.sourceNode.parentJointLink.attachDir;
-        Vector3 restAngleDir = newSegment.sourceNode.parentJointLink.restAngleDir;
+        Vector3 attachDir = newSegment.sourceNode.jointLink.attachDir;
+        Vector3 restAngleDir = newSegment.sourceNode.jointLink.restAngleDir;
 
         // MODIFY AttachDir based on recursion Forward:
         if (newSegment.recursionNumber > 1) {  // if segment is not the root of a recursion chain
-            attachDir = Vector3.Lerp(attachDir, new Vector3(0f, 0f, 1f), newSegment.sourceNode.parentJointLink.recursionForward);
+            attachDir = Vector3.Lerp(attachDir, new Vector3(0f, 0f, 1f), newSegment.sourceNode.jointLink.recursionForward);
         }
         // MODIFY AttachDir based on Mirroring!!!!!
         if (newSegment.mirrorX) {
@@ -214,8 +214,8 @@ public class Critter : MonoBehaviour {
             else { // not root node!!  
                 
                 //newSegment.parentSegment = critterSegmentList[0].GetComponent<CritterSegment>();
-                newSegment.parentSegment = critterSegmentList[newSegment.sourceNode.parentJointLink.parentNode.ID].GetComponent<CritterSegment>();
-                Debug.Log("RebuildCritter() newSegment.parentSegment: " + newSegment.parentSegment.ToString() + ", " + masterCritterGenome.CritterNodeList[i].parentJointLink.parentNode.ID.ToString());
+                newSegment.parentSegment = critterSegmentList[newSegment.sourceNode.jointLink.parentNode.ID].GetComponent<CritterSegment>();
+                Debug.Log("RebuildCritter() newSegment.parentSegment: " + newSegment.parentSegment.ToString() + ", " + masterCritterGenome.CritterNodeList[i].jointLink.parentNode.ID.ToString());
                 SetSegmentTransform(newNode);
 
                 if(physicsOn) {
@@ -286,9 +286,9 @@ public class Critter : MonoBehaviour {
                 newSegment.id = nextSegmentID;  // !!!!!!!!!!!!!!!!!@$%@$#^@$^@$%^$%^#!!!!!!!!!!!!!!!!!!! REVISIT THIS!!!! should id's be different btw segments and nodes?
                 nextSegmentID++;
                 
-                if (currentBuildSegmentList[i].sourceNode.parentJointLink.parentNode == null) {  // is ROOT segment  -- Look into doing Root build BEFORE for loop to avoid the need to do this check
+                if (currentBuildSegmentList[i].sourceNode.ID == 0) {  // is ROOT segment  -- Look into doing Root build BEFORE for loop to avoid the need to do this check
                     newGO.transform.rotation = Quaternion.identity;
-                    newSegment.scalingFactor = newSegment.sourceNode.parentJointLink.recursionScalingFactor;
+                    newSegment.scalingFactor = newSegment.sourceNode.jointLink.recursionScalingFactor;
                     newGO.transform.localScale = currentBuildSegmentList[i].sourceNode.dimensions * newSegment.scalingFactor;
                     if (physicsOn) {
                         newGO.AddComponent<Rigidbody>().isKinematic = true;
@@ -331,18 +331,18 @@ public class Critter : MonoBehaviour {
                     newSegment.mirrorZ = newSegment.parentSegment.mirrorZ;
                     // inherit scaling factor from parent -- this is later adjusted again if it is part of a recursion chain
                     newSegment.scalingFactor = newSegment.parentSegment.scalingFactor;
-                    newSegment.scalingFactor *= currentBuildSegmentList[i].sourceNode.parentJointLink.recursionScalingFactor; // propagate scaling factor
+                    newSegment.scalingFactor *= currentBuildSegmentList[i].sourceNode.jointLink.recursionScalingFactor; // propagate scaling factor
                     // Check for if the segment currently being built is a Mirror COPY:
                     if (currentBuildSegmentList[i].isMirror) {
                         //Debug.Log("This is a MIRROR COPY segment - Wow!");
-                        if(currentBuildSegmentList[i].sourceNode.parentJointLink.symmetryType == CritterJointLink.SymmetryType.MirrorX) {
+                        if(currentBuildSegmentList[i].sourceNode.jointLink.symmetryType == CritterJointLink.SymmetryType.MirrorX) {
                             // Invert the X-axis  (this will propagate down to all this segment's children
                             newSegment.mirrorX = !newSegment.mirrorX;
                         }
-                        else if (currentBuildSegmentList[i].sourceNode.parentJointLink.symmetryType == CritterJointLink.SymmetryType.MirrorY) {
+                        else if (currentBuildSegmentList[i].sourceNode.jointLink.symmetryType == CritterJointLink.SymmetryType.MirrorY) {
                             newSegment.mirrorY = !newSegment.mirrorY;
                         }
-                        else if (currentBuildSegmentList[i].sourceNode.parentJointLink.symmetryType == CritterJointLink.SymmetryType.MirrorZ) {
+                        else if (currentBuildSegmentList[i].sourceNode.jointLink.symmetryType == CritterJointLink.SymmetryType.MirrorZ) {
                             newSegment.mirrorZ = !newSegment.mirrorZ;
                         }
                     }
@@ -351,26 +351,26 @@ public class Critter : MonoBehaviour {
                 //Debug.Log("BUILD SEGMENT: " + (nextSegmentID - 1).ToString() + ", segID: " + newSegment.id.ToString());
 
                 // CHECK FOR RECURSION:
-                if (currentBuildSegmentList[i].sourceNode.parentJointLink.numberOfRecursions > 0) { // if the node being considered has recursions:
+                if (currentBuildSegmentList[i].sourceNode.jointLink.numberOfRecursions > 0) { // if the node being considered has recursions:
                     //Debug.Log("currentNode: " + currentBuildSegmentList[i].sourceNode.ID.ToString() + "newSegmentRecursion#: " + newSegment.recursionNumber.ToString() + ", parentRecursion#: " + currentBuildSegmentList[i].parentSegment.recursionNumber.ToString());
                     if (newSegment.sourceNode == currentBuildSegmentList[i].parentSegment.sourceNode) {  // if this segment's sourceNode is the same is its parent Segment's sourceNode, then it is not the root of the recursion chain!
                         //Debug.Log("newSegment.sourceNode == currentBuildNodeParentSegmentList[i].sourceNode!");
 
                         // Are we at the end of a recursion chain?
-                        if (currentBuildSegmentList[i].parentSegment.recursionNumber >= currentBuildSegmentList[i].sourceNode.parentJointLink.numberOfRecursions) {
-                            //Debug.Log("recursion number greater than numRecursions! ( " + currentBuildSegmentList[i].parentSegment.recursionNumber.ToString() + " vs " + currentBuildSegmentList[i].sourceNode.parentJointLink.numberOfRecursions.ToString());
+                        if (currentBuildSegmentList[i].parentSegment.recursionNumber >= currentBuildSegmentList[i].sourceNode.jointLink.numberOfRecursions) {
+                            //Debug.Log("recursion number greater than numRecursions! ( " + currentBuildSegmentList[i].parentSegment.recursionNumber.ToString() + " vs " + currentBuildSegmentList[i].sourceNode.jointLink.numberOfRecursions.ToString());
                             newSegment.recursionNumber = currentBuildSegmentList[i].parentSegment.recursionNumber + 1; //
-                            //newSegment.scalingFactor *= currentBuildSegmentList[i].sourceNode.parentJointLink.recursionScalingFactor;
+                            //newSegment.scalingFactor *= currentBuildSegmentList[i].sourceNode.jointLink.recursionScalingFactor;
                         }
                         else {  // create new recursion instance!!
                             BuildSegmentInfo newSegmentInfo = new BuildSegmentInfo();
                             newSegmentInfo.sourceNode = currentBuildSegmentList[i].sourceNode;  // request a segment to be built again based on the current sourceNode
                             newSegment.recursionNumber = currentBuildSegmentList[i].parentSegment.recursionNumber + 1;
-                            //newSegment.scalingFactor *= currentBuildSegmentList[i].sourceNode.parentJointLink.recursionScalingFactor; // propagate scaling factor
+                            //newSegment.scalingFactor *= currentBuildSegmentList[i].sourceNode.jointLink.recursionScalingFactor; // propagate scaling factor
                             newSegmentInfo.parentSegment = newSegment; // parent of itself (the just-built Segment)
                             nextBuildSegmentList.Add(newSegmentInfo);
                             // If the node also has Symmetry:
-                            if (newSegmentInfo.sourceNode.parentJointLink.symmetryType != CritterJointLink.SymmetryType.None) {
+                            if (newSegmentInfo.sourceNode.jointLink.symmetryType != CritterJointLink.SymmetryType.None) {
                                 // the child node has some type of symmetry, so add a buildOrder for a mirrored Segment:
                                 BuildSegmentInfo newSegmentInfoMirror = new BuildSegmentInfo();
                                 newSegmentInfoMirror.sourceNode = currentBuildSegmentList[i].sourceNode;  // uses same sourceNode, but tags as Mirror:
@@ -387,7 +387,7 @@ public class Critter : MonoBehaviour {
                         newSegmentInfo.parentSegment = newSegment;
                         nextBuildSegmentList.Add(newSegmentInfo);
                         // If the node also has Symmetry:
-                        if (newSegmentInfo.sourceNode.parentJointLink.symmetryType != CritterJointLink.SymmetryType.None) {
+                        if (newSegmentInfo.sourceNode.jointLink.symmetryType != CritterJointLink.SymmetryType.None) {
                             // the child node has some type of symmetry, so add a buildOrder for a mirrored Segment:
                             BuildSegmentInfo newSegmentInfoMirror = new BuildSegmentInfo();
                             newSegmentInfoMirror.sourceNode = currentBuildSegmentList[i].sourceNode;  // uses same sourceNode, but tags as Mirror:
@@ -398,25 +398,29 @@ public class Critter : MonoBehaviour {
                     }
                 }
                 // Figure out how many unique Child nodes this built node has:
-                int numberOfChildNodes = currentBuildSegmentList[i].sourceNode.attachedJointLinkList.Count;
+                //int numberOfChildNodes = currentBuildSegmentList[i].sourceNode.attachedJointLinkList.Count; // old
+                int numberOfChildNodes = currentBuildSegmentList[i].sourceNode.attachedChildNodesIdList.Count;
                 //Debug.Log("numberOfChildNodes: " + numberOfChildNodes.ToString() + "currentBuildSegmentList[i].sourceNode: " + currentBuildSegmentList[i].sourceNode.ID.ToString() + ", i: " + i.ToString());
                 for (int c = 0; c < numberOfChildNodes; c++) {
-                    
+
                     // if NO symmetry:
                     // Check if Attaching to a recursion chain && if onlyattachToTail is active:
-                    if(currentBuildSegmentList[i].sourceNode.attachedJointLinkList[c].childNode.parentJointLink.onlyAttachToTailNode) {
-                        if(currentBuildSegmentList[i].sourceNode.parentJointLink.numberOfRecursions > 0) {
-                            if (newSegment.recursionNumber > newSegment.sourceNode.parentJointLink.numberOfRecursions) {
+                    int childID = currentBuildSegmentList[i].sourceNode.attachedChildNodesIdList[c];
+                    //Debug.Log("%%%%% c=" + c.ToString() + ", childID: " + childID.ToString() + ", critterNodeListCount: " + masterCritterGenome.CritterNodeList.Count.ToString());
+                    // if(currentBuildSegmentList[i].sourceNode.attachedJointLinkList[c].childNode.parentJointLink.onlyAttachToTailNode)  // OLD
+                    if (masterCritterGenome.CritterNodeList[childID].jointLink.onlyAttachToTailNode) { 
+                        if (currentBuildSegmentList[i].sourceNode.jointLink.numberOfRecursions > 0) {
+                            if (newSegment.recursionNumber > newSegment.sourceNode.jointLink.numberOfRecursions) {
                                 // Only build segment if it is on the end of a recursion chain:
                                 BuildSegmentInfo newSegmentInfo = new BuildSegmentInfo();
-                                newSegmentInfo.sourceNode = currentBuildSegmentList[i].sourceNode.attachedJointLinkList[c].childNode;
+                                newSegmentInfo.sourceNode = masterCritterGenome.CritterNodeList[childID];
                                 newSegmentInfo.parentSegment = newSegment;
                                 nextBuildSegmentList.Add(newSegmentInfo);
 
-                                if (currentBuildSegmentList[i].sourceNode.attachedJointLinkList[c].childNode.parentJointLink.symmetryType != CritterJointLink.SymmetryType.None) {
+                                if (masterCritterGenome.CritterNodeList[childID].jointLink.symmetryType != CritterJointLink.SymmetryType.None) {
                                     // the child node has some type of symmetry, so add a buildOrder for a mirrored Segment:
                                     BuildSegmentInfo newSegmentInfoMirror = new BuildSegmentInfo();
-                                    newSegmentInfoMirror.sourceNode = currentBuildSegmentList[i].sourceNode.attachedJointLinkList[c].childNode;
+                                    newSegmentInfoMirror.sourceNode = masterCritterGenome.CritterNodeList[childID];
                                     newSegmentInfoMirror.isMirror = true;  // This segment is the COPY, not the original
                                     newSegmentInfoMirror.parentSegment = newSegment;  // 
                                     nextBuildSegmentList.Add(newSegmentInfoMirror);
@@ -426,14 +430,14 @@ public class Critter : MonoBehaviour {
                         else {
                             // It only attaches to End nodes, but is parented to a Non-recursive segment, so proceed normally!!!
                             BuildSegmentInfo newSegmentInfo = new BuildSegmentInfo();
-                            newSegmentInfo.sourceNode = currentBuildSegmentList[i].sourceNode.attachedJointLinkList[c].childNode;
+                            newSegmentInfo.sourceNode = masterCritterGenome.CritterNodeList[childID];
                             newSegmentInfo.parentSegment = newSegment;
                             nextBuildSegmentList.Add(newSegmentInfo);
 
-                            if (currentBuildSegmentList[i].sourceNode.attachedJointLinkList[c].childNode.parentJointLink.symmetryType != CritterJointLink.SymmetryType.None) {
+                            if (masterCritterGenome.CritterNodeList[childID].jointLink.symmetryType != CritterJointLink.SymmetryType.None) {
                                 // the child node has some type of symmetry, so add a buildOrder for a mirrored Segment:
                                 BuildSegmentInfo newSegmentInfoMirror = new BuildSegmentInfo();
-                                newSegmentInfoMirror.sourceNode = currentBuildSegmentList[i].sourceNode.attachedJointLinkList[c].childNode;
+                                newSegmentInfoMirror.sourceNode = masterCritterGenome.CritterNodeList[childID];
                                 newSegmentInfoMirror.isMirror = true;  // This segment is the COPY, not the original
                                 newSegmentInfoMirror.parentSegment = newSegment;  // 
                                 nextBuildSegmentList.Add(newSegmentInfoMirror);
@@ -442,14 +446,14 @@ public class Critter : MonoBehaviour {
                     }
                     else {  // proceed normally:
                         BuildSegmentInfo newSegmentInfo = new BuildSegmentInfo();
-                        newSegmentInfo.sourceNode = currentBuildSegmentList[i].sourceNode.attachedJointLinkList[c].childNode;
+                        newSegmentInfo.sourceNode = masterCritterGenome.CritterNodeList[childID];
                         newSegmentInfo.parentSegment = newSegment;
                         nextBuildSegmentList.Add(newSegmentInfo);
 
-                        if (currentBuildSegmentList[i].sourceNode.attachedJointLinkList[c].childNode.parentJointLink.symmetryType != CritterJointLink.SymmetryType.None) {
+                        if (masterCritterGenome.CritterNodeList[childID].jointLink.symmetryType != CritterJointLink.SymmetryType.None) {
                             // the child node has some type of symmetry, so add a buildOrder for a mirrored Segment:
                             BuildSegmentInfo newSegmentInfoMirror = new BuildSegmentInfo();
-                            newSegmentInfoMirror.sourceNode = currentBuildSegmentList[i].sourceNode.attachedJointLinkList[c].childNode;
+                            newSegmentInfoMirror.sourceNode = masterCritterGenome.CritterNodeList[childID];
                             newSegmentInfoMirror.isMirror = true;  // This segment is the COPY, not the original
                             newSegmentInfoMirror.parentSegment = newSegment;  // 
                             nextBuildSegmentList.Add(newSegmentInfoMirror);
@@ -496,7 +500,7 @@ public class Critter : MonoBehaviour {
     void ConfigureJointSettings(CritterSegment segment, ref ConfigurableJoint joint) {
         CritterNode node = segment.sourceNode;
 
-        if (node.parentJointLink.jointType == CritterJointLink.JointType.Fixed) { // Fixed Joint
+        if (node.jointLink.jointType == CritterJointLink.JointType.Fixed) { // Fixed Joint
                                                                                   // Lock mobility:
             joint.xMotion = ConfigurableJointMotion.Locked;
             joint.yMotion = ConfigurableJointMotion.Locked;
@@ -505,7 +509,7 @@ public class Critter : MonoBehaviour {
             joint.angularYMotion = ConfigurableJointMotion.Locked;
             joint.angularZMotion = ConfigurableJointMotion.Locked;
         }
-        else if (node.parentJointLink.jointType == CritterJointLink.JointType.HingeX) { // Uni-Axis Hinge Joint
+        else if (node.jointLink.jointType == CritterJointLink.JointType.HingeX) { // Uni-Axis Hinge Joint
             joint.axis = new Vector3(1f, 0f, 0f);
             joint.secondaryAxis = new Vector3(0f, 1f, 0f);
             JointDrive jointDrive = joint.angularXDrive;
@@ -517,7 +521,7 @@ public class Critter : MonoBehaviour {
             joint.xMotion = ConfigurableJointMotion.Locked;
             joint.yMotion = ConfigurableJointMotion.Locked;
             joint.zMotion = ConfigurableJointMotion.Locked;
-            if (node.parentJointLink.jointLimitPrimary == 180)
+            if (node.jointLink.jointLimitPrimary == 180)
                 joint.angularXMotion = ConfigurableJointMotion.Free;
             else
                 joint.angularXMotion = ConfigurableJointMotion.Limited;
@@ -525,13 +529,13 @@ public class Critter : MonoBehaviour {
             joint.angularZMotion = ConfigurableJointMotion.Locked;
             // Joint Limits:
             SoftJointLimit limitXMin = joint.lowAngularXLimit;
-            limitXMin.limit = -node.parentJointLink.jointLimitPrimary;
+            limitXMin.limit = -node.jointLink.jointLimitPrimary;
             joint.lowAngularXLimit = limitXMin;
             SoftJointLimit limitXMax = joint.highAngularXLimit;
-            limitXMax.limit = node.parentJointLink.jointLimitPrimary;
+            limitXMax.limit = node.jointLink.jointLimitPrimary;
             joint.highAngularXLimit = limitXMax;
         }
-        else if (node.parentJointLink.jointType == CritterJointLink.JointType.HingeY) { // Uni-Axis Hinge Joint
+        else if (node.jointLink.jointType == CritterJointLink.JointType.HingeY) { // Uni-Axis Hinge Joint
             joint.axis = new Vector3(1f, 0f, 0f);
             joint.secondaryAxis = new Vector3(0f, 1f, 0f);
             JointDrive jointDrive = joint.angularYZDrive;
@@ -544,17 +548,17 @@ public class Critter : MonoBehaviour {
             joint.yMotion = ConfigurableJointMotion.Locked;
             joint.zMotion = ConfigurableJointMotion.Locked;
             joint.angularXMotion = ConfigurableJointMotion.Locked;
-            if (node.parentJointLink.jointLimitPrimary == 180)
+            if (node.jointLink.jointLimitPrimary == 180)
                 joint.angularYMotion = ConfigurableJointMotion.Free;
             else
                 joint.angularYMotion = ConfigurableJointMotion.Limited;
             joint.angularZMotion = ConfigurableJointMotion.Locked;
             // Joint Limits:
             SoftJointLimit limitY = joint.angularYLimit;
-            limitY.limit = node.parentJointLink.jointLimitPrimary;
+            limitY.limit = node.jointLink.jointLimitPrimary;
             joint.angularYLimit = limitY;
         }
-        else if (node.parentJointLink.jointType == CritterJointLink.JointType.HingeZ) { // Uni-Axis Hinge Joint
+        else if (node.jointLink.jointType == CritterJointLink.JointType.HingeZ) { // Uni-Axis Hinge Joint
             joint.axis = new Vector3(0f, 1f, 0f);
             joint.secondaryAxis = new Vector3(1f, 0f, 0f);
             JointDrive jointDrive = joint.angularYZDrive;
@@ -568,16 +572,16 @@ public class Critter : MonoBehaviour {
             joint.zMotion = ConfigurableJointMotion.Locked;
             joint.angularXMotion = ConfigurableJointMotion.Locked;
             joint.angularYMotion = ConfigurableJointMotion.Locked;
-            if (node.parentJointLink.jointLimitPrimary == 180)
+            if (node.jointLink.jointLimitPrimary == 180)
                 joint.angularZMotion = ConfigurableJointMotion.Free;
             else
                 joint.angularZMotion = ConfigurableJointMotion.Limited;
             // Joint Limits:
             SoftJointLimit limitZ = joint.angularZLimit;
-            limitZ.limit = node.parentJointLink.jointLimitPrimary;
+            limitZ.limit = node.jointLink.jointLimitPrimary;
             joint.angularZLimit = limitZ;
         }
-        else if (node.parentJointLink.jointType == CritterJointLink.JointType.DualXY) { // Uni-Axis Hinge Joint
+        else if (node.jointLink.jointType == CritterJointLink.JointType.DualXY) { // Uni-Axis Hinge Joint
             joint.axis = new Vector3(1f, 0f, 0f);
             joint.secondaryAxis = new Vector3(0f, 1f, 0f);
             JointDrive jointDriveX = joint.angularXDrive;
@@ -593,7 +597,7 @@ public class Critter : MonoBehaviour {
             joint.xMotion = ConfigurableJointMotion.Locked;
             joint.yMotion = ConfigurableJointMotion.Locked;
             joint.zMotion = ConfigurableJointMotion.Locked;
-            if (node.parentJointLink.jointLimitPrimary == 180) {
+            if (node.jointLink.jointLimitPrimary == 180) {
                 joint.angularXMotion = ConfigurableJointMotion.Free;
                 joint.angularYMotion = ConfigurableJointMotion.Free;
             }                
@@ -604,13 +608,13 @@ public class Critter : MonoBehaviour {
             joint.angularZMotion = ConfigurableJointMotion.Locked;
             // Joint Limits:
             SoftJointLimit limitXMin = joint.lowAngularXLimit;
-            limitXMin.limit = -node.parentJointLink.jointLimitPrimary;
+            limitXMin.limit = -node.jointLink.jointLimitPrimary;
             joint.lowAngularXLimit = limitXMin;
             SoftJointLimit limitXMax = joint.highAngularXLimit;
-            limitXMax.limit = node.parentJointLink.jointLimitPrimary;
+            limitXMax.limit = node.jointLink.jointLimitPrimary;
             joint.highAngularXLimit = limitXMax;
             SoftJointLimit limitYMax = joint.angularYLimit;
-            limitYMax.limit = node.parentJointLink.jointLimitSecondary;
+            limitYMax.limit = node.jointLink.jointLimitSecondary;
             joint.angularYLimit = limitYMax;
         }
     }
@@ -630,11 +634,11 @@ public class Critter : MonoBehaviour {
         //retVec.y = 0f;  // These might change when/if I implement childAttachPos, or initial Rotation
         //retVec.z = -0.5f;
         CritterNode node = segment.sourceNode;
-        Vector3 attachDir = node.parentJointLink.attachDir;
+        Vector3 attachDir = node.jointLink.attachDir;
         // MODIFY AttachDir based on recursion Forward:
         // $*$*$*$*$*$*$*$ This code is duplicated in SetTransform --  Look into how to combine!!!
         if (segment.recursionNumber > 1) {  // if segment is not the root of a recursion chain
-            attachDir = Vector3.Lerp(attachDir, new Vector3(0f, 0f, 1f), segment.sourceNode.parentJointLink.recursionForward);
+            attachDir = Vector3.Lerp(attachDir, new Vector3(0f, 0f, 1f), segment.sourceNode.jointLink.recursionForward);
         }
         if (segment.mirrorX) {
             attachDir.x *= -1f;
@@ -761,76 +765,96 @@ public class Critter : MonoBehaviour {
     }
 
     public void DeleteNode(CritterNode node) {
-        // REFACTOR THIS TO HANDLE attachedChildLists and new parenting etc.!!!
-        int id = node.ID;
-        Debug.Log("DeleteNode before: " + masterCritterGenome.CritterNodeList.Count.ToString());
-
-        // Remove reference to the node being deleted, from its parentNode:
-        CritterNode parentNode = node.parentJointLink.parentNode;
-        int childRef = -1;
-        for(int i = 0; i < parentNode.attachedJointLinkList.Count; i++) {
+        int deletedID = node.ID; // id of the node being deleted 
+        CritterNode parentNode = masterCritterGenome.CritterNodeList[node.jointLink.parentNodeID];  // get parent of node being deleted
+        //Debug.Log("DeleteNode before: " + masterCritterGenome.CritterNodeList.Count.ToString() + " deletedID: " + deletedID.ToString() + " parentChildCount: " + parentNode.attachedChildNodesIdList.Count.ToString());
+        int childIndex = -1;
+        // evalute parent of deleted node, go through its childList to find deleted Node ....        
+        for(int i = 0; i < parentNode.attachedChildNodesIdList.Count; i++) {
+            //Debug.Log("*******B$B$B$ i: " + i.ToString() + " deletedID: " + deletedID.ToString() + ", parentNodeID: " + parentNode.ID.ToString() + " attachedChildNodesIdList[i]: " + parentNode.attachedChildNodesIdList[i].ToString());
             // go through parent node's children list and remove this node from it before deleting it from master list:
-            if(parentNode.attachedJointLinkList[i] == node.parentJointLink) {
-                childRef = i;                
+            if (parentNode.attachedChildNodesIdList[i] == deletedID) { // if the child in parent's List is the child being deleted:
+                //Debug.Log("******* i: " + i.ToString() + " deletedID: " + deletedID.ToString() + ", parentNodeID: " + parentNode.ID.ToString());
+                childIndex = i;   // save index of node being deleted so it can be removed after loop             
             }
         }
-        parentNode.attachedJointLinkList.RemoveAt(childRef); // remove here to avoid shortening length of list while traversing it
+        // and remove it from childList
+        parentNode.attachedChildNodesIdList.RemoveAt(childIndex); // remove here to avoid shortening length of list while traversing it
 
         // Attach children of deleted node to parentNode:
-        for(int j = 0; j < node.attachedJointLinkList.Count; j++) {
-            node.attachedJointLinkList[j].parentNode = parentNode;
-            parentNode.attachedJointLinkList.Add(node.attachedJointLinkList[j]);
+        for(int j = 0; j < node.attachedChildNodesIdList.Count; j++) { // go through deleted node's children
+            //Debug.Log("**** j: " + j.ToString() + " jchildID: " + node.attachedChildNodesIdList[j].ToString());
+            //masterCritterGenome.CritterNodeList[  masterCritterGenome.CritterNodeList[  node.attachedChildNodesIdList[j]  ].jointLink.parentNodeID  ] = parentNode; // OLD; see if this needs to be done with ints rather than saving a ref to parentNode
+            // Set child of deleted-node's parentID  to the original parent of the deleted node:
+            masterCritterGenome.CritterNodeList[node.attachedChildNodesIdList[j]].jointLink.parentNodeID = parentNode.ID;
+            // add the orphaned child ID's to the original parent of the deleted node:
+            parentNode.attachedChildNodesIdList.Add(node.attachedChildNodesIdList[j]);
         }
-
         // Remove node from master List
-        masterCritterGenome.CritterNodeList.RemoveAt(id);
-        Debug.Log("DeleteNode after: " + masterCritterGenome.CritterNodeList.Count.ToString());
+        masterCritterGenome.CritterNodeList.RemoveAt(deletedID);
+        //Debug.Log("DeleteNode after: " + masterCritterGenome.CritterNodeList.Count.ToString() + ", parentFullChildList: " + parentNode.attachedChildNodesIdList.Count.ToString());
     }
 
     public void RenumberNodes() {
         if(masterCritterGenome != null) {
-            // traverse the main node List, if there is a gap in id's, change the id of next lowest node
+            // traverse the main node List, if there is a gap in id's, iterate through all nodes/joints and adjust all ID's down by 1 until no gaps exist
             int checkingID = 0;
-            //int nextFreeID = -1;
             int lastConsecutiveID = 0;
             for(int i = 0; i < masterCritterGenome.CritterNodeList.Count; i++) {
-                Debug.Log("RenumberNodesBEFORE checkingID: " + checkingID.ToString() + ", nodeID: " + masterCritterGenome.CritterNodeList[i].ID.ToString() + ", i: " + i.ToString());
+                //Debug.Log("RenumberNodesBEFORE checkingID: " + checkingID.ToString() + ", nodeID: " + masterCritterGenome.CritterNodeList[i].ID.ToString() + ", i: " + i.ToString());
                 if (masterCritterGenome.CritterNodeList[i].ID == checkingID) { // if node exists for each checkingID
                     lastConsecutiveID = checkingID;
                     // no need to renumber, node exists for this number
                 }
                 else {  //  nodeID didn't match checkingID - there is a gap!
-                    // Search for instances of references to this node -- i.e. children of this node
-                    for(int j = 1; j < masterCritterGenome.CritterNodeList.Count; j++) {  // make this less of a brute force algo later!!!
-                        // SKIP ROOT ^^^^
-                        Debug.Log("objectReference2: j: " + j.ToString() + ", " + masterCritterGenome.CritterNodeList[j].parentJointLink.parentNode.ToString() + ", " + masterCritterGenome.CritterNodeList[j].parentJointLink.parentNode.ID.ToString() + ", lci: " + lastConsecutiveID.ToString());
-                        //if (masterCritterGenome.CritterNodeList[j].parentJointLink.parentNode == null) { // was a child of the missing segment
-                        if (masterCritterGenome.CritterNodeList[j].parentJointLink.parentNode.ID == i) { // 
-                            // attach to current node?
-                            //Debug.Log("objectReference: " + masterCritterGenome.CritterNodeList[j].parentJointLink.parentNode.ToString() + ", " + masterCritterGenome.CritterNodeList[j].parentJointLink.parentNode.ID.ToString() + ", lci: " + lastConsecutiveID.ToString());
-                            
-                            masterCritterGenome.CritterNodeList[j].parentJointLink.parentNode = masterCritterGenome.CritterNodeList[lastConsecutiveID];
-                            masterCritterGenome.CritterNodeList[j].parentJointLink.parentNode.RenumberNodeID(lastConsecutiveID);
-                            
-
+                    //masterCritterGenome.CritterNodeList[i].RenumberNodeID(masterCritterGenome.CritterNodeList[i].ID - 1);
+                    
+                    // Iterate through all nodes:
+                    for (int j = 0; j < masterCritterGenome.CritterNodeList.Count; j++) {  // make this less of a brute force algo later!!!
+                        // check parentNodeID to see if it is above the current Gap ID:
+                        if (masterCritterGenome.CritterNodeList[j].jointLink.parentNodeID > checkingID) { 
+                            // if so, subtract 1 to fill in gap
+                            masterCritterGenome.CritterNodeList[j].jointLink.parentNodeID--;
+                            // OLD:
+                            //masterCritterGenome.CritterNodeList[  masterCritterGenome.CritterNodeList[j].jointLink.parentNodeID  ].jointLink.parentNodeID = masterCritterGenome.CritterNodeList[lastConsecutiveID].ID; // reset parentNodeID
+                            //masterCritterGenome.CritterNodeList[  masterCritterGenome.CritterNodeList[j].jointLink.parentNodeID  ].RenumberNodeID(lastConsecutiveID);        // reset thisNode ID                    
                         }
-                           //if (masterCritterGenome.CritterNodeList[j].parentJointLink.parentNode.ID == masterCritterGenome.CritterNodeList[i].ID) {
-                            // update the referenced ID value to what the node is being renumbered to:
-                            //masterCritterGenome.CritterNodeList[j].parentJointLink.parentNode.ID = checkingID;
-                        //}
+                        if (masterCritterGenome.CritterNodeList[j].jointLink.thisNodeID > checkingID) {    // check if this node's joint selfID > checkingID:                       
+                            masterCritterGenome.CritterNodeList[j].jointLink.thisNodeID--; // if so, subtract 1 to fill in gap
+                        }
+                        // check all child indices of this node:
+                        for (int k = 0; k < masterCritterGenome.CritterNodeList[j].attachedChildNodesIdList.Count; k++) {
+                            // if childID is greater than GapID, subtract 1 to bring it in line:
+                            if(masterCritterGenome.CritterNodeList[j].attachedChildNodesIdList[k] > checkingID) {
+                                masterCritterGenome.CritterNodeList[j].attachedChildNodesIdList[k]--;
+                                
+                            }
+                            //Debug.Log("RenumberNodesCHILDREN j: " + j.ToString() + ", k: " + k.ToString() + ", childID: " + masterCritterGenome.CritterNodeList[j].attachedChildNodesIdList[k].ToString());
+                        }
+                        // if current Node's id is greater than gapID, subtract 1:
+                        if(masterCritterGenome.CritterNodeList[j].ID > checkingID) {
+                            masterCritterGenome.CritterNodeList[j].RenumberNodeID(masterCritterGenome.CritterNodeList[j].ID - 1);
+                        }
                     }
-                    masterCritterGenome.CritterNodeList[i].RenumberNodeID(checkingID); // set id of node to newID
+                    //OLDOLD: masterCritterGenome.CritterNodeList[i].RenumberNodeID(checkingID); // set id of node to newID
                     // Set all other references:
-                    Debug.Log("RenumberNodesMIDDle checkingID: " + checkingID.ToString() + ", nodeID: " + masterCritterGenome.CritterNodeList[i].ID.ToString() + ", i: " + i.ToString());
+                    //Debug.Log("RenumberNodesMIDDle checkingID: " + checkingID.ToString() + ", nodeID: " + masterCritterGenome.CritterNodeList[i].ID.ToString() + ", i: " + i.ToString());
                 }
                 if(i != 0) {
-                    Debug.Log("RenumberNodes checkingID: " + checkingID.ToString() + ", nodeID: " + masterCritterGenome.CritterNodeList[i].ID.ToString() + ", i: " + i.ToString() + ", " + masterCritterGenome.CritterNodeList[i].parentJointLink.parentNode.ID.ToString());
+                    //Debug.Log("RenumberNodes checkingID: " + checkingID.ToString() + ", nodeID: " + masterCritterGenome.CritterNodeList[i].ID.ToString() + ", i: " + i.ToString() + ", " + masterCritterGenome.CritterNodeList[i].jointLink.parentNodeID.ToString());
                 }
                 
 
                 checkingID++;
             }
-            Debug.Log("genome# nodes: " + masterCritterGenome.CritterNodeList.Count.ToString());
+            //Debug.Log("genome# nodes: " + masterCritterGenome.CritterNodeList.Count.ToString());
         }
+    }
+
+    public void LoadCritterGenome(CritterGenome newGenome) {
+        Debug.Log("LoadCritterGenome!!");
+        masterCritterGenome = newGenome;
+        masterCritterGenome.ReconstructGenomeFromLoad();
+        RebuildCritterFromGenomeRecursive(false);
     }
 }

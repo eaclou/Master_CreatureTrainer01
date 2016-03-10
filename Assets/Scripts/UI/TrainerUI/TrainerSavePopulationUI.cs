@@ -184,7 +184,7 @@ public class TrainerSavePopulationUI : MonoBehaviour {
 				Debug.Log ("genomeBiases.Length: " + populationToLoad.masterAgentArray[0].genome.genomeBiases.Length.ToString());
 				Debug.Log ("genomeBias[0]: " + populationToLoad.masterAgentArray[0].genome.genomeBiases[0].ToString());
 				Debug.Log ("ref genomeBias[0]: " + populationRef.masterAgentArray[0].genome.genomeBiases[0].ToString());
-				Debug.Log ("root_body_size: " + populationToLoad.masterAgentArray[0].bodyGenome.creatureBodySegmentGenomeList[0].size.ToString());
+				//Debug.Log ("root_body_size: " + populationToLoad.masterAgentArray[0].bodyGenome.creatureBodySegmentGenomeList[0].size.ToString());
 			}
 		}
 		else {
