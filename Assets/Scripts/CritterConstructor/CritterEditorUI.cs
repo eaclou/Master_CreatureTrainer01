@@ -8,16 +8,27 @@ public class CritterEditorUI : MonoBehaviour {
     public CritterEditorState critterEditorState;
 
     public GameObject panelRightClickSegmentMenu;
-    public GameObject panelRightClickJointMenu;    
+    public GameObject panelRightClickJointMenu;
+
+    public Button buttonReset;
+    public Button buttonSave;
+    public Button buttonLoad;   
 
     public Button buttonDisplayCameraMode;
     public Button buttonDisplayRCMenuMode;
     public Button buttonDisplayView;
+    public Text textButtonView;
     public Button buttonDisplayScale;
+    public Text textButtonScale;
     public Button buttonDisplayMoveJoint;
+    public Text textButtonMove;
     public Button buttonDisplayJointSettings;
+    public Text textJointSettingsTab;
+    public Button buttonDisplayAddons;
+    public Text textAddonsTab;
 
     public Button buttonPreviewPhysics;
+    public Text textPreviewPhysics;
 
     public Text textHoverSegment;
     public Text textSelectedSegment;
@@ -38,6 +49,9 @@ public class CritterEditorUI : MonoBehaviour {
     public bool isClickButtonMove = false;
     public bool isClickButtonSegmentSettings = false;
     public bool isClickButtonPreviewPhysics = false;
+
+    public Color colorButtonTransparent = new Color(1f, 1f, 1f, 0f);
+    public Color colorButtonNormal = new Color(1f, 1f, 1f, 1f);
 
     // Use this for initialization
     void Start () {
@@ -96,19 +110,31 @@ public class CritterEditorUI : MonoBehaviour {
     public void ClickButtonSegmentSettings() {
         if(isSegmentSettings) {
             HideSegmentSettingsPanel();
+            textJointSettingsTab.fontStyle = FontStyle.Normal;
+            buttonDisplayJointSettings.image.color = colorButtonNormal;
         }
         else {
             ShowSegmentSettingsPanel();
+            textJointSettingsTab.fontStyle = FontStyle.Bold;
+            buttonDisplayJointSettings.image.color = colorButtonTransparent;
             HideNodeAddonsPanel();
+            textAddonsTab.fontStyle = FontStyle.Normal;
+            buttonDisplayAddons.image.color = colorButtonNormal;
         }
     }
     public void ClickButtonNodeAddons() {
         if (isNodeAddons) {
             HideNodeAddonsPanel();
+            textAddonsTab.fontStyle = FontStyle.Normal;
+            buttonDisplayAddons.image.color = colorButtonNormal;
         }
         else {
             ShowNodeAddonsPanel();
+            textAddonsTab.fontStyle = FontStyle.Bold;
+            buttonDisplayAddons.image.color = colorButtonTransparent;
             HideSegmentSettingsPanel();
+            textJointSettingsTab.fontStyle = FontStyle.Normal;
+            buttonDisplayJointSettings.image.color = colorButtonNormal;
         }
     }
 
@@ -181,9 +207,9 @@ public class CritterEditorUI : MonoBehaviour {
             CritterNode sourceNode = selectedSegment.GetComponent<CritterSegment>().sourceNode;
             panelSegmentSettings.textSegmentID.text = "Segment ID: " + selectedSegment.GetComponent<CritterSegment>().id.ToString();
             panelSegmentSettings.textNodeID.text = "(Node: " + sourceNode.ID.ToString() + ")";
-            if(sourceNode.parentJointLink.parentNode != null) { // if not the ROOT
+            if(sourceNode.ID != 0) { // if not the ROOT
                 panelSegmentSettings.textParentSegmentID.text = "Parent Segment ID: " + selectedSegment.GetComponent<CritterSegment>().parentSegment.id.ToString();
-                panelSegmentSettings.textParentNodeID.text = "(Node: " + sourceNode.parentJointLink.parentNode.ID.ToString() + ")";
+                panelSegmentSettings.textParentNodeID.text = "(Node: " + sourceNode.jointLink.parentNodeID.ToString() + ")";
             }
             else {
                 panelSegmentSettings.textParentSegmentID.text = "Parent Segment ID: ";
@@ -201,7 +227,7 @@ public class CritterEditorUI : MonoBehaviour {
             panelSegmentSettings.sliderDimensionZ.value = size.z;
             panelSegmentSettings.textInheritedScaleFactor.text = "Inherited Scale Factor: " + selectedSegment.GetComponent<CritterSegment>().scalingFactor.ToString();
 
-            Vector3 attachDir = sourceNode.parentJointLink.attachDir;
+            Vector3 attachDir = sourceNode.jointLink.attachDir;
             attachDir.x = (float)Math.Round((double)attachDir.x, 2);
             attachDir.y = (float)Math.Round((double)attachDir.y, 2);
             attachDir.z = (float)Math.Round((double)attachDir.z, 2);
@@ -212,7 +238,7 @@ public class CritterEditorUI : MonoBehaviour {
             panelSegmentSettings.sliderAttachDirY.value = attachDir.y;
             panelSegmentSettings.sliderAttachDirZ.value = attachDir.z;
 
-            Vector3 restAngle = sourceNode.parentJointLink.restAngleDir;
+            Vector3 restAngle = sourceNode.jointLink.restAngleDir;
             restAngle.x = (float)Math.Round((double)restAngle.x, 2);
             restAngle.y = (float)Math.Round((double)restAngle.y, 2);
             restAngle.z = (float)Math.Round((double)restAngle.z, 2);
@@ -223,21 +249,21 @@ public class CritterEditorUI : MonoBehaviour {
             panelSegmentSettings.sliderRestAngleY.value = restAngle.y;
             panelSegmentSettings.sliderRestAngleZ.value = restAngle.z;
 
-            panelSegmentSettings.dropdownJointType.value = (int)sourceNode.parentJointLink.jointType;
+            panelSegmentSettings.dropdownJointType.value = (int)sourceNode.jointLink.jointType;
 
-            panelSegmentSettings.textNumRecursions.text = "Recursion Number: " + sourceNode.parentJointLink.numberOfRecursions.ToString();
-            panelSegmentSettings.textRecursionScaleFactor.text = "Scale Factor: " + sourceNode.parentJointLink.recursionScalingFactor.ToString();
-            panelSegmentSettings.sliderRecursionScaleFactor.value = sourceNode.parentJointLink.recursionScalingFactor;
-            panelSegmentSettings.textRecursionForward.text = "Forward Bias: " + sourceNode.parentJointLink.recursionForward.ToString();
-            panelSegmentSettings.sliderRecursionForward.value = sourceNode.parentJointLink.recursionForward;
-            panelSegmentSettings.toggleAttachOnlyToLast.isOn = sourceNode.parentJointLink.onlyAttachToTailNode;
+            panelSegmentSettings.textNumRecursions.text = "Recursion Number: " + sourceNode.jointLink.numberOfRecursions.ToString();
+            panelSegmentSettings.textRecursionScaleFactor.text = "Scale Factor: " + sourceNode.jointLink.recursionScalingFactor.ToString();
+            panelSegmentSettings.sliderRecursionScaleFactor.value = sourceNode.jointLink.recursionScalingFactor;
+            panelSegmentSettings.textRecursionForward.text = "Forward Bias: " + sourceNode.jointLink.recursionForward.ToString();
+            panelSegmentSettings.sliderRecursionForward.value = sourceNode.jointLink.recursionForward;
+            panelSegmentSettings.toggleAttachOnlyToLast.isOn = sourceNode.jointLink.onlyAttachToTailNode;
 
-            panelSegmentSettings.dropdownSymmetryType.value = (int)sourceNode.parentJointLink.symmetryType;
+            panelSegmentSettings.dropdownSymmetryType.value = (int)sourceNode.jointLink.symmetryType;
 
-            panelSegmentSettings.textJointAngleLimit.text = sourceNode.parentJointLink.jointLimitPrimary.ToString();
-            panelSegmentSettings.textJointAngleLimitSecondary.text = sourceNode.parentJointLink.jointLimitSecondary.ToString();
-            panelSegmentSettings.sliderJointAngleLimit.value = sourceNode.parentJointLink.jointLimitPrimary;
-            panelSegmentSettings.sliderJointAngleLimitSecondary.value = sourceNode.parentJointLink.jointLimitSecondary;
+            panelSegmentSettings.textJointAngleLimit.text = "Primary: " + sourceNode.jointLink.jointLimitPrimary.ToString();
+            panelSegmentSettings.textJointAngleLimitSecondary.text = "Secondary: " + sourceNode.jointLink.jointLimitSecondary.ToString();
+            panelSegmentSettings.sliderJointAngleLimit.value = sourceNode.jointLink.jointLimitPrimary;
+            panelSegmentSettings.sliderJointAngleLimitSecondary.value = sourceNode.jointLink.jointLimitSecondary;
         }
         else {
             panelSegmentSettings.textSegmentID.text = "Segment ID: none";

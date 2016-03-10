@@ -7,5 +7,6 @@ public class AddonCompassSensor1D : CritterNodeAddonBase {
 
 	public AddonCompassSensor1D() {
         Debug.Log("Constructor AddonCompassSensor1D()");
+        addonType = CritterNodeAddonTypes.CompassSensor1D;
     }
 }

@@ -108,6 +108,8 @@ public class Population {
 		// Figure out Brain Dimensions from Body:
 		numInputNodes = 0; 
 		numOutputNodes = 0;
+        Debug.Log("BROKEN!! Population   private void InitializeAgentBrainAndBody(Agent newAgent, CreatureBodyGenome bodyGenome)");
+        /*
         float initialCreatureVolume = 0f;
 		for(int i = 0; i < newAgent.bodyGenome.creatureBodySegmentGenomeList.Count; i++) {
 			if(newAgent.bodyGenome.creatureBodySegmentGenomeList[i].addOn1 == CreatureBodySegmentGenome.AddOns.ContactSensor || newAgent.bodyGenome.creatureBodySegmentGenomeList[i].addOn2 == CreatureBodySegmentGenome.AddOns.ContactSensor) {
@@ -153,6 +155,7 @@ public class Population {
 		}
 		newAgent.brain.CopyBrainSettingsFrom(templateBrain);  // Copies settings from template brain (what has been set from UI) to new brain instance using override method
 		isFunctional = true;
+        */
 	}
 
 	private void InitializeAgentBrainOnly(Agent newAgent) {  /// Configure newly-created Agent (brain + body) for the FIRST TIME!! to change settings on an existing agent, use a different method.

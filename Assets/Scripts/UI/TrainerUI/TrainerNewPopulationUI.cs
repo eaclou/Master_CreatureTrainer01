@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using UnityEditor;
+//using UnityEditor;
 using System.Collections;
 using UnityEngine.UI;
 
@@ -174,8 +174,8 @@ public class TrainerNewPopulationUI : MonoBehaviour {
 	}
 
 	public void ClickLoadBodyTemplate() {
-		DebugBot.DebugFunctionCall("TNewPopUI; ClickLoadBodyTemplate(); ", true);
-
+		DebugBot.DebugFunctionCall("TNewPopUI; ClickLoadBodyTemplate(); EDITOR TURNED OFF!!!", true);
+        /*
 		// Open file explorer window to choose asset filename:
 		string absPath = EditorUtility.OpenFilePanel ("Select Creature", "Assets/Resources", "");
 		if(absPath.StartsWith (Application.dataPath)) {
@@ -186,6 +186,7 @@ public class TrainerNewPopulationUI : MonoBehaviour {
 
 		DebugBot.DebugFunctionCall("TNewPopUI; ClickLoadBodyTemplate(); " + pendingBodyTemplateName.ToString(), true);
 		UpdateUIWithCurrentData();
+        */
 	}
 
 	public void ClickToggleOptionsPanels() {
@@ -247,17 +248,18 @@ public class TrainerNewPopulationUI : MonoBehaviour {
 
 					populationRef = trainer.PlayerList[curPlayer-1].masterPopulation; // grab current player's population -- this might not be needed
 					populationRef.SetMaxPopulationSize(pendingPopulationSize);
-					//populationRef.numInputNodes = pendingNumInputs;
-					//populationRef.numOutputNodes = pendingNumOutputs;
+                    //populationRef.numInputNodes = pendingNumInputs;
+                    //populationRef.numOutputNodes = pendingNumOutputs;
 
-					// !!!!!!! Transfer over specific Brain-Type Options!
-					//  Or Do I simply change these values in real-time as they are selected by UI?
-					//===================================================
+                    // !!!!!!! Transfer over specific Brain-Type Options!
+                    //  Or Do I simply change these values in real-time as they are selected by UI?
+                    //===================================================
 
-					// CREATE AGENT ARRAY!!!!!!! :
-					CreatureBodyGenome bodyGenome = CreatureBodyLoader.LoadBodyGenome(pendingBodyTemplateName);
-					populationRef.InitializeMasterAgentArray(bodyGenome);
-					trainer.PlayerList[curPlayer-1].hasValidPopulation = true;
+                    // CREATE AGENT ARRAY!!!!!!! :
+                    Debug.Log("BROKEN!!! TrainerNewPopulationUI public void ClickCreateNewPopulation()");
+					//CreatureBodyGenome bodyGenome = CreatureBodyLoader.LoadBodyGenome(pendingBodyTemplateName);
+					//populationRef.InitializeMasterAgentArray(bodyGenome);
+					//trainer.PlayerList[curPlayer-1].hasValidPopulation = true;
 				}
 				else { 
 					DebugBot.DebugFunctionCall("TNewPopUI; ClickCreateNewPopulation(); Null Player Ref!", debugFunctionCalls);
