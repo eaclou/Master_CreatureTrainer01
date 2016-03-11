@@ -1903,25 +1903,43 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
         }
     }
 
-    public void SaveCritterGenome() {
-        Debug.Log("SaveCritterGenome;");
-        /*
+    public void ClickSave() {
+        critterEditorUI.gameObject.SetActive(false);
+        UniFileBrowser.use.SaveFileWindow(SaveCritterGenome);
+        critterEditorUI.gameObject.SetActive(true);
+    }
+    public void ClickLoad() {
+        UniFileBrowser.use.OpenFileWindow(LoadCritterGenome);
+    }
+    public void SaveCritterGenome(string filename) {
+        string fileExt = ".txt";
+        filename += fileExt;
+        Debug.Log("SaveCritterGenome; " + filename);
+        char pathChar = '/';
+        if (Application.platform == RuntimePlatform.WindowsEditor || Application.platform == RuntimePlatform.WindowsPlayer) {
+            pathChar = '\\';
+        }
+        var fileIndex = filename.LastIndexOf(pathChar);
+        string pendingCritterGenomeName = "You selected file: " + filename.Substring(fileIndex + 1, filename.Length - fileIndex - 1);
+        Debug.Log("pendingCritterGenomeName: " + pendingCritterGenomeName);
+        
         bool save = false;
         bool overwriteFiles = true;
-        string pendingCritterGenomeName = "";
+        
+        //string pendingCritterGenomeName = "";
         CritterGenome genomeToSave = critterConstructorManager.masterCritter.masterCritterGenome;
         // Open file explorer window to choose asset filename:
-        string absPath = EditorUtility.SaveFilePanel("Select Critter Genome", "Assets/SaveFiles/CritterEditorGenomes", "critter", "txt");
-        Debug.Log("absPath: " + absPath);
-        if (absPath.StartsWith(Application.dataPath)) {
-            Debug.Log("absPath starts with Application.dataPath");
-            pendingCritterGenomeName = absPath.Substring(Application.dataPath.Length + "/SaveFiles/CritterEditorGenomes/".Length);
-        }
-        pendingCritterGenomeName = pendingCritterGenomeName.Substring(0, pendingCritterGenomeName.Length - ".txt".Length); // clips extension  // Revisit Extension type!
-        DebugBot.DebugFunctionCall("pendingCritterGenomeName; " + pendingCritterGenomeName, true);
+        //string absPath = EditorUtility.SaveFilePanel("Select Critter Genome", "Assets/SaveFiles/CritterEditorGenomes", "critter", "txt");
+        //Debug.Log("absPath: " + absPath);
+        //if (absPath.StartsWith(Application.dataPath)) {
+        //    Debug.Log("absPath starts with Application.dataPath");
+        //    pendingCritterGenomeName = absPath.Substring(Application.dataPath.Length + "/SaveFiles/CritterEditorGenomes/".Length);
+        //}
+        //pendingCritterGenomeName = pendingCritterGenomeName.Substring(0, pendingCritterGenomeName.Length - ".txt".Length); // clips extension  // Revisit Extension type!
+        //DebugBot.DebugFunctionCall("pendingCritterGenomeName; " + pendingCritterGenomeName, true);
         if(genomeToSave != null) {
-            if(pendingCritterGenomeName != "") {
-                if (System.IO.File.Exists(absPath)) {
+            if(pendingCritterGenomeName != "") {  // prevent empty string as name
+                if (System.IO.File.Exists(filename)) {
                     if(overwriteFiles) {
                         save = true;
                     }
@@ -1942,7 +1960,9 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
         }
 
         if (save) {   // SAVE AGENT:
-            ES2.Save(genomeToSave, absPath);
+            Debug.Log("SAVE: " + filename);
+            ES2.Save(genomeToSave, filename);
+            //ES2.Save(genomeToSave, absPath);
             //Population populationToLoad = ES2.Load<Population>(populationRootPath + fileName);
             //Debug.Log("genomeBiases.Length: " + populationToLoad.masterAgentArray[0].genome.genomeBiases.Length.ToString());
             //Debug.Log("genomeBias[0]: " + populationToLoad.masterAgentArray[0].genome.genomeBiases[0].ToString());
@@ -1951,26 +1971,34 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
         }
         else {
             Debug.Log("couldn't save!!!");
-        }*/
+        }        
     }
 
-    public void LoadCritterGenome() {
-        Debug.Log("LoadCritterGenome;");
-        /*
-        string pendingCritterGenomeName = "";
+    public void LoadCritterGenome(string filename) {
+        Debug.Log("LoadCritterGenome; " + filename);
+        char pathChar = '/';
+        if (Application.platform == RuntimePlatform.WindowsEditor || Application.platform == RuntimePlatform.WindowsPlayer) {
+            pathChar = '\\';
+        }
+        var fileIndex = filename.LastIndexOf(pathChar);
+        string message = "You selected file: " + filename.Substring(fileIndex + 1, filename.Length - fileIndex - 1);
+        Debug.Log("message: " + message);
+        
+        
+        //string pendingCritterGenomeName = "";
         //bool load = false;
         // Open file explorer window to choose asset filename:
-        string absPath = EditorUtility.OpenFilePanel("Select Critter Genome", "Assets/SaveFiles/CritterEditorGenomes", "");
-        Debug.Log("absPath: " + absPath);
-        if (absPath.StartsWith(Application.dataPath)) {
-            Debug.Log("absPath starts with Application.dataPath");
-            pendingCritterGenomeName = absPath.Substring(Application.dataPath.Length + "/SaveFiles/CritterEditorGenomes/".Length);
-        }
-        pendingCritterGenomeName = pendingCritterGenomeName.Substring(0, pendingCritterGenomeName.Length - ".txt".Length); // clips extension  // Revisit Extension type!
-        DebugBot.DebugFunctionCall("pendingCritterGenomeName; " + pendingCritterGenomeName, true);
+        //string absPath = EditorUtility.OpenFilePanel("Select Critter Genome", "Assets/SaveFiles/CritterEditorGenomes", "");
+        //Debug.Log("absPath: " + absPath);
+        //if (absPath.StartsWith(Application.dataPath)) {
+        //    Debug.Log("absPath starts with Application.dataPath");
+        //    pendingCritterGenomeName = absPath.Substring(Application.dataPath.Length + "/SaveFiles/CritterEditorGenomes/".Length);
+        //}
+        //pendingCritterGenomeName = pendingCritterGenomeName.Substring(0, pendingCritterGenomeName.Length - ".txt".Length); // clips extension  // Revisit Extension type!
+        //DebugBot.DebugFunctionCall("pendingCritterGenomeName; " + pendingCritterGenomeName, true);
 
-        if (System.IO.File.Exists(absPath)) {
-            CritterGenome genomeToLoad = ES2.Load<CritterGenome>(absPath);
+        if (System.IO.File.Exists(filename)) {
+            CritterGenome genomeToLoad = ES2.Load<CritterGenome>(filename);
             Debug.Log("genomeToLoad.Length: " + genomeToLoad.CritterNodeList.Count.ToString());
             critterConstructorManager.masterCritter.LoadCritterGenome(genomeToLoad);
             
@@ -1987,6 +2015,6 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
         else {
             Debug.LogError("No CritterGenome File Exists!");
         }        
-        */
+        
     }
 }
