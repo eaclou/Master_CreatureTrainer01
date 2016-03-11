@@ -175,7 +175,8 @@ public class TrainerNewPopulationUI : MonoBehaviour {
 
 	public void ClickLoadBodyTemplate() {
 		DebugBot.DebugFunctionCall("TNewPopUI; ClickLoadBodyTemplate(); EDITOR TURNED OFF!!!", true);
-        /*
+        UniFileBrowser.use.OpenFileWindow(LoadBodyTemplate);
+        /*  // OLD:
 		// Open file explorer window to choose asset filename:
 		string absPath = EditorUtility.OpenFilePanel ("Select Creature", "Assets/Resources", "");
 		if(absPath.StartsWith (Application.dataPath)) {
@@ -187,7 +188,29 @@ public class TrainerNewPopulationUI : MonoBehaviour {
 		DebugBot.DebugFunctionCall("TNewPopUI; ClickLoadBodyTemplate(); " + pendingBodyTemplateName.ToString(), true);
 		UpdateUIWithCurrentData();
         */
-	}
+    }
+    public void LoadBodyTemplate(string filename) {
+        Debug.Log("LoadBodyTemplate; filename: " + filename);
+        char pathChar = '/';
+        if (Application.platform == RuntimePlatform.WindowsEditor || Application.platform == RuntimePlatform.WindowsPlayer) {
+            pathChar = '\\';
+        }
+        var fileIndex = filename.LastIndexOf(pathChar);
+        string templateName = filename.Substring(fileIndex + 1, filename.Length - fileIndex - 1);
+        templateName = templateName.Substring(0, templateName.Length - ".txt".Length);
+        Debug.Log("message: " + templateName);
+        
+        if (System.IO.File.Exists(filename)) {
+            CritterGenome genomeToLoad = ES2.Load<CritterGenome>(filename);
+            Debug.Log("genomeToLoad.Length: " + genomeToLoad.CritterNodeList.Count.ToString());
+            //critterConstructorManager.masterCritter.LoadCritterGenome(genomeToLoad);
+            pendingBodyTemplateName = templateName;
+            UpdateUIWithCurrentData();
+        }
+        else {
+            Debug.LogError("No CritterGenome File Exists!");
+        }
+    }
 
 	public void ClickToggleOptionsPanels() {
 		DebugBot.DebugFunctionCall("TNewPopUI; ClickToggleOptionsPanels(); ", debugFunctionCalls);

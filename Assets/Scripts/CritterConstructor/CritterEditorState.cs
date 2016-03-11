@@ -1904,17 +1904,29 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
     }
 
     public void ClickSave() {
-        critterEditorUI.gameObject.SetActive(false);
+        //critterEditorUI.gameObject.SetActive(false);
         UniFileBrowser.use.SaveFileWindow(SaveCritterGenome);
-        critterEditorUI.gameObject.SetActive(true);
+        //critterEditorUI.gameObject.SetActive(true);
     }
     public void ClickLoad() {
         UniFileBrowser.use.OpenFileWindow(LoadCritterGenome);
     }
     public void SaveCritterGenome(string filename) {
         string fileExt = ".txt";
-        filename += fileExt;
-        Debug.Log("SaveCritterGenome; " + filename);
+        char dot = '.';
+        int extIndex;
+        extIndex = filename.LastIndexOf(dot);
+        Debug.Log(filename.LastIndexOf(dot).ToString());
+        if(extIndex == -1) {  // -1 means it didn't have an extension
+            filename += fileExt;  // add extension
+        }
+        else { // had an extension
+            if (filename.Substring(extIndex) == ".txt") { // extension was .txt
+                Debug.Log("extra extension!");
+            }            
+        }   
+        Debug.Log("SaveCritterGenome; " + filename + ", index: " + filename.LastIndexOf(dot).ToString() + ", substring: " + filename.Substring(filename.LastIndexOf(dot)));
+        
         char pathChar = '/';
         if (Application.platform == RuntimePlatform.WindowsEditor || Application.platform == RuntimePlatform.WindowsPlayer) {
             pathChar = '\\';
@@ -1975,6 +1987,10 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
     }
 
     public void LoadCritterGenome(string filename) {
+        CommandDeselectAll();
+        hoverSegment = null;
+        hoverSegmentID = -1;
+        isSegmentHover = false;
         Debug.Log("LoadCritterGenome; " + filename);
         char pathChar = '/';
         if (Application.platform == RuntimePlatform.WindowsEditor || Application.platform == RuntimePlatform.WindowsPlayer) {
