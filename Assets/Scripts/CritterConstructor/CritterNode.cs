@@ -16,8 +16,8 @@ public class CritterNode {
     }
     //public List<CritterJointLink> attachedJointLinkList;
     public List<int> attachedChildNodesIdList;
-    public List<CritterNodeAddonBase> addonsList;
-    
+    //public List<CritterNodeAddonBase> addonsList;  // Deprecated
+
     public CritterJointLink jointLink;
 
     public Vector3 dimensions = new Vector3(1f, 1f, 1f);
@@ -27,7 +27,7 @@ public class CritterNode {
         jointLink = new CritterJointLink();
         //attachedJointLinkList = new List<CritterJointLink>();
         attachedChildNodesIdList = new List<int>();
-        addonsList = new List<CritterNodeAddonBase>();        
+        //addonsList = new List<CritterNodeAddonBase>();     // Deprecated     
     }
 
     public CritterNode(int i) {
@@ -37,7 +37,7 @@ public class CritterNode {
         jointLink = new CritterJointLink(i);
         //attachedJointLinkList = new List<CritterJointLink>();
         attachedChildNodesIdList = new List<int>();
-        addonsList = new List<CritterNodeAddonBase>();
+        //addonsList = new List<CritterNodeAddonBase>();  // Deprecated
     }
 
     public void ResizeNode(Vector3 newDimensions) {

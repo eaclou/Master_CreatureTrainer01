@@ -23,7 +23,7 @@ public class ES2Init : MonoBehaviour
 	public static void Init()
 	{
 		ES2TypeManager.types = new Dictionary<Type, ES2Type>();
-		ES2TypeManager.types[typeof(UnityEngine.Vector2)] = new ES2_Vector2();
+				ES2TypeManager.types[typeof(UnityEngine.Vector2)] = new ES2_Vector2();
 		ES2TypeManager.types[typeof(UnityEngine.Vector3)] = new ES2_Vector3();
 		ES2TypeManager.types[typeof(UnityEngine.Vector4)] = new ES2_Vector4();
 		ES2TypeManager.types[typeof(UnityEngine.Texture2D)] = new ES2_Texture2D();
@@ -60,15 +60,34 @@ public class ES2Init : MonoBehaviour
 		ES2TypeManager.types[typeof(UnityEngine.GradientColorKey)] = new ES2_GradientColorKey();
 		ES2TypeManager.types[typeof(UnityEngine.Gradient)] = new ES2_Gradient();
 		ES2TypeManager.types[typeof(UnityEngine.Sprite)] = new ES2_Sprite();
+		ES2TypeManager.types[typeof(AddonAltimeter)] = new ES2UserType_AddonAltimeter();
+		ES2TypeManager.types[typeof(AddonCompassSensor1D)] = new ES2UserType_AddonCompassSensor1D();
+		ES2TypeManager.types[typeof(AddonCompassSensor3D)] = new ES2UserType_AddonCompassSensor3D();
+		ES2TypeManager.types[typeof(AddonContactSensor)] = new ES2UserType_AddonContactSensor();
+		ES2TypeManager.types[typeof(AddonJointAngleSensor)] = new ES2UserType_AddonJointAngleSensor();
+		ES2TypeManager.types[typeof(AddonJointMotor)] = new ES2UserType_AddonJointMotor();
+		ES2TypeManager.types[typeof(AddonOscillatorInput)] = new ES2UserType_AddonOscillatorInput();
+		ES2TypeManager.types[typeof(AddonPhysicalAttributes)] = new ES2UserType_AddonPhysicalAttributes();
+		ES2TypeManager.types[typeof(AddonPositionSensor1D)] = new ES2UserType_AddonPositionSensor1D();
+		ES2TypeManager.types[typeof(AddonPositionSensor3D)] = new ES2UserType_AddonPositionSensor3D();
+		ES2TypeManager.types[typeof(AddonRaycastSensor)] = new ES2UserType_AddonRaycastSensor();
+		ES2TypeManager.types[typeof(AddonRotationSensor1D)] = new ES2UserType_AddonRotationSensor1D();
+		ES2TypeManager.types[typeof(AddonRotationSensor3D)] = new ES2UserType_AddonRotationSensor3D();
+		ES2TypeManager.types[typeof(AddonThrusterEffector1D)] = new ES2UserType_AddonThrusterEffector1D();
+		ES2TypeManager.types[typeof(AddonThrusterEffector3D)] = new ES2UserType_AddonThrusterEffector3D();
+		ES2TypeManager.types[typeof(AddonTimerInput)] = new ES2UserType_AddonTimerInput();
+		ES2TypeManager.types[typeof(AddonTorqueEffector1D)] = new ES2UserType_AddonTorqueEffector1D();
+		ES2TypeManager.types[typeof(AddonTorqueEffector3D)] = new ES2UserType_AddonTorqueEffector3D();
+		ES2TypeManager.types[typeof(AddonValueInput)] = new ES2UserType_AddonValueInput();
+		ES2TypeManager.types[typeof(AddonVelocitySensor1D)] = new ES2UserType_AddonVelocitySensor1D();
 		ES2TypeManager.types[typeof(Agent)] = new ES2UserType_Agent();
 		ES2TypeManager.types[typeof(CritterGenome)] = new ES2UserType_CritterGenome();
 		ES2TypeManager.types[typeof(CritterJointLink)] = new ES2UserType_CritterJointLink();
 		ES2TypeManager.types[typeof(CritterNode)] = new ES2UserType_CritterNode();
-		ES2TypeManager.types[typeof(CritterNodeAddonBase)] = new ES2UserType_CritterNodeAddonBase();
 		ES2TypeManager.types[typeof(Genome)] = new ES2UserType_Genome();
 		ES2TypeManager.types[typeof(Population)] = new ES2UserType_Population();
 		ES2TypeManager.types[typeof(UnityEngine.AudioClip)] = new ES2_AudioClip();
-		ES2TypeManager.types[typeof(AddonJointMotor)] = new ES2UserType_AddonJointMotor();
+		ES2TypeManager.types[typeof(AddonVelocitySensor3D)] = new ES2UserType_AddonVelocitySensor3D();
 
 		ES2.initialised = true;
 	}

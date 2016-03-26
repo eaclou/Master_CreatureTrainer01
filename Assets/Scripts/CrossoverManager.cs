@@ -164,10 +164,10 @@ public class CrossoverManager {
 		return childFloatGenes;
 	}
 
-	public CreatureBodyGenome[] MixBodyChromosomes(CreatureBodyGenome[] parentGenomes, int numOffspring) {  // takes A number of Genomes and returns new mixed up versions
-		//int geneArrayLength = parentGenomes.Length;
-		CreatureBodyGenome[] childGenomes = new CreatureBodyGenome[numOffspring];
-        Debug.Log("CURRENTLY BROKEN! public CreatureBodyGenome[] MixBodyChromosomes(CreatureBodyGenome[] parentGenomes, int numOffspring)");
+	public CritterGenome[] MixBodyChromosomes(CritterGenome[] parentGenomes, int numOffspring) {  // takes A number of Genomes and returns new mixed up versions
+                                                                                                  //int geneArrayLength = parentGenomes.Length;
+        CritterGenome[] childGenomes = new CritterGenome[numOffspring];
+        Debug.Log("CURRENTLY BROKEN! public CritterGenome[] MixBodyChromosomes(CritterGenome[] parentGenomes, int numOffspring)");
         /*        
         if (parentGenomes.Length == 2)
         {  // TWO PARENTS
@@ -375,7 +375,7 @@ public class CrossoverManager {
 			float[][] parentAgentBiases = new float[numParentAgents][];
 			float[][] parentAgentWeights = new float[numParentAgents][];
 			// %%%%%%%%%% hacky BodyGenome stuff:  -- to eventually be replaced by dynamic NEAT crossover -- for now only proportions/values:
-			CreatureBodyGenome[] parentBodyGenomes = new CreatureBodyGenome[numParentAgents]; // will hold referneces to parent Agent's bodyGenomes
+			//CritterGenome[] parentBodyGenomes = new CritterGenome[numParentAgents]; // will hold referneces to parent Agent's bodyGenomes
 
 			for(int p = 0; p < numParentAgents; p++) {
 		//		Iterate over numberOfParents :
@@ -389,7 +389,7 @@ public class CrossoverManager {
 					//parentAgentChromosomes[p] = new float[sourcePopulation.masterAgentArray[currentRankIndex].genome.genomeBiases.Length];
 					parentAgentBiases[p] = sourcePopulation.masterAgentArray[currentRankIndex].genome.genomeBiases;
 					parentAgentWeights[p] = sourcePopulation.masterAgentArray[currentRankIndex].genome.genomeWeights;
-					parentBodyGenomes[p] = sourcePopulation.masterAgentArray[currentRankIndex].bodyGenome;
+					//parentBodyGenomes[p] = sourcePopulation.masterAgentArray[currentRankIndex].bodyGenome;
 					currentRankIndex++;
 				}
 				// if survival is completely random, as a control:
@@ -398,7 +398,7 @@ public class CrossoverManager {
 					// Set next newChild slot to a completely randomly-chosen agent
 					parentAgentBiases[p] = sourcePopulation.masterAgentArray[randomAgent].genome.genomeBiases;
 					parentAgentWeights[p] = sourcePopulation.masterAgentArray[randomAgent].genome.genomeWeights;
-					parentBodyGenomes[p] = sourcePopulation.masterAgentArray[randomAgent].bodyGenome;
+					//parentBodyGenomes[p] = sourcePopulation.masterAgentArray[randomAgent].bodyGenome;
 				}
 				// if survival is based on a fitness lottery:
 				if(breedingByRaffle) {
@@ -411,7 +411,7 @@ public class CrossoverManager {
 						if(accumulatedFitness >= randomSlicePosition) {
 							parentAgentBiases[p] = sourcePopulation.masterAgentArray[a].genome.genomeBiases;
 							parentAgentWeights[p] = sourcePopulation.masterAgentArray[a].genome.genomeWeights;
-							parentBodyGenomes[p] = sourcePopulation.masterAgentArray[a].bodyGenome;
+							//parentBodyGenomes[p] = sourcePopulation.masterAgentArray[a].bodyGenome;
 						}
 					}
 				}
@@ -420,8 +420,8 @@ public class CrossoverManager {
 		//		Pass that array of parentAgent genome.Arrays into the float-based MixFloatChromosomes() function,
 			float[][] childAgentBiases = MixFloatChromosomes(parentAgentBiases, numChildAgents);
 			float[][] childAgentWeights = MixFloatChromosomes(parentAgentWeights, numChildAgents);
-			// BODY hack:
-			CreatureBodyGenome[] childBodyGenomes = MixBodyChromosomes(parentBodyGenomes, numChildAgents);
+            // BODY hack:
+            //CritterGenome[] childBodyGenomes = MixBodyChromosomes(parentBodyGenomes, numChildAgents);
 
 		//		It can return an Array of Arrays (of new childAgent genome.Arrays) 
 		//		Iterate over ChildArray.Length :  // how many newAgents created
@@ -436,7 +436,7 @@ public class CrossoverManager {
 					newPopulation.masterAgentArray[newChildIndex].genome.genomeWeights[w] = childAgentWeights[c][w];
 					// weights and functions and more!
 				}
-				newPopulation.masterAgentArray[newChildIndex].bodyGenome = childBodyGenomes[c];
+				//newPopulation.masterAgentArray[newChildIndex].bodyGenome = childBodyGenomes[c];
 				newPopulation.masterAgentArray[newChildIndex].brain.SetBrainFromGenome(newPopulation.masterAgentArray[newChildIndex].genome);
 				newChildIndex++;  // new child created!
 				newChildrenCreated++;

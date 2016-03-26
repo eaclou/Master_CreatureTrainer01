@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class TheGraphKing { // Does it need to be MonoBehaviour?
+public class TheGraphKing {
 	// All Hail The Graph King!
 	// 1 King Instance Per Player....
 
@@ -91,17 +91,18 @@ public class TheGraphKing { // Does it need to be MonoBehaviour?
 		texFitnessBasic.Resize(texWidth, 1);
 		for(int y = 0; y < 1; y++) { // not needed for this due to 1 pixel height			
 			for(int x = 0; x < texWidth; x++) {
-				float pixValueRaw = dataManager.generationDataList[x].avgAgentScoreRaw;
-				float pixValueWeighted = dataManager.generationDataList[x].avgAgentScoreWeighted;
-				texFitnessBasic.SetPixel(x, y, new Color(pixValueRaw, pixValueWeighted, 0f));
+                //float pixValueRaw = 0f; //dataManager.generationDataList[x].avgAgentScoreRaw;
+                //float pixValueWeighted = 0f; // dataManager.generationDataList[x].avgAgentScoreWeighted;
+                float pixValue = dataManager.generationDataList[x].totalAllAgentsScore;
+                texFitnessBasic.SetPixel(x, y, new Color(pixValue, pixValue, 0f));  // Raw vs. weighted... remove?? or add per-fitness component
 			}
 		}
 		texFitnessBasic.Apply();
 
-		string fitValues = "Raw: ";
-		for(int x = 0; x < texWidth; x++) { 
-			fitValues += dataManager.generationDataList[x].avgAgentScoreRaw.ToString() + ", ";
-		}
+		//string fitValues = "Raw: ";
+		//for(int x = 0; x < texWidth; x++) {
+        //    fitValues += ""; // dataManager.generationDataList[x].avgAgentScoreRaw.ToString() + ", ";
+		//}
 		//Debug.Log ("TheGraphKing BuildTexturesFitnessBasic Length: " + texFitnessBasic.width.ToString() + ". " + fitValues);
 	}
 
@@ -113,13 +114,14 @@ public class TheGraphKing { // Does it need to be MonoBehaviour?
 		else {
 			genNumber = dataManager.generationDataList.Count - 2;
 		}
-		int texWidth = dataManager.generationDataList[genNumber].agentDataArray.Length;  // Get number of agents in the previous generation
+        int texWidth = 40; // dataManager.generationDataList[genNumber].agentDataArray.Length;  // Get number of agents in the previous generation
 		texFitnessAgentsLastGen.Resize(texWidth, 1);
 		for(int y = 0; y < 1; y++) { // not needed for this due to 1 pixel height			
 			for(int x = 0; x < texWidth; x++) {
-				float pixValueRaw = dataManager.generationDataList[genNumber].agentDataArray[x].rawValueAvg;
-				float pixValueWeighted = dataManager.generationDataList[genNumber].agentDataArray[x].weightedValueAvg;
-				texFitnessAgentsLastGen.SetPixel(x, y, new Color(pixValueRaw, pixValueWeighted, 0f));
+                float pixValueRaw = 0f; // dataManager.generationDataList[genNumber].agentDataArray[x].rawValueAvg;
+                float pixValueWeighted = 0f; // dataManager.generationDataList[genNumber].agentDataArray[x].weightedValueAvg;
+                //playerList[p].masterPopulation.masterAgentArray[j].fitnessScore
+                texFitnessAgentsLastGen.SetPixel(x, y, new Color(pixValueRaw, pixValueWeighted, 0f));
 			}
 		}
 		texFitnessAgentsLastGen.Apply();
@@ -144,14 +146,14 @@ public class TheGraphKing { // Does it need to be MonoBehaviour?
 		int texHeight = dataManager.generationDataList[genNumber].totalNumFitnessComponents;
 		int curTrialIndex = 0;
 		int curFitnessComponentIndex = 0;
-		int numTrials = dataManager.generationDataList[genNumber].agentDataArray[0].trialDataArray.Length;
+		int numTrials = dataManager.generationDataList[genNumber].trialDataArray.Length;
 		//float stackScore = 0f;
 		//for(int i = 0; i <dataManager.generationDataList.Count;
 		texFitnessComponents.Resize(texWidth, texHeight);
 		for(int x = 0; x < texWidth; x++) {
 
 			for(int y = 0; y < texHeight; y++) {
-				if(curFitnessComponentIndex >= dataManager.generationDataList[genNumber].agentDataArray[0].trialDataArray[curTrialIndex].fitnessComponentDataArray.Length) {
+				/*if(curFitnessComponentIndex >= dataManager.generationDataList[genNumber].agentDataArray[0].trialDataArray[curTrialIndex].fitnessComponentDataArray.Length) {
 					curTrialIndex++;
 					curFitnessComponentIndex = 0;
 				}
@@ -166,18 +168,20 @@ public class TheGraphKing { // Does it need to be MonoBehaviour?
 				float pixValueTrialFraction = (float)(curTrialIndex+1) / (float)numTrials;
 				float pixValueComponentFraction = (float)(curFitnessComponentIndex+1f) / (float)dataManager.generationDataList[genNumber].agentDataArray[0].trialDataArray[curTrialIndex].fitnessComponentDataArray.Length;
 				//Debug.Log ("TheGraphKing pixValueComponentFraction: " + pixValueComponentFraction.ToString());
-				texFitnessComponents.SetPixel(x, y, new Color(pixValueRaw, pixValueTrialFraction, pixValueComponentFraction));
+                */
+				//texFitnessComponents.SetPixel(x, y, new Color(pixValueRaw, pixValueTrialFraction, pixValueComponentFraction));
+                texFitnessComponents.SetPixel(x, y, new Color(0f, 0f, 0f));
 
 
-				curFitnessComponentIndex++;
+                curFitnessComponentIndex++;
 			}
 
 		}
 		texFitnessComponents.Apply();
 		
 		string fitValues = "Raw: ";
-		for(int x = 0; x < texWidth; x++) { 
-			fitValues += dataManager.generationDataList[x].avgAgentScoreRaw.ToString() + ", ";
+		for(int x = 0; x < texWidth; x++) {
+            fitValues += 0f; //dataManager.generationDataList[x].avgAgentScoreRaw.ToString() + ", ";
 		}
 		//Debug.Log ("TheGraphKing BuildTexturesFitnessBasic Length: " + texFitnessBasic.width.ToString() + ". " + fitValues);
 	}

@@ -484,7 +484,7 @@ public class CritterEditorState : MonoBehaviour {
             
             selectedSegmentGizmo = critterConstructorManager.masterCritter.critterSegmentList[lowestMatchID];
 
-            critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(selectedSegment.GetComponent<CritterSegment>().sourceNode);  // REVISIT?
+            critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(critterConstructorManager.masterCritter.masterCritterGenome, selectedSegment.GetComponent<CritterSegment>().sourceNode.ID);  // REVISIT?
             //Debug.Log("CommandSetSelectedSegments: selectedSegment.GetComponent<CritterSegment>().id " + selectedSegment.GetComponent<CritterSegment>().id.ToString() + ", co: " + clickedObject.ToString() + ", selNodeID: " + selectedNodeID.ToString());
         }
     }
@@ -518,7 +518,7 @@ public class CritterEditorState : MonoBehaviour {
             selectedSegment = critterConstructorManager.masterCritter.critterSegmentList[lowestMatchID];
 
             selectedSegmentGizmo = critterConstructorManager.masterCritter.critterSegmentList[lowestMatchID];
-            critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(selectedSegment.GetComponent<CritterSegment>().sourceNode);  // REVISIT?
+            critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(critterConstructorManager.masterCritter.masterCritterGenome, selectedSegment.GetComponent<CritterSegment>().sourceNode.ID);  // REVISIT?
         }
         else {
             // Deselect all
@@ -1790,97 +1790,236 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
     }
 
     public void ClickAttachAddon() {
-        //Debug.Log("Attach Addon");
+        Debug.Log("Attach Addon: " + ((CritterNodeAddonBase.CritterNodeAddonTypes)critterEditorUI.panelNodeAddons.dropdownAddonType.value).ToString());
         CritterNodeAddonBase.CritterNodeAddonTypes addonType = (CritterNodeAddonBase.CritterNodeAddonTypes)critterEditorUI.panelNodeAddons.dropdownAddonType.value;
         CritterNode sourceNode = selectedSegment.GetComponent<CritterSegment>().sourceNode;
 
-        //CritterNodeAddonBase newAddon;
-        if(addonType == CritterNodeAddonBase.CritterNodeAddonTypes.JointMotor) {
-            AddonJointMotor newJointMotor = new AddonJointMotor();      // Figure out how to get this to not create a new instance everytime -- check class type!      
-            //newAddon = newJointMotor;
-            if(!CheckListForAddon(newJointMotor, sourceNode.addonsList)) {  // only allows 1 instance of the JointMotor type
-                sourceNode.addonsList.Add(newJointMotor);
-                critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(sourceNode);
-            }            
+        if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.PhysicalAttributes) {
+            bool listContainsType = false;
+            for (int i = 0; i < critterConstructorManager.masterCritter.masterCritterGenome.addonPhysicalAttributesList.Count; i++) {  // check for existing addon of this type
+                if (critterConstructorManager.masterCritter.masterCritterGenome.addonPhysicalAttributesList[i].critterNodeID == sourceNode.ID) {
+                    listContainsType = true;
+                }
+            }
+            if (!listContainsType) {  // only allows 1 instance of the JointMotor type
+                AddonPhysicalAttributes newPhysicalAttributes = new AddonPhysicalAttributes(sourceNode.ID);
+                critterConstructorManager.masterCritter.masterCritterGenome.addonPhysicalAttributesList.Add(newPhysicalAttributes);
+                //critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(critterConstructorManager.masterCritter.masterCritterGenome, sourceNode.ID);
+            }
         }
-        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.JointAngleSensor) {
-            AddonJointAngleSensor newJointAngleSensor = new AddonJointAngleSensor();
-            if (!CheckListForAddon(newJointAngleSensor, sourceNode.addonsList)) {  // only allows 1 instance of the newJointAngleSensor type
-                sourceNode.addonsList.Add(newJointAngleSensor);
-                critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(sourceNode);
+        
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.JointAngleSensor) {            
+            bool listContainsType = false;
+            // Move duplicate check to an Add Addon function within the CritterGenome? to handle it automagically?
+            for (int i = 0; i < critterConstructorManager.masterCritter.masterCritterGenome.addonJointAngleSensorList.Count; i++) {  // check for existing addon of this type
+                if (critterConstructorManager.masterCritter.masterCritterGenome.addonJointAngleSensorList[i].critterNodeID == sourceNode.ID) {
+                    // there already exists a jointMotor!!
+                    listContainsType = true;
+                }
+            }
+            if (!listContainsType) {  // only allows 1 instance of the newJointAngleSensor type
+                AddonJointAngleSensor newJointAngleSensor = new AddonJointAngleSensor(sourceNode.ID);
+                critterConstructorManager.masterCritter.masterCritterGenome.addonJointAngleSensorList.Add(newJointAngleSensor);
+                //critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(critterConstructorManager.masterCritter.masterCritterGenome, sourceNode.ID);
             }
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.ContactSensor) {
-            AddonContactSensor newContactSensor = new AddonContactSensor();
-            if (!CheckListForAddon(newContactSensor, sourceNode.addonsList)) {  // only allows 1 instance of the newContactSensor type
-                sourceNode.addonsList.Add(newContactSensor);
-                critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(sourceNode);
+            bool listContainsType = false;
+            for (int i = 0; i < critterConstructorManager.masterCritter.masterCritterGenome.addonContactSensorList.Count; i++) {  // check for existing addon of this type
+                if (critterConstructorManager.masterCritter.masterCritterGenome.addonContactSensorList[i].critterNodeID == sourceNode.ID) {
+                    listContainsType = true;
+                }
+            }
+            if (!listContainsType) {  // only allows 1 instance of the ContactSensor type
+                AddonContactSensor newContactSensor = new AddonContactSensor(sourceNode.ID);
+                critterConstructorManager.masterCritter.masterCritterGenome.addonContactSensorList.Add(newContactSensor);
             }
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.RaycastSensor) {
-            AddonRaycastSensor newRaycastSensor = new AddonRaycastSensor();
-            sourceNode.addonsList.Add(newRaycastSensor);
-            critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(sourceNode);
+            AddonRaycastSensor newRaycastSensor = new AddonRaycastSensor(sourceNode.ID);
+            critterConstructorManager.masterCritter.masterCritterGenome.addonRaycastSensorList.Add(newRaycastSensor);            
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.CompassSensor1D) {
-            AddonCompassSensor1D newCompassSensor1D = new AddonCompassSensor1D();
-            sourceNode.addonsList.Add(newCompassSensor1D);
-            critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(sourceNode);
+            AddonCompassSensor1D newCompassSensor1D = new AddonCompassSensor1D(sourceNode.ID);
+            critterConstructorManager.masterCritter.masterCritterGenome.addonCompassSensor1DList.Add(newCompassSensor1D);
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.CompassSensor3D) {
-            AddonCompassSensor3D newCompassSensor3D = new AddonCompassSensor3D();
-            if (!CheckListForAddon(newCompassSensor3D, sourceNode.addonsList)) {  // only allows 1 instance of the newCompassSensor3D type
-                sourceNode.addonsList.Add(newCompassSensor3D);
-                critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(sourceNode);
+            AddonCompassSensor3D newCompassSensor3D = new AddonCompassSensor3D(sourceNode.ID);
+            critterConstructorManager.masterCritter.masterCritterGenome.addonCompassSensor3DList.Add(newCompassSensor3D);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.PositionSensor1D) {
+            AddonPositionSensor1D newPositionSensor1D = new AddonPositionSensor1D(sourceNode.ID);
+            critterConstructorManager.masterCritter.masterCritterGenome.addonPositionSensor1DList.Add(newPositionSensor1D);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.PositionSensor3D) {
+            AddonPositionSensor3D newPositionSensor3D = new AddonPositionSensor3D(sourceNode.ID);
+            critterConstructorManager.masterCritter.masterCritterGenome.addonPositionSensor3DList.Add(newPositionSensor3D);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.RotationSensor1D) {
+            AddonRotationSensor1D newRotationSensor1D = new AddonRotationSensor1D(sourceNode.ID);
+            critterConstructorManager.masterCritter.masterCritterGenome.addonRotationSensor1DList.Add(newRotationSensor1D);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.RotationSensor3D) {
+            AddonRotationSensor3D newRotationSensor3D = new AddonRotationSensor3D(sourceNode.ID);
+            critterConstructorManager.masterCritter.masterCritterGenome.addonRotationSensor3DList.Add(newRotationSensor3D);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.VelocitySensor1D) {
+            AddonVelocitySensor1D newVelocitySensor1D = new AddonVelocitySensor1D(sourceNode.ID);
+            critterConstructorManager.masterCritter.masterCritterGenome.addonVelocitySensor1DList.Add(newVelocitySensor1D);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.VelocitySensor3D) {
+            AddonVelocitySensor3D newVelocitySensor3D = new AddonVelocitySensor3D(sourceNode.ID);
+            critterConstructorManager.masterCritter.masterCritterGenome.addonVelocitySensor3DList.Add(newVelocitySensor3D);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.Altimeter) {
+            bool listContainsType = false;
+            for (int i = 0; i < critterConstructorManager.masterCritter.masterCritterGenome.addonAltimeterList.Count; i++) {  // check for existing addon of this type
+                if (critterConstructorManager.masterCritter.masterCritterGenome.addonAltimeterList[i].critterNodeID == sourceNode.ID) {
+                    listContainsType = true;
+                }
+            }
+            if (!listContainsType) {  // only allows 1 instance of the Altimeter type
+                AddonAltimeter newAltimeter = new AddonAltimeter(sourceNode.ID);
+                critterConstructorManager.masterCritter.masterCritterGenome.addonAltimeterList.Add(newAltimeter);
+            }
+        }
+
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.JointMotor) {
+            bool listContainsType = false;
+            for (int i = 0; i < critterConstructorManager.masterCritter.masterCritterGenome.addonJointMotorList.Count; i++) {  // check for existing addon of this type
+                if (critterConstructorManager.masterCritter.masterCritterGenome.addonJointMotorList[i].critterNodeID == sourceNode.ID) {
+                    // there already exists a jointMotor!!
+                    listContainsType = true;
+                }
+            }
+            if (!listContainsType) {  // only allows 1 instance of the JointMotor type
+                AddonJointMotor newJointMotor = new AddonJointMotor(sourceNode.ID);
+                critterConstructorManager.masterCritter.masterCritterGenome.addonJointMotorList.Add(newJointMotor);
+                //critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(critterConstructorManager.masterCritter.masterCritterGenome, sourceNode.ID);
             }
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.ThrusterEffector1D) {
-            AddonThrusterEffector1D newThrusterEffector1D = new AddonThrusterEffector1D();
-            sourceNode.addonsList.Add(newThrusterEffector1D);
-            critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(sourceNode);
+            AddonThrusterEffector1D newThrusterEffector1D = new AddonThrusterEffector1D(sourceNode.ID);
+            critterConstructorManager.masterCritter.masterCritterGenome.addonThrusterEffector1DList.Add(newThrusterEffector1D);
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.ThrusterEffector3D) {
-            AddonThrusterEffector3D newThrusterEffector3D = new AddonThrusterEffector3D();
-            if (!CheckListForAddon(newThrusterEffector3D, sourceNode.addonsList)) {  // only allows 1 instance of the newThrusterEffector3D type
-                sourceNode.addonsList.Add(newThrusterEffector3D);
-                critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(sourceNode);
+            bool listContainsType = false;
+            for (int i = 0; i < critterConstructorManager.masterCritter.masterCritterGenome.addonThrusterEffector3DList.Count; i++) {  // check for existing addon of this type
+                if (critterConstructorManager.masterCritter.masterCritterGenome.addonThrusterEffector3DList[i].critterNodeID == sourceNode.ID) {
+                    listContainsType = true;
+                }
+            }
+            if (!listContainsType) { 
+                AddonThrusterEffector3D newThrusterEffector3D = new AddonThrusterEffector3D(sourceNode.ID);
+                critterConstructorManager.masterCritter.masterCritterGenome.addonThrusterEffector3DList.Add(newThrusterEffector3D);
             }
         }
-        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.StickyEffector) {
-            AddonStickyEffector newStickyEffector = new AddonStickyEffector();
-            if (!CheckListForAddon(newStickyEffector, sourceNode.addonsList)) {  // only allows 1 instance of the newThrusterEffector3D type
-                sourceNode.addonsList.Add(newStickyEffector);
-                critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(sourceNode);
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.TorqueEffector1D) {
+            AddonTorqueEffector1D newTorqueEffector1D = new AddonTorqueEffector1D(sourceNode.ID);
+            critterConstructorManager.masterCritter.masterCritterGenome.addonTorqueEffector1DList.Add(newTorqueEffector1D);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.TorqueEffector3D) {
+            bool listContainsType = false;
+            for (int i = 0; i < critterConstructorManager.masterCritter.masterCritterGenome.addonTorqueEffector3DList.Count; i++) {  // check for existing addon of this type
+                if (critterConstructorManager.masterCritter.masterCritterGenome.addonTorqueEffector3DList[i].critterNodeID == sourceNode.ID) {
+                    listContainsType = true;
+                }
+            }
+            if (!listContainsType) {  // only allows 1 instance of the Torque type
+                AddonTorqueEffector3D newTorqueEffector3D = new AddonTorqueEffector3D(sourceNode.ID);
+                critterConstructorManager.masterCritter.masterCritterGenome.addonTorqueEffector3DList.Add(newTorqueEffector3D);
             }
         }
+
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.OscillatorInput) {
-            AddonOscillatorInput newOscillatorInput = new AddonOscillatorInput();
-            sourceNode.addonsList.Add(newOscillatorInput);
-            critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(sourceNode);
+            AddonOscillatorInput newOscillatorInput = new AddonOscillatorInput(sourceNode.ID);
+            critterConstructorManager.masterCritter.masterCritterGenome.addonOscillatorInputList.Add(newOscillatorInput);
+            //critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(critterConstructorManager.masterCritter.masterCritterGenome, sourceNode.ID);
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.ValueInput) {
-            AddonValueInput newValueInput = new AddonValueInput();
-            sourceNode.addonsList.Add(newValueInput);
-            critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(sourceNode);
+            AddonValueInput newValueInput = new AddonValueInput(sourceNode.ID);
+            critterConstructorManager.masterCritter.masterCritterGenome.addonValueInputList.Add(newValueInput);
         }
-        //sourceNode.addonsList.Add(newAddon);
-        //critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(sourceNode);
-    }
-    public bool CheckListForAddon(CritterNodeAddonBase pendingAddon, List<CritterNodeAddonBase> list) {
-        bool listContainsType = false;
-        for(int i = 0; i < list.Count; i++) {
-            if(pendingAddon.GetType() == list[i].GetType()) {
-                // there already exists a jointMotor!!
-                listContainsType = true;
-            }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.TimerInput) {
+            AddonTimerInput newTimerInput = new AddonTimerInput(sourceNode.ID);
+            critterConstructorManager.masterCritter.masterCritterGenome.addonTimerInputList.Add(newTimerInput);
         }
-        return listContainsType;
+
+        critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(critterConstructorManager.masterCritter.masterCritterGenome, sourceNode.ID);
     }
-    public void RemoveAddon(int index) {
+    
+    public void RemoveAddon(CritterNodeAddonBase.CritterNodeAddonTypes addonType, int addonIndex) {
+        // Assumes RemoveAddon was only called from UI display button, which can only appear for the currently selected Segment!
         CritterNode sourceNode = selectedSegment.GetComponent<CritterSegment>().sourceNode;
         //Destroy(sourceNode.addonsList[index]);
-        sourceNode.addonsList.RemoveAt(index);
-        critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(sourceNode);
+        //sourceNode.addonsList.RemoveAt(index);
+        if(addonType == CritterNodeAddonBase.CritterNodeAddonTypes.PhysicalAttributes) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonPhysicalAttributesList.RemoveAt(addonIndex);
+        }
+
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.JointAngleSensor) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonJointAngleSensorList.RemoveAt(addonIndex);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.ContactSensor) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonContactSensorList.RemoveAt(addonIndex);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.RaycastSensor) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonRaycastSensorList.RemoveAt(addonIndex);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.CompassSensor1D) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonCompassSensor1DList.RemoveAt(addonIndex);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.CompassSensor3D) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonCompassSensor3DList.RemoveAt(addonIndex);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.PositionSensor1D) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonPositionSensor1DList.RemoveAt(addonIndex);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.PositionSensor3D) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonPositionSensor3DList.RemoveAt(addonIndex);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.RotationSensor1D) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonRotationSensor1DList.RemoveAt(addonIndex);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.RotationSensor3D) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonRotationSensor3DList.RemoveAt(addonIndex);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.VelocitySensor1D) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonVelocitySensor1DList.RemoveAt(addonIndex);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.VelocitySensor3D) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonVelocitySensor3DList.RemoveAt(addonIndex);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.Altimeter) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonAltimeterList.RemoveAt(addonIndex);
+        }
+
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.JointMotor) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonJointMotorList.RemoveAt(addonIndex);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.ThrusterEffector1D) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonThrusterEffector1DList.RemoveAt(addonIndex);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.ThrusterEffector3D) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonThrusterEffector3DList.RemoveAt(addonIndex);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.TorqueEffector1D) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonTorqueEffector1DList.RemoveAt(addonIndex);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.TorqueEffector3D) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonTorqueEffector3DList.RemoveAt(addonIndex);
+        }
+
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.OscillatorInput) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonOscillatorInputList.RemoveAt(addonIndex);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.ValueInput) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonValueInputList.RemoveAt(addonIndex);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.TimerInput) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonTimerInputList.RemoveAt(addonIndex);
+        }
+        critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(critterConstructorManager.masterCritter.masterCritterGenome, sourceNode.ID);
     }
 
     private void RebuildCritterStatic() {

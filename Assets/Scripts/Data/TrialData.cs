@@ -9,11 +9,11 @@ public class TrialData {
 	//     -And the Modified Score for the Trial (after adjusting by power & weight) -- Do I want in 0-1 range, or actual value?
 	//     -And Number of Fitness Components
 	public FitnessComponentData[] fitnessComponentDataArray;
-	public float rawValueTotal;
-	public float weightedValueTotal;
-	public float rawValueAvg;
-	public float weightedValueAvg;
-	public float totalSumOfWeights; // keeps track of total of all fitnessComponent weight values for this Trial
+	//public float rawValueTotal;
+	//public float weightedValueTotal;
+	//public float rawValueAvg;
+	//public float weightedValueAvg;
+	public float totalSumOfWeights = 0f; // keeps track of total of all fitnessComponent weight values for this Trial
 	
 	public TrialData(int numFitnessComponents) {  // number of fitness components for this player's current Trial
 		fitnessComponentDataArray = new FitnessComponentData[numFitnessComponents];

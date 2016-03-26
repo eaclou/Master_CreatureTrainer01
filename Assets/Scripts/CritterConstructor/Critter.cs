@@ -8,12 +8,126 @@ public class Critter : MonoBehaviour {
     public Material critterSegmentMaterial;
     // List of generated segments, based on critter's full Genome
     public List<GameObject> critterSegmentList;
-    
+    // Should these 'live' on each segment themselves, or stay as separate global lists??  v v v
+
+    public List<SegaddonPhysicalAttributes> segaddonPhysicalAttributesList;
+
+    public List<SegaddonJointAngleSensor> segaddonJointAngleSensorList;
+    public List<SegaddonContactSensor> segaddonContactSensorList;
+    public List<SegaddonRaycastSensor> segaddonRaycastSensorList;    
+    public List<SegaddonCompassSensor1D> segaddonCompassSensor1DList;
+    public List<SegaddonCompassSensor3D> segaddonCompassSensor3DList;
+    public List<SegaddonPositionSensor1D> segaddonPositionSensor1DList;
+    public List<SegaddonPositionSensor3D> segaddonPositionSensor3DList;
+    public List<SegaddonRotationSensor1D> segaddonRotationSensor1DList;
+    public List<SegaddonRotationSensor3D> segaddonRotationSensor3DList;
+    public List<SegaddonVelocitySensor1D> segaddonVelocitySensor1DList;
+    public List<SegaddonVelocitySensor3D> segaddonVelocitySensor3DList;
+    public List<SegaddonAltimeter> segaddonAltimeterList;
+
+    public List<SegaddonJointMotor> segaddonJointMotorList;
+    public List<SegaddonThrusterEffector1D> segaddonThrusterEffector1DList;
+    public List<SegaddonThrusterEffector3D> segaddonThrusterEffector3DList;
+    public List<SegaddonTorqueEffector1D> segaddonTorqueEffector1DList;
+    public List<SegaddonTorqueEffector3D> segaddonTorqueEffector3DList;
+
+    public List<SegaddonOscillatorInput> segaddonOscillatorInputList;
+    public List<SegaddonValueInput> segaddonValueInputList;
+    public List<SegaddonTimerInput> segaddonTimerInputList;
+
+
+    public List<PhysicMaterial> segmentPhysicMaterialList;
+
     public void InitializeBlankCritter() {
         if(critterSegmentList == null) {
             critterSegmentList = new List<GameObject>(); // the 'official' record of this critters Segments
-        }        
+        }
+
+        Debug.Log("InitializeCritterFromGenome(CritterGenome genome)  created SEGADDON LISTS!!!");
+        InitializeAddonLists();
+        if(segmentPhysicMaterialList == null) {
+            segmentPhysicMaterialList = new List<PhysicMaterial>();
+        }
         CreateBlankCritterGenome();        
+    }
+
+    public void InitializeCritterFromGenome(CritterGenome genome) {
+        masterCritterGenome = genome;
+        if (critterSegmentList == null) {
+            critterSegmentList = new List<GameObject>(); // the 'official' record of this critters Segments
+        }
+        InitializeAddonLists();
+        Debug.Log("InitializeCritterFromGenome(CritterGenome genome)  created SEGADDON LISTS!!!");
+        
+    }
+
+    public void InitializeAddonLists() {
+        if (segaddonPhysicalAttributesList == null) {
+            segaddonPhysicalAttributesList = new List<SegaddonPhysicalAttributes>();
+        }
+
+        if (segaddonJointAngleSensorList == null) {
+            segaddonJointAngleSensorList = new List<SegaddonJointAngleSensor>(); 
+        }
+        if (segaddonContactSensorList == null) {
+            segaddonContactSensorList = new List<SegaddonContactSensor>(); 
+        }
+        if (segaddonRaycastSensorList == null) {
+            segaddonRaycastSensorList = new List<SegaddonRaycastSensor>(); 
+        }
+        if (segaddonCompassSensor1DList == null) {
+            segaddonCompassSensor1DList = new List<SegaddonCompassSensor1D>(); 
+        }
+        if (segaddonCompassSensor3DList == null) {
+            segaddonCompassSensor3DList = new List<SegaddonCompassSensor3D>(); 
+        }
+        if (segaddonPositionSensor1DList == null) {
+            segaddonPositionSensor1DList = new List<SegaddonPositionSensor1D>();
+        }
+        if (segaddonPositionSensor3DList == null) {
+            segaddonPositionSensor3DList = new List<SegaddonPositionSensor3D>();
+        }
+        if (segaddonRotationSensor1DList == null) {
+            segaddonRotationSensor1DList = new List<SegaddonRotationSensor1D>();
+        }
+        if (segaddonRotationSensor3DList == null) {
+            segaddonRotationSensor3DList = new List<SegaddonRotationSensor3D>();
+        }
+        if (segaddonVelocitySensor1DList == null) {
+            segaddonVelocitySensor1DList = new List<SegaddonVelocitySensor1D>();
+        }
+        if (segaddonVelocitySensor3DList == null) {
+            segaddonVelocitySensor3DList = new List<SegaddonVelocitySensor3D>();
+        }
+        if (segaddonAltimeterList == null) {
+            segaddonAltimeterList = new List<SegaddonAltimeter>();
+        }
+
+        if (segaddonJointMotorList == null) {
+            segaddonJointMotorList = new List<SegaddonJointMotor>(); 
+        }
+        if (segaddonThrusterEffector1DList == null) {
+            segaddonThrusterEffector1DList = new List<SegaddonThrusterEffector1D>();
+        }
+        if (segaddonThrusterEffector3DList == null) {
+            segaddonThrusterEffector3DList = new List<SegaddonThrusterEffector3D>();
+        }
+        if (segaddonTorqueEffector1DList == null) {
+            segaddonTorqueEffector1DList = new List<SegaddonTorqueEffector1D>();
+        }
+        if (segaddonTorqueEffector3DList == null) {
+            segaddonTorqueEffector3DList = new List<SegaddonTorqueEffector3D>();
+        }
+
+        if (segaddonOscillatorInputList == null) {
+            segaddonOscillatorInputList = new List<SegaddonOscillatorInput>(); 
+        }
+        if (segaddonValueInputList == null) {
+            segaddonValueInputList = new List<SegaddonValueInput>(); 
+        }
+        if (segaddonTimerInputList == null) {
+            segaddonTimerInputList = new List<SegaddonTimerInput>();
+        }
     }
 
     private void CreateBlankCritterGenome() {
@@ -51,7 +165,8 @@ public class Critter : MonoBehaviour {
         CritterSegment newSegment = newSegmentGO.GetComponent<CritterSegment>();
 
         Vector3 newSegmentParentDimensions = newSegment.parentSegment.sourceNode.dimensions * newSegment.parentSegment.scalingFactor;
-        Vector3 newSegmentDimensions = newSegment.sourceNode.dimensions * newSegment.scalingFactor;        
+        Vector3 newSegmentDimensions = newSegment.sourceNode.dimensions * newSegment.scalingFactor;
+        newSegment.surfaceArea = new Vector3(newSegmentDimensions.y * newSegmentDimensions.z * 2f, newSegmentDimensions.x * newSegmentDimensions.z * 2f, newSegmentDimensions.x * newSegmentDimensions.y * 2f);       
         parentPos = newSegment.parentSegment.transform.position;        
         Vector3 attachDir = newSegment.sourceNode.jointLink.attachDir;
         Vector3 restAngleDir = newSegment.sourceNode.jointLink.restAngleDir;
@@ -147,12 +262,26 @@ public class Critter : MonoBehaviour {
         float parentDepth = 0f;
         if (attachSide == 0) {  // attached to the X side, so use parent's X scale
             parentDepth = newSegmentParentDimensions.x * 0.5f;
+            // subtract intersecting surface areas:  // DOESN"T HANDLE OFFSET POSITIONS YET!!!
+            // uses y & z of parent size, but x & y of own size, since it always has its 'back' to the parent
+            float overlap = (Mathf.Min(newSegmentDimensions.y, newSegmentParentDimensions.y) * Mathf.Min(newSegmentDimensions.x, newSegmentParentDimensions.z));
+            // uses math.max to prevent going below 0
+            newSegment.surfaceArea.z = Mathf.Max(0f, newSegment.surfaceArea.z - overlap);  // subtract the shared region from this segment that should not be in contact with the water
+            newSegment.parentSegment.surfaceArea.x = Mathf.Max(0f, newSegment.parentSegment.surfaceArea.x - overlap);  // subtract the shared region from the parent segment that should not be in contact with the water
         }
         else if (attachSide == 1) {
             parentDepth = newSegmentParentDimensions.y * 0.5f;
+
+            float overlap = (Mathf.Min(newSegmentDimensions.x, newSegmentParentDimensions.x) * Mathf.Min(newSegmentDimensions.y, newSegmentParentDimensions.z));
+            newSegment.surfaceArea.z = Mathf.Max(0f, newSegment.surfaceArea.z - overlap); 
+            newSegment.parentSegment.surfaceArea.y = Mathf.Max(0f, newSegment.parentSegment.surfaceArea.y - overlap); 
         }
         else {   //  attachSide == 2
             parentDepth = newSegmentParentDimensions.z * 0.5f;
+
+            float overlap = (Mathf.Min(newSegmentDimensions.x, newSegmentParentDimensions.x) * Mathf.Min(newSegmentDimensions.y, newSegmentParentDimensions.y));
+            newSegment.surfaceArea.z = Mathf.Max(0f, newSegment.surfaceArea.z - overlap);
+            newSegment.parentSegment.surfaceArea.z = Mathf.Max(0f, newSegment.parentSegment.surfaceArea.z - overlap);
         }
         attachPosWorld = newSegment.parentSegment.transform.position + attachDirWorld * parentDepth;
         
@@ -231,10 +360,47 @@ public class Critter : MonoBehaviour {
         }        
     }*/
 
+    /*
+    public int CalculateNumSegments() {
+        int numSegments = 0;
+        RebuildCritterFromGenomeRecursive(false);
+        numSegments = critterSegmentList.Count;
+        Debug.Log("CalculateNumSegments: " + numSegments.ToString());
+        DeleteSegments();
+        return numSegments;
+    }
+    */  // deprecated, use similar function within CritterGenome class
+
     public void RebuildCritterFromGenomeRecursive(bool physicsOn) {
         //Debug.Log("RebuildCritterFromGenomeRecursive: " + masterCritterGenome.CritterNodeList.Count.ToString());
         // Delete existing Segment GameObjects
         DeleteSegments();
+        // Is this the best way to clear the lists? from a memory standpoint...
+        segaddonPhysicalAttributesList.Clear();
+        
+        segaddonJointAngleSensorList.Clear();
+        segaddonContactSensorList.Clear();
+        segaddonRaycastSensorList.Clear();
+        segaddonCompassSensor1DList.Clear();
+        segaddonCompassSensor3DList.Clear();
+        segaddonPositionSensor1DList.Clear();
+        segaddonPositionSensor3DList.Clear();
+        segaddonRotationSensor1DList.Clear();
+        segaddonRotationSensor3DList.Clear();
+        segaddonVelocitySensor1DList.Clear();
+        segaddonVelocitySensor3DList.Clear();
+        segaddonAltimeterList.Clear();
+
+        segaddonJointMotorList.Clear();
+        segaddonThrusterEffector1DList.Clear();
+        segaddonThrusterEffector3DList.Clear();
+        segaddonTorqueEffector1DList.Clear();
+        segaddonTorqueEffector3DList.Clear();
+
+        segaddonOscillatorInputList.Clear();
+        segaddonValueInputList.Clear();
+        segaddonTimerInputList.Clear();
+
         InitializeSegmentMaterial();
 
         if (critterSegmentList != null) {
@@ -246,22 +412,13 @@ public class Critter : MonoBehaviour {
         int maxDepth = 20;  // safeguard to prevent while loop lock
         int nextSegmentID = 0;
         List<CritterSegment> builtSegmentsList = new List<CritterSegment>();  // keep track of segments that have been built - linear in-order array 0-n segments
-        //List<CritterNode> currentBuildNodeList = new List<CritterNode>();  // the childNodes that are next in line to be translated into Segments
-        //List<CritterNode> pendingChildNodeList = new List<CritterNode>();  // the childNodes that are next in line to be translated into Segments
-        //List<CritterSegment> pendingBuildNodeParentSegmentList = new List<CritterSegment>();  // a List that mirrors the pending Node list, but keeps track of each of their corresponding ParentSegments
-        //List<CritterSegment> currentBuildNodeParentSegmentList = new List<CritterSegment>();
-
         List<BuildSegmentInfo> currentBuildSegmentList = new List<BuildSegmentInfo>();  // keeps track of all current-depth segment build-requests, and holds important metadata
         List<BuildSegmentInfo> nextBuildSegmentList = new List<BuildSegmentInfo>();  // used to keep track of next childSegments that need to be built
 
         // ***********  Will attempt to traverse the Segments to be created, keeping track of where on each graph (nodes# & segment#) the current build is on.
         BuildSegmentInfo rootSegmentBuildInfo = new BuildSegmentInfo();
         rootSegmentBuildInfo.sourceNode = masterCritterGenome.CritterNodeList[0];
-        //if(rootSegmentBuildInfo.sourceNode.attachedJointLinkList.Count > 0) 
-        //    Debug.Log("Root Children: " + rootSegmentBuildInfo.sourceNode.attachedJointLinkList.Count + ", child: " + rootSegmentBuildInfo.sourceNode.attachedJointLinkList[0]);
-        currentBuildSegmentList.Add(rootSegmentBuildInfo);  // ROOT NODE IS SPECIAL!
-        //currentBuildNodeList.Add(masterCritterGenome.CritterNodeList[0]);  // Root Node
-        
+        currentBuildSegmentList.Add(rootSegmentBuildInfo);  // ROOT NODE IS SPECIAL!        
 
         // Do a Breadth-first traversal??
         while (isPendingChildren) {
@@ -283,23 +440,25 @@ public class Critter : MonoBehaviour {
                 critterSegmentList.Add(newGO);  // Add to master Linear list of Segments
                 newSegment.InitGamePiece();  // create the mesh and some other initialization stuff
                 newSegment.sourceNode = currentBuildSegmentList[i].sourceNode;
-                newSegment.id = nextSegmentID;  // !!!!!!!!!!!!!!!!!@$%@$#^@$^@$%^$%^#!!!!!!!!!!!!!!!!!!! REVISIT THIS!!!! should id's be different btw segments and nodes?
+                newSegment.id = nextSegmentID;
                 nextSegmentID++;
                 
                 if (currentBuildSegmentList[i].sourceNode.ID == 0) {  // is ROOT segment  -- Look into doing Root build BEFORE for loop to avoid the need to do this check
                     newGO.transform.rotation = Quaternion.identity;
                     newSegment.scalingFactor = newSegment.sourceNode.jointLink.recursionScalingFactor;
                     newGO.transform.localScale = currentBuildSegmentList[i].sourceNode.dimensions * newSegment.scalingFactor;
+                    newSegment.surfaceArea = new Vector3(newGO.transform.localScale.y * newGO.transform.localScale.z * 2f, newGO.transform.localScale.x * newGO.transform.localScale.z * 2f, newGO.transform.localScale.x * newGO.transform.localScale.y * 2f);
                     if (physicsOn) {
-                        newGO.AddComponent<Rigidbody>().isKinematic = true;
-                        newGO.GetComponent<Rigidbody>().drag = 20f;
-                        newGO.GetComponent<Rigidbody>().angularDrag = 20f;
-                        // Bouncy Root:
-                        GameObject anchorGO = new GameObject("Anchor");
-                        anchorGO.transform.SetParent(this.gameObject.transform);
-                        anchorGO.AddComponent<Rigidbody>().isKinematic = true;
+                        newGO.AddComponent<Rigidbody>().isKinematic = false;
                         
-                        ConfigurableJoint configJoint = newGO.AddComponent<ConfigurableJoint>();
+                        //newGO.GetComponent<Rigidbody>().drag = 20f;
+                        //newGO.GetComponent<Rigidbody>().angularDrag = 20f;
+                        // Bouncy Root:
+                        //GameObject anchorGO = new GameObject("Anchor");
+                        //anchorGO.transform.SetParent(this.gameObject.transform);
+                        //anchorGO.AddComponent<Rigidbody>().isKinematic = true;
+
+                        /*ConfigurableJoint configJoint = newGO.AddComponent<ConfigurableJoint>();
                         configJoint.autoConfigureConnectedAnchor = false;
                         configJoint.connectedBody = anchorGO.GetComponent<Rigidbody>();
                         configJoint.anchor = new Vector3(0f, 0f, 0f);
@@ -320,6 +479,7 @@ public class Critter : MonoBehaviour {
                         configJoint.linearLimit = jointLimit;
                         configJoint.angularXLimitSpring = limitSpring;
                         configJoint.angularYZLimitSpring = limitSpring;
+                        */
                     }
                 }
                 else {  // if NOT root segment, can consider parent-related stuff:
@@ -345,6 +505,191 @@ public class Critter : MonoBehaviour {
                         else if (currentBuildSegmentList[i].sourceNode.jointLink.symmetryType == CritterJointLink.SymmetryType.MirrorZ) {
                             newSegment.mirrorZ = !newSegment.mirrorZ;
                         }
+                    }
+                }
+                // SEGMENT ADDONS:
+                if(physicsOn) {
+                    // Check for Physical Attributes:
+                    int physicalAttributesIndex = masterCritterGenome.CheckForAddonPhysicalAttributes(currentBuildSegmentList[i].sourceNode.ID);
+                    if (physicalAttributesIndex != -1) { 
+                        SegaddonPhysicalAttributes newPhysicalAttributes = new SegaddonPhysicalAttributes(masterCritterGenome.addonPhysicalAttributesList[physicalAttributesIndex]);
+                        newPhysicalAttributes.segmentID = newSegment.id;
+                        segaddonPhysicalAttributesList.Add(newPhysicalAttributes);
+
+                        PhysicMaterial segmentPhysicMaterial = new PhysicMaterial();
+                        segmentPhysicMaterial.dynamicFriction = newPhysicalAttributes.dynamicFriction[0];
+                        segmentPhysicMaterial.staticFriction = newPhysicalAttributes.staticFriction[0];
+                        segmentPhysicMaterial.bounciness = newPhysicalAttributes.bounciness[0];
+                        RigidbodyConstraints rbConstraints = newGO.GetComponent<Rigidbody>().constraints;
+                        if(newPhysicalAttributes.freezePositionX[0]) {
+                            rbConstraints = rbConstraints | RigidbodyConstraints.FreezePositionX;
+                        }
+                        if (newPhysicalAttributes.freezePositionY[0]) {
+                            rbConstraints = rbConstraints | RigidbodyConstraints.FreezePositionY;
+                        }
+                        if (newPhysicalAttributes.freezePositionZ[0]) {
+                            rbConstraints = rbConstraints | RigidbodyConstraints.FreezePositionZ;
+                        }
+                        if (newPhysicalAttributes.freezeRotationX[0]) {
+                            rbConstraints = rbConstraints | RigidbodyConstraints.FreezeRotationX;
+                        }
+                        if (newPhysicalAttributes.freezeRotationY[0]) {
+                            rbConstraints = rbConstraints | RigidbodyConstraints.FreezeRotationY;
+                        }
+                        if (newPhysicalAttributes.freezeRotationZ[0]) {
+                            rbConstraints = rbConstraints | RigidbodyConstraints.FreezeRotationZ;
+                        }
+                        newGO.GetComponent<Rigidbody>().constraints = rbConstraints;
+                        newGO.GetComponent<BoxCollider>().material = segmentPhysicMaterial;
+                        //= RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ | RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezePositionZ;
+
+                        //segmentPhysicMaterialList
+                    }
+
+                    // Check for ANGLE SENSORS:
+                    int jointAngleSensorIndex = masterCritterGenome.CheckForAddonJointAngleSensor(currentBuildSegmentList[i].sourceNode.ID);
+                    if (jointAngleSensorIndex != -1) { // if there is a jointAngleSensor definition on this sourceNode
+                        SegaddonJointAngleSensor newJointAngleSensor = new SegaddonJointAngleSensor(masterCritterGenome.addonJointAngleSensorList[jointAngleSensorIndex]);
+                        newJointAngleSensor.segmentID = newSegment.id;
+                        segaddonJointAngleSensorList.Add(newJointAngleSensor);
+                    }
+                    // Check for Contact Sensors:
+                    int contactSensorIndex = masterCritterGenome.CheckForAddonContactSensor(currentBuildSegmentList[i].sourceNode.ID);
+                    if (contactSensorIndex != -1) {
+                        SegaddonContactSensor newContactSensor = new SegaddonContactSensor(masterCritterGenome.addonContactSensorList[contactSensorIndex]);
+                        newContactSensor.segmentID = newSegment.id;
+                        segaddonContactSensorList.Add(newContactSensor);
+                        SegaddonCollisionDetector collisionDetector = newGO.AddComponent<SegaddonCollisionDetector>();
+                        collisionDetector.referencedContactSensor = newContactSensor;
+                    }
+                    // Check for Raycast Sensors:
+                    int raycastSensorIndex = masterCritterGenome.CheckForAddonRaycastSensor(currentBuildSegmentList[i].sourceNode.ID);
+                    if (raycastSensorIndex != -1) {
+                        SegaddonRaycastSensor newRaycastSensor = new SegaddonRaycastSensor(masterCritterGenome.addonRaycastSensorList[raycastSensorIndex]);
+                        newRaycastSensor.segmentID = newSegment.id;
+                        segaddonRaycastSensorList.Add(newRaycastSensor);
+                    }
+                    // Check for COMPASS SENSORS1D:
+                    int compassSensor1DIndex = masterCritterGenome.CheckForAddonCompassSensor1D(currentBuildSegmentList[i].sourceNode.ID);
+                    if (compassSensor1DIndex != -1) { // if there is a compassSensor1DIndex definition on this sourceNode
+                        SegaddonCompassSensor1D newCompassSensor1D = new SegaddonCompassSensor1D(masterCritterGenome.addonCompassSensor1DList[compassSensor1DIndex]);
+                        newCompassSensor1D.segmentID = newSegment.id;
+                        segaddonCompassSensor1DList.Add(newCompassSensor1D);
+                    }
+                    // Check for COMPASS SENSORS3D:
+                    int compassSensor3DIndex = masterCritterGenome.CheckForAddonCompassSensor3D(currentBuildSegmentList[i].sourceNode.ID);
+                    if (compassSensor3DIndex != -1) { // if there is a compassSensor1DIndex definition on this sourceNode
+                        SegaddonCompassSensor3D newCompassSensor3D = new SegaddonCompassSensor3D(masterCritterGenome.addonCompassSensor3DList[compassSensor3DIndex]);
+                        newCompassSensor3D.segmentID = newSegment.id;
+                        segaddonCompassSensor3DList.Add(newCompassSensor3D);
+                    }
+                    // Check for Position SENSORS1D:
+                    int positionSensor1DIndex = masterCritterGenome.CheckForAddonPositionSensor1D(currentBuildSegmentList[i].sourceNode.ID);
+                    if (positionSensor1DIndex != -1) { 
+                        SegaddonPositionSensor1D newPositionSensor1D = new SegaddonPositionSensor1D(masterCritterGenome.addonPositionSensor1DList[positionSensor1DIndex]);
+                        newPositionSensor1D.segmentID = newSegment.id;
+                        segaddonPositionSensor1DList.Add(newPositionSensor1D);
+                    }
+                    // Check for Position SENSORS3D:
+                    int positionSensor3DIndex = masterCritterGenome.CheckForAddonPositionSensor3D(currentBuildSegmentList[i].sourceNode.ID);
+                    if (positionSensor3DIndex != -1) { 
+                        SegaddonPositionSensor3D newPositionSensor3D = new SegaddonPositionSensor3D(masterCritterGenome.addonPositionSensor3DList[positionSensor3DIndex]);
+                        newPositionSensor3D.segmentID = newSegment.id;
+                        segaddonPositionSensor3DList.Add(newPositionSensor3D);
+                    }
+                    // Check for Rotation SENSORS1D:
+                    int rotationSensor1DIndex = masterCritterGenome.CheckForAddonRotationSensor1D(currentBuildSegmentList[i].sourceNode.ID);
+                    if (rotationSensor1DIndex != -1) {
+                        SegaddonRotationSensor1D newRotationSensor1D = new SegaddonRotationSensor1D(masterCritterGenome.addonRotationSensor1DList[rotationSensor1DIndex]);
+                        newRotationSensor1D.segmentID = newSegment.id;
+                        segaddonRotationSensor1DList.Add(newRotationSensor1D);
+                    }
+                    // Check for Rotation SENSORS3D:
+                    int rotationSensor3DIndex = masterCritterGenome.CheckForAddonRotationSensor3D(currentBuildSegmentList[i].sourceNode.ID);
+                    if (rotationSensor3DIndex != -1) { // if there is a compassSensor1DIndex definition on this sourceNode
+                        SegaddonRotationSensor3D newRotationSensor3D = new SegaddonRotationSensor3D(masterCritterGenome.addonRotationSensor3DList[rotationSensor3DIndex]);
+                        newRotationSensor3D.segmentID = newSegment.id;
+                        segaddonRotationSensor3DList.Add(newRotationSensor3D);
+                    }
+                    // Check for Velocity SENSORS1D:
+                    int velocitySensor1DIndex = masterCritterGenome.CheckForAddonVelocitySensor1D(currentBuildSegmentList[i].sourceNode.ID);
+                    if (velocitySensor1DIndex != -1) { // if there is a compassSensor1DIndex definition on this sourceNode
+                        SegaddonVelocitySensor1D newVelocitySensor1D = new SegaddonVelocitySensor1D(masterCritterGenome.addonVelocitySensor1DList[velocitySensor1DIndex]);
+                        newVelocitySensor1D.segmentID = newSegment.id;
+                        segaddonVelocitySensor1DList.Add(newVelocitySensor1D);
+                    }
+                    // Check for Velocity SENSORS3D:
+                    int velocitySensor3DIndex = masterCritterGenome.CheckForAddonVelocitySensor3D(currentBuildSegmentList[i].sourceNode.ID);
+                    if (velocitySensor3DIndex != -1) { // if there is a compassSensor1DIndex definition on this sourceNode
+                        SegaddonVelocitySensor3D newVelocitySensor3D = new SegaddonVelocitySensor3D(masterCritterGenome.addonVelocitySensor3DList[velocitySensor3DIndex]);
+                        newVelocitySensor3D.segmentID = newSegment.id;
+                        segaddonVelocitySensor3DList.Add(newVelocitySensor3D);
+                    }
+                    // Check for Altimeters:
+                    int altimeterIndex = masterCritterGenome.CheckForAddonAltimeter(currentBuildSegmentList[i].sourceNode.ID);
+                    if (altimeterIndex != -1) {
+                        SegaddonAltimeter newAltimeter = new SegaddonAltimeter(masterCritterGenome.addonAltimeterList[altimeterIndex]);
+                        newAltimeter.segmentID = newSegment.id;
+                        segaddonAltimeterList.Add(newAltimeter);
+                    }
+
+                    // Check for MOTORS:
+                    int jointMotorIndex = masterCritterGenome.CheckForAddonJointMotor(currentBuildSegmentList[i].sourceNode.ID);
+                    if (jointMotorIndex != -1) { // if there is a jointMotor definition on this sourceNode
+                                                 // build SegaddonJointMotor!!!
+                        SegaddonJointMotor newJointMotor = new SegaddonJointMotor(masterCritterGenome.addonJointMotorList[jointMotorIndex]);
+                        newJointMotor.segmentID = newSegment.id;
+                        segaddonJointMotorList.Add(newJointMotor);
+                    }
+                    // Check for ThrusterEffector1D's:
+                    int thrusterEffector1DIndex = masterCritterGenome.CheckForAddonThrusterEffector1D(currentBuildSegmentList[i].sourceNode.ID);
+                    if (thrusterEffector1DIndex != -1) {
+                        SegaddonThrusterEffector1D newThrusterEffector1D = new SegaddonThrusterEffector1D(masterCritterGenome.addonThrusterEffector1DList[thrusterEffector1DIndex]);
+                        newThrusterEffector1D.segmentID = newSegment.id;
+                        segaddonThrusterEffector1DList.Add(newThrusterEffector1D);
+                    }
+                    // Check for ThrusterEffector3D's:
+                    int thrusterEffector3DIndex = masterCritterGenome.CheckForAddonThrusterEffector3D(currentBuildSegmentList[i].sourceNode.ID);
+                    if (thrusterEffector3DIndex != -1) {
+                        SegaddonThrusterEffector3D newThrusterEffector3D = new SegaddonThrusterEffector3D(masterCritterGenome.addonThrusterEffector3DList[thrusterEffector3DIndex]);
+                        newThrusterEffector3D.segmentID = newSegment.id;
+                        segaddonThrusterEffector3DList.Add(newThrusterEffector3D);
+                    }
+                    // Check for TorqueEffector1D's:
+                    int torqueEffector1DIndex = masterCritterGenome.CheckForAddonTorqueEffector1D(currentBuildSegmentList[i].sourceNode.ID);
+                    if (torqueEffector1DIndex != -1) {
+                        SegaddonTorqueEffector1D newTorqueEffector1D = new SegaddonTorqueEffector1D(masterCritterGenome.addonTorqueEffector1DList[torqueEffector1DIndex]);
+                        newTorqueEffector1D.segmentID = newSegment.id;
+                        segaddonTorqueEffector1DList.Add(newTorqueEffector1D);
+                    }
+                    // Check for TorqueEffector3D's:
+                    int torqueEffector3DIndex = masterCritterGenome.CheckForAddonTorqueEffector3D(currentBuildSegmentList[i].sourceNode.ID);
+                    if (torqueEffector3DIndex != -1) {
+                        SegaddonTorqueEffector3D newTorqueEffector3D = new SegaddonTorqueEffector3D(masterCritterGenome.addonTorqueEffector3DList[torqueEffector3DIndex]);
+                        newTorqueEffector3D.segmentID = newSegment.id;
+                        segaddonTorqueEffector3DList.Add(newTorqueEffector3D);
+                    }
+
+                    // Check for Oscillator Input:
+                    int oscillatorInputIndex = masterCritterGenome.CheckForAddonOscillatorInput(currentBuildSegmentList[i].sourceNode.ID);
+                    if (oscillatorInputIndex != -1) { // if there is a OscillatorInput definition on this sourceNode
+                        SegaddonOscillatorInput newOscillatorInput = new SegaddonOscillatorInput(masterCritterGenome.addonOscillatorInputList[oscillatorInputIndex]);
+                        newOscillatorInput.segmentID = newSegment.id;
+                        segaddonOscillatorInputList.Add(newOscillatorInput);
+                    }
+                    // Check for Value Input:
+                    int valueInputIndex = masterCritterGenome.CheckForAddonValueInput(currentBuildSegmentList[i].sourceNode.ID);
+                    if (valueInputIndex != -1) {
+                        SegaddonValueInput newValueInput = new SegaddonValueInput(masterCritterGenome.addonValueInputList[valueInputIndex]);
+                        newValueInput.segmentID = newSegment.id;
+                        segaddonValueInputList.Add(newValueInput);
+                    }
+                    // Check for Timer Input:
+                    int timerInputIndex = masterCritterGenome.CheckForAddonTimerInput(currentBuildSegmentList[i].sourceNode.ID);
+                    if (timerInputIndex != -1) {
+                        SegaddonTimerInput newTimerInput = new SegaddonTimerInput(masterCritterGenome.addonTimerInputList[timerInputIndex]);
+                        newTimerInput.segmentID = newSegment.id;
+                        segaddonTimerInputList.Add(newTimerInput);
                     }
                 }
 
@@ -469,12 +814,13 @@ public class Critter : MonoBehaviour {
                     SetSegmentTransform(newGO);  // Properly position the SegmentGO where it should be  && scale!
                     if (physicsOn) {
                         newGO.AddComponent<Rigidbody>().isKinematic = false;
+                        newGO.GetComponent<Rigidbody>().ResetInertiaTensor();
                         ConfigurableJoint configJoint = newGO.AddComponent<ConfigurableJoint>();
                         configJoint.autoConfigureConnectedAnchor = false;
                         configJoint.connectedBody = newSegment.parentSegment.gameObject.GetComponent<Rigidbody>();
                         configJoint.anchor = GetJointAnchor(newSegment);
                         configJoint.connectedAnchor = GetJointConnectedAnchor(newSegment); // <-- Might be Unnecessary
-                        ConfigureJointSettings(newSegment, ref configJoint);
+                        ConfigureJointSettings(newSegment, ref configJoint);  // UPDATE THIS TO USE segaddonJointMotorSettings!?!?
                     }
                 }                
             }
@@ -758,6 +1104,7 @@ public class Critter : MonoBehaviour {
         //Debug.Log("DeleteSegments: " + critterSegmentList.Count.ToString());
         critterSegmentList.Clear();
         //Debug.Log("DeleteSegments: " + critterSegmentList.Count.ToString());
+        //segmentPhysicMaterialList.Clear();
     }
 
     public void RebuildBranchFromGenome(CritterNode node) {  // resets and re-constructs only a branch of the Critter, starting with specified node

@@ -14,7 +14,7 @@ public class ES2UserType_Population : ES2Type
         // Make sure to edit Read() function to properly handle version control!
         // VERSION 0:
         writer.Write(data.brainType);
-		writer.Write(data.templateBodyGenome);
+		writer.Write(data.templateGenome);
 		writer.Write(data.numInputNodes);
 		writer.Write(data.numOutputNodes);
 		writer.Write(data.populationMaxSize);
@@ -41,7 +41,7 @@ public class ES2UserType_Population : ES2Type
         if (fileVersion >= 0)
         {
             data.brainType = reader.Read<Population.BrainType>();
-            data.templateBodyGenome = reader.Read<CreatureBodyGenome>();
+            data.templateGenome = reader.Read<CritterGenome>();
             data.numInputNodes = reader.Read<System.Int32>();
             data.numOutputNodes = reader.Read<System.Int32>();
             data.populationMaxSize = reader.Read<System.Int32>();

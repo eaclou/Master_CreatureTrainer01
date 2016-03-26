@@ -10,84 +10,122 @@ public class DataManager {
 	// Playing Game States! 
 	private int writingCurGeneration = -1;
 	private int writingCurPlayer = -1;
-	//private int writingNumPlayers = 0;
 	private int writingCurAgent = -1;
-	//private int writingNumAgents = 0;
 	private int writingCurTrialIndex = -1;
-	//private int writingNumTrials = 0; 
 	private int writingCurGameRound = -1;
-	//private int writingNumGameRounds = 0;
-
-	// VARIABLES FOR TEMP DATA:
-
-
 
 	// DATA:
-
-	//public FitnessData playerFitnessData; // Holds all the training data for the player that owns this DataManager
 	public List<GenerationData> generationDataList;  // Holds all the training data for the player that owns this DataManager
 
-	// Average Fitness Scores for all generations
-	// For each Trial:
-	//     For each Fitness Component:
-	//         Store Raw FitComponent Value (only adjust all to bigger is better)
-	//         Store Modified Fitness Score value - After power & weight
-
-	// FitnessData
-	//     Holds all stored fitness data for this player - Array/List of GenerationData
-	//     Holds Number of Generations
-	/*public struct FitnessData {
-		private List<GenerationData> generationDataList;
-		
-		public FitnessData() {
-			generationDataList = new List<GenerationData>();
-		}
-	}*/
-	// GameRoundFitnessComponentData  // MIGHT NOT BE NEEDED !!!!
-	//     Contains a raw and weighted score for one round of a minigame trial, for one fitness component
-	/*public struct GameRoundComponentData {
-		private float rawValue;
-		private float weightedValue;
-
-		public GameRoundComponentData() {
-
-		}
-	}*/
-
-	// Array/List/1D Texture:  Index --> Generation#, and Value = 0-1 Total Score
-	// or
-	// Array/List/2D Texture: X-Index --> Generation#, Y-Index --> [0]=Raw or [1]=Modified, and Value[X,Y] = 0-1 Total Score
-	// Array/List/1-2D Texture: X-Index --> Agent#, Value --> 0-1 Total Score
-
+    // Need to store lowest/highest raw total scores (OF ALL TIME) for each fitnessComponent 
+    public List<TrialData> recordScoresTrialDataArray;
+        
 
 	public DataManager(Player player) {
 		playerRef = player;
 
 		generationDataList = new List<GenerationData>();
-		//Debug.Log (generationDataList.Count.ToString());
-		//playerFitnessData = new FitnessData();
-	}
+        
+        //Debug.Log (generationDataList.Count.ToString());
+        //playerFitnessData = new FitnessData();
+    }
 
 	// 
 
 	public void InitializeNewGenerationDataArrays(int generationIndex) {
+        if (recordScoresTrialDataArray == null) { // if first time:
+            // USE THIS STUFF TO STORE GLOBAL RECORD SCORES PER-FITNESSCOMPONENT!!!
+            // This will then be used to help score each generation in the future
+            // I'm just re-using the data classes here but this might need a more custom solution later.
+            // as with the rest of this system, it can't handle drastic changes to number/type of Trials, or adding/deleting fitness components.
+            // Eventually I'll have to build a very flexible system that can handle gen0 being totally different from currentGen....
+            recordScoresTrialDataArray = new List<TrialData>();
+            int numActiveTrials = 0;
+            for (int i = 0; i < playerRef.masterTrialsList.Count; i++) { // First loop needed just to Count
+                if (playerRef.masterTrialsList[i].miniGameManager.gameType != MiniGameManager.MiniGameType.None) {  // if active trial
+                    numActiveTrials++;
+                }
+            }
+            // Loop through all Trials:
+            for (int trialIndex = 0; trialIndex < numActiveTrials; trialIndex++) {
+                // Get numFitnessComponents:
+                int numFitnessComponents = playerRef.masterTrialsList[trialIndex].fitnessManager.masterFitnessCompList.Count;
+                TrialData newTrialData = new TrialData(numFitnessComponents);
+
+                for (int fitCompIndex = 0; fitCompIndex < numFitnessComponents; fitCompIndex++) {
+                    FitnessComponentData newFitnessComponentData = new FitnessComponentData();
+                    newTrialData.fitnessComponentDataArray[fitCompIndex] = newFitnessComponentData;
+                }
+                recordScoresTrialDataArray.Add(newTrialData);
+            }
+        }
+
 		// For This Player:
 		if(generationIndex >= generationDataList.Count) { // if new generation needs to be created
-			//Debug.Log ("InitializeNewGenerationDataArrays" + generationIndex.ToString());
 
-			int numAgents = playerRef.masterPopulation.populationMaxSize;
-			GenerationData newGenerationData = new GenerationData(numAgents); // Now I have a generationData wrapper and an array of AgentData's
-
-			//     Get number of Trials
-			int numActiveTrials = 0;
+            // !!!!!!!@!@!#$!@$#!$!@@@@@@@@@@@@@@@@@@@@@@@!@$#!#############!!!!!!!!!!!!!!!!!!!!!!^^^^^^^^^^^^^$%&###############%***********************$$$$$$$$##########
+            // Calculate total TrialWeights and totalFitnessComponentWeights per Trial for later use somewhere in this function!!!!
+            int numAgents = playerRef.masterPopulation.populationMaxSize;
+            //     Get number of Trials:
+            int numActiveTrials = 0;
 			for(int i = 0; i < playerRef.masterTrialsList.Count; i++) { // First loop needed just to Count
 				if(playerRef.masterTrialsList[i].miniGameManager.gameType != MiniGameManager.MiniGameType.None) {  // if active trial
 					numActiveTrials++;
 				}
 			}
-			//Debug.Log ("NumActiveTrials= " + numActiveTrials.ToString() + ", NumAgents= " + numAgents.ToString());
-			// Loop over all agents?
-			for(int j = 0; j < numAgents; j++) {
+            GenerationData newGenerationData = new GenerationData(numActiveTrials);
+            
+            // Loop through all Trials:
+            for(int trialIndex = 0; trialIndex < numActiveTrials; trialIndex++) {
+                // Get numFitnessComponents:
+                int numFitnessComponents = playerRef.masterTrialsList[trialIndex].fitnessManager.masterFitnessCompList.Count;
+                TrialData newTrialData = new TrialData(numFitnessComponents);
+                
+                for(int fitCompIndex = 0; fitCompIndex < numFitnessComponents; fitCompIndex++) {
+                    FitnessComponentData newFitnessComponentData = new FitnessComponentData(numAgents);
+
+                    for(int a = 0; a < numAgents; a++) {
+                        AgentData newAgentData = new AgentData();
+
+                        newFitnessComponentData.agentDataArray[a] = newAgentData;
+                    }
+                    newTrialData.totalSumOfWeights += playerRef.masterTrialsList[trialIndex].fitnessManager.masterFitnessCompList[fitCompIndex].weight;
+                    newTrialData.fitnessComponentDataArray[fitCompIndex] = newFitnessComponentData;
+                }
+                newGenerationData.totalSumOfWeights += playerRef.masterTrialsList[trialIndex].weight;
+                newGenerationData.trialDataArray[trialIndex] = newTrialData; // actually assign the new AgentData instance to generationData
+                newGenerationData.totalNumFitnessComponents = numFitnessComponents;
+            }
+
+            // AvgGenome:
+            // Calculate Generation average genome:
+            Genome avgGenome = new Genome();
+            avgGenome.genomeBiases = new float[playerRef.masterPopulation.masterAgentArray[0].genome.genomeBiases.Length];
+            avgGenome.genomeWeights = new float[playerRef.masterPopulation.masterAgentArray[0].genome.genomeWeights.Length];
+            avgGenome.ZeroGenome(); // set all values to 0f;
+            for (int i = 0; i < numAgents; i++) {
+                // iterate through Bias Arrays and add each agent's bias value to the avg
+                for (int b = 0; b < avgGenome.genomeBiases.Length; b++) {
+                    avgGenome.genomeBiases[b] += playerRef.masterPopulation.masterAgentArray[i].genome.genomeBiases[b] / (float)numAgents;
+                }
+                // iterate through Weight Arrays and add each agent's weight value to the avg
+                for (int w = 0; w < avgGenome.genomeWeights.Length; w++) {
+                    avgGenome.genomeWeights[w] += playerRef.masterPopulation.masterAgentArray[i].genome.genomeWeights[w] / (float)numAgents;
+                }
+            }
+            // Save the genome values to this generation Data:
+            newGenerationData.genAvgGenome = avgGenome;
+            //newGenerationData.genAvgGenome.genomeBiases = avgGenome.genomeBiases;
+            //newGenerationData.genAvgGenome.genomeWeights = avgGenome.genomeWeights;
+
+            generationDataList.Add(newGenerationData); // Add the newly created generation data to the master list
+
+
+
+            // OLD BELOW v v v v v v v v v v v v
+            // Loop over all agents
+            /*int numAgents = playerRef.masterPopulation.populationMaxSize;
+            for (int j = 0; j < numAgents; j++) {
 				AgentData newAgentData = new AgentData(numActiveTrials);
 
 				// Fill the AgentData's TrialsList:		
@@ -140,14 +178,16 @@ public class DataManager {
 			}	
 			//
 			generationDataList.Add (newGenerationData); // Add the newly created generation data to the master list
+            */
 		}               
 	}
 
-	public void StoreGameRoundRawData(float rawScore, int curGeneration, int curAgent, int curTrial, int curFitComp, int curGameRound) { // One play of a game has been completed
-		generationDataList[curGeneration].agentDataArray[curAgent].trialDataArray[curTrial].fitnessComponentDataArray[curFitComp].rawValuesArray[curGameRound] = rawScore;
-		generationDataList[curGeneration].agentDataArray[curAgent].trialDataArray[curTrial].fitnessComponentDataArray[curFitComp].rawValueTotal += rawScore;
-	}
-	public void StoreGameRoundWeightedData(float weightedScore, int curGeneration, int curAgent, int curTrial, int curFitComp, int curGameRound) { // One play of a game has been completed
+	public void StoreGameRoundRawData(float rawScore, int curGeneration, int curAgent, int curTrial, int curFitComp) { // One play of a game has been completed
+        generationDataList[curGeneration].trialDataArray[curTrial].fitnessComponentDataArray[curFitComp].agentDataArray[curAgent].rawValueTotal += rawScore;
+        //generationDataList[curGeneration].agentDataArray[curAgent].trialDataArray[curTrial].fitnessComponentDataArray[curFitComp].rawValuesArray[curGameRound] = rawScore; // might not be needed!
+        //generationDataList[curGeneration].agentDataArray[curAgent].trialDataArray[curTrial].fitnessComponentDataArray[curFitComp].rawValueTotal += rawScore;
+    }
+	/*public void StoreGameRoundWeightedData(float weightedScore, int curGeneration, int curAgent, int curTrial, int curFitComp, int curGameRound) { // One play of a game has been completed
 		generationDataList[curGeneration].agentDataArray[curAgent].trialDataArray[curTrial].fitnessComponentDataArray[curFitComp].weightedValuesArray[curGameRound] = weightedScore;
 		generationDataList[curGeneration].agentDataArray[curAgent].trialDataArray[curTrial].fitnessComponentDataArray[curFitComp].weightedValueTotal += weightedScore;
 	}
@@ -174,9 +214,9 @@ public class DataManager {
 		// Once totals for this specific Trial are calculated, add this value to total AgentScore so it can be avged by numTrials Later.
 		generationDataList[curGeneration].agentDataArray[curAgent].rawValueTotal += generationDataList[curGeneration].agentDataArray[curAgent].trialDataArray[curTrial].rawValueAvg;
 		generationDataList[curGeneration].agentDataArray[curAgent].weightedValueTotal += generationDataList[curGeneration].agentDataArray[curAgent].trialDataArray[curTrial].weightedValueAvg;
-	}
+	}*/
 
-	public void AverageTrialScoresPerAgent(int curGeneration, int curAgent) {
+	//public void AverageTrialScoresPerAgent(int curGeneration, int curAgent) {
 		/*
 		// Iterate through each TrialIndex
 		int numTrials = playerRef.masterTrialsList.Count - 1;
@@ -267,7 +307,7 @@ public class DataManager {
 
 
 		// OLD OLD OLD OLD !!!! OLD OLD OLD OLD !!!! OLD OLD OLD OLD !!!! OLD OLD OLD OLD !!!! OLD OLD OLD OLD !!!! OLD OLD OLD OLD !!!!
-
+        /*
 		// Set value for total fitness score for this Agent (Over all Trials):
 		generationDataList[curGeneration].agentDataArray[curAgent].rawValueAvg = generationDataList[curGeneration].agentDataArray[curAgent].rawValueTotal / 
 			(float)generationDataList[curGeneration].agentDataArray[curAgent].trialDataArray.Length; // Divided by number of Trials
@@ -278,10 +318,10 @@ public class DataManager {
 		generationDataList[curGeneration].agentDataArray[curAgent].weightedValueAvg = generationDataList[curGeneration].agentDataArray[curAgent].weightedValueTotal / 
 			(float)generationDataList[curGeneration].agentDataArray[curAgent].trialDataArray.Length; // Divided by number of Trials
 		generationDataList[curGeneration].totalAgentScoresWeighted += generationDataList[curGeneration].agentDataArray[curAgent].weightedValueAvg;
+        */
+	//}
 
-	}
-
-	public void AverageTrialScoresPerGen(int curGeneration) {
+	/*public void AverageTrialScoresPerGen(int curGeneration) {
 		// Average Values over the entire Generation
 		//Debug.Log ("AverageTrialScoresPerGen(); avgRawScore: " + generationDataList[curGeneration].avgAgentScoreRaw.ToString());
 		generationDataList[curGeneration].avgAgentScoreRaw = generationDataList[curGeneration].totalAgentScoresRaw / (float)generationDataList[curGeneration].agentDataArray.Length;
@@ -306,5 +346,5 @@ public class DataManager {
 		// Save the genome values to this generation Data:
 		generationDataList[curGeneration].genAvgGenome.genomeBiases = avgGenome.genomeBiases;
 		generationDataList[curGeneration].genAvgGenome.genomeWeights = avgGenome.genomeWeights;
-	}
+	}*/
 }

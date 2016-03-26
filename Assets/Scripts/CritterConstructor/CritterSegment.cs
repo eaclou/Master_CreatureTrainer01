@@ -14,6 +14,7 @@ public class CritterSegment : MonoBehaviour {
     public bool mirrorX = false; // defaults off -- keeps track of accumulated symmetry when constructing creature
     public bool mirrorY = false;
     public bool mirrorZ = false;
+    public Vector3 surfaceArea;
 
     public bool meshBuilt = false;
 

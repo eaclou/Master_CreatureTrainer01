@@ -13,7 +13,6 @@ public class ES2UserType_CritterNode : ES2Type
         writer.Write(0); // Version 0 is current version number
         // Make sure to edit Read() function to properly handle version control!
         // VERSION 0:
-        writer.Write(data.addonsList);
         //writer.Write(data.attachedJointLinkList);
         //writer.Write(data.jointLink); 
         writer.Write(data.attachedChildNodesIdList);
@@ -38,7 +37,6 @@ public class ES2UserType_CritterNode : ES2Type
 
         // VERSION 0:
         if (fileVersion >= 0) {
-            data.addonsList = reader.ReadList<CritterNodeAddonBase>();
             //data.attachedJointLinkList = reader.ReadList<CritterJointLink>();
             //if (data.jointLink != null) 
             data.attachedChildNodesIdList = reader.ReadList<System.Int32>();           

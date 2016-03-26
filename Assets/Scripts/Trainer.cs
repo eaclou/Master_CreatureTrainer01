@@ -153,10 +153,8 @@ public class Trainer {
 			UpdatePlayingNumAgents();
 			UpdatePlayingNumTrials(); 
 			UpdatePlayingNumPlayers();
-			//if(!playerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].miniGameManager.miniGameInstance.piecesBuilt) { // if current miniGame instance doesn't have pieces built
-			//	DebugBot.DebugFunctionCall("PIECES BUILT!! ", debugFunctionCalls);
-			//	playerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].miniGameManager.miniGameInstance.BuildGamePieces();
-			//}
+			
+            // For the very first time, generation zero:
 			for(int p = 0; p < playerList.Count; p++) {
 				playerList[p].dataManager.InitializeNewGenerationDataArrays(playingCurGeneration);
 			}
@@ -203,152 +201,182 @@ public class Trainer {
 	}
 
 	#region Fitness Stuff
-	private void CombineFitnessScoresEndRound() {
+	private void ProcessFitnessScoresEndRound() {
 		// Agent X just finished a round of a game -- Figure out its score.
-
 		// Find playingCurMiniGameTimeStep (i.e. how many timesteps the game was played
 		int numTimeSteps = playingCurMiniGameTimeStep;
-		// Look through Current player's Trial's fitness manager's Fitness Components
-		// Loop through fitnessComponents (array or List?)
+		// Look through Current player's Trial's fitness manager's Fitness Components:
 		FitnessManager fitnessManagerRef = playerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].fitnessManager;
-		//Debug.Log ("gameRoundFitnessScoreBEFORE: " + fitnessManagerRef.agentFitnessScores[playingCurAgent].ToString());
 		int numGameFitComponents = fitnessManagerRef.gameFitnessComponentList.Count;
 		int numBrainFitComponents = fitnessManagerRef.brainFitnessComponentList.Count;
 		int numSelectedComponents = 0;
-		//float gameRoundFitnessScoreRaw = 0f;
-		//float gameRoundFitnessScoreWeighted = 0f;
 
-
+        // Fitness Components from MINIGAME (TRIAL):
 		for(int i = 0; i < numGameFitComponents; i++) {
 			if(fitnessManagerRef.gameFitnessComponentList[i].on) {
-				//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-				// Pass each fitnessManagerRef to DataManager?....eh...
-				// How Best to store data and calculate avg's & stuff with data at same time? 
-				// And know when/if to Expand Arrays/Lists/Re-write data?
-				// Maybe just pass each Score as well as curPlayingData:
-				//     whenever agent finishes a round, 
-				//     agent finishes a trial, 
-				//     player finishes all trials, 
-				//     and nextGeneration.
-				// ...By Passing to a function in DataManager for updating at each of those times.
-				// Then the dataManager takes care of determining if it needs to increase size of array, average agent scores, or do other calculations
-				// Once dataManager is done with its housekeeping, tap the current player's GraphKing and update the textures/shader attributes
-				// 
-
 				float score = 0f;
 				score = fitnessManagerRef.gameFitnessComponentList[i].componentScore[0]; // get raw value from miniGame
-
-				// Averaging and BiggerIsBetter modifications will happen at end of Trial instead
+				// If the score is an Average, divide by number of timeSteps -- only needed if miniGame numTimeSteps varies?? keeping it in just in case...
 				if(fitnessManagerRef.gameFitnessComponentList[i].divideByTimeSteps) {
 					score /= (float)numTimeSteps;
 				}
-				score = Mathf.Clamp01(score);
-				// Adjust raw averaged scores by biggerIsBetter (invert), power and weight.
-				if(!fitnessManagerRef.gameFitnessComponentList[i].bigIsBetter) {  // invert values
-					score = 1f - score;
-				}
-
-				//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-				// Pass or Set RAW fitness score for this component onto DataManager for current Player, Trial, Agent, & FitnessComponent
-				//gameRoundFitnessScoreRaw += score;
-				//Debug.Log ("gameRoundFitnessScoreRAW: " + score.ToString());
-				playerList[playingCurPlayer].dataManager.StoreGameRoundRawData(score, playingCurGeneration, playingCurAgent, playingCurTrialIndex, numSelectedComponents, playingCurTrialRound);
-
-				score = Mathf.Pow (score, fitnessManagerRef.gameFitnessComponentList[i].power);
-				score *= fitnessManagerRef.gameFitnessComponentList[i].weight;
-
-				playerList[playingCurPlayer].dataManager.StoreGameRoundWeightedData(score, playingCurGeneration, playingCurAgent, playingCurTrialIndex, numSelectedComponents, playingCurTrialRound);
-
+				
+                // Add this raw score from this round to the Agent's fitness raw values:
+				playerList[playingCurPlayer].dataManager.StoreGameRoundRawData(score, playingCurGeneration, playingCurAgent, playingCurTrialIndex, numSelectedComponents);
 				numSelectedComponents++;
 			}		
 		}
+        // Fitness Components from BRAIN:
 		for(int i = 0; i < numBrainFitComponents; i++) {
 			if(fitnessManagerRef.brainFitnessComponentList[i].on) {
-				//Debug.Log ("i: " + i.ToString() + ", numFitComponents: " + numGameFitComponents.ToString() + ", componentScore[0]: " + fitnessManagerRef.gameFitnessComponentList[i].componentScore[0]);
-				// Get raw values from fitness Manager ( Separate Array that holds only selected fitness components )
-				// divide raw values (one per fitness component ) by timesteps to get average value -- need to add a flag on fitness component for averaging it?
 				float score = 0f;
 				score = fitnessManagerRef.brainFitnessComponentList[i].componentScore[0];
 				if(fitnessManagerRef.brainFitnessComponentList[i].divideByTimeSteps) {
 					score /= (float)numTimeSteps;
 				}
-				score = Mathf.Clamp01(score);
-				// Adjust raw averaged scores by biggerIsBetter (invert), power and weight.
-				if(!fitnessManagerRef.brainFitnessComponentList[i].bigIsBetter) {  // invert values
-					score = 1f - score;
-				}
-				//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-				// Pass or Set RAW fitness score for this component onto DataManager for current Player, Trial, Agent, & FitnessComponent
-				//gameRoundFitnessScoreRaw += score;
-				playerList[playingCurPlayer].dataManager.StoreGameRoundRawData(score, playingCurGeneration, playingCurAgent, playingCurTrialIndex, numSelectedComponents, playingCurTrialRound);
-
-				score = Mathf.Pow (score, fitnessManagerRef.brainFitnessComponentList[i].power);
-				score *= fitnessManagerRef.brainFitnessComponentList[i].weight;
-
-				playerList[playingCurPlayer].dataManager.StoreGameRoundWeightedData(score, playingCurGeneration, playingCurAgent, playingCurTrialIndex, numSelectedComponents, playingCurTrialRound);
-				//gameRoundFitnessScoreWeighted += score;
+				playerList[playingCurPlayer].dataManager.StoreGameRoundRawData(score, playingCurGeneration, playingCurAgent, playingCurTrialIndex, numSelectedComponents);                
 				numSelectedComponents++;
 			}
 		}
-		// Combine All Normalized Scores into a single fitness value for this GameRound.
-		//fitnessManagerRef.agentFitnessScoresRaw[playingCurAgent] += gameRoundFitnessScoreRaw/(float)numSelectedComponents; // OBSOLETE
-		//fitnessManagerRef.agentFitnessScoresWeighted[playingCurAgent] += gameRoundFitnessScoreWeighted/(float)numSelectedComponents; // OBSOLETE
-
-		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-		// Should the fitness score live inside each agent, or in the DataManager for each player, or both/neither?
-		// -- Maybe calculate all the scores in Data-Manager, and then just set the Agent's fitness from dataManager --
-		// -- Agent storing its own fitness value is currently important to the way Crossover is handled.
-		// -- Maybe in the future I could remove agent fitness variable and overhaul Crossover to use dataManager, but this doesn't seem to be too heavy
-		// Do I need to store actual fitness score values in fitnessManagerRef? or bypass it and use DataManager?
-
-		// Add this Score to Agent's total fitness score, stored in Fitness Manager for that Trial.
-		//Debug.Log ("gameRoundFitnessScoreAFTER: " + fitnessManagerRef.agentFitnessScores[playingCurAgent].ToString());
 	}
 
-	private void CombineFitnessScoresGameRounds(int currentAgent) {
-		// Agent X just finished all the rounds of its current Trial
-		int curAgent = currentAgent;
-		int numRounds = playingNumTrialRounds;
+    private void ProcessFitnessScoresEndAgent(int agentIndex) {
+        // Check all FitnessComponent scores for lowest/highest generation scores:
 
-		playerList[playingCurPlayer].dataManager.AverageTrialDataPerFitnessComponent(playingCurGeneration, playingCurAgent, playingCurTrialIndex);
+        int populationSize = playerList[playingCurPlayer].masterPopulation.populationMaxSize;
 
-	}
+        for (int fitCompIndex = 0; fitCompIndex < playerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].fitnessManager.masterFitnessCompList.Count; fitCompIndex++) {
+            float agentRawScore = playerList[playingCurPlayer].dataManager.generationDataList[playingCurGeneration].trialDataArray[playingCurTrialIndex].fitnessComponentDataArray[fitCompIndex].agentDataArray[agentIndex].rawValueTotal;
+            float curLowestScore = playerList[playingCurPlayer].dataManager.generationDataList[playingCurGeneration].trialDataArray[playingCurTrialIndex].fitnessComponentDataArray[fitCompIndex].lowestScore;
+            float curHighestScore = playerList[playingCurPlayer].dataManager.generationDataList[playingCurGeneration].trialDataArray[playingCurTrialIndex].fitnessComponentDataArray[fitCompIndex].highestScore;
+            string fitComponentName = playerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].fitnessManager.masterFitnessCompList[fitCompIndex].componentName;
+            //Debug.Log("ProcessFitnessScoresEndAgent(" + agentIndex.ToString() + ") " + fitComponentName + ", raw: " + agentRawScore.ToString() + ", low: " + curLowestScore.ToString() + ", high: " + curHighestScore.ToString());
+            if(agentIndex == 0) {
+                playerList[playingCurPlayer].dataManager.generationDataList[playingCurGeneration].trialDataArray[playingCurTrialIndex].fitnessComponentDataArray[fitCompIndex].lowestScore = agentRawScore;
+                playerList[playingCurPlayer].dataManager.generationDataList[playingCurGeneration].trialDataArray[playingCurTrialIndex].fitnessComponentDataArray[fitCompIndex].highestScore = agentRawScore;
+            }
+            else {
+                if (agentRawScore < curLowestScore) {
+                    playerList[playingCurPlayer].dataManager.generationDataList[playingCurGeneration].trialDataArray[playingCurTrialIndex].fitnessComponentDataArray[fitCompIndex].lowestScore = agentRawScore;
+                }
+                if (agentRawScore > curHighestScore) {
+                    playerList[playingCurPlayer].dataManager.generationDataList[playingCurGeneration].trialDataArray[playingCurTrialIndex].fitnessComponentDataArray[fitCompIndex].highestScore = agentRawScore;
+                }
+            }
 
-	private void CombineFitnessScoresAllTrials() {
+            // Add Agent's raw score totals for this Trial (all game rounds):
+            playerList[playingCurPlayer].dataManager.generationDataList[playingCurGeneration].trialDataArray[playingCurTrialIndex].fitnessComponentDataArray[fitCompIndex].totalRawScore += agentRawScore;
+        }
+    }
+
+    private void ProcessFitnessScoresEndGeneration() {
 		// Just before NextGeneration, need to tally up and combine scores from each of the Trials for each Player's Agents
-
 		// Loop through Players
 		for(int p = 0; p < playingNumPlayers; p++) {
-		//		Get Population Size,
-			int populationSize = playerList[p].masterPopulation.populationMaxSize;
-		//	
-			string agentFitnessTotals = "";
+            //		Get Population Size,
+            int populationSize = playerList[p].masterPopulation.populationMaxSize;
+            float[] agentScores01 = new float[populationSize];
+            for(int i = 0; i < populationSize; i++) { // Init Array:
+                agentScores01[i] = 0f;
+            }
+            // LOOP through all FITNESS COMPONENTS (by way of trials)
+            for (int trialIndex = 0; trialIndex < playerList[p].masterTrialsList.Count; trialIndex++) {
+                // CAN I RELY ON [fitnessManager.masterFitnessCompList] ?????
+                for (int fitCompIndex = 0; fitCompIndex < playerList[p].masterTrialsList[trialIndex].fitnessManager.masterFitnessCompList.Count; fitCompIndex++) {
+                    // Loop Through all AGENTS:
+                    for (int a = 0; a < populationSize; a++) {
+                        // get agent's raw fitness score for this fitness component:
+                        // requires re-arranging dataManager in a more FitnessComponent-centric way:
+                        float rawComponentScore = playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].agentDataArray[a].rawValueTotal;
+                        float lowestScore = playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].lowestScore;
+                        float highestScore = playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].highestScore;
+                        float scoreRange = highestScore - lowestScore;
+                        if (scoreRange == 0f) scoreRange = 1f; // PREVENT DIVIDE BY ZERO
+                        // remap to 0-1:
+                        rawComponentScore -= lowestScore;
+                        float score01 = rawComponentScore / scoreRange;
+                        if(playerList[p].masterTrialsList[trialIndex].fitnessManager.masterFitnessCompList[fitCompIndex].bigIsBetter == false) {
+                            score01 = 1f - score01;
+                        }
+                        score01 = Mathf.Pow(score01, playerList[p].masterTrialsList[trialIndex].fitnessManager.masterFitnessCompList[fitCompIndex].power);
+                        // figure out this fitnessComponent's share of total
+                        // should I store totalSumOfWeights, or calculate it at beginning of this function?
+                        float trialPieSlice = playerList[p].masterTrialsList[trialIndex].weight / playerList[p].dataManager.generationDataList[playingCurGeneration].totalSumOfWeights;
+                        float fitnessComponentPieSlice = playerList[p].masterTrialsList[trialIndex].fitnessManager.masterFitnessCompList[fitCompIndex].weight / playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].totalSumOfWeights;
+                        float weightMultiplier = trialPieSlice * fitnessComponentPieSlice;
 
-			for(int a = 0; a < populationSize; a++) {
-				playerList[playingCurPlayer].dataManager.AverageTrialScoresPerAgent(playingCurGeneration, a);
-				// Store Agent SCORE:
-				//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-				// Should the fitness score live inside each agent, or in the DataManager for each player, or both/neither?
-				// -- Maybe calculate all the scores in Data-Manager, and then just set the Agent's fitness from dataManager --
-				// -- Agent storing its own fitness value is currently important to the way Crossover is handled.
-				// -- Maybe in the future I could remove agent fitness variable and overhaul Crossover to use dataManager
-				playerList[p].masterPopulation.masterAgentArray[a].fitnessScore = 
-					playerList[playingCurPlayer].dataManager.generationDataList[playingCurGeneration].agentDataArray[a].weightedValueAvg;
+                        // Add score to Agent's total 0-1 fitness score ... stored
+                        agentScores01[a] += score01 * weightMultiplier;
+                    }
+
+                    //Update all-time records:
+                    if(playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].totalRawScore < playerList[p].dataManager.recordScoresTrialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].lowestScore) {
+                        playerList[p].dataManager.recordScoresTrialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].lowestScore = playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].totalRawScore;
+                    }
+                    if (playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].totalRawScore > playerList[p].dataManager.recordScoresTrialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].highestScore) {
+                        playerList[p].dataManager.recordScoresTrialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].highestScore = playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].totalRawScore;
+                    }
+                    if(playingCurGeneration == 0) {
+                        playerList[p].dataManager.recordScoresTrialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].lowestScore = playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].totalRawScore;
+                        playerList[p].dataManager.recordScoresTrialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].highestScore = playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].totalRawScore;
+                    }
+                    //Debug.Log("ProcessFitnessScoresEndGeneration(" + playingCurGeneration.ToString() + ") fitComp[" + fitCompIndex.ToString() + "], totalScore: " + playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].totalRawScore.ToString() + ", low: " + playerList[p].dataManager.recordScoresTrialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].lowestScore.ToString() + ", high: " + playerList[p].dataManager.recordScoresTrialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].highestScore.ToString());
+                }
+            }
+            // SAVE FINAL 0-1 SCORE FOR EACH AGENT HERE:   (this is the value that will be used to rank the agents during crossover!)
+            for (int j = 0; j < populationSize; j++) { // Init Array:
+                string fitComponentScores = "";
+                for (int fitCompIndex = 0; fitCompIndex < playerList[p].masterTrialsList[0].fitnessManager.masterFitnessCompList.Count; fitCompIndex++) {
+                    fitComponentScores += playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[0].fitnessComponentDataArray[fitCompIndex].agentDataArray[j].rawValueTotal.ToString() + " || ";
+                }
+                //Debug.Log("ProcessFitnessScoresEndGeneration(" + playingCurGeneration.ToString() + ") agent " + j.ToString() + " score01= " + agentScores01[j].ToString());
+                //Debug.Log("ProcessFitnessScoresEndGeneration(" + playingCurGeneration.ToString() + ") agent " + j.ToString() + "|| " +  fitComponentScores);
+                playerList[p].masterPopulation.masterAgentArray[j].fitnessScore = agentScores01[j];
+            }
 
 
-				// !@!#$#!@#$!@$#$#!@$#!@###$~!!  ----STORE DATA IN DATAMANAGER HERE!!----  !@#$%!#$^%^*&^#$%!@#!
-				//agentFitnessTotals += "Agent# " + a.ToString() + " Score: " + playerList[p].masterPopulation.masterAgentArray[a].fitnessScore.ToString() + ", Raw: " + playerList[playingCurPlayer].dataManager.generationDataList[playingCurGeneration].agentDataArray[a].rawValueAvg + "; ";
-				//Debug.Log ("agentScore: " + playerList[p].masterPopulation.masterAgentArray[a].fitnessScore.ToString());
-			}
+            // WILL HAVE TO: cycle through ALL generations and update their final 0-1 scores based on global record highs/lows per-fitnessComponent
+            //This will give a 0-1 value per-fitnessComponent which will be weighted based on currentGen settings -- this is done to ALL gens to keep the graph accurate
+            for(int genIndex = 0; genIndex < playingCurGeneration + 1; genIndex++) {
+                // LOOP through all FITNESS COMPONENTS (by way of trials)
+                playerList[p].dataManager.generationDataList[genIndex].totalAllAgentsScore = 0f; // zero it out to start
+                for (int trialIndex = 0; trialIndex < playerList[p].masterTrialsList.Count; trialIndex++) {
+                    // CAN I RELY ON [fitnessManager.masterFitnessCompList] ?????
+                    for (int fitCompIndex = 0; fitCompIndex < playerList[p].masterTrialsList[trialIndex].fitnessManager.masterFitnessCompList.Count; fitCompIndex++) {
+                        
+                        float rawTotalComponentScore = playerList[p].dataManager.generationDataList[genIndex].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].totalRawScore;
+                        float lowestScore = playerList[p].dataManager.recordScoresTrialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].lowestScore;
+                        float highestScore = playerList[p].dataManager.recordScoresTrialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].highestScore;
+                        float scoreRange = highestScore - lowestScore;
+                        if (scoreRange == 0f) scoreRange = 1f; // PREVENT DIVIDE BY ZERO
+                                                               // remap to 0-1:
+                        rawTotalComponentScore -= lowestScore;
+                        float genScore01 = rawTotalComponentScore / scoreRange;
+                        if (playerList[p].masterTrialsList[trialIndex].fitnessManager.masterFitnessCompList[fitCompIndex].bigIsBetter == false) {
+                            genScore01 = 1f - genScore01;
+                        }
+                        genScore01 = Mathf.Pow(genScore01, playerList[p].masterTrialsList[trialIndex].fitnessManager.masterFitnessCompList[fitCompIndex].power);
+                        // figure out this fitnessComponent's share of total
+                        // should I store totalSumOfWeights, or calculate it at beginning of this function?
+                        float trialPieSlice = playerList[p].masterTrialsList[trialIndex].weight / playerList[p].dataManager.generationDataList[playingCurGeneration].totalSumOfWeights;
+                        float fitnessComponentPieSlice = playerList[p].masterTrialsList[trialIndex].fitnessManager.masterFitnessCompList[fitCompIndex].weight / playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].totalSumOfWeights;
+                        float weightMultiplier = trialPieSlice * fitnessComponentPieSlice;
+
+                        //Debug.Log("ProcessFitnessScoresEndGeneration(" + genIndex.ToString() + ", genScore01: " + genScore01.ToString() + ", mult: " + weightMultiplier.ToString());
+                        playerList[p].dataManager.generationDataList[genIndex].totalAllAgentsScore += genScore01 * weightMultiplier;
+
+                    }
+                }
+                Debug.Log("ProcessFitnessScoresEndGeneration(" + genIndex.ToString() + ") totalAllAgentsScore: " + playerList[p].dataManager.generationDataList[genIndex].totalAllAgentsScore.ToString());
+            }
 
 
-			// !!!!!!!!!!  Need to do fitness score modifications here!!! :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::########
-			playerList[playingCurPlayer].dataManager.AverageTrialScoresPerGen(playingCurGeneration);
 
-
-
-			//Debug.Log (agentFitnessTotals);
-			playerList[p].graphKing.BuildTexturesFitnessPerGen(playerList[p]);
+            //Debug.Log("ProcessFitnessScoresEndGeneration(" + playingCurGeneration.ToString() + ") base01: " + baseGenerationScore01.ToString() + ", new01: " + newGenerationScore01.ToString() + ", scoreRatio: " + newScoreRatio.ToString());
+            
+            
+            //Debug.Log (agentFitnessTotals);
+            playerList[p].graphKing.BuildTexturesFitnessPerGen(playerList[p]);
 			playerList[p].graphKing.BuildTexturesHistoryPerGen(playerList[p]);
 		}
 	}
@@ -361,28 +389,30 @@ public class Trainer {
 		betweenGenerations = false;
 		//Debug.Log ("UpdatePlayingState - curGameTimeSteps: " + playingCurMiniGameTimeStep.ToString());
 		if(playingCurMiniGameTimeStep >= playingNumMiniGameTimeSteps) {  // hit time limit of minigame
-			CombineFitnessScoresEndRound();  // divides accumulated fitness score by time-steps, to keep it in 0-1 range and stores it in AgentScoresArray
+			ProcessFitnessScoresEndRound();  // divides accumulated fitness score by time-steps, to keep it in 0-1 range and stores it in AgentScoresArray
 			//playerList[0].masterPopulation.masterAgentArray[playingCurAgent].fitnessScore = currentGameManager.miniGameInstance.fitnessScore;
 			playingCurMiniGameTimeStep = 0;
 			playingCurTrialRound++;  // Same agent, next round playthrough
 
-			// v v v THIS might cause problems!
-			// .. See if necessary to update minigame's agentBeingTested somewhere her, or only inside CalculateOneStep() as it is...
-			currentGameManager.miniGameInstance.DisablePhysicsGamePieceComponents();
+            // v v v THIS might cause problems!
+            // .. See if necessary to update minigame's agentBeingTested somewhere her, or only inside CalculateOneStep() as it is...
+            //currentGameManager.miniGameInstance.DisablePhysicsGamePieceComponents();
             //Debug.Log("Trainer: " + playerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].miniGameManager.miniGameInstance.agentBodyBeingTested.creatureBodySegmentGenomeList[0].addOn1.ToString());
-            currentGameManager.miniGameInstance.Reset();
-			currentGameManager.miniGameInstance.SetPhysicsGamePieceTransformsFromData();  // set the PhysX gamePieces based on gameData
-			currentGameManager.miniGameInstance.EnablePhysicsGamePieceComponents(); // create RigidBody and HingeJoint etc. components on the empty GameObjects
 
-			if(playingCurTrialRound >= playingNumTrialRounds) {   // finished all rounds of current Trial for current Agent
-				CombineFitnessScoresGameRounds(playingCurAgent);  // combines the raw scores from all game rounds to get the agent's Fitness score for that TrialIndex
+
+            //currentGameManager.miniGameInstance.Reset();  // OLD
+            currentGameManager.miniGameInstance.ClearGame();
+
+            //currentGameManager.miniGameInstance.SetPhysicsGamePieceTransformsFromData();  // set the PhysX gamePieces based on gameData
+            //currentGameManager.miniGameInstance.EnablePhysicsGamePieceComponents(); // create RigidBody and HingeJoint etc. components on the empty GameObjects
+
+            if (playingCurTrialRound >= playingNumTrialRounds) {   // finished all rounds of current Trial for current Agent
+				ProcessFitnessScoresEndAgent(playingCurAgent);  // combines the raw scores from all game rounds to get the agent's Fitness score for that TrialIndex
 				playingCurTrialRound = 0;
-
 				playingCurAgent++;  // Move on to next agent
 
 				if(playingCurAgent >= playingNumAgents) {
 					playingCurAgent = 0;
-
 					playingCurPlayer++;  // Now that the current player has changed, update how many trial rounds for new player
 					//DebugBot.DebugFunctionCall("Trainer; UpdatePlayingState; PLAYERS!!: " + playingNumPlayers.ToString(), true);
 
@@ -393,7 +423,7 @@ public class Trainer {
 
 
 						if(playingCurTrialIndex >= playingNumTrials) {
-							CombineFitnessScoresAllTrials(); // combines the scores for all agents' TrialIndex's to get final Agent Fitness Scores
+							ProcessFitnessScoresEndGeneration(); // combines the scores for all agents' TrialIndex's to get final Agent Fitness Scores
 							playingCurTrialIndex = 0;
 							betweenGenerations = true;
 							//=========================
@@ -489,10 +519,11 @@ public class Trainer {
                                                                    //currentGameManager.miniGameInstance.Reset();
             //Debug.Log("CalculateOneStep()Trainer BEFORE: " + playerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].miniGameManager.miniGameInstance.agentBodyBeingTested.creatureBodySegmentGenomeList[0].addOn1.ToString());
             currentGameManager.miniGameInstance.InstantiateGamePieces();  // first time Game has been Reset, so instantiateGamePieces
-			currentGameManager.miniGameInstance.DisablePhysicsGamePieceComponents();
+			//currentGameManager.miniGameInstance.DisablePhysicsGamePieceComponents();
 			currentGameManager.miniGameInstance.Reset(); // <-- OLD PLACEMENT
-			currentGameManager.miniGameInstance.SetPhysicsGamePieceTransformsFromData();  // set the PhysX gamePieces based on gameData
-			currentGameManager.miniGameInstance.EnablePhysicsGamePieceComponents(); // create RigidBody and HingeJoint etc. components on the empty GameObjects
+            currentGameManager.SetInputOutputArrays();
+            //currentGameManager.miniGameInstance.SetPhysicsGamePieceTransformsFromData();  // set the PhysX gamePieces based on gameData
+            //currentGameManager.miniGameInstance.EnablePhysicsGamePieceComponents(); // create RigidBody and HingeJoint etc. components on the empty GameObjects
             //Debug.Log("CalculateOneStep()Trainer AFTER: " + playerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].miniGameManager.miniGameInstance.agentBodyBeingTested.creatureBodySegmentGenomeList[0].addOn1.ToString());
         }
 
@@ -517,61 +548,74 @@ public class Trainer {
 			// ... in which case it handles the incrementing of stateData and if a game needs to be Reset, resets curTimeStep to 0
 		}
 
-		// Check if this mini-game tests agents in isolation, or drops them all in the same arena together
-		if(true) {  //if(miniGame testsIsolated) { If it's isolated, then it can use the multi-agent parallel independent testing:
-			// Check how many agents to be tested (how many mini-Game instance -- agent pairs)
-			// For ( agents to be tested ) 
-			for(int i = 0; i < 1; i++) {
-				// Get current agent instance being tested
-				//BrainBase currentBrain = PlayerList[playingCurPlayer].masterPopulation.masterAgentArray[playingCurAgent].brain;
-				// Get current miniGame instance:
+        if(currentGameManager.miniGameInstance.waitingForReset) {
+            //Debug.Log("CalculateOneStep() waitingForReset");
+            currentGameManager.miniGameInstance.Reset();
+            currentGameManager.SetInputOutputArrays();
+        }
+        else {
+            if (currentGameManager.miniGameInstance.gameCleared) {
+                //Debug.Log("CalculateOneStep() gameCleared");
+                currentGameManager.miniGameInstance.waitingForReset = true;
+            }
+            else {
+                // Check if this mini-game tests agents in isolation, or drops them all in the same arena together
+                if (true) {  //if(miniGame testsIsolated) { If it's isolated, then it can use the multi-agent parallel independent testing:
+                             // Check how many agents to be tested (how many mini-Game instance -- agent pairs)
+                             // For ( agents to be tested ) 
+                    for (int i = 0; i < 1; i++) {
+                        // Get current agent instance being tested
+                        //BrainBase currentBrain = PlayerList[playingCurPlayer].masterPopulation.masterAgentArray[playingCurAgent].brain;
+                        // Get current miniGame instance:
 
-				// Check if miniGame has all pieces built: Or do this somewhere else???
-				//if(!currentGameManager.miniGameInstance.piecesBuilt) {
-					//currentGameManager.miniGameInstance.BuildGamePieces();
-				//}
+                        // Check if miniGame has all pieces built: Or do this somewhere else???
+                        //if(!currentGameManager.miniGameInstance.piecesBuilt) {
+                        //currentGameManager.miniGameInstance.BuildGamePieces();
+                        //}
 
-				// Check if miniGame/agent has finished the game round early, before max time
-				//if(playingCurMiniGameTimeStep == (playingNumMiniGameTimeSteps - 1)) { // if game has ended check for miniGameInstance.finished or equivalent
-					// Take care of it, fitness + any needed cleanup
-					//currentGameManager.miniGameInstance.DeleteGamePieces();
-					// Delete physics Components to prevent any physX simulations between this and the next (Reset) Frames
-				//}
-				//else { // Game is still going on:
-				// Set position & velocity variables from the physX objects in the game from between Frames, since the physics sim runs directly after FixedUpdate():
-				//if(playingCurMiniGameTimeStep != 0) {  // if it is the very first timeStep of the game, don't grab PhysX simulation info
-					//currentGameManager.miniGameInstance.UpdateGameStateFromPhysX();
-				//}					
+                        // Check if miniGame/agent has finished the game round early, before max time
+                        //if(playingCurMiniGameTimeStep == (playingNumMiniGameTimeSteps - 1)) { // if game has ended check for miniGameInstance.finished or equivalent
+                        // Take care of it, fitness + any needed cleanup
+                        //currentGameManager.miniGameInstance.DeleteGamePieces();
+                        // Delete physics Components to prevent any physX simulations between this and the next (Reset) Frames
+                        //}
+                        //else { // Game is still going on:
+                        // Set position & velocity variables from the physX objects in the game from between Frames, since the physics sim runs directly after FixedUpdate():
+                        //if(playingCurMiniGameTimeStep != 0) {  // if it is the very first timeStep of the game, don't grab PhysX simulation info
+                        //currentGameManager.miniGameInstance.UpdateGameStateFromPhysX();
+                        //}					
 
-				//Debug.Log (currentGameManager.ToString());
-				//Debug.Log (currentGameManager.brainInput[0].ToString());
-				//Debug.Log (currentGameManager.brainOutput[0][0].ToString());
-				//Debug.Log (currentGameManager.miniGameInstance.outputChannelsList[0].channelValue[0].ToString());
+                        //Debug.Log (currentGameManager.ToString());
+                        //Debug.Log (currentGameManager.brainInput[0].ToString());
+                        //Debug.Log (currentGameManager.brainOutput[0][0].ToString());
+                        //Debug.Log (currentGameManager.miniGameInstance.outputChannelsList[0].channelValue[0].ToString());
 
-				// Now with the updated values for position/velocity etc., pass input values into brains
-				currentBrain.BrainMasterFunction(ref currentGameManager.brainInput, ref currentGameManager.brainOutput);
-				// Run the game for one timeStep: (Note that this will only modify non-physX variables -- the actual movement and physX sim happens just afterward -- so keep that in mind)
-				currentGameManager.miniGameInstance.Tick ();
+                        // Now with the updated values for position/velocity etc., pass input values into brains
+                        currentBrain.BrainMasterFunction(ref currentGameManager.brainInput, ref currentGameManager.brainOutput);
+                        // Run the game for one timeStep: (Note that this will only modify non-physX variables -- the actual movement and physX sim happens just afterward -- so keep that in mind)
+                        currentGameManager.miniGameInstance.Tick();
 
-				if(false) {  // if( playbackSpeed is > some threshold value...
-					// If it's running too fast, turn off gamePiece render components, certain graphs
+                        if (false) {  // if( playbackSpeed is > some threshold value...
+                                      // If it's running too fast, turn off gamePiece render components, certain graphs
 
-				}
-				else {
-					// turn on Visualizations and graphs:  // REVISIT THIS!!!!
-					playerList[playingCurPlayer].graphKing.BuildTexturesCurAgentPerTick(playerList[playingCurPlayer], playerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].miniGameManager, playingCurAgent);
-				}
-				//}
-			}
-			// Update playingState now that multiple agents have been evaluated -- messing up the playingCurAgent
-		}
-		//else {  // if miniGame tests all agents together:
-		//	// Do whatever...
-		//}
+                        }
+                        else {
+                            // turn on Visualizations and graphs:  // REVISIT THIS!!!!
+                            playerList[playingCurPlayer].graphKing.BuildTexturesCurAgentPerTick(playerList[playingCurPlayer], playerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].miniGameManager, playingCurAgent);
+                        }
+                        //}
+                    }
+                    // Update playingState now that multiple agents have been evaluated -- messing up the playingCurAgent
+                }
+                //else {  // if miniGame tests all agents together:
+                //	// Do whatever...
+                //}
 
-		// .......................................
-		// ... Next is PhysX Simulation (internal Unity code that I can't access)
-	}
+                // .......................................
+                // ... Next is PhysX Simulation (internal Unity code that I can't access)
+            }
+        }
+    }
 
 	public void NextGenerationStart() {
 		gameControllerRef.trainerUI.CheckForAllPendingApply(); // apply any pending edits

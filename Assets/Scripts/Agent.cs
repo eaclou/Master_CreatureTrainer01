@@ -9,7 +9,7 @@ public class Agent {
 
 	public BrainBase brain; // This is where the magic happens
 	public Genome genome; // encodes the brain network in long single-dimension arrays
-	public CreatureBodyGenome bodyGenome;  // encodes the body shape of the creature in a list of SegmentGenomes
+	public CritterGenome bodyGenome;  // encodes the body shape of the creature in a list of SegmentGenomes
 
 	// Constructor Methods:
 	public Agent() {
