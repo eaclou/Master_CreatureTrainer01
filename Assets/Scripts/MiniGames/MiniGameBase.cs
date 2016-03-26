@@ -12,13 +12,15 @@ public class MiniGameBase {
 
 	public List<GameOptionChannel> gameOptionsList;
 
-	public CreatureBodyGenome agentBodyBeingTested; // !!!!! RE-EVALUATE if instead, Trainer should pass agent into Reset() and Tick() functions, rather than storing a ref
+	public CritterGenome agentBodyBeingTested; // !!!!! RE-EVALUATE if instead, Trainer should pass agent into Reset() and Tick() functions, rather than storing a ref
 
 	public bool gameEndStateReached = false;
 	public bool piecesBuilt = false;
 	public bool gameInitialized = false;
 	public bool gameTicked = false;
 	public bool gameUpdatedFromPhysX = false;
+    public bool gameCleared = false;  // delete critterSegments -- wait for reset
+    public bool waitingForReset = false;
 	public int gameCurrentTimeStep = 0;
 
 
@@ -79,4 +81,8 @@ public class MiniGameBase {
 		gameUpdatedFromPhysX = false;
 		gameCurrentTimeStep++;  // reset to 0
 	}
+
+    public virtual void ClearGame() {
+        gameCleared = true;        
+    }
 }

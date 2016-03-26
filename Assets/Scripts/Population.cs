@@ -12,7 +12,7 @@ public class Population {
 	// Brain Settings!
 	public BrainType brainType = BrainType.None;
 	public BrainBase templateBrain; // do I need this? would be used as currently selected brain for use in displaying/choosing brain settings
-	public CreatureBodyGenome templateBodyGenome; 
+	public CritterGenome templateGenome; 
 	//public Agent templateAgent;  // ?????????????????????  This might eventually be better....
 
 	public int numInputNodes = 0;
@@ -46,11 +46,18 @@ public class Population {
 		}
 	}
 
-	public void InitializeMasterAgentArray(CreatureBodyGenome bodyGenome) {  // Creates a new population for the FIRST TIME!!!
-		DebugBot.DebugFunctionCall("Population; InitializeMasterAgentArray(CreatureBodyGenome); ", debugFunctionCalls);
-		templateBodyGenome = bodyGenome;
-		// BrainType can't be set to NONE !!!!!!!!!
-		masterAgentArray = new Agent[populationMaxSize];
+	public void InitializeMasterAgentArray(CritterGenome bodyGenome) {  // Creates a new population for the FIRST TIME!!!
+		DebugBot.DebugFunctionCall("Population; InitializeMasterAgentArray(CritterGenome); ", debugFunctionCalls);
+		templateGenome = bodyGenome;
+        
+        //Debug.Log("BROKEN!! Population   private void InitializeAgentBrainAndBody(Agent newAgent, CreatureBodyGenome bodyGenome)");
+        int[] critterData = templateGenome.CalculateNumberOfSegmentsInputsOutputs();
+        int numSegments = critterData[0];
+        numInputNodes = critterData[1];
+        numOutputNodes = critterData[2];
+        Debug.Log("Critter Stats [0]: " + numSegments.ToString() + ", [1]: " + numInputNodes.ToString() + ", [2]: " + numOutputNodes.ToString());
+        // BrainType can't be set to NONE !!!!!!!!!
+        masterAgentArray = new Agent[populationMaxSize];
 		for(int i = 0; i < populationMaxSize; i++) {
 			Agent newAgent = new Agent();
 			InitializeAgentBrainAndBody(newAgent, bodyGenome);  // create Agent's brain as proper type, and copies over templateBrain's settings
@@ -100,33 +107,11 @@ public class Population {
 		}
 	}
 
-	private void InitializeAgentBrainAndBody(Agent newAgent, CreatureBodyGenome bodyGenome) {  /// Configure newly-created Agent (brain + body) for the FIRST TIME!! to change settings on an existing agent, use a different method.
+	private void InitializeAgentBrainAndBody(Agent newAgent, CritterGenome bodyGenome) {  /// Configure newly-created Agent (brain + body) for the FIRST TIME!! to change settings on an existing agent, use a different method.
 		DebugBot.DebugFunctionCall("Population; InitializeAgentInstance(); ", debugFunctionCalls);
-		// Figure out Agent Body HERE:
-		
+		// Figure out Agent Body HERE:		
 		newAgent.bodyGenome = bodyGenome; // set as this agent's body Genome
-		// Figure out Brain Dimensions from Body:
-		numInputNodes = 0; 
-		numOutputNodes = 0;
-        Debug.Log("BROKEN!! Population   private void InitializeAgentBrainAndBody(Agent newAgent, CreatureBodyGenome bodyGenome)");
-        /*
-        float initialCreatureVolume = 0f;
-		for(int i = 0; i < newAgent.bodyGenome.creatureBodySegmentGenomeList.Count; i++) {
-			if(newAgent.bodyGenome.creatureBodySegmentGenomeList[i].addOn1 == CreatureBodySegmentGenome.AddOns.ContactSensor || newAgent.bodyGenome.creatureBodySegmentGenomeList[i].addOn2 == CreatureBodySegmentGenome.AddOns.ContactSensor) {
-				numInputNodes++;
-			}
-			if(newAgent.bodyGenome.creatureBodySegmentGenomeList[i].addOn1 == CreatureBodySegmentGenome.AddOns.CompassSensor3D || newAgent.bodyGenome.creatureBodySegmentGenomeList[i].addOn2 == CreatureBodySegmentGenome.AddOns.CompassSensor3D) {
-				numInputNodes += 3;
-			}
-			if(i != 0) {  // if not the root
-				numInputNodes++; // angle sensor
-				numOutputNodes++; // joint motor target
-			}
-            Vector3 segmentSize = newAgent.bodyGenome.creatureBodySegmentGenomeList[i].size;
-            initialCreatureVolume += segmentSize.x * segmentSize.y * segmentSize.z;
-        }
-        newAgent.bodyGenome.initialTotalVolume = initialCreatureVolume;
-        //Debug.Log("newAgent.bodyGenome.initialTotalVolume: " + newAgent.bodyGenome.initialTotalVolume.ToString());
+        
         // BRAIN BELOW:
         // Initialize Brain:
         if (brainType == BrainType.None) {
@@ -155,7 +140,7 @@ public class Population {
 		}
 		newAgent.brain.CopyBrainSettingsFrom(templateBrain);  // Copies settings from template brain (what has been set from UI) to new brain instance using override method
 		isFunctional = true;
-        */
+        
 	}
 
 	private void InitializeAgentBrainOnly(Agent newAgent) {  /// Configure newly-created Agent (brain + body) for the FIRST TIME!! to change settings on an existing agent, use a different method.
@@ -299,11 +284,11 @@ public class Population {
 		populationCopy.SetMaxPopulationSize(populationMaxSize);
 		populationCopy.brainType = brainType;
 		populationCopy.templateBrain = templateBrain;
-		populationCopy.templateBodyGenome = templateBodyGenome;
+		populationCopy.templateGenome = templateGenome;
 		populationCopy.numInputNodes = numInputNodes;
 		populationCopy.numOutputNodes = numOutputNodes;
 		populationCopy.numAgents = numAgents;
-		populationCopy.InitializeMasterAgentArray(templateBodyGenome); // CONFIRM THIS SHOULD BE USED!! MIGHT WANT TO JUST COPY AGENTS!!!!
+		populationCopy.InitializeMasterAgentArray(templateGenome); // CONFIRM THIS SHOULD BE USED!! MIGHT WANT TO JUST COPY AGENTS!!!!
 		// ^ ^ ^ Looks like this is used in the CrossoverManager to break the reference connection to the AgentArray when copying the main Population
 		// ....  Seems like this is just needed to assign new memmory for the swapPopulation agentArray, to allow for proper data transfer
 		// ....  between the sourcePopulation and the new Copy (which will hold the next generation). New agents are setup at birth time.

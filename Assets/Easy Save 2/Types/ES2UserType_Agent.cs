@@ -37,7 +37,7 @@ public class ES2UserType_Agent : ES2Type
         if (fileVersion >= 0)
         {
             data.genome = reader.Read<Genome>();
-            data.bodyGenome = reader.Read<CreatureBodyGenome>();
+            data.bodyGenome = reader.Read<CritterGenome>();
             if (fileVersion >= 1)
             {
                 // new attributes

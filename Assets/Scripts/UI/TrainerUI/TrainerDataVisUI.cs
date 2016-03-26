@@ -199,7 +199,7 @@ public class TrainerDataVisUI : MonoBehaviour {
 			
 			textFitnessGraphTitle.text = "Average Fitness Over Generations:";
 			if(currentPlayer.dataManager.generationDataList.Count > 1) {
-				textFitnessReadout.text = "Last Gen Avg: " + currentPlayer.dataManager.generationDataList[currentPlayer.dataManager.generationDataList.Count-2].avgAgentScoreRaw.ToString();
+                textFitnessReadout.text = "Last Gen Avg: "; // + currentPlayer.dataManager.generationDataList[currentPlayer.dataManager.generationDataList.Count-2].avgAgentScoreRaw.ToString();
 				
 			}
 			else {
@@ -213,15 +213,15 @@ public class TrainerDataVisUI : MonoBehaviour {
 
 			textFitnessGraphTitle.text = "Agent Fitnesses Last Generation:";
 			if(currentPlayer.dataManager.generationDataList.Count > 1) {
-				textFitnessReadout.text = "Last Gen Avg: " + currentPlayer.dataManager.generationDataList[currentPlayer.dataManager.generationDataList.Count-2].avgAgentScoreRaw.ToString();
-				imageFitnessGraph.GetComponent<Image>().material.SetInt("_NumAgents", currentPlayer.dataManager.generationDataList[currentPlayer.dataManager.generationDataList.Count - 2].agentDataArray.Length);
-				imageFitnessGraph.GetComponent<Image>().material.SetFloat("_GenAvgScore", currentPlayer.dataManager.generationDataList[currentPlayer.dataManager.generationDataList.Count-2].avgAgentScoreRaw);
+                textFitnessReadout.text = "Last Gen Avg: ";// + currentPlayer.dataManager.generationDataList[currentPlayer.dataManager.generationDataList.Count-2].avgAgentScoreRaw.ToString();
+				//imageFitnessGraph.GetComponent<Image>().material.SetInt("_NumAgents", currentPlayer.dataManager.generationDataList[currentPlayer.dataManager.generationDataList.Count - 2].agentDataArray.Length);
+				//imageFitnessGraph.GetComponent<Image>().material.SetFloat("_GenAvgScore", currentPlayer.dataManager.generationDataList[currentPlayer.dataManager.generationDataList.Count-2].avgAgentScoreRaw);
 				
 			}
 			else {
 				textFitnessReadout.text = "Last Gen Avg:";
-				imageFitnessGraph.GetComponent<Image>().material.SetInt("_NumAgents", currentPlayer.dataManager.generationDataList[0].agentDataArray.Length);
-				imageFitnessGraph.GetComponent<Image>().material.SetFloat("_GenAvgScore", currentPlayer.dataManager.generationDataList[0].avgAgentScoreRaw);
+				//imageFitnessGraph.GetComponent<Image>().material.SetInt("_NumAgents", currentPlayer.dataManager.generationDataList[0].agentDataArray.Length);
+				//imageFitnessGraph.GetComponent<Image>().material.SetFloat("_GenAvgScore", currentPlayer.dataManager.generationDataList[0].avgAgentScoreRaw);
 			}
 		}
 
@@ -231,15 +231,15 @@ public class TrainerDataVisUI : MonoBehaviour {
 
 			textFitnessGraphTitle.text = "Avg Fitness By Components:";
 			if(currentPlayer.dataManager.generationDataList.Count > 1) {
-				textFitnessReadout.text = "Last Gen Avg: " + currentPlayer.dataManager.generationDataList[currentPlayer.dataManager.generationDataList.Count-2].avgAgentScoreRaw.ToString();
+                textFitnessReadout.text = "Last Gen Avg: ";// + currentPlayer.dataManager.generationDataList[currentPlayer.dataManager.generationDataList.Count-2].avgAgentScoreRaw.ToString();
 				imageFitnessGraph.GetComponent<Image>().material.SetInt("_NumComponents", currentPlayer.dataManager.generationDataList[currentPlayer.dataManager.generationDataList.Count - 2].totalNumFitnessComponents);
-				imageFitnessGraph.GetComponent<Image>().material.SetFloat("_GenAvgScore", currentPlayer.dataManager.generationDataList[currentPlayer.dataManager.generationDataList.Count-2].avgAgentScoreRaw);
+				//imageFitnessGraph.GetComponent<Image>().material.SetFloat("_GenAvgScore", currentPlayer.dataManager.generationDataList[currentPlayer.dataManager.generationDataList.Count-2].avgAgentScoreRaw);
 				
 			}
 			else {
 				textFitnessReadout.text = "Last Gen Avg:";
 				imageFitnessGraph.GetComponent<Image>().material.SetInt("_NumComponents", currentPlayer.dataManager.generationDataList[0].totalNumFitnessComponents);
-				imageFitnessGraph.GetComponent<Image>().material.SetFloat("_GenAvgScore", currentPlayer.dataManager.generationDataList[0].avgAgentScoreRaw);
+				//imageFitnessGraph.GetComponent<Image>().material.SetFloat("_GenAvgScore", currentPlayer.dataManager.generationDataList[0].avgAgentScoreRaw);
 			}
 		}
 

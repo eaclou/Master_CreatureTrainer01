@@ -12,16 +12,8 @@ public class FitnessManager {
 
 	// EVENTUALLY REMOVE THIS:
 	public List<FitnessComponent> masterFitnessCompList;  // This stores all possible fitness components, assembled from brain & miniGame's fitnessCompList 
-
-
-	// +++++++ MAKE OBSOLETE: transfer to DataManager!
-	//public float[] agentFitnessScoresRaw; // holds the scores for each Agent on this Trial
-	//public float[] agentFitnessScoresWeighted; // holds the scores for each Agent on this Trial
-
-
-
+  
 	public float[][] fitnessComponentRawScoresArray;  //  Stores the references to selected fitness Components (raw un-averaged scores from miniGame and Brain)
-
 
 	// Constructor
 	public FitnessManager(Player player) {
@@ -92,10 +84,10 @@ public class FitnessManager {
 			}
 		}
 
-		string debugMessage = "FitnessScoreArray: ";
-		for(int x = 0; x < fitnessComponentRawScoresArray.Length; x++) {
-			debugMessage += fitnessComponentRawScoresArray[x][0].ToString() + ", ";
-		}
+		//string debugMessage = "FitnessScoreArray: ";
+		//for(int x = 0; x < fitnessComponentRawScoresArray.Length; x++) {
+		//	debugMessage += fitnessComponentRawScoresArray[x][0].ToString() + ", ";
+		//}
 		//DebugBot.DebugFunctionCall("MiniGameManager; SetInputOutputArrays(); brainInput: " + debugMessage, debugFunctionCalls);
 		// END NEW APPROACH !! ++++++++++++++++++++++++++++++++++++++++++++++++++++
 	}

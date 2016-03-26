@@ -62,7 +62,7 @@ public class TrainerNewPopulationUI : MonoBehaviour {
 	private int pendingNumInputs = 4;
 	private int pendingNumOutputs = 4;
 
-	private string pendingBodyTemplateName = "";
+	private string pendingBodyTemplateFilename = "";
 
 	private Population populationRef;
 
@@ -115,7 +115,7 @@ public class TrainerNewPopulationUI : MonoBehaviour {
 		textNumInputs.text = pendingNumInputs.ToString();
 		textNumOutputs.text = pendingNumOutputs.ToString();
 
-		textLoadedBodyTemplateName.text = pendingBodyTemplateName;
+		textLoadedBodyTemplateName.text = pendingBodyTemplateFilename;
 
 		UpdateUIElementStates();
 	}
@@ -201,10 +201,10 @@ public class TrainerNewPopulationUI : MonoBehaviour {
         Debug.Log("message: " + templateName);
         
         if (System.IO.File.Exists(filename)) {
-            CritterGenome genomeToLoad = ES2.Load<CritterGenome>(filename);
-            Debug.Log("genomeToLoad.Length: " + genomeToLoad.CritterNodeList.Count.ToString());
-            //critterConstructorManager.masterCritter.LoadCritterGenome(genomeToLoad);
-            pendingBodyTemplateName = templateName;
+            //CritterGenome genomeToLoad = ES2.Load<CritterGenome>(filename);
+            Debug.Log("filename.Length: " + filename.ToString());
+            
+            pendingBodyTemplateFilename = filename;
             UpdateUIWithCurrentData();
         }
         else {
@@ -279,11 +279,14 @@ public class TrainerNewPopulationUI : MonoBehaviour {
                     //===================================================
 
                     // CREATE AGENT ARRAY!!!!!!! :
-                    Debug.Log("BROKEN!!! TrainerNewPopulationUI public void ClickCreateNewPopulation()");
-					//CreatureBodyGenome bodyGenome = CreatureBodyLoader.LoadBodyGenome(pendingBodyTemplateName);
-					//populationRef.InitializeMasterAgentArray(bodyGenome);
-					//trainer.PlayerList[curPlayer-1].hasValidPopulation = true;
-				}
+                    //Debug.Log("BROKEN!!! TrainerNewPopulationUI public void ClickCreateNewPopulation() pendingTemplateName: " + pendingBodyTemplateFilename);
+                    CritterGenome genomeToLoad = ES2.Load<CritterGenome>(pendingBodyTemplateFilename);
+                    Debug.Log("genomeToLoad Length: " + genomeToLoad.CritterNodeList.Count.ToString() + ", pendingTemplateName: " + pendingBodyTemplateFilename);
+                    //CreatureBodyGenome bodyGenome = CreatureBodyLoader.LoadBodyGenome(pendingBodyTemplateName);
+                    //Debug.Log("ClickCreateNewPopulation() Number of Segments: " + genomeToLoad.CalculateNumberOfSegments().ToString());
+                    populationRef.InitializeMasterAgentArray(genomeToLoad);
+                    trainer.PlayerList[curPlayer-1].hasValidPopulation = true;
+                }
 				else { 
 					DebugBot.DebugFunctionCall("TNewPopUI; ClickCreateNewPopulation(); Null Player Ref!", debugFunctionCalls);
 				}

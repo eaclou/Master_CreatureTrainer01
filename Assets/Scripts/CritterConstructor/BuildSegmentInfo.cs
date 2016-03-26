@@ -6,6 +6,7 @@ public class BuildSegmentInfo {
     public CritterNode sourceNode;
     public CritterSegment parentSegment;
     public bool isMirror = false;
+    public int recursionNumber = 0;
 
 	// Constructor!
 	public BuildSegmentInfo() {
