@@ -4,37 +4,35 @@ using System.Collections;
 public class Population {
 	public bool debugFunctionCalls = false; // turns debug messages on/off
 
-	public enum BrainType {
-		None,
-		Test,
-		ANN_FF_Layered_AllToAll
-	};
-	// Brain Settings!
-	public BrainType brainType = BrainType.None;
-	public BrainBase templateBrain; // do I need this? would be used as currently selected brain for use in displaying/choosing brain settings
-	public CritterGenome templateGenome; 
-	//public Agent templateAgent;  // ?????????????????????  This might eventually be better....
-
-	public int numInputNodes = 0;
+    //public enum BrainType {
+    //	None,
+    //	Test,
+    //	ANN_FF_Layered_AllToAll
+    //};
+    // Brain Settings!
+    //public BrainType brainType = BrainType.None;
+    //public BrainBase templateBrain; // do I need this? would be used as currently selected brain for use in displaying/choosing brain settings
+    public BrainSettings brainSettings;
+    //public Agent templateAgent;  // ?????????????????????  This might eventually be better....
+    public CritterGenome templateGenome;
+    public int numInputNodes = 0;
 	public int numOutputNodes = 0;
-
 	public int populationMaxSize = 4; // default value
 	public int numAgents = 0;
-
 	public Agent[] masterAgentArray;
 
 	public bool initRandom = false;
-
 	public bool isFunctional = false;
 
 	// Constructor Methods:
 	public Population() {
 		DebugBot.DebugFunctionCall("Population; Population() Constructor!; ", debugFunctionCalls);
-		ChangeTemplateBrainType(brainType);
+        
+        brainSettings = new BrainSettings(); // CHANGE THIS LATER!!!!!
 	}
 
 	// Public Methods!
-	public void InitializeMasterAgentArray() {  // Creates a new population for the FIRST TIME!!!
+	/*public void InitializeMasterAgentArray() {  // Creates a new population for the FIRST TIME!!!
 		DebugBot.DebugFunctionCall("Population; InitializeMasterAgentArray(); ", debugFunctionCalls);
 		// BrainType can't be set to NONE !!!!!!!!!
 		masterAgentArray = new Agent[populationMaxSize];
@@ -44,19 +42,18 @@ public class Population {
 			masterAgentArray[i] = newAgent;
 			numAgents++;
 		}
-	}
+	}*/
 
 	public void InitializeMasterAgentArray(CritterGenome bodyGenome) {  // Creates a new population for the FIRST TIME!!!
 		DebugBot.DebugFunctionCall("Population; InitializeMasterAgentArray(CritterGenome); ", debugFunctionCalls);
 		templateGenome = bodyGenome;
         
-        //Debug.Log("BROKEN!! Population   private void InitializeAgentBrainAndBody(Agent newAgent, CreatureBodyGenome bodyGenome)");
-        int[] critterData = templateGenome.CalculateNumberOfSegmentsInputsOutputs();
+        int[] critterData = templateGenome.CalculateNumberOfSegmentsInputsOutputs(); // just to check number of segments, inputs, and outputs
         int numSegments = critterData[0];
         numInputNodes = critterData[1];
         numOutputNodes = critterData[2];
         Debug.Log("Critter Stats [0]: " + numSegments.ToString() + ", [1]: " + numInputNodes.ToString() + ", [2]: " + numOutputNodes.ToString());
-        // BrainType can't be set to NONE !!!!!!!!!
+        
         masterAgentArray = new Agent[populationMaxSize];
 		for(int i = 0; i < populationMaxSize; i++) {
 			Agent newAgent = new Agent();
@@ -82,7 +79,7 @@ public class Population {
 			}
 			else {// No agent at this index
 				Agent newAgent = new Agent();
-				InitializeAgentBrainOnly(newAgent);  // create Agent's brain as proper type, and copies over templateBrain's settings
+				//InitializeAgentBrainOnly(newAgent);  // create Agent's brain as proper type, and copies over templateBrain's settings
 				newMasterAgentArray[i] = newAgent;
 			}
 		}
@@ -91,7 +88,7 @@ public class Population {
 		masterAgentArray = newMasterAgentArray;
 	}
 
-	public void ChangeTemplateBrainType(BrainType newBrainType) {
+	/*public void ChangeTemplateBrainType(BrainType newBrainType) {
 		if(brainType != newBrainType) { // only do something if the brainType has changed
 			brainType = newBrainType;
 			templateBrain = null;
@@ -105,7 +102,7 @@ public class Population {
 				templateBrain = new BrainANN_FF_Layers_A2A();
 			}
 		}
-	}
+	}*/
 
 	private void InitializeAgentBrainAndBody(Agent newAgent, CritterGenome bodyGenome) {  /// Configure newly-created Agent (brain + body) for the FIRST TIME!! to change settings on an existing agent, use a different method.
 		DebugBot.DebugFunctionCall("Population; InitializeAgentInstance(); ", debugFunctionCalls);
@@ -114,36 +111,21 @@ public class Population {
         
         // BRAIN BELOW:
         // Initialize Brain:
-        if (brainType == BrainType.None) {
-			newAgent.brain = new BrainBase();
-			isFunctional = false;
+		newAgent.brain = new BrainNEAT();        
+		
+        GenomeNEAT brainGenome;
+		if(initRandom) {
+            brainGenome = newAgent.brain.InitializeRandomBrain(numInputNodes, numOutputNodes); // 'builds' the brain and spits out a Genome
 		}
-		// Test Type (manual coded brain)
-		if(brainType == BrainType.Test) {
-			newAgent.brain = new BrainTest();
-			
+		else {
+            brainGenome = newAgent.brain.InitializeBlankBrain(numInputNodes, numOutputNodes);
 		}
-		// ANN Feed-Forward Layered Static All-to-All:
-		if(brainType == BrainType.ANN_FF_Layered_AllToAll) {
-			newAgent.brain = new BrainANN_FF_Layers_A2A() as BrainANN_FF_Layers_A2A;
-			int[] layerDimensions = new int[2]{numInputNodes, numOutputNodes}; // Add UI support for setting layers
-			Genome genome;
-			if(initRandom) {
-				genome = newAgent.brain.InitializeRandomBrain(layerDimensions); // 'builds' the brain and spits out a Genome
-			}
-			else {
-				genome = newAgent.brain.InitializeBlankBrain(layerDimensions);
-			}
-			newAgent.genome = genome;
-			newAgent.brain.SetBrainFromGenome(genome);
-			
-		}
-		newAgent.brain.CopyBrainSettingsFrom(templateBrain);  // Copies settings from template brain (what has been set from UI) to new brain instance using override method
-		isFunctional = true;
-        
+		newAgent.brainGenome = brainGenome;
+		newAgent.brain.BuildBrainNetwork();  // constructs the brain from its sourceGenome
+		isFunctional = true;        
 	}
 
-	private void InitializeAgentBrainOnly(Agent newAgent) {  /// Configure newly-created Agent (brain + body) for the FIRST TIME!! to change settings on an existing agent, use a different method.
+	/*private void InitializeAgentBrainOnly(Agent newAgent) {  /// Configure newly-created Agent (brain + body) for the FIRST TIME!! to change settings on an existing agent, use a different method.
 		DebugBot.DebugFunctionCall("Population; InitializeAgentInstance(); ", debugFunctionCalls);
 		// Initialize Brain:
 		if(brainType == BrainType.None) {
@@ -172,26 +154,11 @@ public class Population {
 		}
 		newAgent.brain.CopyBrainSettingsFrom(templateBrain);  // Copies settings from template brain (what has been set from UI) to new brain instance using override method
 		isFunctional = true;
-	}
+	}*/
 
-	private void InitializeAgentBrainsFromGenome(Agent agent) {  // set up agent's brain in the case of a loaded population
-		if(brainType == BrainType.None) {
-			agent.brain = new BrainBase();
-			isFunctional = false;
-		}
-		// Test Type (manual coded brain)
-		if(brainType == BrainType.Test) {
-			agent.brain = new BrainTest();
-			
-		}
-		// ANN Feed-Forward Layered Static All-to-All:
-		if(brainType == BrainType.ANN_FF_Layered_AllToAll) {
-			agent.brain = new BrainANN_FF_Layers_A2A() as BrainANN_FF_Layers_A2A;
-
-			agent.brain.InitializeBrainFromGenome(agent.genome);	// SetBrainFromGenome or InitializeBrainFromGenome	?	
-		}
-		agent.brain.CopyBrainSettingsFrom(templateBrain);  // Copies settings from template brain (what has been set from UI) to new brain instance using override method
-	}
+	private void InitializeAgentBrainsFromGenome(Agent agent) {  // set up agent's brain in the case of a loaded population		
+        agent.brain.InitializeBrainFromGenome(agent.brainGenome);
+    }
 
 	public void SetMaxPopulationSize(int size) {
 		DebugBot.DebugFunctionCall("Population; SetMaxPopulationSize(); ", debugFunctionCalls);
@@ -220,10 +187,10 @@ public class Population {
 		//Debug.Log("agent0 fitness: " + rankedAgentArray[0].fitnessScore.ToString());
 		Agent swapAgentA = new Agent();
 		Agent swapAgentB = new Agent();
-		Genome swapGenomeA = new Genome();
-		Genome swapGenomeB = new Genome();
-		float[] swapBiasesA = new float[rankedAgentArray[0].genome.genomeBiases.Length];
-		float[] swapBiasesB = new float[rankedAgentArray[0].genome.genomeBiases.Length];
+		//GenomeNEAT swapGenomeA = new GenomeNEAT();
+        //GenomeNEAT swapGenomeB = new GenomeNEAT();
+		//float[] swapBiasesA = new float[rankedAgentArray[0].genome.genomeBiases.Length];
+		//float[] swapBiasesB = new float[rankedAgentArray[0].genome.genomeBiases.Length];
 
 		/*
 		string masterString = "MasterAgentArrayB4: ";
@@ -245,30 +212,27 @@ public class Population {
 			{
 				if(rankedAgentArray[j].fitnessScore < rankedAgentArray[j+1].fitnessScore)  // if lower index holds a smaller time, swap places
 				{
-					// NOT WORKING!!!!!!
-					//swapGenomeA = rankedAgentArray[j].brain.genome;
-					//swapGenomeB = rankedAgentArray[j+1].brain.genome;
-					swapBiasesA = rankedAgentArray[j].genome.genomeBiases;
-					swapBiasesB = rankedAgentArray[j+1].genome.genomeBiases;
+					
+					//swapBiasesA = rankedAgentArray[j].genome.genomeBiases;
+					//swapBiasesB = rankedAgentArray[j+1].genome.genomeBiases;
 					swapAgentA = rankedAgentArray[j];
 					swapAgentB = rankedAgentArray[j+1];
 
-					//rankedAgentArray[j].brain.genome = swapGenomeB;
-					//rankedAgentArray[j+1].brain.genome = swapGenomeA;
-					rankedAgentArray[j].genome.genomeBiases = swapBiasesA;
-					rankedAgentArray[j+1].genome.genomeBiases = swapBiasesB;
+					
+					//rankedAgentArray[j].genome.genomeBiases = swapBiasesA;
+					//rankedAgentArray[j+1].genome.genomeBiases = swapBiasesB;
 					rankedAgentArray[j] = swapAgentB;
 					rankedAgentArray[j+1] = swapAgentA;
 				}
 			}
 		}	
-		/*
+		
 		string rankedAfterString = "RankedAgentArrayAfter: ";
 		for(int h = 0; h < populationMaxSize; h++) {
-			rankedAfterString += "Fit: " + rankedAgentArray[h].fitnessScore.ToString () + ", " + rankedAgentArray[h].brain.genome.genomeWeights[0].ToString() + ", ";
+			rankedAfterString += "Fit: " + rankedAgentArray[h].fitnessScore.ToString () + ", " + ", ";
 		}
 		Debug.Log (rankedAfterString);
-		*/
+		
 		masterAgentArray = rankedAgentArray;
 	}
 
@@ -282,8 +246,8 @@ public class Population {
 	public Population CopyPopulationSettings() {  // returns a copy of the current Population instance calling the function i.e. Population newPop = new Population(); newPop = sourcePop.CopyPopulation();
 		Population populationCopy = new Population();
 		populationCopy.SetMaxPopulationSize(populationMaxSize);
-		populationCopy.brainType = brainType;
-		populationCopy.templateBrain = templateBrain;
+		//populationCopy.brainType = brainType;
+		//populationCopy.templateBrain = templateBrain;
 		populationCopy.templateGenome = templateGenome;
 		populationCopy.numInputNodes = numInputNodes;
 		populationCopy.numOutputNodes = numOutputNodes;
@@ -316,11 +280,11 @@ public class Population {
 			// Create new Population:
 			Population factionPop = new Population();
 			factionPop.populationMaxSize = blockSize;
-			factionPop.brainType = brainType;
-			factionPop.templateBrain = templateBrain;
+			//factionPop.brainType = brainType;
+			//factionPop.templateBrain = templateBrain;
 			factionPop.numInputNodes = numInputNodes;
 			factionPop.numOutputNodes = numOutputNodes;
-			factionPop.InitializeMasterAgentArray();
+			//factionPop.InitializeMasterAgentArray();
 
 			for(int j = 0; j < blockSize; j++) {  // copy over Agents from source Pop.
 				factionPop.masterAgentArray[j] = masterAgentArray[curAgentIndex];
@@ -362,7 +326,7 @@ public class Population {
 			}
 			else {// No agent at this index
 				Agent newAgent = new Agent();
-				InitializeAgentBrainOnly(newAgent);  // create Agent's brain as proper type, and copies over templateBrain's settings
+				//InitializeAgentBrainOnly(newAgent);  // create Agent's brain as proper type, and copies over templateBrain's settings
 				newMasterAgentArray[i] = newAgent;
 			}
 		}
@@ -372,13 +336,7 @@ public class Population {
 	}
 
 	public void PrintSettings() {
-		string currentSettingsLog = "";
-		currentSettingsLog += "brainType: " + brainType.ToString();
-		if(templateBrain != null) {
-			currentSettingsLog += ", templateBrain: " + templateBrain.ToString();
-		} else {
-			currentSettingsLog += ", templateBrain: null";
-		}
+		string currentSettingsLog = "";		
 		currentSettingsLog += ", Input/Output: " + numInputNodes.ToString() + " / " + numOutputNodes.ToString();
 		currentSettingsLog += ", popMaxSize: " + populationMaxSize.ToString();
 		currentSettingsLog += ", numAgents: " + numAgents.ToString();
@@ -392,7 +350,7 @@ public class Population {
 			for(int i = 0; i < masterAgentArray.Length; i++) {
 				agentListLog += ", A:" + i.ToString() + " Fit: " + masterAgentArray[i].fitnessScore;
 				if(masterAgentArray[i].brain != null) {
-					agentListLog += ", brain: " + masterAgentArray[i].brain.Name;
+					//agentListLog += ", brain: " + masterAgentArray[i].brain.Name;
 				} else {
 					agentListLog += ", brain: null";
 				}

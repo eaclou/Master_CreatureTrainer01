@@ -2,11 +2,16 @@
 using System.Collections;
 using System.Collections.Generic;
 
+
+
 /// <summary>
 /// Class for holding all the data needed for a mesh in progress.
 /// </summary>
-public class MeshBuilder
+public class MeshBuilder 
 {
+
+    public Mesh mesh;
+
 	/// <summary>
 	/// The vertex positions of the mesh.
 	/// </summary>
@@ -18,11 +23,17 @@ public class MeshBuilder
 	/// </summary>
 	public List<Vector3> Normals { get { return m_Normals; } }
 	private List<Vector3> m_Normals = new List<Vector3>();
-	
-	/// <summary>
-	/// The UV coordinates of the mesh.
+
+    /// <summary>
+	/// The vertex colors of the mesh.
 	/// </summary>
-	public List<Vector2> UVs { get { return m_UVs; } }
+	public List<Color> Colors { get { return m_Colors; } }
+    private List<Color> m_Colors= new List<Color>();
+
+    /// <summary>
+    /// The UV coordinates of the mesh.
+    /// </summary>
+    public List<Vector2> UVs { get { return m_UVs; } }
 	private List<Vector2> m_UVs = new List<Vector2>();
 	
 	//indices for the triangles:
@@ -48,7 +59,10 @@ public class MeshBuilder
 	public Mesh CreateMesh()
 	{
 		//Create an instance of the Unity Mesh class:
-		Mesh mesh = new Mesh();
+        if(mesh == null) {
+            mesh = new Mesh();
+        }
+		
 		
 		//add our vertex and triangle values to the new mesh:
 		mesh.vertices = m_Vertices.ToArray();
@@ -57,9 +71,13 @@ public class MeshBuilder
 		//Normals are optional. Only use them if we have the correct amount:
 		if (m_Normals.Count == m_Vertices.Count)
 			mesh.normals = m_Normals.ToArray();
-		
-		//UVs are optional. Only use them if we have the correct amount:
-		if (m_UVs.Count == m_Vertices.Count)
+
+        //Colors are optional. Only use them if we have the correct amount:
+        if (m_Colors.Count == m_Vertices.Count)
+            mesh.colors = m_Colors.ToArray();
+
+        //UVs are optional. Only use them if we have the correct amount:
+        if (m_UVs.Count == m_Vertices.Count)
 			mesh.uv = m_UVs.ToArray();
 		
 		//have the mesh recalculate its bounding box (required for proper rendering):
@@ -67,4 +85,22 @@ public class MeshBuilder
 		
 		return mesh;
 	}
+
+    public void ClearMeshbuilder() {
+        m_Vertices.Clear();
+        m_Normals.Clear();
+        m_UVs.Clear();
+        m_Indices.Clear();
+        m_Colors.Clear();
+    }
+
+    public void UpdateMeshColors() {
+        //Colors are optional. Only use them if we have the correct amount:
+        if (m_Colors.Count == m_Vertices.Count)
+            mesh.colors = m_Colors.ToArray();
+    }
+
+    public void UpdateMeshVertices() {
+        mesh.vertices = m_Vertices.ToArray();
+    }
 }

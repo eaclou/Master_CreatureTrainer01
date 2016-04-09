@@ -71,14 +71,14 @@ public class TrainerNewPopulationUI : MonoBehaviour {
 
 		Player currentPlayer = trainerModuleScript.gameController.masterTrainer.PlayerList[trainerModuleScript.gameController.masterTrainer.CurPlayer-1];
 		populationRef = currentPlayer.masterPopulation;
-		if(populationRef.templateBrain == null) {
+		/*if(populationRef.templateBrain == null) {
 			populationRef.templateBrain = new BrainBase();
 			
 			//InitializePanelInputList();
 			//InitializePanelOutputList();
-		}
+		}*/
 
-		if(!dropDownPopulated) {  // So it only creates buttons on startup
+		/*if(!dropDownPopulated) {  // So it only creates buttons on startup
 			foreach (string type in System.Enum.GetNames(typeof(Population.BrainType))) {
 				//DebugBot.DebugFunctionCall("TMiniGameUI; " + type, debugFunctionCalls);
 				GameObject button = (GameObject)Instantiate (buttonBrainTypeDropDownPrefab);
@@ -91,15 +91,15 @@ public class TrainerNewPopulationUI : MonoBehaviour {
 				button.transform.SetParent(dropDownChooseBrainTypePanel);
 			}
 			dropDownPopulated = true;
-		}
+		}*/
 		
 		DebugBot.DebugFunctionCall("TNewPopUI; InitializePanelWithTrainerData(); ", debugFunctionCalls);
 		sliderPopulationSize.minValue = minMaxPopulationSize;
 		sliderPopulationSize.maxValue = maxMaxPopulationSize;
-		sliderNumInputs.minValue = minBrainInputs;
-		sliderNumInputs.maxValue = maxBrainInputs;
-		sliderNumOutputs.minValue = minBrainOutputs;
-		sliderNumOutputs.maxValue = maxBrainOutputs;
+		//sliderNumInputs.minValue = minBrainInputs;
+		//sliderNumInputs.maxValue = maxBrainInputs;
+		//sliderNumOutputs.minValue = minBrainOutputs;
+		//sliderNumOutputs.maxValue = maxBrainOutputs;
 
 		UpdateUIWithCurrentData();
 	}
@@ -139,12 +139,12 @@ public class TrainerNewPopulationUI : MonoBehaviour {
 			//SetupPanelOutputList();
 		}		
 		// Choose Brain-Type Drop-down:
-		if(populationRef.brainType == Population.BrainType.None) {
-			textButtonBrainTypeDropDown.text = "Choose Brain Type (Drop-Down)";
-		}
-		else {
-			textButtonBrainTypeDropDown.text = populationRef.brainType.ToString();
-		}
+		//if(populationRef.brainType == Population.BrainType.None) {
+		//	textButtonBrainTypeDropDown.text = "Choose Brain Type (Drop-Down)";
+		//}
+		//else {
+		//	textButtonBrainTypeDropDown.text = populationRef.brainType.ToString();
+		//}
 		bgImage.color = trainerModuleScript.defaultBGColor;
 	}
 
@@ -154,7 +154,7 @@ public class TrainerNewPopulationUI : MonoBehaviour {
 	//	DebugBot.DebugFunctionCall("TNewPopUI; ClickChooseBrainType(); ", debugFunctionCalls);
 	//}
 	
-	public void ChooseBrainType(string brainType) {  // clicked on a drop-down sub-button:
+	/*public void ChooseBrainType(string brainType) {  // clicked on a drop-down sub-button:
 		DebugBot.DebugFunctionCall("TNewPopUI; ChooseBrainType(" + brainType + "); ", debugFunctionCalls);
 		Player currentPlayer = trainerModuleScript.gameController.masterTrainer.PlayerList[trainerModuleScript.gameController.masterTrainer.CurPlayer-1];
 
@@ -171,7 +171,7 @@ public class TrainerNewPopulationUI : MonoBehaviour {
 		//	InitializePanelOutputList();  // and possibly Transfer Functions panel also
 
 		UpdateUIWithCurrentData();
-	}
+	}*/
 
 	public void ClickLoadBodyTemplate() {
 		DebugBot.DebugFunctionCall("TNewPopUI; ClickLoadBodyTemplate(); EDITOR TURNED OFF!!!", true);
@@ -224,7 +224,7 @@ public class TrainerNewPopulationUI : MonoBehaviour {
 		UpdateUIWithCurrentData();
 	}
 
-	public void SliderNumInputs(float sliderValue) { // On Slider Value Changed
+	/*public void SliderNumInputs(float sliderValue) { // On Slider Value Changed
 		DebugBot.DebugFunctionCall("TNewPopUI; SliderNumInputs(); ", debugFunctionCalls);
 		pendingNumInputs = (int)sliderValue;
 		UpdateUIWithCurrentData();
@@ -234,7 +234,7 @@ public class TrainerNewPopulationUI : MonoBehaviour {
 		DebugBot.DebugFunctionCall("TNewPopUI; SliderNumOutputs(); ", debugFunctionCalls);
 		pendingNumOutputs = (int)sliderValue;
 		UpdateUIWithCurrentData();
-	}
+	}*/
 
 	public void ToggleRandomWeights(bool value) {
 		DebugBot.DebugFunctionCall("TNewPopUI; ToggleRandomWeights(); ", debugFunctionCalls);
@@ -261,40 +261,29 @@ public class TrainerNewPopulationUI : MonoBehaviour {
 
 	public void ClickCreateNewPopulation() {
 		DebugBot.DebugFunctionCall("TNewPopUI; ClickCreateNewPopulation(); ", debugFunctionCalls);
+        
+		Trainer trainer = trainerModuleScript.gameController.masterTrainer;  //  ?? why only set up reference here???
 
-		if(populationRef.brainType != Population.BrainType.None) {  // BrainType needs to BE something
-			Trainer trainer = trainerModuleScript.gameController.masterTrainer;
+		if(trainer.PlayerList != null) {	// if there is a valid PlayerList		
+			int curPlayer = trainer.CurPlayer;
+			if(trainer.PlayerList[curPlayer-1] != null) {  // If Current Player exists
 
-			if(trainer.PlayerList != null) {	// if there is a valid PlayerList		
-				int curPlayer = trainer.CurPlayer;
-				if(trainer.PlayerList[curPlayer-1] != null) {  // If Current Player exists
-
-					populationRef = trainer.PlayerList[curPlayer-1].masterPopulation; // grab current player's population -- this might not be needed
-					populationRef.SetMaxPopulationSize(pendingPopulationSize);
-                    //populationRef.numInputNodes = pendingNumInputs;
-                    //populationRef.numOutputNodes = pendingNumOutputs;
-
-                    // !!!!!!! Transfer over specific Brain-Type Options!
-                    //  Or Do I simply change these values in real-time as they are selected by UI?
-                    //===================================================
-
-                    // CREATE AGENT ARRAY!!!!!!! :
-                    //Debug.Log("BROKEN!!! TrainerNewPopulationUI public void ClickCreateNewPopulation() pendingTemplateName: " + pendingBodyTemplateFilename);
-                    CritterGenome genomeToLoad = ES2.Load<CritterGenome>(pendingBodyTemplateFilename);
-                    Debug.Log("genomeToLoad Length: " + genomeToLoad.CritterNodeList.Count.ToString() + ", pendingTemplateName: " + pendingBodyTemplateFilename);
-                    //CreatureBodyGenome bodyGenome = CreatureBodyLoader.LoadBodyGenome(pendingBodyTemplateName);
-                    //Debug.Log("ClickCreateNewPopulation() Number of Segments: " + genomeToLoad.CalculateNumberOfSegments().ToString());
-                    populationRef.InitializeMasterAgentArray(genomeToLoad);
-                    trainer.PlayerList[curPlayer-1].hasValidPopulation = true;
-                }
-				else { 
-					DebugBot.DebugFunctionCall("TNewPopUI; ClickCreateNewPopulation(); Null Player Ref!", debugFunctionCalls);
-				}
+				populationRef = trainer.PlayerList[curPlayer-1].masterPopulation; // grab current player's population -- this might not be needed
+				populationRef.SetMaxPopulationSize(pendingPopulationSize);
+                
+                // CREATE AGENT ARRAY!!!!!!! :                
+                CritterGenome genomeToLoad = ES2.Load<CritterGenome>(pendingBodyTemplateFilename);                
+                populationRef.InitializeMasterAgentArray(genomeToLoad);
+                trainer.PlayerList[curPlayer-1].hasValidPopulation = true;
+            }
+			else { 
+				DebugBot.DebugFunctionCall("TNewPopUI; ClickCreateNewPopulation(); Null Player Ref!", debugFunctionCalls);
 			}
-			trainerModuleScript.ClickPopulation(); // switches to Population Panel -- might not be necessary?
-			trainer.PlayerList[trainer.CurPlayer-1].graphKing.BuildTexturesCurAgentPerAgent(trainer.PlayerList[trainer.CurPlayer-1], 0);
-			trainerModuleScript.SetAllPanelsFromTrainerData();
 		}
+		trainerModuleScript.ClickPopulation(); // switches to Population Panel -- might not be necessary?
+		trainer.PlayerList[trainer.CurPlayer-1].graphKing.BuildTexturesCurAgentPerAgent(trainer.PlayerList[trainer.CurPlayer-1], 0);
+		trainerModuleScript.SetAllPanelsFromTrainerData();
+		
 	}
 
 	#endregion

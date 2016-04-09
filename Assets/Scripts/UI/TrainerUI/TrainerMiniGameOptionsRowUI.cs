@@ -33,11 +33,11 @@ public class TrainerMiniGameOptionsRowUI : MonoBehaviour {
 
 		Player currentPlayer = trainerModuleScript.gameController.masterTrainer.PlayerList[trainerModuleScript.gameController.masterTrainer.CurPlayer-1];
 
-		sliderOptionChannel.value = trainerMiniGameScript.pendingMiniGameManager.miniGameInstance.gameOptionsList[optionsListIndex].channelValue[0];
-		pendingOptionValue = trainerMiniGameScript.pendingMiniGameManager.miniGameInstance.gameOptionsList[optionsListIndex].channelValue[0];
+		sliderOptionChannel.value = trainerMiniGameScript.pendingMiniGameSettings.gameOptionsList[optionsListIndex].channelValue[0];
+		pendingOptionValue = trainerMiniGameScript.pendingMiniGameSettings.gameOptionsList[optionsListIndex].channelValue[0];
 		pendingUpdateFromData = true;
 
-		DebugBot.DebugFunctionCall("TMiniGameOptionsRowUI; InitializePanelWithTrainerData(); pend: " + pendingOptionValue.ToString() + ", val: " + sliderOptionChannel.value.ToString() + ", channel: " + trainerMiniGameScript.pendingMiniGameManager.miniGameInstance.gameOptionsList[optionsListIndex].channelValue[0].ToString(), debugFunctionCalls);
+		DebugBot.DebugFunctionCall("TMiniGameOptionsRowUI; InitializePanelWithTrainerData(); pend: " + pendingOptionValue.ToString() + ", val: " + sliderOptionChannel.value.ToString() + ", channel: " + trainerMiniGameScript.pendingMiniGameSettings.gameOptionsList[optionsListIndex].channelValue[0].ToString(), debugFunctionCalls);
 		UpdateUIWithCurrentData();
 	}
 	
@@ -50,11 +50,11 @@ public class TrainerMiniGameOptionsRowUI : MonoBehaviour {
 		// Changing Button Displays !!
 		Player currentPlayer = trainerModuleScript.gameController.masterTrainer.PlayerList[trainerModuleScript.gameController.masterTrainer.CurPlayer-1];
 
-		sliderOptionChannel.minValue = trainerMiniGameScript.pendingMiniGameManager.miniGameInstance.gameOptionsList[optionsListIndex].minValue;
-		sliderOptionChannel.maxValue = trainerMiniGameScript.pendingMiniGameManager.miniGameInstance.gameOptionsList[optionsListIndex].maxValue;
+		sliderOptionChannel.minValue = trainerMiniGameScript.pendingMiniGameSettings.gameOptionsList[optionsListIndex].minValue;
+		sliderOptionChannel.maxValue = trainerMiniGameScript.pendingMiniGameSettings.gameOptionsList[optionsListIndex].maxValue;
 		sliderOptionChannel.value = pendingOptionValue;
-		textOptionName.text = trainerMiniGameScript.pendingMiniGameManager.miniGameInstance.gameOptionsList[optionsListIndex].channelName; // set display name
-		textOptionValue.text = trainerMiniGameScript.pendingMiniGameManager.miniGameInstance.gameOptionsList[optionsListIndex].channelValue[0].ToString(); // set value display
+		textOptionName.text = trainerMiniGameScript.pendingMiniGameSettings.gameOptionsList[optionsListIndex].channelName; // set display name
+		textOptionValue.text = trainerMiniGameScript.pendingMiniGameSettings.gameOptionsList[optionsListIndex].channelValue[0].ToString(); // set value display
 
 		//DebugBot.DebugFunctionCall("TMiniGameOptionsRowUI; UpdateUIElementStates(); " + textOutputSourceName.text.ToString(), debugFunctionCalls);
 	}
@@ -77,7 +77,7 @@ public class TrainerMiniGameOptionsRowUI : MonoBehaviour {
 
 		}
 		pendingOptionValue = val;
-		trainerMiniGameScript.pendingMiniGameManager.miniGameInstance.gameOptionsList[optionsListIndex].channelValue[0] = pendingOptionValue;
+		trainerMiniGameScript.pendingMiniGameSettings.gameOptionsList[optionsListIndex].channelValue[0] = pendingOptionValue;
 		trainerMiniGameScript.valuesChanged = true;
 		trainerMiniGameScript.UpdateUIWithCurrentData();
 		UpdateUIWithCurrentData();			

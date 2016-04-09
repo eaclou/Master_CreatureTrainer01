@@ -11,8 +11,6 @@ public class BrainANN_FF_Layers_A2A : BrainBase {
 	public int numHiddenLayers = 0;
 	public int[] numNodesEachLayer;
 
-
-
 	// Layer Count doesn't include Input Layer, since it's simply a buffer that is not manipulated
 	private int layerCount;  // number of 'real' layers (excluding input layer)
 	private int inputSize;  // the number of input layer nodes

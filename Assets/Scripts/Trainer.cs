@@ -104,12 +104,16 @@ public class Trainer {
 
 	public bool betweenGenerations = true;
 
-	#endregion
+
+    // MOVE THIS LATER!!!
+    public GameObject brainNetworkGO;
+    public BrainNetworkVisualizer networkVisualizer;
+    #endregion
 
 
 
-	// Constructor Method
-	public Trainer() {
+    // Constructor Method
+    public Trainer() {
 		DebugBot.DebugFunctionCall("Trainer; Trainer() Constructor!; ", debugFunctionCalls);
 		//CheckPanelApplyCriteria();
 		InitializePlayerList();
@@ -309,8 +313,10 @@ public class Trainer {
                         agentScores01[a] += score01 * weightMultiplier;
                     }
 
-                    //Update all-time records:
-                    if(playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].totalRawScore < playerList[p].dataManager.recordScoresTrialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].lowestScore) {
+                    // Divide total scores by number of game rounds to stay normalized:
+                    playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].totalRawScore /= playerList[p].masterTrialsList[trialIndex].numberOfPlays;
+                    //Update all-time records:                    
+                    if (playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].totalRawScore < playerList[p].dataManager.recordScoresTrialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].lowestScore) {
                         playerList[p].dataManager.recordScoresTrialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].lowestScore = playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].totalRawScore;
                     }
                     if (playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].totalRawScore > playerList[p].dataManager.recordScoresTrialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].highestScore) {
@@ -377,10 +383,33 @@ public class Trainer {
             
             //Debug.Log (agentFitnessTotals);
             playerList[p].graphKing.BuildTexturesFitnessPerGen(playerList[p]);
-			playerList[p].graphKing.BuildTexturesHistoryPerGen(playerList[p]);
+			//playerList[p].graphKing.BuildTexturesHistoryPerGen(playerList[p]);
 		}
 	}
 	#endregion
+
+    public void BuildBrainMesh(BrainNEAT brain) {
+        MiniGameManager currentGameManager = PlayerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].miniGameManager;
+        if (brainNetworkGO == null) {
+            brainNetworkGO = new GameObject("brainNetworkGO");
+            brainNetworkGO.AddComponent<MeshFilter>();
+            
+            Material brainNetworkMat = new Material(Shader.Find("Custom/SimpleBrainNetworkShader"));
+            brainNetworkGO.AddComponent<MeshRenderer>().material = brainNetworkMat;
+            
+            networkVisualizer = brainNetworkGO.AddComponent<BrainNetworkVisualizer>();
+            
+            if (currentGameManager.miniGameInstance.critterBeingTested != null) {
+                networkVisualizer.sourceCritter = currentGameManager.miniGameInstance.critterBeingTested;
+            }
+            
+            //currentGameManager.miniGameInstance.critterBeingTested.critterSegmentMaterial.SetTexture("_NeuronPosTex", networkVisualizer.neuronPositionsTexture);
+        }
+        MiniGameCritterWalkBasic minigame = (MiniGameCritterWalkBasic)currentGameManager.miniGameInstance as MiniGameCritterWalkBasic;
+        networkVisualizer.InitShaderTexture(brain);
+        minigame.SetShaderTextures(networkVisualizer);
+        brainNetworkGO.GetComponent<MeshFilter>().sharedMesh = networkVisualizer.BuildNewMesh(brain);
+    }
 
 	private void UpdatePlayingState() {  // increments current state variables, keeping track of when each should roll-over into the next round
 		//Debug.Log ("UpdatePlayingState() playingCurGameStep: " + playingCurMiniGameTimeStep.ToString());
@@ -411,7 +440,9 @@ public class Trainer {
 				playingCurTrialRound = 0;
 				playingCurAgent++;  // Move on to next agent
 
-				if(playingCurAgent >= playingNumAgents) {
+                
+
+                if (playingCurAgent >= playingNumAgents) {
 					playingCurAgent = 0;
 					playingCurPlayer++;  // Now that the current player has changed, update how many trial rounds for new player
 					//DebugBot.DebugFunctionCall("Trainer; UpdatePlayingState; PLAYERS!!: " + playingNumPlayers.ToString(), true);
@@ -458,7 +489,8 @@ public class Trainer {
 					if(!fastModeOn) {
 						// UPDATE texture for current agent brain diagram with genome for new agent
 						playerList[playingCurPlayer].graphKing.BuildTexturesCurAgentPerAgent(playerList[playingCurPlayer], playingCurAgent);
-					}
+                        
+                    }
 					UpdatePlayingNumTimeSteps();
 				}
 			}
@@ -507,7 +539,7 @@ public class Trainer {
                                       // Send gameStateData (InputChannels List) through inputArray to the current Agent's Brain instance.
         //Debug.Log("CalculateOneStep() Trainer: " + playingCurMiniGameTimeStep.ToString());
         // v v v TO BE REPLACED EVENTUALLY!!!
-        BrainBase currentBrain = PlayerList[playingCurPlayer].masterPopulation.masterAgentArray[playingCurAgent].brain;  // <-- to help readability
+        BrainNEAT currentBrain = PlayerList[playingCurPlayer].masterPopulation.masterAgentArray[playingCurAgent].brain;  // <-- to help readability
 		MiniGameManager currentGameManager = PlayerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].miniGameManager;  // <-- to help readability
 		Agent curAgent = PlayerList[playingCurPlayer].masterPopulation.masterAgentArray[playingCurAgent];
         // DIG INTO THIS -- see where it is lost on the Agent
@@ -522,6 +554,8 @@ public class Trainer {
 			//currentGameManager.miniGameInstance.DisablePhysicsGamePieceComponents();
 			currentGameManager.miniGameInstance.Reset(); // <-- OLD PLACEMENT
             currentGameManager.SetInputOutputArrays();
+                       
+            BuildBrainMesh(playerList[playingCurPlayer].masterPopulation.masterAgentArray[playingCurAgent].brain);
             //currentGameManager.miniGameInstance.SetPhysicsGamePieceTransformsFromData();  // set the PhysX gamePieces based on gameData
             //currentGameManager.miniGameInstance.EnablePhysicsGamePieceComponents(); // create RigidBody and HingeJoint etc. components on the empty GameObjects
             //Debug.Log("CalculateOneStep()Trainer AFTER: " + playerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].miniGameManager.miniGameInstance.agentBodyBeingTested.creatureBodySegmentGenomeList[0].addOn1.ToString());
@@ -552,6 +586,10 @@ public class Trainer {
             //Debug.Log("CalculateOneStep() waitingForReset");
             currentGameManager.miniGameInstance.Reset();
             currentGameManager.SetInputOutputArrays();
+            if (currentGameManager.miniGameInstance.critterBeingTested != null) {
+                networkVisualizer.sourceCritter = currentGameManager.miniGameInstance.critterBeingTested;
+            }
+            BuildBrainMesh(playerList[playingCurPlayer].masterPopulation.masterAgentArray[playingCurAgent].brain);
         }
         else {
             if (currentGameManager.miniGameInstance.gameCleared) {
@@ -594,6 +632,17 @@ public class Trainer {
                         currentBrain.BrainMasterFunction(ref currentGameManager.brainInput, ref currentGameManager.brainOutput);
                         // Run the game for one timeStep: (Note that this will only modify non-physX variables -- the actual movement and physX sim happens just afterward -- so keep that in mind)
                         currentGameManager.miniGameInstance.Tick();
+                        //if (currentGameManager.miniGameInstance.critterBeingTested != null) {
+                        networkVisualizer.sourceCritter = currentGameManager.miniGameInstance.critterBeingTested;
+                        networkVisualizer.SetNeuronSegmentPositions(currentBrain);
+                        //}
+                        networkVisualizer.UpdateVertexColors(currentBrain);
+                        networkVisualizer.MoveNeurons(currentBrain, 1);
+                        networkVisualizer.UpdateNodeVertexPositionsSphere(currentBrain);
+                        networkVisualizer.UpdateConnectionVertexPositionsBezier(currentBrain);
+                        //MiniGameCritterWalkBasic minigame = (MiniGameCritterWalkBasic)currentGameManager.miniGameInstance as MiniGameCritterWalkBasic;
+                        //networkVisualizer.InitShaderTexture(brain);
+                        //minigame.SetShaderTextures(networkVisualizer);
 
                         if (false) {  // if( playbackSpeed is > some threshold value...
                                       // If it's running too fast, turn off gamePiece render components, certain graphs
@@ -601,7 +650,7 @@ public class Trainer {
                         }
                         else {
                             // turn on Visualizations and graphs:  // REVISIT THIS!!!!
-                            playerList[playingCurPlayer].graphKing.BuildTexturesCurAgentPerTick(playerList[playingCurPlayer], playerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].miniGameManager, playingCurAgent);
+                            //playerList[playingCurPlayer].graphKing.BuildTexturesCurAgentPerTick(playerList[playingCurPlayer], playerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].miniGameManager, playingCurAgent);
                         }
                         //}
                     }

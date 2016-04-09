@@ -13,8 +13,9 @@ public class MiniGameBase {
 	public List<GameOptionChannel> gameOptionsList;
 
 	public CritterGenome agentBodyBeingTested; // !!!!! RE-EVALUATE if instead, Trainer should pass agent into Reset() and Tick() functions, rather than storing a ref
+    public Critter critterBeingTested;
 
-	public bool gameEndStateReached = false;
+    public bool gameEndStateReached = false;
 	public bool piecesBuilt = false;
 	public bool gameInitialized = false;
 	public bool gameTicked = false;

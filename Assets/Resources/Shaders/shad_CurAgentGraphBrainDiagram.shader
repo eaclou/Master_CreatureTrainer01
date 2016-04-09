@@ -290,7 +290,7 @@
 				//}
 				
 				
-				//return float4(0.5, 0.5, 0.5, 1.0);
+				return float4(0.33, 0.5, 0.45, 1.0);
 				return finalColor;
 			}
 		ENDCG

@@ -82,7 +82,7 @@ public class TheGraphKing {
 
 	public void BuildTexturesCurAgentPerAgent(Player player, int agentIndex) {
 		DataManager dataManager = player.dataManager;
-		BuildTexturesCurAgentBrainDiagramAgent(player, agentIndex);
+		//BuildTexturesCurAgentBrainDiagramAgent(player, agentIndex);
 	}
 
 	#region fitness graph methods
@@ -191,8 +191,8 @@ public class TheGraphKing {
 	public void BuildTexturesHistoryAvgGenomes(DataManager dataManager) {
 		int texWidth;
 		int numGens = dataManager.generationDataList.Count;
-		int biasLength = dataManager.generationDataList[0].genAvgGenome.genomeBiases.Length;
-		int weightLength = dataManager.generationDataList[0].genAvgGenome.genomeWeights.Length;
+        int biasLength = 2; // dataManager.generationDataList[0].genAvgGenome.genomeBiases.Length;
+        int weightLength = 2; // dataManager.generationDataList[0].genAvgGenome.genomeWeights.Length;
 		int texHeight = biasLength + weightLength;
 
 		float aspectRatio = (float)numGens/(float)texHeight;
@@ -207,12 +207,12 @@ public class TheGraphKing {
 		for(int x = 0; x < texWidth; x++) { 
 			int genIndex = Mathf.RoundToInt(((float)x / (float)texWidth) * numGens);
 			for(int b = 0; b < biasLength; b++) {
-				float pixValueRaw = dataManager.generationDataList[genIndex].genAvgGenome.genomeBiases[b];
+                float pixValueRaw = 0f; // dataManager.generationDataList[genIndex].genAvgGenome.genomeBiases[b];
 				pixValueRaw = (pixValueRaw + 5f) / 10f; // get in 0-1 range
 				texHistoryAvgGenomes.SetPixel(x, b, new Color(pixValueRaw, 0f, 0f));
 			}
 			for(int w = 0; w < weightLength; w++) {
-				float pixValueRaw = dataManager.generationDataList[genIndex].genAvgGenome.genomeWeights[w];
+                float pixValueRaw = 0f; // dataManager.generationDataList[genIndex].genAvgGenome.genomeWeights[w];
 				pixValueRaw = (pixValueRaw + 5f) / 10f; // get in 0-1 range
 				texHistoryAvgGenomes.SetPixel(x, w+biasLength, new Color(pixValueRaw, 0f, 0f));
 			}
@@ -272,8 +272,8 @@ public class TheGraphKing {
 					pixValueRaw = (miniGameManager.brainOutput[x][0] + 1f) * 0.5f; // normalize to 0-1 range
 				}
 				else {  // hidden layer
-					//pixValueRaw = (player.masterPopulation.masterAgentArray[agentIndex].brain.layerOutput[l][x] + 1f) * 0.5f; // normalize to 0-1 range
-					pixValueRaw = (player.masterPopulation.masterAgentArray[agentIndex].brain.layerOutput[l-1][x] + 1f) * 0.5f; // normalize to 0-1 range
+                        //pixValueRaw = (player.masterPopulation.masterAgentArray[agentIndex].brain.layerOutput[l][x] + 1f) * 0.5f; // normalize to 0-1 range
+                    pixValueRaw = 0f; // (player.masterPopulation.masterAgentArray[agentIndex].brain.layerOutput[l-1][x] + 1f) * 0.5f; // normalize to 0-1 range
 				}
 				texCurAgentBrainDiagramTick.SetPixel(linearIndex, 0, new Color(pixValueRaw, ((float)l + 1f)/(float)layerSizes.Length, ((float)x + 1f)/(float)layerSizes[l]));
 				// R: node value,  G: inverse layer index,  B: inverse node index

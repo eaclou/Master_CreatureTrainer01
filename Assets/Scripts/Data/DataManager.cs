@@ -98,8 +98,8 @@ public class DataManager {
             }
 
             // AvgGenome:
-            // Calculate Generation average genome:
-            Genome avgGenome = new Genome();
+            // Calculate Generation average genome:  // BROKEN BECAUSE USING NEW GENOMES!!!
+            /*Genome avgGenome = new Genome();
             avgGenome.genomeBiases = new float[playerRef.masterPopulation.masterAgentArray[0].genome.genomeBiases.Length];
             avgGenome.genomeWeights = new float[playerRef.masterPopulation.masterAgentArray[0].genome.genomeWeights.Length];
             avgGenome.ZeroGenome(); // set all values to 0f;
@@ -114,7 +114,7 @@ public class DataManager {
                 }
             }
             // Save the genome values to this generation Data:
-            newGenerationData.genAvgGenome = avgGenome;
+            newGenerationData.genAvgGenome = avgGenome;*/
             //newGenerationData.genAvgGenome.genomeBiases = avgGenome.genomeBiases;
             //newGenerationData.genAvgGenome.genomeWeights = avgGenome.genomeWeights;
 

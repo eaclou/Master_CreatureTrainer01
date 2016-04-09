@@ -39,13 +39,14 @@ public class TrainerMiniGameUI : MonoBehaviour {
 	private Population populationRef;
 
 	//public MiniGame.MiniGameType pendingMiniGameType;
-	public MiniGameManager pendingMiniGameManager;
+	public MiniGameManager.MiniGameType pendingMiniGameType = MiniGameManager.MiniGameType.None;
+    public MiniGameSettingsBase pendingMiniGameSettings;
 	
 	// UI Settings:	
 	public bool panelActive = false;  // requires valid population
-	public bool inputsPanelOn = true;
+	public bool inputsPanelOn = false;
 	public bool outputsPanelOn = false;
-	public bool optionsPanelOn = false;
+	public bool optionsPanelOn = true;
 
 	public bool applyPressed = false;
 	public bool valuesChanged = false;
@@ -65,33 +66,36 @@ public class TrainerMiniGameUI : MonoBehaviour {
 
 		Player currentPlayer = trainerModuleScript.gameController.masterTrainer.PlayerList[trainerModuleScript.gameController.masterTrainer.CurPlayer-1];
 		// SET PENDING values from trainer data:
-		if(pendingMiniGameManager == null) {
+		/*if(pendingMiniGameManager == null) {
 			DebugBot.DebugFunctionCall("TMiniGameUI; InitializePanelWithTrainerData(); pendingMiniGameManager == null", debugFunctionCalls);
 			pendingMiniGameManager = new MiniGameManager(currentPlayer);
 
 			InitializePanelInputList();
 			InitializePanelOutputList();
 			InitializePanelOptionsList();
-		}
+		}*/
 
 		// if game-type has changed -- this should only happen when clicking CANCEL ?  -- as Apply sets data from pendingData
-		if(currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].miniGameManager.gameType != pendingMiniGameManager.gameType) { 
+		if(currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].miniGameManager.gameType != pendingMiniGameType) { 
 			DebugBot.DebugFunctionCall("TMiniGameUI; InitializePanelWithTrainerData(); miniGameManager.gameType != pendingMiniGameManager.gameType", debugFunctionCalls);
-			pendingMiniGameManager.SetMiniGameType(currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].miniGameManager.gameType);
+			//pendingMiniGameManager.SetMiniGameType(currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].miniGameManager.gameType);
 		}
-		List<BrainInputChannel> dataInputChannelsList = currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].miniGameManager.miniGameInstance.inputChannelsList;
-		if(dataInputChannelsList.Count != 0) {
-			DebugBot.DebugFunctionCall("TMiniGameUI; InitializePanelWithTrainerData(); dataInputChannelsList[0].on = " + currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].miniGameManager.miniGameInstance.inputChannelsList[0].on, debugFunctionCalls);
-		}
-		CopyInputChannelsList(dataInputChannelsList, pendingMiniGameManager.miniGameInstance.inputChannelsList);
-		InitializePanelInputList();	
-		List<BrainOutputChannel> dataOutputChannelList = currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].miniGameManager.miniGameInstance.outputChannelsList;
-		CopyOutputChannelsList(dataOutputChannelList, pendingMiniGameManager.miniGameInstance.outputChannelsList);
-		InitializePanelOutputList();
+		//List<BrainInputChannel> dataInputChannelsList = currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].miniGameManager.miniGameInstance.inputChannelsList;
+		//if(dataInputChannelsList.Count != 0) {
+		//	DebugBot.DebugFunctionCall("TMiniGameUI; InitializePanelWithTrainerData(); dataInputChannelsList[0].on = " + currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].miniGameManager.miniGameInstance.inputChannelsList[0].on, debugFunctionCalls);
+		//}
+		//CopyInputChannelsList(dataInputChannelsList, pendingMiniGameManager.miniGameInstance.inputChannelsList);
+		//InitializePanelInputList();	
+		//List<BrainOutputChannel> dataOutputChannelList = currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].miniGameManager.miniGameInstance.outputChannelsList;
+		//CopyOutputChannelsList(dataOutputChannelList, pendingMiniGameManager.miniGameInstance.outputChannelsList);
+		//InitializePanelOutputList();
 
-		InitializePanelOptionsList();
+		
 
-		currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].miniGameManager.SetInputOutputArrays();
+        if(currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].miniGameManager.gameType != MiniGameManager.MiniGameType.None) {
+            //currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].miniGameManager.SetInputOutputArrays();
+            InitializePanelOptionsList();
+        }		
 
 		if(!dropDownPopulated) {  // So it only creates buttons on startup
 			foreach (string type in System.Enum.GetNames(typeof(MiniGameManager.MiniGameType))) {
@@ -176,11 +180,11 @@ public class TrainerMiniGameUI : MonoBehaviour {
 		}
 
 		// Choose Mini-game Drop-down:
-		if(pendingMiniGameManager.gameType == MiniGameManager.MiniGameType.None) {
+		if(pendingMiniGameType == MiniGameManager.MiniGameType.None) {
 			textButtonChooseMiniGame.text = "Choose Mini-Game Type (Drop-Down)";
 		}
 		else {
-			textButtonChooseMiniGame.text = pendingMiniGameManager.gameType.ToString();
+			textButtonChooseMiniGame.text = pendingMiniGameType.ToString();
 		}
 		// Background Color for pending changes:
 		if(applyPressed) {
@@ -194,15 +198,15 @@ public class TrainerMiniGameUI : MonoBehaviour {
 	public void UpdateUIWithCurrentData() {
 		DebugBot.DebugFunctionCall("TMiniGameUI; UpdateUIWithCurrentData(); ", debugFunctionCalls);
 		//pendingMiniGameManager.SetMiniGameType(pendingMiniGameManager.gameType); 
-		UpdateSelectedChannelCounts();
-		textInputSources.text = "Input Sources: " + pendingNumSelectedInputs.ToString() + " / " + pendingMaxSelectedInputs.ToString();
-		textOutputActions.text = "Output Actions: " + pendingNumSelectedOutputs.ToString() + " / " + pendingMaxSelectedOutputs.ToString();
+		//UpdateSelectedChannelCounts();
+		//textInputSources.text = "Input Sources: " + pendingNumSelectedInputs.ToString() + " / " + pendingMaxSelectedInputs.ToString();
+		//textOutputActions.text = "Output Actions: " + pendingNumSelectedOutputs.ToString() + " / " + pendingMaxSelectedOutputs.ToString();
 
 		CheckActivationCriteria();
 		UpdateUIElementStates();
 	}
 
-	private void UpdateSelectedChannelCounts() {
+	/*private void UpdateSelectedChannelCounts() {
 		Player currentPlayer = trainerModuleScript.gameController.masterTrainer.PlayerList[trainerModuleScript.gameController.masterTrainer.CurPlayer-1];
 		// INPUTS!!
 		pendingNumSelectedInputs = 0;
@@ -220,7 +224,7 @@ public class TrainerMiniGameUI : MonoBehaviour {
 				pendingNumSelectedOutputs++;
 			}
 		}
-	}
+	}*/
 
 	public void SetTrainerDataFromUIApply() {
 		DebugBot.DebugFunctionCall("TMiniGameUI; SetTrainerDataFromUIApply(); ", debugFunctionCalls);
@@ -228,7 +232,7 @@ public class TrainerMiniGameUI : MonoBehaviour {
 		// IF this slot used to be empty (None):
 		int numberOfTrials = currentPlayer.masterTrialsList.Count;
 		if(currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].miniGameManager.gameType == MiniGameManager.MiniGameType.None) {
-			if(pendingMiniGameManager.gameType != MiniGameManager.MiniGameType.None) {  // NEW ADD TRIAL button/row created if this slot went from none-->something !!!!!!
+			if(pendingMiniGameType != MiniGameManager.MiniGameType.None) {  // NEW ADD TRIAL button/row created if this slot went from none-->something !!!!!!
 				if(currentPlayer.currentTrialForEdit == (numberOfTrials - 1)) {  // If this is the last item in the Trials array, add a new one with None
 					// THIS WILL NEED to eventually handle more than 1 player, loop through playersList or store that info somewhere
 					currentPlayer.AddNewTrialRow();
@@ -237,9 +241,9 @@ public class TrainerMiniGameUI : MonoBehaviour {
 			}
 		}
 		// If gameType is changing:
-		if(currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].miniGameManager.gameType != pendingMiniGameManager.gameType) { // if game-type has changed
+		if(currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].miniGameManager.gameType != pendingMiniGameType) { // if game-type has changed
 			// If GameType is changing AND changing to None:
-			if(pendingMiniGameManager.gameType == MiniGameManager.MiniGameType.None) {  // NEW ADD TRIAL button/row created if this slot went from none-->something !!!!!!
+			if(pendingMiniGameType == MiniGameManager.MiniGameType.None) { 
 				if(currentPlayer.currentTrialForEdit == (numberOfTrials - 2)) {  // If this is the second-to-last item in the Trials array, remove lastIndex
 					// THIS WILL NEED to eventually handle more than 1 player, loop through playersList or store that info somewhere
 					currentPlayer.RemoveLastTrialRow();
@@ -248,16 +252,21 @@ public class TrainerMiniGameUI : MonoBehaviour {
 					}					
 				}
 			}
-			currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].miniGameManager.SetMiniGameType(pendingMiniGameManager.gameType); // Access the MiniGameManager object in the Player's TrialsList Trial and change GameType
-			currentPlayer.graphKing.BuildTexturesCurAgentPerTick(currentPlayer, currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].miniGameManager, 0);
+            
+			currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].miniGameManager.SetMiniGameType(pendingMiniGameType, pendingMiniGameSettings); // Access the MiniGameManager object in the Player's TrialsList Trial and change GameType
+            
+            //currentPlayer.graphKing.BuildTexturesCurAgentPerTick(currentPlayer, currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].miniGameManager, 0);
 		}
 
 		trainerModuleScript.gameController.masterTrainer.UpdatePlayingNumTrials();
 		trainerModuleScript.panelMenuBarScript.InitializePanelWithTrainerData(); // Update menu-Bar
 
-		CopyInputChannelsList(pendingMiniGameManager.miniGameInstance.inputChannelsList, currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].miniGameManager.miniGameInstance.inputChannelsList);
-		CopyOutputChannelsList(pendingMiniGameManager.miniGameInstance.outputChannelsList, currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].miniGameManager.miniGameInstance.outputChannelsList);
-		CopyOptionsChannelsList(pendingMiniGameManager.miniGameInstance.gameOptionsList, currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].miniGameManager.miniGameInstance.gameOptionsList);
+        //Debug.Log("currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].miniGameManager.SetMiniGameType(pendingMiniGameManager.gameType);");
+        //currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].miniGameManager.SetMiniGameType(pendingMiniGameManager.gameType); // Access the MiniGameManager object in the Player's TrialsList Trial and change GameType
+
+        //CopyInputChannelsList(pendingMiniGameManager.miniGameInstance.inputChannelsList, currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].miniGameManager.miniGameInstance.inputChannelsList);
+        //CopyOutputChannelsList(pendingMiniGameManager.miniGameInstance.outputChannelsList, currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].miniGameManager.miniGameInstance.outputChannelsList);
+        //CopyOptionsChannelsList(pendingMiniGameManager.miniGameInstance.gameOptionsList, currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].miniGameManager.miniGameInstance.gameOptionsList);
 
 		InitializePanelWithTrainerData();
 	}
@@ -272,13 +281,15 @@ public class TrainerMiniGameUI : MonoBehaviour {
 			MiniGameManager.MiniGameType parsed_enum = (MiniGameManager.MiniGameType)System.Enum.Parse( typeof( MiniGameManager.MiniGameType ), gameType );
 
 			Trial dataMiniGameTrial = currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit];
-			if(pendingMiniGameManager.gameType != parsed_enum) { // if the values are different:
-				pendingMiniGameManager.gameType = parsed_enum;
+			if(pendingMiniGameType != parsed_enum) { // if the values are different:
+				pendingMiniGameType = parsed_enum;
 				valuesChanged = true;
-				pendingMiniGameManager.SetMiniGameType(pendingMiniGameManager.gameType); 
+                //pendingMiniGameManager.SetMiniGameType(pendingMiniGameManager.gameType); 
+                pendingMiniGameSettings = new MiniGameCritterWalkBasicSettings();
+                pendingMiniGameSettings.InitGameOptionsList();
 				// Inputs / Outputs button toggles
-				InitializePanelInputList();
-				InitializePanelOutputList();
+				//InitializePanelInputList();
+				//InitializePanelOutputList();
 				InitializePanelOptionsList();
 				//DebugBot.DebugFunctionCall("TMiniGameUI; VALUES CHANGED", debugFunctionCalls);
 			}			 
@@ -287,7 +298,8 @@ public class TrainerMiniGameUI : MonoBehaviour {
 		UpdateUIWithCurrentData();
 	}
 
-	public void InitializePanelInputList() {
+    // These will gradually move more into the sphere of the actual Agent/Population's Brains, rather than being a part of the minigame options
+	/*public void InitializePanelInputList() {
 		Player currentPlayer = trainerModuleScript.gameController.masterTrainer.PlayerList[trainerModuleScript.gameController.masterTrainer.CurPlayer-1];
 		DebugBot.DebugFunctionCall("TMiniGameUI; InitializePanelInputList(" + pendingMiniGameManager.miniGameInstance.inputChannelsList.Count.ToString() + "); ", debugFunctionCalls);
 		// CLEAR CURRENT LIST:
@@ -306,9 +318,9 @@ public class TrainerMiniGameUI : MonoBehaviour {
 			miniGameInputRowScript.InitializePanelWithTrainerData();
 			inputListRow.transform.SetParent(inputListTableSpace);
 		}
-	}
+	}*/
 
-	public void InitializePanelOutputList() {
+	/*public void InitializePanelOutputList() {
 		Player currentPlayer = trainerModuleScript.gameController.masterTrainer.PlayerList[trainerModuleScript.gameController.masterTrainer.CurPlayer-1];
 		// CLEAR CURRENT LIST:
 		foreach (Transform child in outputListTableSpace) {
@@ -325,7 +337,7 @@ public class TrainerMiniGameUI : MonoBehaviour {
 			miniGameOutputRowScript.InitializePanelWithTrainerData();
 			outputListRow.transform.SetParent(outputListTableSpace);
 		}
-	}
+	}*/
 
 	public void InitializePanelOptionsList() {
 		Player currentPlayer = trainerModuleScript.gameController.masterTrainer.PlayerList[trainerModuleScript.gameController.masterTrainer.CurPlayer-1];
@@ -335,7 +347,7 @@ public class TrainerMiniGameUI : MonoBehaviour {
 		}
 		//pendingNumSelectedOutputs = 0;
 		//pendingMaxSelectedOutputs = currentPlayer.masterPopulation.numOutputNodes;
-		for(int i = 0; i < pendingMiniGameManager.miniGameInstance.gameOptionsList.Count; i++) {
+		for(int i = 0; i < pendingMiniGameSettings.gameOptionsList.Count; i++) {
 			GameObject optionsListRow = (GameObject)Instantiate (panelMiniGameOptionsRowPrefab);
 			TrainerMiniGameOptionsRowUI miniGameOptionsRowScript = optionsListRow.GetComponent<TrainerMiniGameOptionsRowUI>();
 			miniGameOptionsRowScript.optionsListIndex = i; // CHANGE LATER!!!!!!!
@@ -373,7 +385,7 @@ public class TrainerMiniGameUI : MonoBehaviour {
 		UpdateUIWithCurrentData();
 	}
 
-	public void ClickInputToggleSelectAll(bool toggle) {
+	/*public void ClickInputToggleSelectAll(bool toggle) {
 		DebugBot.DebugFunctionCall("TMiniGameUI; ClickInputToggleSelectAll(); ", debugFunctionCalls);
 
 		if(toggle) {  // if turning ON:
@@ -443,7 +455,7 @@ public class TrainerMiniGameUI : MonoBehaviour {
 		}
 		InitializePanelOutputList();
 		UpdateUIWithCurrentData();
-	}
+	}*/
 	
 	public void ClickApply() {
 		DebugBot.DebugFunctionCall("TMiniGameUI; ClickApply(); ", debugFunctionCalls);

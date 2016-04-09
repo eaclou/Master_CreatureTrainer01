@@ -7,8 +7,9 @@ public class Agent {
 
 	public float fitnessScore;
 
-	public BrainBase brain; // This is where the magic happens
+	public BrainNEAT brain; // This is where the magic happens
 	public Genome genome; // encodes the brain network in long single-dimension arrays
+    public GenomeNEAT brainGenome;
 	public CritterGenome bodyGenome;  // encodes the body shape of the creature in a list of SegmentGenomes
 
 	// Constructor Methods:
@@ -16,16 +17,15 @@ public class Agent {
 		DebugBot.DebugFunctionCall("Agent; Agent() Constructor!; ", debugFunctionCalls);
 	}
 
-	public void InitializeRandomGenome(int[] layerSizes) {
-		//genome = new Genome(layerSizes); // instantiate a new random Genome
-		brain.InitializeRandomBrain(layerSizes);
+	public void InitializeRandomGenome(int numInputs, int numOutputs) {
+		brain.InitializeRandomBrain(numInputs, numOutputs);
 	}
 
-	//public void ApplyBrainSettings() {
-	//
-	//}
+    public void InitializeBlankGenome(int numInputs, int numOutputs) {
+        brain.InitializeBlankBrain(numInputs, numOutputs);
+    }
 
-	public Agent RefAgent() {
+    public Agent RefAgent() {
 		Agent agentRef = new Agent();
 		agentRef = this;
 		return agentRef;

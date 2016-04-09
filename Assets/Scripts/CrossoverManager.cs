@@ -7,12 +7,12 @@ public class CrossoverManager {
 	// SETTINGS:
 	public string tempName = "name!";
 
-	public float masterMutationRate = 0.025f;
-	public float maximumWeightMagnitude = 2.5f;
-	public float mutationDriftScale = 0.45f;
-	public float mutationRemoveLinkChance = 0.4f;
-	public float mutationAddLinkChance = 0f;
-	public float mutationFunctionChance = 0f;
+	public float masterMutationRate = 0.05f;
+	public float maximumWeightMagnitude = 2f;
+	public float mutationDriftScale = 0.75f;
+	public float mutationRemoveLinkChance = 0.1f;
+	public float mutationAddLinkChance = 0.5f;
+	public float mutationAddNodeChance = 0.2f; // temp?
 	public float mutationBodyChance = 0.5f;
 
 	public float maxBodyMutationFactor = 1.25f;
@@ -32,9 +32,7 @@ public class CrossoverManager {
 	public bool breedingByRank = true;
 	public bool breedingStochastic = false;
 	public bool breedingByRaffle = false;
-
-
-
+    
 	//empty constructor
 	public CrossoverManager() {
 
@@ -49,7 +47,7 @@ public class CrossoverManager {
 		mutationDriftScale = sourceManager.mutationDriftScale;
 		mutationRemoveLinkChance = sourceManager.mutationRemoveLinkChance;
 		mutationAddLinkChance = sourceManager.mutationAddLinkChance;
-		mutationFunctionChance = sourceManager.mutationFunctionChance;
+		mutationAddNodeChance = sourceManager.mutationAddNodeChance;
 
 		numSwapPositions = sourceManager.numSwapPositions;
 		numFactions = sourceManager.numFactions;
@@ -66,10 +64,6 @@ public class CrossoverManager {
 		breedingByRank = sourceManager.breedingByRank;
 		breedingStochastic = sourceManager.breedingStochastic;
 		breedingByRaffle = sourceManager.breedingByRaffle;
-	}
-
-	public void MakeRefToSourceCrossoverManager(CrossoverManager sourceManager) {
-		//this = sourceManager;
 	}
 
 	public void PerformCrossover(ref Population sourcePopulation) {
@@ -246,6 +240,13 @@ public class CrossoverManager {
 		}
 		return false;
 	}
+    public bool CheckForMutation(float rate) {
+        float rand = UnityEngine.Random.Range(0f, 1f);
+        if (rand < rate) {
+            return true;
+        }
+        return false;
+    }
 
 	public bool CheckForBodyMutation() {
 		float rand = UnityEngine.Random.Range(0f, 1f);
@@ -265,11 +266,6 @@ public class CrossoverManager {
 			newFloat = (sourceFloat * (1.0f - mutationDriftScale)) + 
 				(Gaussian.GetRandomGaussian()*maximumWeightMagnitude) * mutationDriftScale;
 		}
-		//tempBias1[b] = (genePool[i].genomeBiases[b] * (1.0 - mutationDriftScale)) + (MutateZeroBias(Gaussian.GetRandomGaussian()*maxPreyBias) * mutationDriftScale);
-		//double zeroRoll = rand.NextDouble();
-		//if(zeroRoll < mutationZeroBias) {
-		//	tempBias1[b] = 0;
-		//}
 		return newFloat;
 	}
 
@@ -289,7 +285,229 @@ public class CrossoverManager {
 
 	}
 
-	public Population BreedPopulation(ref Population sourcePopulation) {
+    public Population BreedPopulation(ref Population sourcePopulation) {
+        for (int m = 0; m < sourcePopulation.masterAgentArray.Length; m++) {
+            //sourcePopulation.masterAgentArray[m].brain.genome.PrintBiases("sourcePop " + sourcePopulation.masterAgentArray[m].fitnessScore.ToString() + ", " + m.ToString() + ", ");
+            //newPop.masterAgentArray[m].brain.genome.PrintBiases("newPop " + m.ToString() + ", ");
+        }
+        // rank sourcePop by fitness score // maybe do this as a method of Population class?
+        sourcePopulation.RankAgentArray();
+
+        // Create the Population that will hold the next Generation agentArray:
+        //Population newPopulation = new Population();
+        //newPopulation = sourcePopulation.CopyPopulationSettings();
+        Agent[] newAgentArray = new Agent[sourcePopulation.masterAgentArray.Length];
+
+        // Calculate total fitness score:
+        float totalScore = 0f;
+        if (survivalByRaffle) {
+            for (int a = 0; a < sourcePopulation.populationMaxSize; a++) { // iterate through all agents
+                totalScore += sourcePopulation.masterAgentArray[a].fitnessScore;
+            }
+        }
+
+        // Figure out How many Agents survive
+        int numSurvivors = Mathf.RoundToInt(survivalRate * (float)sourcePopulation.populationMaxSize);
+        //Depending on method, one at a time, select an Agent to survive until the max Number is reached
+        int newChildIndex = 0;
+        // For ( num Agents ) {
+        for (int i = 0; i < numSurvivors; i++) {
+            // If survival is by fitness score ranking:
+            if (survivalByRank) {
+                // Pop should already be ranked, so just traverse from top (best) to bottom (worst)
+                newAgentArray[newChildIndex] = sourcePopulation.masterAgentArray[newChildIndex];
+                newChildIndex++;
+            }
+            // if survival is completely random, as a control:
+            if (survivalStochastic) {
+                int randomAgent = UnityEngine.Random.Range(0, numSurvivors - 1);
+                // Set next newChild slot to a randomly-chosen agent within the survivor faction -- change to full random?
+                newAgentArray[newChildIndex] = sourcePopulation.masterAgentArray[randomAgent];
+                newChildIndex++;
+            }
+            // if survival is based on a fitness lottery:
+            if (survivalByRaffle) {  // Try when Fitness is normalized from 0-1
+                float randomSlicePosition = UnityEngine.Random.Range(0f, totalScore);
+                float accumulatedFitness = 0f;
+                for (int a = 0; a < sourcePopulation.populationMaxSize; a++) { // iterate through all agents
+                    accumulatedFitness += sourcePopulation.masterAgentArray[a].fitnessScore;
+                    // if accum fitness is on slicePosition, copy this Agent
+                    Debug.Log("NumSurvivors: " + numSurvivors.ToString() + ", Surviving Agent " + a.ToString() + ": AccumFitness: " + accumulatedFitness.ToString() + ", RafflePos: " + randomSlicePosition.ToString() + ", TotalScore: " + totalScore.ToString() + ", newChildIndex: " + newChildIndex.ToString());
+                    if (accumulatedFitness >= randomSlicePosition) {
+                        newAgentArray[newChildIndex] = sourcePopulation.masterAgentArray[a];
+                        newChildIndex++;
+                    }
+
+                }
+            }
+        }
+
+        // Figure out how many new agents must be created to fill up the new population:
+        int numNewChildAgents = sourcePopulation.populationMaxSize - numSurvivors;
+        int numEligibleBreederAgents = Mathf.RoundToInt(breedingRate * (float)sourcePopulation.populationMaxSize);
+        int currentRankIndex = 0;
+
+        float totalScoreBreeders = 0f;
+        if (breedingByRaffle) {  // calculate total fitness scores to determine lottery weights
+            for (int a = 0; a < numEligibleBreederAgents; a++) { // iterate through all agents
+                totalScoreBreeders += sourcePopulation.masterAgentArray[a].fitnessScore;
+            }
+        }
+
+        // Iterate over numAgentsToCreate :
+        int newChildrenCreated = 0;
+        while (newChildrenCreated < numNewChildAgents) {
+            //		Find how many parents random number btw min/max:
+            int numParentAgents = UnityEngine.Random.Range(minNumParents, maxNumParents);
+            int numChildAgents = 1; // defaults to one child, but:
+            if (numNewChildAgents - newChildrenCreated >= 2) {  // room for two more!
+                numChildAgents = 2;                
+            }
+
+            //Agent[] parentAgentsArray = new Agent[numParentAgents];
+            List<GeneNodeNEAT> parentNodeList = new List<GeneNodeNEAT>();
+            List<GeneLinkNEAT> parentLinkList = new List<GeneLinkNEAT>();
+            //float[][] parentAgentBiases = new float[numParentAgents][];
+            //float[][] parentAgentWeights = new float[numParentAgents][];
+
+            numParentAgents = 1; // CHANGE THIS WHEN IMPLEMENTING CROSSOVER!!!!!!!!!!!!!!!!!!!!##########################################
+            for (int p = 0; p < numParentAgents; p++) {
+                //		Iterate over numberOfParents :
+                //			Depending on method, select suitable agents' genome.Arrays until the numberOfPArents is reached, collect them in an array of arrays
+                Agent newParentAgent = new Agent();
+                // If breeding is by fitness score ranking:
+                if (breedingByRank) {
+                    // Pop should already be ranked, so just traverse from top (best) to bottom (worst) to select parentAgents
+                    if (currentRankIndex >= numEligibleBreederAgents) { // if current rank index is greater than the num of eligible breeders, then restart the index to 0;
+                        currentRankIndex = 0;
+                    }
+                    newParentAgent = sourcePopulation.masterAgentArray[currentRankIndex];
+                    //parentAgentsArray[p] = newParentAgent;
+                    parentNodeList = sourcePopulation.masterAgentArray[currentRankIndex].brainGenome.nodeNEATList;
+                    parentLinkList = sourcePopulation.masterAgentArray[currentRankIndex].brainGenome.linkNEATList;
+                    //parentAgentBiases[p] = sourcePopulation.masterAgentArray[currentRankIndex].genome.genomeBiases;
+                    //parentAgentWeights[p] = sourcePopulation.masterAgentArray[currentRankIndex].genome.genomeWeights;
+                    currentRankIndex++;
+                }
+                // if survival is completely random, as a control:
+                if (breedingStochastic) {
+                    int randomAgent = UnityEngine.Random.Range(0, numEligibleBreederAgents - 1); // check if minus 1 is needed
+                                                                                                 // Set next newChild slot to a completely randomly-chosen agent
+                    newParentAgent = sourcePopulation.masterAgentArray[randomAgent];
+                    //parentAgentsArray[p] = newParentAgent;
+                    parentNodeList = sourcePopulation.masterAgentArray[randomAgent].brainGenome.nodeNEATList;
+                    parentLinkList = sourcePopulation.masterAgentArray[randomAgent].brainGenome.linkNEATList;
+                    //parentAgentBiases[p] = sourcePopulation.masterAgentArray[randomAgent].genome.genomeBiases;
+                    //parentAgentWeights[p] = sourcePopulation.masterAgentArray[randomAgent].genome.genomeWeights;
+                    //parentBodyGenomes[p] = sourcePopulation.masterAgentArray[randomAgent].bodyGenome;
+                }
+                // if survival is based on a fitness lottery:
+                if (breedingByRaffle) {
+                    float randomSlicePosition = UnityEngine.Random.Range(0f, totalScoreBreeders);
+                    float accumulatedFitness = 0f;
+                    for (int a = 0; a < numEligibleBreederAgents; a++) { // iterate through all agents
+                        accumulatedFitness += sourcePopulation.masterAgentArray[a].fitnessScore;
+                        // if accum fitness is on slicePosition, copy this Agent
+                        Debug.Log("Breeding Agent " + a.ToString() + ": AccumFitness: " + accumulatedFitness.ToString() + ", RafflePos: " + randomSlicePosition.ToString() + ", totalScoreBreeders: " + totalScoreBreeders.ToString() + ", numEligibleBreederAgents: " + numEligibleBreederAgents.ToString());
+                        if (accumulatedFitness >= randomSlicePosition) {
+                            newParentAgent = sourcePopulation.masterAgentArray[a];
+                            //parentAgentsArray[p] = newParentAgent;
+                            parentNodeList = sourcePopulation.masterAgentArray[a].brainGenome.nodeNEATList;
+                            parentLinkList = sourcePopulation.masterAgentArray[a].brainGenome.linkNEATList;
+                            //parentAgentBiases[p] = sourcePopulation.masterAgentArray[a].genome.genomeBiases;
+                            //parentAgentWeights[p] = sourcePopulation.masterAgentArray[a].genome.genomeWeights;
+                            //parentBodyGenomes[p] = sourcePopulation.masterAgentArray[a].bodyGenome;
+                        }
+                    }
+                }
+            }
+            // Combine the genes in the parentArrays and return the specified number of children genomes
+            //		Pass that array of parentAgent genome.Arrays into the float-based MixFloatChromosomes() function,
+            //float[][] childAgentBiases = MixFloatChromosomes(parentAgentBiases, numChildAgents);
+            //float[][] childAgentWeights = MixFloatChromosomes(parentAgentWeights, numChildAgents);
+            //Agent[] newChildAgentsArray = new Agent[numChildAgents];
+            // BODY hack:
+            //CritterGenome[] childBodyGenomes = MixBodyChromosomes(parentBodyGenomes, numChildAgents);
+
+            //		It can return an Array of Arrays (of new childAgent genome.Arrays) 
+            //		Iterate over ChildArray.Length :  // how many newAgents created
+            for (int c = 0; c < numChildAgents; c++) { // for number of child Agents in floatArray[][]:
+                Agent newChildAgent = new Agent();
+                //newChildAgent = parentAgentsArray[0];
+                //newChildAgent.brainGenome.AddNewRandomLink();
+                //newChildAgent.brain.BuildBrainNetwork();
+                
+
+                List<GeneNodeNEAT> childNodeList = new List<GeneNodeNEAT>();
+                List<GeneLinkNEAT> childLinkList = new List<GeneLinkNEAT>();
+                Debug.Log("ChildNumber: " + c.ToString());
+                for(int i = 0; i < parentNodeList.Count; i++) {
+                    // iterate through all nodes in the parent List and copy them into fresh new geneNodes:
+                    GeneNodeNEAT clonedNode = new GeneNodeNEAT(parentNodeList[i].id, parentNodeList[i].nodeType);
+                    childNodeList.Add(clonedNode);
+                }
+                for(int j = 0; j < parentLinkList.Count; j++) {
+                    //same thing with connections
+                    GeneLinkNEAT clonedLink = new GeneLinkNEAT(parentLinkList[j].fromNodeID, parentLinkList[j].toNodeID, parentLinkList[j].weight, parentLinkList[j].enabled, parentLinkList[j].innov);
+                    childLinkList.Add(clonedLink);
+                }
+                // MUTATION:
+                //public float mutationAddLinkChance = 0f;
+                //public float mutationFunctionChance = 0f;
+                GenomeNEAT childGenome = new GenomeNEAT();
+                childGenome.nodeNEATList = childNodeList;
+                childGenome.linkNEATList = childLinkList;
+
+                for (int k = 0; k < childLinkList.Count; k++) {
+                    if (CheckForMutation(masterMutationRate)) {  // Weight Mutation!
+                        Debug.Log("Weight Mutation Link[" + k.ToString() + "] weight: " + childLinkList[k].weight.ToString() + ", mutate: " + MutateFloat(childLinkList[k].weight).ToString());
+                        childLinkList[k].weight = MutateFloat(childLinkList[k].weight);                        
+                    }                    
+                }
+                if(CheckForMutation(mutationAddLinkChance)) { // Adds new connection
+                    Debug.Log("Add Link Mutation Agent[" + newChildIndex.ToString() + "]");
+                    childGenome.AddNewRandomLink();
+                }
+                if(CheckForMutation(mutationAddNodeChance)) {   // Adds a new node
+                    Debug.Log("Add Node Mutation Agent[" + newChildIndex.ToString() + "]");
+                    childGenome.AddNewRandomNode();
+                }
+                /*for (int b = 0; b < sourcePopulation.masterAgentArray[0].genome.genomeBiases.Length; b++) {
+                    //Debug.Log ("ChildNumber: " + c.ToString() + ", BiasIndex: " + b.ToString() + ", biasValue: " + childAgentBiases[c][b].ToString () + ", newChildIndex: " + newChildIndex.ToString() + ", numNewChildren: " + numNewChildAgents.ToString() + ", numChildAgents: " + numChildAgents.ToString() + ", newChildrenCreated: " + newChildrenCreated.ToString());
+                    Agent newChildAgent = new Agent();
+                    newChildAgent = 
+                    newAgentArray[newChildIndex] = newChildAgent; // = childAgentBiases[c][b];
+                    // weights and functions and more!
+                }
+                for (int w = 0; w < sourcePopulation.masterAgentArray[0].genome.genomeWeights.Length; w++) {
+                    //Debug.Log ("ChildNumber: " + c.ToString() + ", BiasIndex: " + b.ToString() + ", biasValue: " + childAgentBiases[c][b].ToString () + ", newChildIndex: " + newChildIndex.ToString() + ", numNewChildren: " + numNewChildAgents.ToString() + ", numChildAgents: " + numChildAgents.ToString() + ", newChildrenCreated: " + newChildrenCreated.ToString());
+                    newAgentArray[newChildIndex].genome.genomeWeights[w] = childAgentWeights[c][w];
+                    // weights and functions and more!
+                }*/
+                // IMPORTANT!!!! v v v v v v
+                //newPopulation.masterAgentArray[newChildIndex].brain.SetBrainFromGenome(newPopulation.masterAgentArray[newChildIndex].genome);
+                
+                
+                newChildAgent.brainGenome = childGenome;
+                newChildAgent.brainGenome.nodeNEATList = childNodeList;
+                newChildAgent.brainGenome.linkNEATList = childLinkList;
+                BrainNEAT childBrain = new BrainNEAT(childGenome);
+                childBrain.BuildBrainNetwork();
+                newChildAgent.brain = childBrain;
+                //newChildAgent
+                newAgentArray[newChildIndex] = newChildAgent;
+
+                newChildIndex++;  // new child created!
+                newChildrenCreated++;
+            }
+
+        }
+        sourcePopulation.masterAgentArray = newAgentArray;
+
+        return sourcePopulation;
+    }
+
+    /*public Population BreedPopulation(ref Population sourcePopulation) {
 		for(int m = 0; m < sourcePopulation.masterAgentArray.Length; m++) {
 			//sourcePopulation.masterAgentArray[m].brain.genome.PrintBiases("sourcePop " + sourcePopulation.masterAgentArray[m].fitnessScore.ToString() + ", " + m.ToString() + ", ");
 			//newPop.masterAgentArray[m].brain.genome.PrintBiases("newPop " + m.ToString() + ", ");
@@ -437,7 +655,9 @@ public class CrossoverManager {
 					// weights and functions and more!
 				}
 				//newPopulation.masterAgentArray[newChildIndex].bodyGenome = childBodyGenomes[c];
-				newPopulation.masterAgentArray[newChildIndex].brain.SetBrainFromGenome(newPopulation.masterAgentArray[newChildIndex].genome);
+
+                // IMPORTANT!!!! v v v v v v
+				//newPopulation.masterAgentArray[newChildIndex].brain.SetBrainFromGenome(newPopulation.masterAgentArray[newChildIndex].genome);
 				newChildIndex++;  // new child created!
 				newChildrenCreated++;
 			}
@@ -446,7 +666,7 @@ public class CrossoverManager {
         //newPop.isFunctional = true;
         //Debug.Log("newPopulation.masterAgentArray[0].bodyGenome.creatureBodySegmentGenomeList[0].size.x: " + newPopulation.masterAgentArray[0].bodyGenome.creatureBodySegmentGenomeList[0].size.x.ToString());
         return newPopulation;
-	}
+	}*/
 
 
 

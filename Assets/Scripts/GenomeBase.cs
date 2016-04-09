@@ -3,16 +3,16 @@ using System.Collections;
 
 public class GenomeBase
 {
-	public float[] genomeWeights;
-	public float[] genomeBiases;
-	public TransferFunctions.TransferFunction[] geneFunctions;
+	//public float[] genomeWeights;
+	//public float[] genomeBiases;
+	//public TransferFunctions.TransferFunction[] geneFunctions;
 	
 	public GenomeBase()  // constructor for new, blank genome
 	{
 
 	}
 
-	public void ZeroGenome() {
+	/*public void ZeroGenome() {
 		for(int i = 0; i < genomeBiases.Length; i++) {
 			genomeBiases[i] = 0f;
 		}
@@ -27,5 +27,5 @@ public class GenomeBase
 			biases += genomeBiases[i].ToString() + ", ";
 		}
 		DebugBot.DebugFunctionCall (prefix + biases, true);
-	}
+	}*/
 }

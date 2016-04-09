@@ -13,7 +13,7 @@ public class ES2UserType_Agent : ES2Type
         writer.Write(1); // Version 1 is current version number
         // Make sure to edit Read() function to properly handle version control!
         // VERSION 0:
-        writer.Write(data.genome);
+        writer.Write(data.brainGenome);
 		writer.Write(data.bodyGenome);
         // VERSION 1:
 
@@ -36,7 +36,7 @@ public class ES2UserType_Agent : ES2Type
         // VERSION 0:
         if (fileVersion >= 0)
         {
-            data.genome = reader.Read<Genome>();
+            data.brainGenome = reader.Read<GenomeNEAT>();
             data.bodyGenome = reader.Read<CritterGenome>();
             if (fileVersion >= 1)
             {

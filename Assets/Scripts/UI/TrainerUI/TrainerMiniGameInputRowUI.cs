@@ -30,7 +30,7 @@ public class TrainerMiniGameInputRowUI : MonoBehaviour {
 
 		sliderNumNodes.minValue = minNumNodes; // set up slider bounds
 		sliderNumNodes.maxValue = maxNumNodes;
-		pendingChannelOn = trainerMiniGameScript.pendingMiniGameManager.miniGameInstance.inputChannelsList[inputListIndex].on;
+		//pendingChannelOn = trainerMiniGameScript.pendingMiniGameManager.miniGameInstance.inputChannelsList[inputListIndex].on;
 		toggleInputSource.isOn = pendingChannelOn;
 
 		UpdateUIWithCurrentData();
@@ -47,7 +47,7 @@ public class TrainerMiniGameInputRowUI : MonoBehaviour {
 		Player currentPlayer = trainerModuleScript.gameController.masterTrainer.PlayerList[trainerModuleScript.gameController.masterTrainer.CurPlayer-1];
 
 		textInputSourceName = toggleInputSource.transform.GetComponentInChildren<Text>();
-		textInputSourceName.text = trainerMiniGameScript.pendingMiniGameManager.miniGameInstance.inputChannelsList[inputListIndex].channelName; // set display name
+		//textInputSourceName.text = trainerMiniGameScript.pendingMiniGameManager.miniGameInstance.inputChannelsList[inputListIndex].channelName; // set display name
 
 		//textAddEditTrial.text = currentPlayer.masterTrialsList[trialIndex].gameType.ToString();  // set to mini-game type
 
@@ -86,13 +86,13 @@ public class TrainerMiniGameInputRowUI : MonoBehaviour {
 			}
 			else {
 				pendingChannelOn = toggle;
-				trainerMiniGameScript.pendingMiniGameManager.miniGameInstance.inputChannelsList[inputListIndex].on = toggle;
+				//trainerMiniGameScript.pendingMiniGameManager.miniGameInstance.inputChannelsList[inputListIndex].on = toggle;
 				trainerMiniGameScript.valuesChanged = true;
 			}
 		}
 		else {
 			pendingChannelOn = toggle;
-			trainerMiniGameScript.pendingMiniGameManager.miniGameInstance.inputChannelsList[inputListIndex].on = toggle;
+			//trainerMiniGameScript.pendingMiniGameManager.miniGameInstance.inputChannelsList[inputListIndex].on = toggle;
 			trainerMiniGameScript.valuesChanged = true;
 		}
 		trainerMiniGameScript.UpdateUIWithCurrentData();

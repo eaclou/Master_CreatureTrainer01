@@ -14,8 +14,7 @@ public class GenerationData {
 	//public float avgAgentScoreWeighted;
 	public int totalNumFitnessComponents;
 	public float totalSumOfWeights = 0f; // keeps track of total of all TrialIndex weight values for this Generation
-	public Genome genAvgGenome;
-
+	//public Genome genAvgGenome;  // REVISIT!!!
     public float totalAllAgentsScore = 0f;
 
     // Keep track of each fitnessComponent avg score?

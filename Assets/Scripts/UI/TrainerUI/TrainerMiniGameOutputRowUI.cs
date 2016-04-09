@@ -27,7 +27,7 @@ public class TrainerMiniGameOutputRowUI : MonoBehaviour {
 
 		Player currentPlayer = trainerModuleScript.gameController.masterTrainer.PlayerList[trainerModuleScript.gameController.masterTrainer.CurPlayer-1];
 
-		pendingChannelOn = trainerMiniGameScript.pendingMiniGameManager.miniGameInstance.outputChannelsList[outputListIndex].on;
+		//pendingChannelOn = trainerMiniGameScript.pendingMiniGameManager.miniGameInstance.outputChannelsList[outputListIndex].on;
 		toggleOutputSource.isOn = pendingChannelOn;
 	
 		UpdateUIWithCurrentData();
@@ -44,7 +44,7 @@ public class TrainerMiniGameOutputRowUI : MonoBehaviour {
 		Player currentPlayer = trainerModuleScript.gameController.masterTrainer.PlayerList[trainerModuleScript.gameController.masterTrainer.CurPlayer-1];
 
 		textOutputSourceName = toggleOutputSource.transform.GetComponentInChildren<Text>(); // Is this line needed?
-		textOutputSourceName.text = trainerMiniGameScript.pendingMiniGameManager.miniGameInstance.outputChannelsList[outputListIndex].channelName; // set display name
+		//textOutputSourceName.text = trainerMiniGameScript.pendingMiniGameManager.miniGameInstance.outputChannelsList[outputListIndex].channelName; // set display name
 
 		DebugBot.DebugFunctionCall("TMiniGameOutputRowUI; UpdateUIElementStates(); " + textOutputSourceName.text.ToString(), debugFunctionCalls);
 
@@ -70,13 +70,13 @@ public class TrainerMiniGameOutputRowUI : MonoBehaviour {
 			}
 			else {
 				pendingChannelOn = toggle;
-				trainerMiniGameScript.pendingMiniGameManager.miniGameInstance.outputChannelsList[outputListIndex].on = toggle;
+				//trainerMiniGameScript.pendingMiniGameManager.miniGameInstance.outputChannelsList[outputListIndex].on = toggle;
 				trainerMiniGameScript.valuesChanged = true;
 			}
 		}
 		else {
 			pendingChannelOn = toggle;
-			trainerMiniGameScript.pendingMiniGameManager.miniGameInstance.outputChannelsList[outputListIndex].on = toggle;
+			//trainerMiniGameScript.pendingMiniGameManager.miniGameInstance.outputChannelsList[outputListIndex].on = toggle;
 			trainerMiniGameScript.valuesChanged = true;
 		}
 		trainerMiniGameScript.UpdateUIWithCurrentData();

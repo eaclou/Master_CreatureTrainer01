@@ -33,22 +33,24 @@ public class FitnessManager {
 
 	public void SetMasterFitnessComponentList() { // Looks at player's brain and Trial's miniGame instance to assemble a combined FitnessComponentList
 		//DebugBot.DebugFunctionCall("SetMasterFitnessComponentList: " + playerRef.masterTrialsList.Count.ToString (), true);
-		BrainBase currentBrainRef = playerRef.masterPopulation.templateBrain; // OR TEMPLATE BRAIN???
+		//BrainBase currentBrainRef = playerRef.masterPopulation.templateBrain; // OR TEMPLATE BRAIN???
 		MiniGameBase currentMiniGameRef = playerRef.masterTrialsList[playerRef.currentTrialForEdit].miniGameManager.miniGameInstance;
+        BrainSettings brainSettings = playerRef.masterPopulation.brainSettings;
+        brainFitnessComponentList = brainSettings.brainFitnessComponentList;
+        if (currentMiniGameRef != null) {
+            //if (currentMiniGameRef.gameInitialized) {
+            gameFitnessComponentList = currentMiniGameRef.fitnessComponentList;
 
-		brainFitnessComponentList = currentBrainRef.brainFitnessComponentList;
-		gameFitnessComponentList = currentMiniGameRef.fitnessComponentList;
-
-
-		masterFitnessCompList = new List<FitnessComponent>();
-		//if(currentBrainRef.brainFitnessComponentList 
-		for(int i = 0; i < currentBrainRef.brainFitnessComponentList.Count; i++) {  // grab fitnessComponents from current brain type
-			masterFitnessCompList.Add (currentBrainRef.brainFitnessComponentList[i]);
-		}
-		for(int j = 0; j < currentMiniGameRef.fitnessComponentList.Count; j++) {
-			masterFitnessCompList.Add (currentMiniGameRef.fitnessComponentList[j]);
-		}
-		//DebugBot.DebugFunctionCall("SetMasterFitnessComponentList: Length: " + masterFitnessCompList.Count.ToString () + ", brainList: " + brainFitnessComponentList.Count.ToString() + ", gameList: " + gameFitnessComponentList.Count.ToString(), true);
+            masterFitnessCompList = new List<FitnessComponent>();
+            for (int i = 0; i < brainSettings.brainFitnessComponentList.Count; i++) {  // grab fitnessComponents from current brain type
+                masterFitnessCompList.Add(brainSettings.brainFitnessComponentList[i]);
+            }
+            for (int j = 0; j < currentMiniGameRef.fitnessComponentList.Count; j++) {
+                masterFitnessCompList.Add(currentMiniGameRef.fitnessComponentList[j]);
+            }
+            //}
+        }
+        
 	}
 
 	public void SetFitnessComponentScoreArray() {

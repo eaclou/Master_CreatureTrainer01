@@ -32,52 +32,51 @@ public class MiniGameManager {
 	// CHANGE THESE TO BETTER/GENERIC DATA TYPES LATER!!!!!!!!!!!!!!!!!
 	// The list of potential Channels is stored inside the miniGameInstance Object,
 	// The arrays of paramater references for the Brain (only consists of the selected channels) lives here in the MiniGameManager
-	public float[][] brainInput;  //  Come back to this and see if I should use a BrainInputChannel class instead of float;
-	public float[][] brainOutput;  // !! Or if this should live inside the miniGameInstance
+	public List<float[]> brainInput;  //  Come back to this and see if I should use a BrainInputChannel class instead of float;
+	public List<float[]> brainOutput;  // !! Or if this should live inside the miniGameInstance
 
 
 	public MiniGameManager(Player playerReference) {
 		DebugBot.DebugFunctionCall("MiniGameManager; MiniGameManager(); Constructor", debugFunctionCalls);
 		playerRef = playerReference;
-		SetMiniGameType(gameType);
+		//SetMiniGameType(gameType);
 		//inputSourceList = new string[0];
 		//outputActionsList = new string[0];
 	}
 
 	public void SetInputOutputArrays() {
-		//DebugBot.DebugFunctionCall("MiniGameManager; SetInputOutputArrays(); " + playerRef.currentTrialForEdit.ToString(), debugFunctionCalls);
-		// ++++++ NEW APPROACH !! ++++++++++++++++++++++++++++++++++++++++++++++++
-		// re-initialize data arrays in case population has changed settings
-		//brainInput = null;
-		//brainOutput = null;
-		// Prep the input data for the brain by making the array dimensions match the number of input/output Neurons in the current brain:
-		brainInput = new float[playerRef.masterPopulation.numInputNodes][];
-		brainOutput = new float[playerRef.masterPopulation.numOutputNodes][];
+        //DebugBot.DebugFunctionCall("MiniGameManager; SetInputOutputArrays(); " + playerRef.currentTrialForEdit.ToString(), debugFunctionCalls);
+        // ++++++ NEW APPROACH !! ++++++++++++++++++++++++++++++++++++++++++++++++
+        // re-initialize data arrays in case population has changed settings
+        //brainInput = null;
+        //brainOutput = null;
+        // Prep the input data for the brain by making the array dimensions match the number of input/output Neurons in the current brain:
+        brainInput = new List<float[]>(); // playerRef.masterPopulation.numInputNodes][];
+        brainOutput = new List<float[]>(); // playerRef.masterPopulation.numOutputNodes][];
 		// Find length of Channel Lists
-		int numInputChannels = miniGameInstance.inputChannelsList.Count;
-		int numOutputChannels = miniGameInstance.outputChannelsList.Count;
+		int numInputChannels = playerRef.masterPopulation.numInputNodes;
+		int numOutputChannels = playerRef.masterPopulation.numOutputNodes;
 		//DebugBot.DebugFunctionCall("MiniGameManager; SetInputOutputArrays(); inputCount: " + miniGameInstance.inputChannelsList.Count.ToString() + ", outputCount: " + miniGameInstance.outputChannelsList.Count.ToString(), debugFunctionCalls);
 		// Loop through original Channel Lists, and if a channel is selected, pass a ref of its value to the next Index in the brainDataArrays
 		int currentInputArrayIndex = 0;
 		int currentOutputArrayIndex = 0;
 		for(int i = 0; i < numInputChannels; i++) {
-			//DebugBot.DebugFunctionCall("MiniGameManager; SetInputOutputArrays(); input: " + miniGameInstance.inputChannelsList[i].channelValue[0].ToString(), debugFunctionCalls);
+            //Debug.Log("i: " + i.ToString() + ", numInputChannels: " + numInputChannels.ToString() + ", inputChannelsListCount: " + miniGameInstance.inputChannelsList.Count.ToString());
 			if(miniGameInstance.inputChannelsList[i].on) {
-				brainInput[currentInputArrayIndex] = miniGameInstance.inputChannelsList[i].channelValue; // send reference of channel value to current brainInputArray Index
-				//DebugBot.DebugFunctionCall("MiniGameManager; SetInputOutputArrays(); brainInput[i][0]: " + brainInput[currentInputArrayIndex][0].ToString() + ", miniGameChannelValue[0]: " + miniGameInstance.inputChannelsList[i].channelValue[0].ToString(), debugFunctionCalls);
-				//brainInput[currentInputArrayIndex][0] -= 333.33f;
-				//miniGameInstance.inputChannelsList[i].channelValue[0] += 44.4444f;
-				currentInputArrayIndex++; // increment current brainInput Index
+				//brainInput[currentInputArrayIndex] = miniGameInstance.inputChannelsList[i].channelValue; // send reference of channel value to current brainInputArray Index
+                brainInput.Add(miniGameInstance.inputChannelsList[i].channelValue);
+                currentInputArrayIndex++; // increment current brainInput Index
 			}
 		}
 		for(int o = 0; o < numOutputChannels; o++) {
 			if(miniGameInstance.outputChannelsList[o].on) {
-				brainOutput[currentOutputArrayIndex] = miniGameInstance.outputChannelsList[o].channelValue; // send reference of channel value to current brainOutputArray Index
+                //brainOutput[currentOutputArrayIndex] = miniGameInstance.outputChannelsList[o].channelValue; // send reference of channel value to current brainOutputArray Index
+                brainOutput.Add(miniGameInstance.outputChannelsList[o].channelValue);
 				currentOutputArrayIndex++; // increment current brainOutput Index
 			}
 		}
 		// Fill any remaining indices with value of zero ( this will happen if the brain has more nodes than the number of selected Channels )
-		while(currentInputArrayIndex < brainInput.Length) {
+		/*while(currentInputArrayIndex < brainInput.Length) {
 			float[] zeroArray = new float[1];
 			zeroArray[0] = 0f;
 			brainInput[currentInputArrayIndex] = zeroArray; // zero out extra indices
@@ -88,23 +87,23 @@ public class MiniGameManager {
 			zeroArray[0] = 0f;
 			brainOutput[currentOutputArrayIndex] = zeroArray; // zero out extra indices
 			currentOutputArrayIndex++; // increment current brainOutput Index
-		}
+		}*/
 
 
 
-		string debugMessage = "BrainInput: ";
+		/*string debugMessage = "BrainInput: ";
 		for(int x = 0; x < brainInput.Length; x++) {
 			debugMessage += brainInput[x][0].ToString() + ", ";
 		}
 		debugMessage += "BrainOutput: ";
 		for(int y = 0; y < brainOutput.Length; y++) {
 			debugMessage += brainOutput[y][0].ToString() + ", ";
-		}
+		}*/
 		//DebugBot.DebugFunctionCall("MiniGameManager; SetInputOutputArrays(); brainInput: " + debugMessage, debugFunctionCalls);
 		// END NEW APPROACH !! ++++++++++++++++++++++++++++++++++++++++++++++++++++
 	}
 
-	public void SetMiniGameType(MiniGameManager.MiniGameType newGameType) {  // Change game type and re-instantiate miniGameInstance
+	public void SetMiniGameType(MiniGameManager.MiniGameType newGameType, MiniGameSettingsBase gameSettings) {  // Change game type and re-instantiate miniGameInstance
 		DebugBot.DebugFunctionCall("Trial; SetMiniGameType(); " + gameType.ToString(), debugFunctionCalls);
 		miniGameInstance = null;
 		gameType = newGameType;  // Update GameType to new Type!
@@ -133,7 +132,10 @@ public class MiniGameManager {
             //Debug.Log("playerRef.masterPopulation.templateBodyGenome: " + playerRef.masterPopulation.templateBodyGenome.creatureBodySegmentGenomeList[0].addOn1.ToString());
             //Debug.Log("templateBody: " + templateBody.creatureBodySegmentGenomeList[0].addOn1.ToString());
 			MiniGameCritterWalkBasic newGameInstance = new MiniGameCritterWalkBasic(templateBody);
+            newGameInstance.UseSettings((MiniGameCritterWalkBasicSettings)gameSettings);
+            newGameInstance.InitializeGame();
 			miniGameInstance = newGameInstance;
+            Debug.Log("miniGameInstance.inputChannelsList.Count: " + miniGameInstance.inputChannelsList.Count.ToString());
 		}
 		/*else if(newGameType == MiniGameType.RobotArmSimple) {
 			MiniGameRobotArm newGameInstance = new MiniGameRobotArm();
@@ -160,6 +162,6 @@ public class MiniGameManager {
 			miniGameInstance = newGameInstance;
 		}*/
 
-		SetInputOutputArrays();
+		SetInputOutputArrays(); // Haven't set input/output lists for the minigame yet....
 	}
 }

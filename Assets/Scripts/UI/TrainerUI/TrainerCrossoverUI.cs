@@ -177,8 +177,8 @@ public class TrainerCrossoverUI : MonoBehaviour {
 		textSeverLinkChance.text = pendingCrossoverManager.mutationRemoveLinkChance.ToString();
 		sliderAddLinkChance.value = pendingCrossoverManager.mutationAddLinkChance;
 		textAddLinkChance.text = pendingCrossoverManager.mutationAddLinkChance.ToString();
-		sliderFunctionChance.value = pendingCrossoverManager.mutationFunctionChance;
-		textFunctionChance.text = pendingCrossoverManager.mutationFunctionChance.ToString();
+		sliderFunctionChance.value = pendingCrossoverManager.mutationAddNodeChance;
+		textFunctionChance.text = pendingCrossoverManager.mutationAddNodeChance.ToString();
 
 		sliderNumSwapPositions.value = pendingCrossoverManager.numSwapPositions;
 		textNumSwapPositions.text = pendingCrossoverManager.numSwapPositions.ToString();
@@ -265,9 +265,9 @@ public class TrainerCrossoverUI : MonoBehaviour {
 
 	public void SliderFunctionChance(float sliderValue) { // On Slider Value Changed
 		DebugBot.DebugFunctionCall("TCrossoverUI; SliderFunctionChance(); ", debugFunctionCalls);
-		pendingCrossoverManager.mutationFunctionChance = sliderValue;
-		float dataFunctionChance = playerRef.masterCupid.mutationFunctionChance;
-		if(pendingCrossoverManager.mutationFunctionChance != dataFunctionChance) {
+		pendingCrossoverManager.mutationAddNodeChance = sliderValue;
+		float dataFunctionChance = playerRef.masterCupid.mutationAddNodeChance;
+		if(pendingCrossoverManager.mutationAddNodeChance != dataFunctionChance) {
 			valuesChanged = true;
 		}
 		else {
