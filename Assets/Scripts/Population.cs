@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class Population {
 	public bool debugFunctionCalls = false; // turns debug messages on/off
@@ -20,30 +21,26 @@ public class Population {
 	public int populationMaxSize = 4; // default value
 	public int numAgents = 0;
 	public Agent[] masterAgentArray;
-
+    public List<SpeciesBreedingPool> speciesBreedingPoolList;
+    private int nextAvailableSpeciesID = 0;
+    
 	public bool initRandom = false;
 	public bool isFunctional = false;
 
 	// Constructor Methods:
 	public Population() {
 		DebugBot.DebugFunctionCall("Population; Population() Constructor!; ", debugFunctionCalls);
-        
+        if(speciesBreedingPoolList == null) {
+            speciesBreedingPoolList = new List<SpeciesBreedingPool>();
+        }
         brainSettings = new BrainSettings(); // CHANGE THIS LATER!!!!!
 	}
 
-	// Public Methods!
-	/*public void InitializeMasterAgentArray() {  // Creates a new population for the FIRST TIME!!!
-		DebugBot.DebugFunctionCall("Population; InitializeMasterAgentArray(); ", debugFunctionCalls);
-		// BrainType can't be set to NONE !!!!!!!!!
-		masterAgentArray = new Agent[populationMaxSize];
-		for(int i = 0; i < populationMaxSize; i++) {
-			Agent newAgent = new Agent();
-			InitializeAgentBrainOnly(newAgent);  // create Agent's brain as proper type, and copies over templateBrain's settings
-			masterAgentArray[i] = newAgent;
-			numAgents++;
-		}
-	}*/
-
+    public int GetNextSpeciesID() {
+        nextAvailableSpeciesID++;
+        return nextAvailableSpeciesID;
+    }
+    
 	public void InitializeMasterAgentArray(CritterGenome bodyGenome) {  // Creates a new population for the FIRST TIME!!!
 		DebugBot.DebugFunctionCall("Population; InitializeMasterAgentArray(CritterGenome); ", debugFunctionCalls);
 		templateGenome = bodyGenome;
@@ -53,17 +50,83 @@ public class Population {
         numInputNodes = critterData[1];
         numOutputNodes = critterData[2];
         Debug.Log("Critter Stats [0]: " + numSegments.ToString() + ", [1]: " + numInputNodes.ToString() + ", [2]: " + numOutputNodes.ToString());
-        
+                
         masterAgentArray = new Agent[populationMaxSize];
 		for(int i = 0; i < populationMaxSize; i++) {
 			Agent newAgent = new Agent();
+            //newAgent.fitnessRank =
 			InitializeAgentBrainAndBody(newAgent, bodyGenome);  // create Agent's brain as proper type, and copies over templateBrain's settings
 			masterAgentArray[i] = newAgent;
 			numAgents++;
 		}
-	}
 
-	public void InitializeLoadedMasterAgentArray() {
+        InitializeSpeciesPoolsAndAgents(); // assigns agents to a species and populates the breeding pools    
+    }
+    public void InitializeSpeciesPoolsAndAgents() {
+        for (int i = 0; i < populationMaxSize; i++) {
+            SortAgentIntoBreedingPool(masterAgentArray[i]);
+        }
+    }
+
+    public void SortAgentIntoBreedingPool(Agent agent) {
+        bool speciesGenomeMatch = false;
+        for(int s = 0; s < speciesBreedingPoolList.Count; s++) {
+            float geneticDistance = GenomeNEAT.MeasureGeneticDistance(agent.brainGenome, speciesBreedingPoolList[s].templateGenome);
+            
+            if (geneticDistance < 1f) { //speciesSimilarityThreshold) {  // !!! figure out how/where to place this attribute or get a ref from crossoverManager
+                speciesGenomeMatch = true;
+                //agent.speciesID = speciesBreedingPoolList[s].speciesID; // this is done inside the AddNewAgent method below v v v 
+                speciesBreedingPoolList[s].AddNewAgent(agent);
+                //Debug.Log("SortAgentIntoBreedingPool dist: " + geneticDistance.ToString() + ", speciesIDs: " + agent.speciesID.ToString() + ", " + speciesBreedingPoolList[s].speciesID.ToString());
+                break;
+            }
+        }
+        if(!speciesGenomeMatch) {
+            //Debug.Log("POPULATION SortAgentIntoBreedingPool NO MATCH!!! -- creating new BreedingPool ");
+            SpeciesBreedingPool newSpeciesBreedingPool = new SpeciesBreedingPool(agent.brainGenome, GetNextSpeciesID()); // creates new speciesPool modeled on this agent's genome
+            newSpeciesBreedingPool.AddNewAgent(agent);  // add this agent to breeding pool
+            speciesBreedingPoolList.Add(newSpeciesBreedingPool);  // add new speciesPool to the population's list of all active species
+        }
+    }
+
+    public SpeciesBreedingPool GetBreedingPoolByID(List<SpeciesBreedingPool> poolsList, int id) {
+        for (int s = 0; s < poolsList.Count; s++) {
+            
+            if (poolsList[s].speciesID == id) {
+                //Debug.Log("GetBreedingPoolByID MATCH!: id: " + id.ToString() + ", speciesIDs: " + poolsList[s].speciesID.ToString());
+
+                return poolsList[s];
+            }
+        }
+        Debug.Log("GetBreedingPoolByID FAILURE!!!: id: " + id.ToString());
+        return null;
+    }
+
+    /*public void AssignAgentToSpecies(Agent agent) {
+        bool speciesMatch = false;
+        for (int s = 0; s < speciesList.Count; s++) {
+            // check for match
+            //if()
+            float geneticDistance = GenomeNEAT.MeasureGeneticDistance(speciesList[s].templateGenome, agent.brainGenome);
+            float threshold = 0.8f;
+
+            if (geneticDistance < threshold) {
+                // Join that species!
+                speciesMatch = true;
+                Debug.Log("AssignAgentToSpecies - MATCH! speciesID: " + speciesList[s].id.ToString());
+                speciesList[s].AddNewMember(agent);
+            }
+        }
+        if (!speciesMatch) { // no matching species!
+                             // create a new species
+            
+            Species newSpecies = new Species(agent);  // adds member automagically
+            speciesList.Add(newSpecies);
+            Debug.Log("AssignAgentToSpecies - UNIQUE! speciesID: " + newSpecies.id.ToString() + ", listCount: " + speciesList.Count.ToString());
+        }
+    }*/
+
+    public void InitializeLoadedMasterAgentArray() {
 		for(int i = 0; i < populationMaxSize; i++) {
 			InitializeAgentBrainsFromGenome(masterAgentArray[i]);  // create Agent's brain as proper type, and copies over templateBrain's settings
 		}
@@ -88,22 +151,6 @@ public class Population {
 		masterAgentArray = newMasterAgentArray;
 	}
 
-	/*public void ChangeTemplateBrainType(BrainType newBrainType) {
-		if(brainType != newBrainType) { // only do something if the brainType has changed
-			brainType = newBrainType;
-			templateBrain = null;
-			templateBrain = new BrainBase();
-			// Test Type (manual coded brain)
-			if(brainType == BrainType.Test) {
-				templateBrain = new BrainTest();
-			}
-			// ANN Feed-Forward Layered Static All-to-All:
-			if(brainType == BrainType.ANN_FF_Layered_AllToAll) {
-				templateBrain = new BrainANN_FF_Layers_A2A();
-			}
-		}
-	}*/
-
 	private void InitializeAgentBrainAndBody(Agent newAgent, CritterGenome bodyGenome) {  /// Configure newly-created Agent (brain + body) for the FIRST TIME!! to change settings on an existing agent, use a different method.
 		DebugBot.DebugFunctionCall("Population; InitializeAgentInstance(); ", debugFunctionCalls);
 		// Figure out Agent Body HERE:		
@@ -120,43 +167,14 @@ public class Population {
 		else {
             brainGenome = newAgent.brain.InitializeBlankBrain(numInputNodes, numOutputNodes);
 		}
-		newAgent.brainGenome = brainGenome;
+        
+        newAgent.brainGenome = brainGenome;
 		newAgent.brain.BuildBrainNetwork();  // constructs the brain from its sourceGenome
-		isFunctional = true;        
+        //AssignAgentToSpecies(newAgent);
+        isFunctional = true;        
 	}
 
-	/*private void InitializeAgentBrainOnly(Agent newAgent) {  /// Configure newly-created Agent (brain + body) for the FIRST TIME!! to change settings on an existing agent, use a different method.
-		DebugBot.DebugFunctionCall("Population; InitializeAgentInstance(); ", debugFunctionCalls);
-		// Initialize Brain:
-		if(brainType == BrainType.None) {
-			newAgent.brain = new BrainBase();
-			isFunctional = false;
-		}
-		// Test Type (manual coded brain)
-		if(brainType == BrainType.Test) {
-			newAgent.brain = new BrainTest();
-
-		}
-		// ANN Feed-Forward Layered Static All-to-All:
-		if(brainType == BrainType.ANN_FF_Layered_AllToAll) {
-			newAgent.brain = new BrainANN_FF_Layers_A2A() as BrainANN_FF_Layers_A2A;
-			int[] layerDimensions = new int[2]{numInputNodes, numOutputNodes}; // Add UI support for setting layers
-			Genome genome;
-			if(initRandom) {
-				genome = newAgent.brain.InitializeRandomBrain(layerDimensions); // 'builds' the brain and spits out a Genome
-			}
-			else {
-				genome = newAgent.brain.InitializeBlankBrain(layerDimensions);
-			}
-			newAgent.genome = genome;
-			newAgent.brain.SetBrainFromGenome(genome);
-
-		}
-		newAgent.brain.CopyBrainSettingsFrom(templateBrain);  // Copies settings from template brain (what has been set from UI) to new brain instance using override method
-		isFunctional = true;
-	}*/
-
-	private void InitializeAgentBrainsFromGenome(Agent agent) {  // set up agent's brain in the case of a loaded population		
+    private void InitializeAgentBrainsFromGenome(Agent agent) {  // set up agent's brain in the case of a loaded population		
         agent.brain.InitializeBrainFromGenome(agent.brainGenome);
     }
 
@@ -167,60 +185,20 @@ public class Population {
 	}
 
 	public void RankAgentArray() { // brute force sort
-
-		/*scoreArray = new float[numAgents];
-		scoreHunterArray = new float[numAgents];
-		geneRankArray = new Genome[numAgents];
-		geneRankHunterArray = new Genome[numAgents];
-		float swapTimeA = new float();
-		float swapTimeB = new float();
-		Genome swapGeneA = new Genome(layerSizes);
-		Genome swapGeneB = new Genome(layerSizes);
-		
-		scoreArray = avoidanceTimes;
-		scoreHunterArray = minHunterDistances;
-		geneRankArray = genePool;
-		geneRankHunterArray = genePoolHunter;
-		*/
+        
 		Agent[] rankedAgentArray = new Agent[populationMaxSize];
 		rankedAgentArray = masterAgentArray;
-		//Debug.Log("agent0 fitness: " + rankedAgentArray[0].fitnessScore.ToString());
 		Agent swapAgentA = new Agent();
 		Agent swapAgentB = new Agent();
-		//GenomeNEAT swapGenomeA = new GenomeNEAT();
-        //GenomeNEAT swapGenomeB = new GenomeNEAT();
-		//float[] swapBiasesA = new float[rankedAgentArray[0].genome.genomeBiases.Length];
-		//float[] swapBiasesB = new float[rankedAgentArray[0].genome.genomeBiases.Length];
-
-		/*
-		string masterString = "MasterAgentArrayB4: ";
-		for(int g = 0; g < populationMaxSize; g++) {
-			masterString += "Fit: " + masterAgentArray[g].fitnessScore.ToString () + ", " +  masterAgentArray[g].brain.genome.genomeWeights[0].ToString() + ", ";
-		}
-		Debug.Log (masterString);
-		string rankedString = "RankedAgentArrayB4: ";
-		for(int h = 0; h < populationMaxSize; h++) {
-			rankedString += "Fit: " + rankedAgentArray[h].fitnessScore.ToString () + ", " + rankedAgentArray[h].brain.genome.genomeWeights[0].ToString() + ", ";
-		}
-		Debug.Log (rankedString);
-		*/
-
 
 		for(int i = 0; i < populationMaxSize - 1; i++)
 		{
 			for(int j = 0; j < populationMaxSize - 1; j++)
 			{
-				if(rankedAgentArray[j].fitnessScore < rankedAgentArray[j+1].fitnessScore)  // if lower index holds a smaller time, swap places
+				if(rankedAgentArray[j].fitnessScoreSpecies < rankedAgentArray[j+1].fitnessScoreSpecies)  // if lower index holds a smaller time, swap places
 				{
-					
-					//swapBiasesA = rankedAgentArray[j].genome.genomeBiases;
-					//swapBiasesB = rankedAgentArray[j+1].genome.genomeBiases;
 					swapAgentA = rankedAgentArray[j];
 					swapAgentB = rankedAgentArray[j+1];
-
-					
-					//rankedAgentArray[j].genome.genomeBiases = swapBiasesA;
-					//rankedAgentArray[j+1].genome.genomeBiases = swapBiasesB;
 					rankedAgentArray[j] = swapAgentB;
 					rankedAgentArray[j+1] = swapAgentA;
 				}
@@ -229,7 +207,8 @@ public class Population {
 		
 		string rankedAfterString = "RankedAgentArrayAfter: ";
 		for(int h = 0; h < populationMaxSize; h++) {
-			rankedAfterString += "Fit: " + rankedAgentArray[h].fitnessScore.ToString () + ", " + ", ";
+            rankedAgentArray[h].fitnessRank = h;
+            rankedAfterString += "Fit: " + rankedAgentArray[h].fitnessScoreSpecies.ToString () + ", h: " + h.ToString() + ", ";
 		}
 		Debug.Log (rankedAfterString);
 		
@@ -252,7 +231,7 @@ public class Population {
 		populationCopy.numInputNodes = numInputNodes;
 		populationCopy.numOutputNodes = numOutputNodes;
 		populationCopy.numAgents = numAgents;
-		populationCopy.InitializeMasterAgentArray(templateGenome); // CONFIRM THIS SHOULD BE USED!! MIGHT WANT TO JUST COPY AGENTS!!!!
+		//populationCopy.InitializeMasterAgentArray(templateGenome); // CONFIRM THIS SHOULD BE USED!! MIGHT WANT TO JUST COPY AGENTS!!!!
 		// ^ ^ ^ Looks like this is used in the CrossoverManager to break the reference connection to the AgentArray when copying the main Population
 		// ....  Seems like this is just needed to assign new memmory for the swapPopulation agentArray, to allow for proper data transfer
 		// ....  between the sourcePopulation and the new Copy (which will hold the next generation). New agents are setup at birth time.

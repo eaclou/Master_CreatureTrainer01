@@ -108,6 +108,7 @@ public class Trainer {
     // MOVE THIS LATER!!!
     public GameObject brainNetworkGO;
     public BrainNetworkVisualizer networkVisualizer;
+    Material brainNetworkMat = new Material(Shader.Find("Custom/SimpleBrainNetworkShader"));
     #endregion
 
 
@@ -280,52 +281,78 @@ public class Trainer {
             //		Get Population Size,
             int populationSize = playerList[p].masterPopulation.populationMaxSize;
             float[] agentScores01 = new float[populationSize];
+            float mostLinks = 0f;
             for(int i = 0; i < populationSize; i++) { // Init Array:
                 agentScores01[i] = 0f;
+                // TEMPORARY!!!  -- adds a cost to having larger brains!!
+                float numLinks = 0f;
+                for(int b = 0; b < playerList[p].masterPopulation.masterAgentArray[i].brainGenome.linkNEATList.Count; b++) {
+                    if(playerList[p].masterPopulation.masterAgentArray[i].brainGenome.linkNEATList[b].enabled) {
+                        numLinks++;
+                    }
+                }
+                if(numLinks > mostLinks) {
+                    mostLinks = numLinks;
+                }
             }
+            if (mostLinks == 0f)
+                mostLinks = 1f;
             // LOOP through all FITNESS COMPONENTS (by way of trials)
             for (int trialIndex = 0; trialIndex < playerList[p].masterTrialsList.Count; trialIndex++) {
                 // CAN I RELY ON [fitnessManager.masterFitnessCompList] ?????
-                for (int fitCompIndex = 0; fitCompIndex < playerList[p].masterTrialsList[trialIndex].fitnessManager.masterFitnessCompList.Count; fitCompIndex++) {
+                for (int fitCompIndex = 0; fitCompIndex < playerList[p].masterTrialsList[trialIndex].fitnessManager.masterFitnessCompList.Count + 1; fitCompIndex++) {
                     // Loop Through all AGENTS:
                     for (int a = 0; a < populationSize; a++) {
-                        // get agent's raw fitness score for this fitness component:
-                        // requires re-arranging dataManager in a more FitnessComponent-centric way:
-                        float rawComponentScore = playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].agentDataArray[a].rawValueTotal;
-                        float lowestScore = playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].lowestScore;
-                        float highestScore = playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].highestScore;
-                        float scoreRange = highestScore - lowestScore;
-                        if (scoreRange == 0f) scoreRange = 1f; // PREVENT DIVIDE BY ZERO
-                        // remap to 0-1:
-                        rawComponentScore -= lowestScore;
-                        float score01 = rawComponentScore / scoreRange;
-                        if(playerList[p].masterTrialsList[trialIndex].fitnessManager.masterFitnessCompList[fitCompIndex].bigIsBetter == false) {
-                            score01 = 1f - score01;
+                        // TEMPORARY!!! for large brain penalty!!!
+                        if(fitCompIndex == playerList[p].masterTrialsList[trialIndex].fitnessManager.masterFitnessCompList.Count) {
+                            float largeBrainCost = playerList[p].masterPopulation.masterAgentArray[a].brainGenome.linkNEATList.Count / mostLinks;
+                            float largeBrainPenaltyMultiplier = playerList[p].masterCupid.largeBrainPenalty;
+                            largeBrainCost *= largeBrainPenaltyMultiplier;
+                            agentScores01[a] = Mathf.Max(0f, agentScores01[a] - largeBrainCost);  // don't allow negative
+                            //Debug.Log("Brain Penalty Agent# " + a.ToString() + ": " + largeBrainCost.ToString() + ", fitness: " + agentScores01[a].ToString());
                         }
-                        score01 = Mathf.Pow(score01, playerList[p].masterTrialsList[trialIndex].fitnessManager.masterFitnessCompList[fitCompIndex].power);
-                        // figure out this fitnessComponent's share of total
-                        // should I store totalSumOfWeights, or calculate it at beginning of this function?
-                        float trialPieSlice = playerList[p].masterTrialsList[trialIndex].weight / playerList[p].dataManager.generationDataList[playingCurGeneration].totalSumOfWeights;
-                        float fitnessComponentPieSlice = playerList[p].masterTrialsList[trialIndex].fitnessManager.masterFitnessCompList[fitCompIndex].weight / playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].totalSumOfWeights;
-                        float weightMultiplier = trialPieSlice * fitnessComponentPieSlice;
+                        else {  // proceed normally:
+                                // get agent's raw fitness score for this fitness component:
+                                // requires re-arranging dataManager in a more FitnessComponent-centric way:
+                            float rawComponentScore = playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].agentDataArray[a].rawValueTotal;
+                            float lowestScore = playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].lowestScore;
+                            float highestScore = playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].highestScore;
+                            float scoreRange = highestScore - lowestScore;
+                            if (scoreRange == 0f) scoreRange = 1f; // PREVENT DIVIDE BY ZERO
+                                                                   // remap to 0-1:
+                            rawComponentScore -= lowestScore;
+                            float score01 = rawComponentScore / scoreRange;
+                            if (playerList[p].masterTrialsList[trialIndex].fitnessManager.masterFitnessCompList[fitCompIndex].bigIsBetter == false) {
+                                score01 = 1f - score01;
+                            }
+                            score01 = Mathf.Pow(score01, playerList[p].masterTrialsList[trialIndex].fitnessManager.masterFitnessCompList[fitCompIndex].power);
+                            // figure out this fitnessComponent's share of total
+                            // should I store totalSumOfWeights, or calculate it at beginning of this function?
+                            float trialPieSlice = playerList[p].masterTrialsList[trialIndex].weight / playerList[p].dataManager.generationDataList[playingCurGeneration].totalSumOfWeights;
+                            float fitnessComponentPieSlice = playerList[p].masterTrialsList[trialIndex].fitnessManager.masterFitnessCompList[fitCompIndex].weight / playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].totalSumOfWeights;
+                            float weightMultiplier = trialPieSlice * fitnessComponentPieSlice;
 
-                        // Add score to Agent's total 0-1 fitness score ... stored
-                        agentScores01[a] += score01 * weightMultiplier;
+                            // Add score to Agent's total 0-1 fitness score ... stored
+                            agentScores01[a] += score01 * weightMultiplier;
+                        }                        
                     }
 
-                    // Divide total scores by number of game rounds to stay normalized:
-                    playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].totalRawScore /= playerList[p].masterTrialsList[trialIndex].numberOfPlays;
-                    //Update all-time records:                    
-                    if (playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].totalRawScore < playerList[p].dataManager.recordScoresTrialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].lowestScore) {
-                        playerList[p].dataManager.recordScoresTrialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].lowestScore = playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].totalRawScore;
+                    if (fitCompIndex < playerList[p].masterTrialsList[trialIndex].fitnessManager.masterFitnessCompList.Count) {  // TEMPORARY large brain penalty safeguard!
+                        // Divide total scores by number of game rounds to stay normalized:
+                        playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].totalRawScore /= playerList[p].masterTrialsList[trialIndex].numberOfPlays;
+                        //Update all-time records:                    
+                        if (playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].totalRawScore < playerList[p].dataManager.recordScoresTrialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].lowestScore) {
+                            playerList[p].dataManager.recordScoresTrialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].lowestScore = playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].totalRawScore;
+                        }
+                        if (playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].totalRawScore > playerList[p].dataManager.recordScoresTrialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].highestScore) {
+                            playerList[p].dataManager.recordScoresTrialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].highestScore = playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].totalRawScore;
+                        }
+                        if (playingCurGeneration == 0) {
+                            playerList[p].dataManager.recordScoresTrialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].lowestScore = playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].totalRawScore;
+                            playerList[p].dataManager.recordScoresTrialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].highestScore = playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].totalRawScore;
+                        }
                     }
-                    if (playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].totalRawScore > playerList[p].dataManager.recordScoresTrialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].highestScore) {
-                        playerList[p].dataManager.recordScoresTrialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].highestScore = playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].totalRawScore;
-                    }
-                    if(playingCurGeneration == 0) {
-                        playerList[p].dataManager.recordScoresTrialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].lowestScore = playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].totalRawScore;
-                        playerList[p].dataManager.recordScoresTrialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].highestScore = playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].totalRawScore;
-                    }
+                    
                     //Debug.Log("ProcessFitnessScoresEndGeneration(" + playingCurGeneration.ToString() + ") fitComp[" + fitCompIndex.ToString() + "], totalScore: " + playerList[p].dataManager.generationDataList[playingCurGeneration].trialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].totalRawScore.ToString() + ", low: " + playerList[p].dataManager.recordScoresTrialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].lowestScore.ToString() + ", high: " + playerList[p].dataManager.recordScoresTrialDataArray[trialIndex].fitnessComponentDataArray[fitCompIndex].highestScore.ToString());
                 }
             }
@@ -338,6 +365,11 @@ public class Trainer {
                 //Debug.Log("ProcessFitnessScoresEndGeneration(" + playingCurGeneration.ToString() + ") agent " + j.ToString() + " score01= " + agentScores01[j].ToString());
                 //Debug.Log("ProcessFitnessScoresEndGeneration(" + playingCurGeneration.ToString() + ") agent " + j.ToString() + "|| " +  fitComponentScores);
                 playerList[p].masterPopulation.masterAgentArray[j].fitnessScore = agentScores01[j];
+                playerList[p].masterPopulation.masterAgentArray[j].parentFitnessScoreA = agentScores01[j];
+                int numMembersOfSpecies = playerList[p].masterPopulation.GetBreedingPoolByID(playerList[p].masterPopulation.speciesBreedingPoolList, playerList[p].masterPopulation.masterAgentArray[j].speciesID).agentList.Count;
+                Debug.Log("Trainer fit -- numMembersOfSpecies: " + numMembersOfSpecies.ToString() + ", speciesID: " + playerList[p].masterPopulation.masterAgentArray[j].speciesID.ToString());               
+                playerList[p].masterPopulation.masterAgentArray[j].fitnessScoreSpecies = agentScores01[j] / (1f + numMembersOfSpecies * playerList[p].masterCupid.largeSpeciesPenalty);
+                              
             }
 
 
@@ -373,7 +405,7 @@ public class Trainer {
 
                     }
                 }
-                Debug.Log("ProcessFitnessScoresEndGeneration(" + genIndex.ToString() + ") totalAllAgentsScore: " + playerList[p].dataManager.generationDataList[genIndex].totalAllAgentsScore.ToString());
+                //Debug.Log("ProcessFitnessScoresEndGeneration(" + genIndex.ToString() + ") totalAllAgentsScore: " + playerList[p].dataManager.generationDataList[genIndex].totalAllAgentsScore.ToString());
             }
 
 
@@ -394,7 +426,7 @@ public class Trainer {
             brainNetworkGO = new GameObject("brainNetworkGO");
             brainNetworkGO.AddComponent<MeshFilter>();
             
-            Material brainNetworkMat = new Material(Shader.Find("Custom/SimpleBrainNetworkShader"));
+            //Material brainNetworkMat = new Material(Shader.Find("Custom/SimpleBrainNetworkShader"));
             brainNetworkGO.AddComponent<MeshRenderer>().material = brainNetworkMat;
             
             networkVisualizer = brainNetworkGO.AddComponent<BrainNetworkVisualizer>();
@@ -584,12 +616,14 @@ public class Trainer {
 
         if(currentGameManager.miniGameInstance.waitingForReset) {
             //Debug.Log("CalculateOneStep() waitingForReset");
+            currentGameManager.miniGameInstance.gameCurrentRound = playingCurTrialRound;
             currentGameManager.miniGameInstance.Reset();
             currentGameManager.SetInputOutputArrays();
             if (currentGameManager.miniGameInstance.critterBeingTested != null) {
                 networkVisualizer.sourceCritter = currentGameManager.miniGameInstance.critterBeingTested;
             }
             BuildBrainMesh(playerList[playingCurPlayer].masterPopulation.masterAgentArray[playingCurAgent].brain);
+            
         }
         else {
             if (currentGameManager.miniGameInstance.gameCleared) {
@@ -633,13 +667,20 @@ public class Trainer {
                         // Run the game for one timeStep: (Note that this will only modify non-physX variables -- the actual movement and physX sim happens just afterward -- so keep that in mind)
                         currentGameManager.miniGameInstance.Tick();
                         //if (currentGameManager.miniGameInstance.critterBeingTested != null) {
-                        networkVisualizer.sourceCritter = currentGameManager.miniGameInstance.critterBeingTested;
-                        networkVisualizer.SetNeuronSegmentPositions(currentBrain);
+                        //networkVisualizer.sourceCritter = currentGameManager.miniGameInstance.critterBeingTested;
+                        //networkVisualizer.SetNeuronSegmentPositions(currentBrain);
                         //}
-                        networkVisualizer.UpdateVertexColors(currentBrain);
-                        networkVisualizer.MoveNeurons(currentBrain, 1);
-                        networkVisualizer.UpdateNodeVertexPositionsSphere(currentBrain);
-                        networkVisualizer.UpdateConnectionVertexPositionsBezier(currentBrain);
+                        //networkVisualizer.UpdateVertexColors(currentBrain);
+                        //networkVisualizer.MoveNeurons(currentBrain, 1);
+                        //networkVisualizer.UpdateNodeVertexPositionsSphere(currentBrain);
+                        //networkVisualizer.UpdateConnectionVertexPositionsBezier(currentBrain);
+                        // Update Data text view:
+                        gameControllerRef.trainerUI.panelDataViewScript.populationRef = playerList[playingCurPlayer].masterPopulation;
+                        gameControllerRef.trainerUI.panelDataViewScript.minigameRef = currentGameManager.miniGameInstance;
+                        gameControllerRef.trainerUI.panelDataViewScript.dataManagerRef = playerList[playingCurPlayer].dataManager;
+                        gameControllerRef.trainerUI.panelDataViewScript.SetCurrentAgentID(playingCurAgent);
+                        gameControllerRef.trainerUI.panelDataViewScript.UpdateDataText();
+                        
                         //MiniGameCritterWalkBasic minigame = (MiniGameCritterWalkBasic)currentGameManager.miniGameInstance as MiniGameCritterWalkBasic;
                         //networkVisualizer.InitShaderTexture(brain);
                         //minigame.SetShaderTextures(networkVisualizer);

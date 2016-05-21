@@ -19,10 +19,23 @@ public class TrainerCrossoverUI : MonoBehaviour {
 	public Text textSeverLinkChance;
 	public Slider sliderAddLinkChance;
 	public Text textAddLinkChance;
-	public Slider sliderFunctionChance;
+	public Slider sliderFunctionChance;  // Add Node!
 	public Text textFunctionChance;
+    public Slider sliderRemoveNodeChance;
+    public Text textRemoveNodeChance;
 
-	public Slider sliderNumSwapPositions;
+    public Slider sliderLargeBrainPenalty;
+    public Text textLargeBrainPenalty;
+    public Slider sliderSimilarityThreshold;
+    public Text textSimilarityThreshold;
+    public Slider sliderAdoptionRate;
+    public Text textAdoptionRate;
+    public Slider sliderSpeciesSizePenalty;
+    public Text textSpeciesSizePenalty;
+    public Slider sliderInterspeciesMatingRate;
+    public Text textInterspeciesMatingRate;
+
+    public Slider sliderNumSwapPositions;
 	public Text textNumSwapPositions;
 	public Slider sliderNumFactions;
 	public Text textNumFactions;
@@ -44,7 +57,11 @@ public class TrainerCrossoverUI : MonoBehaviour {
 	public Toggle toggleBreedingRandom;
 	public Toggle toggleBreedingByFitLottery;
 
-	public Button buttonApply;
+    public Toggle toggleMutation;
+    public Toggle toggleCrossover;
+    public Toggle toggleSpeciation;
+
+    public Button buttonApply;
 	public Button buttonCancel;
 	public Image bgImage;
 
@@ -75,7 +92,7 @@ public class TrainerCrossoverUI : MonoBehaviour {
 
 		// SET values from trainer data:
 		sliderMasterMutationRate.minValue = 0f; // set up slider bounds
-		sliderMasterMutationRate.maxValue = 0.2f;
+		sliderMasterMutationRate.maxValue = 0.4f;
 		//sliderMasterMutationRate.value = pendingCrossoverManager.masterMutationRate;
 		//textMasterMutationRate.text = pendingCrossoverManager.masterMutationRate.ToString();
 		sliderMaximumWeight.minValue = 0f; // set up slider bounds
@@ -88,8 +105,21 @@ public class TrainerCrossoverUI : MonoBehaviour {
 		sliderAddLinkChance.maxValue = 1f;
 		sliderFunctionChance.minValue = 0f; // set up slider bounds
 		sliderFunctionChance.maxValue = 1f;
+        sliderRemoveNodeChance.minValue = 0f; // set up slider bounds
+        sliderRemoveNodeChance.maxValue = 1f;
 
-		sliderNumSwapPositions.minValue = 1;
+        sliderLargeBrainPenalty.minValue = 0f; // set up slider bounds
+        sliderLargeBrainPenalty.maxValue = 0.5f;
+        sliderSimilarityThreshold.minValue = 0f; // set up slider bounds
+        sliderSimilarityThreshold.maxValue = 10f;
+        sliderAdoptionRate.minValue = 0f; // set up slider bounds
+        sliderAdoptionRate.maxValue = 1f;
+        sliderSpeciesSizePenalty.minValue = 0f; // set up slider bounds
+        sliderSpeciesSizePenalty.maxValue = 1f;
+        sliderInterspeciesMatingRate.minValue = 0f; // set up slider bounds
+        sliderInterspeciesMatingRate.maxValue = 1f;
+
+        sliderNumSwapPositions.minValue = 1;
 		sliderNumSwapPositions.maxValue = 20;
 		sliderNumFactions.minValue = 1;
 		sliderNumFactions.maxValue = 20;
@@ -102,6 +132,8 @@ public class TrainerCrossoverUI : MonoBehaviour {
 		sliderSurvivalRate.maxValue = 1f;
 		sliderBreedingRate.minValue = 0f; // set up slider bounds
 		sliderBreedingRate.maxValue = 1f;
+
+        // Need to add the Toggles here ?!?????????????????????????????????????????
 
 		
 		valuesChanged = false;
@@ -179,8 +211,21 @@ public class TrainerCrossoverUI : MonoBehaviour {
 		textAddLinkChance.text = pendingCrossoverManager.mutationAddLinkChance.ToString();
 		sliderFunctionChance.value = pendingCrossoverManager.mutationAddNodeChance;
 		textFunctionChance.text = pendingCrossoverManager.mutationAddNodeChance.ToString();
+        sliderRemoveNodeChance.value = pendingCrossoverManager.mutationRemoveNodeChance;
+        textRemoveNodeChance.text = pendingCrossoverManager.mutationRemoveNodeChance.ToString();
 
-		sliderNumSwapPositions.value = pendingCrossoverManager.numSwapPositions;
+        sliderLargeBrainPenalty.value = pendingCrossoverManager.largeBrainPenalty;
+        textLargeBrainPenalty.text = pendingCrossoverManager.largeBrainPenalty.ToString();
+        sliderSimilarityThreshold.value = pendingCrossoverManager.speciesSimilarityThreshold;
+        textSimilarityThreshold.text = pendingCrossoverManager.speciesSimilarityThreshold.ToString();
+        sliderAdoptionRate.value = pendingCrossoverManager.adoptionRate;
+        textAdoptionRate.text = pendingCrossoverManager.adoptionRate.ToString();
+        sliderSpeciesSizePenalty.value = pendingCrossoverManager.largeSpeciesPenalty;
+        textSpeciesSizePenalty.text = pendingCrossoverManager.largeSpeciesPenalty.ToString();
+        sliderInterspeciesMatingRate.value = pendingCrossoverManager.interspeciesBreedingRate;
+        textInterspeciesMatingRate.text = pendingCrossoverManager.interspeciesBreedingRate.ToString();
+
+        sliderNumSwapPositions.value = pendingCrossoverManager.numSwapPositions;
 		textNumSwapPositions.text = pendingCrossoverManager.numSwapPositions.ToString();
 		sliderNumFactions.value = pendingCrossoverManager.numFactions;
 		textNumFactions.text = pendingCrossoverManager.numFactions.ToString();
@@ -275,8 +320,82 @@ public class TrainerCrossoverUI : MonoBehaviour {
 		}
 		UpdateUIWithCurrentData();  // Will update text display of PENDING numPlayers value (NOT the applied value!)
 	}
+    public void SliderRemoveNodeChance(float sliderValue) { // On Slider Value Changed
+        DebugBot.DebugFunctionCall("TCrossoverUI; SliderRemoveNodeChance(); ", debugFunctionCalls);
+        pendingCrossoverManager.mutationRemoveNodeChance = sliderValue;
+        float dataRemoveNodeChance = playerRef.masterCupid.mutationRemoveNodeChance;
+        if (pendingCrossoverManager.mutationRemoveNodeChance != dataRemoveNodeChance) {
+            valuesChanged = true;
+        }
+        else {
+            valuesChanged = false;
+        }
+        UpdateUIWithCurrentData();  // Will update text display of PENDING numPlayers value (NOT the applied value!)
+    }
 
-	public void SliderNumSwapPositions(float sliderValue) { // On Slider Value Changed
+    public void SliderLargeBrainPenalty(float sliderValue) { // On Slider Value Changed
+        DebugBot.DebugFunctionCall("TCrossoverUI; SliderLargeBrainPenalty(); ", debugFunctionCalls);
+        pendingCrossoverManager.largeBrainPenalty = sliderValue;
+        float dataLargeBrainPenalty = playerRef.masterCupid.largeBrainPenalty;
+        if (pendingCrossoverManager.largeBrainPenalty != dataLargeBrainPenalty) {
+            valuesChanged = true;
+        }
+        else {
+            valuesChanged = false;
+        }
+        UpdateUIWithCurrentData();  // Will update text display of PENDING numPlayers value (NOT the applied value!)
+    }
+    // SPECIATION:
+    public void SliderSimilarityThreshold(float sliderValue) { // On Slider Value Changed
+        DebugBot.DebugFunctionCall("TCrossoverUI; SliderSimilarityThreshold(); ", debugFunctionCalls);
+        pendingCrossoverManager.speciesSimilarityThreshold = sliderValue;
+        float dataSimilarityThreshold = playerRef.masterCupid.speciesSimilarityThreshold;
+        if (pendingCrossoverManager.speciesSimilarityThreshold != dataSimilarityThreshold) {
+            valuesChanged = true;
+        }
+        else {
+            valuesChanged = false;
+        }
+        UpdateUIWithCurrentData();  // Will update text display of PENDING numPlayers value (NOT the applied value!)
+    }
+    public void SliderAdoptionRate(float sliderValue) { // On Slider Value Changed
+        DebugBot.DebugFunctionCall("TCrossoverUI; SliderAdoptionRate(); ", debugFunctionCalls);
+        pendingCrossoverManager.adoptionRate = sliderValue;
+        float dataAdoptionRate = playerRef.masterCupid.adoptionRate;
+        if (pendingCrossoverManager.adoptionRate != dataAdoptionRate) {
+            valuesChanged = true;
+        }
+        else {
+            valuesChanged = false;
+        }
+        UpdateUIWithCurrentData();  // Will update text display of PENDING numPlayers value (NOT the applied value!)
+    }
+    public void SliderSpeciesSizePenalty(float sliderValue) { // On Slider Value Changed
+        DebugBot.DebugFunctionCall("TCrossoverUI; SliderSpeciesSizePenalty(); ", debugFunctionCalls);
+        pendingCrossoverManager.largeSpeciesPenalty = sliderValue;
+        float dataSpeciesSizePenalty = playerRef.masterCupid.largeSpeciesPenalty;
+        if (pendingCrossoverManager.largeSpeciesPenalty != dataSpeciesSizePenalty) {
+            valuesChanged = true;
+        }
+        else {
+            valuesChanged = false;
+        }
+        UpdateUIWithCurrentData();  // Will update text display of PENDING numPlayers value (NOT the applied value!)
+    }
+    public void SliderInterspeciesMatingRate(float sliderValue) { // On Slider Value Changed
+        DebugBot.DebugFunctionCall("TCrossoverUI; InterspeciesMatingRate(); ", debugFunctionCalls);
+        pendingCrossoverManager.interspeciesBreedingRate = sliderValue;
+        float dataInterspeciesMatingRate = playerRef.masterCupid.interspeciesBreedingRate;
+        if (pendingCrossoverManager.interspeciesBreedingRate != dataInterspeciesMatingRate) {
+            valuesChanged = true;
+        }
+        else {
+            valuesChanged = false;
+        }
+        UpdateUIWithCurrentData();  // Will update text display of PENDING numPlayers value (NOT the applied value!)
+    }
+
+    public void SliderNumSwapPositions(float sliderValue) { // On Slider Value Changed
 		DebugBot.DebugFunctionCall("TCrossoverUI; SliderNumSwapPositions(); ", debugFunctionCalls);
 		pendingCrossoverManager.numSwapPositions = (int)sliderValue;
 		int dataNumSwapPositions = playerRef.masterCupid.numSwapPositions;
@@ -357,7 +476,8 @@ public class TrainerCrossoverUI : MonoBehaviour {
 	public void ToggleBreedWithSimilar(bool value) {
 		DebugBot.DebugFunctionCall("TCrossoverUI; ToggleBreedWithSimilar(); ", debugFunctionCalls);
 		pendingCrossoverManager.breedWithSimilar = value;
-	}
+        UpdateUIWithCurrentData();
+    }
 
 	public void ToggleSurvivalByRank(bool value) {
 		DebugBot.DebugFunctionCall("TCrossoverUI; ToggleSurvivalByRank(); ", debugFunctionCalls);
@@ -374,7 +494,8 @@ public class TrainerCrossoverUI : MonoBehaviour {
 				toggleSurvivalByRanking.isOn = true;
 			}
 		}
-	}
+        UpdateUIWithCurrentData();
+    }
 	public void ToggleSurvivalStochastic(bool value) {
 		DebugBot.DebugFunctionCall("TCrossoverUI; ToggleSurvivalStochastic(); ", debugFunctionCalls);
 		if(value) {  // if was off, turning on:
@@ -390,7 +511,8 @@ public class TrainerCrossoverUI : MonoBehaviour {
 				toggleSurvivalRandom.isOn = true;
 			}
 		}
-	}
+        UpdateUIWithCurrentData();
+    }
 	public void ToggleSurvivalByRaffle(bool value) {
 		DebugBot.DebugFunctionCall("TCrossoverUI; ToggleSurvivalByRaffle(); ", debugFunctionCalls);
 		if(value) {  // if was off, turning on:
@@ -407,7 +529,8 @@ public class TrainerCrossoverUI : MonoBehaviour {
 				toggleSurvivalByFitLottery.isOn = true;
 			}
 		}
-	}
+        UpdateUIWithCurrentData();
+    }
 
 	public void ToggleBreedingByRank(bool value) {
 		DebugBot.DebugFunctionCall("TCrossoverUI; ToggleBreedingByRank(); ", debugFunctionCalls);
@@ -425,7 +548,8 @@ public class TrainerCrossoverUI : MonoBehaviour {
 				toggleBreedingByRanking.isOn = true;
 			}
 		}
-	}
+        UpdateUIWithCurrentData();
+    }
 	public void ToggleBreedingStochastic(bool value) {
 		DebugBot.DebugFunctionCall("TCrossoverUI; ToggleBreedingStochastic(); ", debugFunctionCalls);
 		if(value) {  // if was off, turning on:
@@ -441,7 +565,8 @@ public class TrainerCrossoverUI : MonoBehaviour {
 				toggleBreedingRandom.isOn = true;
 			}
 		}
-	}
+        UpdateUIWithCurrentData();
+    }
 	public void ToggleBreedingByRaffle(bool value) {
 		DebugBot.DebugFunctionCall("TCrossoverUI; ToggleBreedingByRaffle(); ", debugFunctionCalls);
 		if(value) {  // if was off, turning on:
@@ -457,10 +582,29 @@ public class TrainerCrossoverUI : MonoBehaviour {
 				toggleBreedingByFitLottery.isOn = true;
 			}
 		}
-	}
+        UpdateUIWithCurrentData();
+    }
 
-	
-	public void ClickApply() {
+    public void ToggleMutation(bool value) {
+        DebugBot.DebugFunctionCall("TCrossoverUI; ToggleMutation(" + value.ToString() + "); ", debugFunctionCalls);
+        pendingCrossoverManager.useMutation = value;
+        valuesChanged = true;
+        UpdateUIWithCurrentData();
+    }
+    public void ToggleCrossover(bool value) {
+        DebugBot.DebugFunctionCall("TCrossoverUI; ToggleCrossover(" + value.ToString() + "); ", debugFunctionCalls);
+        pendingCrossoverManager.useCrossover = value;
+        valuesChanged = true;
+        UpdateUIWithCurrentData();
+    }
+    public void ToggleSpeciation(bool value) {
+        DebugBot.DebugFunctionCall("TCrossoverUI; ToggleSpeciation(" + value.ToString() + "); ", debugFunctionCalls);
+        pendingCrossoverManager.useSpeciation = value;
+        valuesChanged = true;
+        UpdateUIWithCurrentData();
+    }
+
+    public void ClickApply() {
 		DebugBot.DebugFunctionCall("TCrossoverUI; ClickApply(); ", debugFunctionCalls);
 		applyPressed = true;
 		UpdateUIElementStates();  // change background color to indicate pending changes

@@ -3,13 +3,15 @@
 		_Color ("Color", Color) = (1,1,1,1)
 	}
 	SubShader {
-		Tags{ "Queue" = "Transparent" }
-		//Tags{ "RenderType" = "Opaque" }
+		//Tags{ "RenderType" = "Opaque"  "RenderQueue" = "Opaque" }
+		Tags{ "RenderType" = "Transparent" "Queue" = "Transparent"  }
 		//LOD 200
 		
 		pass {
 			//ZWrite Off
+			Cull Off
 			ZTest Always
+			//ZWrite Off
 
 			CGPROGRAM
 			// Physically based Standard lighting model, and enable shadows on all light types
@@ -21,7 +23,8 @@
 
 			
 			// uniforms
-			uniform fixed4 _Color;	
+			uniform fixed4 _Color;
+			uniform fixed4 _LightColor0;
 
 			struct vertexInput {
 				float4 vertex : POSITION; // position in object coordinates
@@ -48,7 +51,11 @@
 				o.color = _Color;
 				
 				//normal dir
-				o.normalDir = normalize ( mul ( float4( i.normal, 0.0 ), _World2Object).xyz );				
+				o.normalDir = normalize ( mul ( float4( i.normal, 0.0 ), _World2Object).xyz );		
+				float3 normalDirection = normalize(mul(float4(i.normal, 1.0), _World2Object).xyz);
+				//float3 lightDirection = normalize(_WorldSpaceLightPos0.xyz);
+				float3 lightDirection = float3(0.2, 1.0, 0.3);
+				float3 diffuse = _LightColor0.xyz * max(0.0, dot(normalDirection, lightDirection)) * _Color;
 				//world position
 				float4 posWorld = mul(_Object2World, i.vertex);				
 				//view direction
@@ -58,7 +65,6 @@
 				//float val = abs(((o.color.r + o.color.g + o.color.b) / 3.0) - 0.5) + 1;
 				//i.vertex = (i.vertex - 0.5) * val * 1.0;
 				o.pos = mul( UNITY_MATRIX_MVP, i.vertex );
-				
 				
 				// DEBUG options - sets color to other variables
 				//o.color = i.texcoord;
@@ -71,13 +77,13 @@
 				//o.color = i.color // vertex colors
 				//o.color = float4( i.normal, 1.0);
 				
-
 				float dist = sqrt(dot(camToWorldVector, camToWorldVector));
 				float maxFogDist = 20.0;
 				float fogAmount = clamp(0.0, 1.0, dist/maxFogDist);
-				float4 fogColor = float4(0.4, 0.6, 0.75, 1.0);
-				//o.color = fogColor;
-				o.color = lerp(i.color * _Color, fogColor, fogAmount);
+				float4 fogColor = float4(0.5, 0.62, 0.94, 1.0);
+				
+				o.color = lerp(i.color * _Color, fogColor, 0.1);
+				o.color.xyz = lerp(o.color.xyz, diffuse, 0.01);
 				//o.color.a = 0.0;
 				
 				return o;

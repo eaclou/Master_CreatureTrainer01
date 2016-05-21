@@ -36,5 +36,6 @@ public class SegaddonPositionSensor3D {
         fitnessDistance = new float[1];
         fitnessDistance[0] = 0f;
         targetPos = new Vector3[1];
+        relative = sourceNode.relative[0];
     }
 }

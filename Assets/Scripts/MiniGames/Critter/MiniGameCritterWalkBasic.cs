@@ -45,23 +45,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
 
     // Game Settings:
     public int numberOfSegments = 12; // cleanup?
-    // GameOptions:
-    //public float[] viscosityDrag = new float[1]; //50f;
-    //public float[] gravityStrength = new float[1];
-    //public float[] jointMotorForce = new float[1]; //100f;
-    //public float[] jointMotorSpeed = new float[1]; //500f;
-    //public float[] variableMass = new float[1]; // 0 means all segments have mass of 1.  // 1 means segment's mass is proportional to its volume
-    //public float[] targetX = new float[1];
-    //public float[] targetY = new float[1];
-    //public float[] targetZ = new float[1];
-    //public float[] targetPosAxis = new float[1];
-    //public float[] moveSpeedMaxFit = new float[1];
-    //public float[] maxScoreDistance = new float[1];
-    //public float[] targetRadius = new float[1];
-    //public float[] groundPositionY = new float[1];
-    //public float[] groundBounce = new float[1];
-    //public float[] groundFriction = new float[1];
-    //public float[] angleSensorSensitivity = new float[1];
+    
     // Debug & Diagnostic:
     public float debugVectorLength = 0.7f;
     public float debugVectorThickness = 0.0125f;
@@ -207,6 +191,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             wormSegmentArray_ScaleX[i] = new float[1];
             wormSegmentArray_ScaleY[i] = new float[1];
             wormSegmentArray_ScaleZ[i] = new float[1];
+
         }
     }
 
@@ -227,8 +212,79 @@ public class MiniGameCritterWalkBasic : MiniGameBase
                 
         ResetFitnessComponentValues(); // Fitness component list currently does not change based on Agent, so no need to regenerate list, only reset values
 
+        //Debug.Log("Reset! CurrentRound: " + gameCurrentRound.ToString());
+
         #region setup Target
+        float targDist = UnityEngine.Random.Range(gameSettings.minScoreDistance[0], gameSettings.maxScoreDistance[0]);
         float randX = UnityEngine.Random.Range(-1f, 1f);
+        float randY = UnityEngine.Random.Range(-1f, 1f);
+        float randZ = UnityEngine.Random.Range(-1f, 1f);
+        Vector3 randDir = new Vector3(randX, randY, randZ).normalized;
+        switch (gameCurrentRound) {
+            case 0:
+                // Pos X:
+                targetPos = new Vector3(1f * targDist, 0f, 0f);
+                targetPosX[0] = targetPos.x;
+                targetPosY[0] = targetPos.y;
+                targetPosZ[0] = targetPos.z;
+                break;
+            case 1:
+                // Neg X:
+                targetPos = new Vector3(-1f * targDist, 0f, 0f);
+                targetPosX[0] = targetPos.x;
+                targetPosY[0] = targetPos.y;
+                targetPosZ[0] = targetPos.z;
+                break;
+            case 2:
+                // Pos Y:
+                targetPos = new Vector3(0f, 1f * targDist, 0f);
+                targetPosX[0] = targetPos.x;
+                targetPosY[0] = targetPos.y;
+                targetPosZ[0] = targetPos.z;
+                break;
+            case 3:
+                // Neg Y:
+                targetPos = new Vector3(0f, -1f * targDist, 0f);
+                targetPosX[0] = targetPos.x;
+                targetPosY[0] = targetPos.y;
+                targetPosZ[0] = targetPos.z;
+                break;
+            case 4:
+                // Pos Z:
+                targetPos = new Vector3(0f, 0f, 1f * targDist);
+                targetPosX[0] = targetPos.x;
+                targetPosY[0] = targetPos.y;
+                targetPosZ[0] = targetPos.z;
+                break;
+            case 5:
+                // Neg Z:
+                targetPos = new Vector3(0f, 0f, -1f * targDist);
+                targetPosX[0] = targetPos.x;
+                targetPosY[0] = targetPos.y;
+                targetPosZ[0] = targetPos.z;
+                break;
+            case 6:
+                // Neg Z:
+                targetPos = new Vector3(randDir.x * targDist, randDir.y * targDist, randDir.z * targDist);
+                targetPosX[0] = targetPos.x;
+                targetPosY[0] = targetPos.y;
+                targetPosZ[0] = targetPos.z;
+                break;
+            case 7:
+                // Neg Z:
+                targetPos = new Vector3(randDir.x * targDist, randDir.y * targDist, randDir.z * targDist);
+                targetPosX[0] = targetPos.x;
+                targetPosY[0] = targetPos.y;
+                targetPosZ[0] = targetPos.z;
+                break;
+
+            default:
+
+                break;
+        }
+
+        
+        /*float randX = UnityEngine.Random.Range(-1f, 1f);
         float randY = UnityEngine.Random.Range(-1f, 1f);
         float randZ = UnityEngine.Random.Range(-1f, 1f);
         float delta = gameSettings.targetPosAxis[0] - 0.5f;
@@ -283,12 +339,14 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         }
 
         Vector3 randDir = new Vector3(randX, randY, randZ).normalized;
-        targetPos = new Vector3(randDir.x * gameSettings.maxScoreDistance[0], randDir.y * gameSettings.maxScoreDistance[0], randDir.z * gameSettings.maxScoreDistance[0]);
+        float targDist = UnityEngine.Random.Range(gameSettings.minScoreDistance[0], gameSettings.maxScoreDistance[0]);
+        targetPos = new Vector3(randDir.x * targDist, randDir.y * targDist, randDir.z * targDist);
         targetPosX[0] = targetPos.x;
         targetPosY[0] = targetPos.y;
         targetPosZ[0] = targetPos.z;
+        */
         #endregion
-
+        
         Vector3 avgPos = new Vector3(0f, 0f, 0f);
         wormTotalMass = 0f;
 
@@ -370,7 +428,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             //critterBeingTested.critterSegmentList[i].GetComponent<MeshRenderer>().material.SetColor("_Color", new Color(0f, 0.5f, 0.1f));
             //Debug.Log("Set Color!");
             critterBeingTested.critterSegmentList[i].GetComponent<MeshRenderer>().material.SetTexture("_NeuronPosTex", visualizer.neuronPositionsTexture);
-            Debug.Log("Set Color!" + visualizer.neuronPositionsTexture.width.ToString());
+            //Debug.Log("Set Color!" + visualizer.neuronPositionsTexture.width.ToString());
         }
         //critterBeingTested.critterSegmentMaterial.SetTexture("_NeuronPosTex", networkVisualizer.neuronPositionsTexture);
     }
@@ -441,6 +499,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             else {
                 forwardVector = positionSensor1D.forwardVector[0].normalized;
             }
+            //Debug.Log("positionSensor1D relative: " + positionSensor1D.relative.ToString() + ", forVec: " + forwardVector.ToString() + ", quat: " + critterBeingTested.critterSegmentList[positionSensor1D.segmentID].transform.rotation.ToString());
             float dot = Vector3.Dot(segmentToTargetVect, forwardVector) * positionSensor1D.sensitivity;  // should equal magnitude
             positionSensor1D.linearDistance[0] = dot;
             positionSensor1D.fitnessDistance[0] = Mathf.Abs(dot);
@@ -485,11 +544,14 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         for (int rotationSensor3DIndex = 0; rotationSensor3DIndex < critterBeingTested.segaddonRotationSensor3DList.Count; rotationSensor3DIndex++) {
             SegaddonRotationSensor3D rotationSensor3D = critterBeingTested.segaddonRotationSensor3DList[rotationSensor3DIndex];
             Vector3 localAngularVelocity = critterBeingTested.critterSegmentList[rotationSensor3D.segmentID].transform.InverseTransformDirection(critterBeingTested.critterSegmentList[rotationSensor3D.segmentID].GetComponent<Rigidbody>().angularVelocity);
-            
+            //Vector3 localAngularVelocity = critterBeingTested.critterSegmentList[rotationSensor3D.segmentID].GetComponent<Rigidbody>().angularVelocity;
+
             rotationSensor3D.rotationRateX[0] = localAngularVelocity.x * rotationSensor3D.sensitivity;
             rotationSensor3D.rotationRateY[0] = localAngularVelocity.y * rotationSensor3D.sensitivity;
-            rotationSensor3D.rotationRateZ[0] = localAngularVelocity.z * rotationSensor3D.sensitivity;      
-            rotationSensor3D.fitnessRotationRate[0] = new Vector3(Mathf.Abs(rotationSensor3D.rotationRateX[0]), Mathf.Abs(rotationSensor3D.rotationRateY[0]), Mathf.Abs(rotationSensor3D.rotationRateZ[0])).magnitude;
+            rotationSensor3D.rotationRateZ[0] = localAngularVelocity.z * rotationSensor3D.sensitivity; 
+            fitnessRotationSensor3DList[rotationSensor3DIndex][0] += new Vector3(Mathf.Abs(rotationSensor3D.rotationRateX[0]), Mathf.Abs(rotationSensor3D.rotationRateY[0]), Mathf.Abs(rotationSensor3D.rotationRateZ[0])).magnitude;
+            //rotationSensor3D.fitnessRotationRate[0] = new Vector3(Mathf.Abs(rotationSensor3D.rotationRateX[0]), Mathf.Abs(rotationSensor3D.rotationRateY[0]), Mathf.Abs(rotationSensor3D.rotationRateZ[0])).magnitude;
+            //Debug.Log("rotationSensor3D fitnessRotationRate[0]: " + rotationSensor3D.fitnessRotationRate[0].ToString());
             // Vector3 localAngularVelocity = target.transform.InverseTransformDirection(target.rigidbody.angularVelocity); // use if needed!!
         }
         // Velocity Sensor 1D:
@@ -535,7 +597,8 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         // Altimeter:
         for (int altimeterIndex = 0; altimeterIndex < critterBeingTested.segaddonAltimeterList.Count; altimeterIndex++) {
             SegaddonAltimeter altimeter = critterBeingTested.segaddonAltimeterList[altimeterIndex];
-            altimeter.altitude[0] = critterBeingTested.critterSegmentList[altimeterIndex].transform.position.y;           
+            altimeter.altitude[0] = critterBeingTested.critterSegmentList[altimeterIndex].transform.position.y;
+            fitnessAltimeterList[altimeterIndex][0] += altimeter.altitude[0];        
         }
 
         // Setup Joint MOTORS:  ..... was created within RebuildCritterFromGenomeRecursive...
@@ -685,7 +748,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
 
         Vector3 headToTargetVect = new Vector3(targetPosX[0] - wormSegmentArray_PosX[0][0], targetPosY[0] - wormSegmentArray_PosY[0][0], targetPosZ[0] - wormSegmentArray_PosZ[0][0]).normalized;
 
-        fitMoveToTarget[0] += Vector3.Dot(comVel.normalized, targetDirection.normalized) * 0.5f + 0.5f;
+        fitMoveToTarget[0] += Vector3.Dot(comVel.normalized, targetDirection.normalized);
         fitMoveSpeed[0] += comVel.magnitude;
 
         bool inTarget = false;
@@ -699,7 +762,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             fitTimeInTarget[0] += 0f;
         }
 
-        if (inTarget)
+        /*if (inTarget)
         {
             //preWarm = false;
             //Debug.Log ("PreWarm OFF");
@@ -761,7 +824,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             targetPosX[0] = targetPos.x;
             targetPosY[0] = targetPos.y;
             targetPosZ[0] = targetPos.z;
-        }
+        }*/
 
         gameTicked = true;
         //gameCurrentTimeStep++;  This is updated in base class function: GameTimeStepCompleted()
@@ -1012,17 +1075,17 @@ public class MiniGameCritterWalkBasic : MiniGameBase
     {
         // Fitness Component List:
         fitnessComponentList = new List<FitnessComponent>();
-        FitnessComponent FC_distFromOrigin = new FitnessComponent(ref fitDistFromOrigin, true, true, 1f, 1f, "Distance From Origin", true);
+        FitnessComponent FC_distFromOrigin = new FitnessComponent(ref fitDistFromOrigin, true, true, 1f, 0f, "Distance From Origin", true);
         fitnessComponentList.Add(FC_distFromOrigin); // 0
         //FitnessComponent FC_energySpent = new FitnessComponent(ref fitEnergySpent, true, false, 1f, 1f, "Energy Spent", true);
         //fitnessComponentList.Add(FC_energySpent); // 1
         FitnessComponent FC_distToTarget = new FitnessComponent(ref fitDistToTarget, true, false, 1f, 1f, "Distance To Target", true);
         fitnessComponentList.Add(FC_distToTarget); // 2
-        FitnessComponent FC_timeToTarget = new FitnessComponent(ref fitTimeInTarget, true, false, 1f, 1f, "Time To Target", true);
+        FitnessComponent FC_timeToTarget = new FitnessComponent(ref fitTimeInTarget, true, true, 1f, 1f, "Time In Target", true);
         fitnessComponentList.Add(FC_timeToTarget); // 3
         FitnessComponent FC_moveToTarget = new FitnessComponent(ref fitMoveToTarget, true, true, 1f, 1f, "Move Towards Target", true);
         fitnessComponentList.Add(FC_moveToTarget); // 7
-        FitnessComponent FC_moveSpeed = new FitnessComponent(ref fitMoveSpeed, true, true, 1f, 1f, "Average Speed", true);
+        FitnessComponent FC_moveSpeed = new FitnessComponent(ref fitMoveSpeed, true, true, 1f, 0f, "Average Speed", true);
         fitnessComponentList.Add(FC_moveSpeed); // 8
 
         fitnessContactSensorList = new List<float[]>();
@@ -1083,7 +1146,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             float[] fitnessDistance = new float[1];
             fitnessDistance[0] = 0f;
             fitnessPositionSensor1DList.Add(fitnessDistance);
-            FitnessComponent FC_segmentPosition1DDistance = new FitnessComponent(ref fitnessDistance, true, false, 1f, 1f, fitnessComponentName, true);
+            FitnessComponent FC_segmentPosition1DDistance = new FitnessComponent(ref fitnessDistance, true, false, 1f, 0.25f, fitnessComponentName, true);
             fitnessComponentList.Add(FC_segmentPosition1DDistance);
         }
         fitnessPositionSensor3DList = new List<float[]>();
@@ -1101,8 +1164,8 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             float[] fitnessRate = new float[1];
             fitnessRate[0] = 0f;
             fitnessRotationSensor1DList.Add(fitnessRate);
-            FitnessComponent FC_segmentRotation1DDistance = new FitnessComponent(ref fitnessRate, true, false, 1f, 1f, fitnessComponentName, true);
-            fitnessComponentList.Add(FC_segmentRotation1DDistance);
+            FitnessComponent FC_segmentRotation1D = new FitnessComponent(ref fitnessRate, true, false, 1f, 1f, fitnessComponentName, true);
+            fitnessComponentList.Add(FC_segmentRotation1D);
         }
         fitnessRotationSensor3DList = new List<float[]>();
         for (int rotationSensor3DIndex = 0; rotationSensor3DIndex < critterBeingTested.segaddonRotationSensor3DList.Count; rotationSensor3DIndex++) {
@@ -1110,8 +1173,9 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             float[] fitnessRate = new float[1];
             fitnessRate[0] = 0f;
             fitnessRotationSensor3DList.Add(fitnessRate);
-            FitnessComponent FC_segmentRotation3DDistance = new FitnessComponent(ref fitnessRate, true, false, 1f, 1f, fitnessComponentName, true);
-            fitnessComponentList.Add(FC_segmentRotation3DDistance);
+            //critterBeingTested.segaddonRotationSensor3DList[rotationSensor3DIndex];
+            FitnessComponent FC_segmentRotation3D = new FitnessComponent(ref fitnessRate, true, false, 1f, 0.25f, fitnessComponentName, true);
+            fitnessComponentList.Add(FC_segmentRotation3D);
         }
         fitnessAltimeterList = new List<float[]>();
         for (int altimeterIndex = 0; altimeterIndex < critterBeingTested.segaddonAltimeterList.Count; altimeterIndex++) {

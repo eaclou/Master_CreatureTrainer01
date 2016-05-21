@@ -24,7 +24,7 @@ public class MiniGameBase {
     public bool waitingForReset = false;
 	public int gameCurrentTimeStep = 0;
 
-
+    public int gameCurrentRound = 0;
 
 	//public float fitnessScore = 0f;
 

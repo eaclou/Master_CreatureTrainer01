@@ -14,7 +14,8 @@ public class MiniGameCritterWalkBasicSettings : MiniGameSettingsBase {
     public float[] targetY = new float[1];
     public float[] targetZ = new float[1];
     public float[] targetPosAxis = new float[1];
-    public float[] moveSpeedMaxFit = new float[1];
+    //public float[] moveSpeedMaxFit = new float[1];
+    public float[] minScoreDistance = new float[1];
     public float[] maxScoreDistance = new float[1];
     public float[] targetRadius = new float[1];
     public float[] groundPositionY = new float[1];
@@ -25,18 +26,19 @@ public class MiniGameCritterWalkBasicSettings : MiniGameSettingsBase {
     public MiniGameCritterWalkBasicSettings() {
         // DEFAULTS:
         viscosityDrag[0] = 0f;
-        gravityStrength[0] = 0.0f;
+        gravityStrength[0] = 0f;
         jointMotorForce[0] = 1f; // global multipliers on individual joint motor settings
         jointMotorSpeed[0] = 1f;
         variableMass[0] = 0.0f;
         targetX[0] = 0f;
         targetY[0] = 0f;
         targetZ[0] = 1f;
-        targetPosAxis[0] = 1f;
-        maxScoreDistance[0] = 10f;
-        moveSpeedMaxFit[0] = 0.1f;
-        targetRadius[0] = 0.35f;
-        groundPositionY[0] = -5f;
+        targetPosAxis[0] = 0.5f;
+        minScoreDistance[0] = 3f;
+        maxScoreDistance[0] = 3.1f;
+        //moveSpeedMaxFit[0] = 0.1f;
+        targetRadius[0] = 1f;
+        groundPositionY[0] = -20f;
         angleSensorSensitivity[0] = 1f;
 
         gameOptionsList = new List<GameOptionChannel>();
@@ -63,9 +65,11 @@ public class MiniGameCritterWalkBasicSettings : MiniGameSettingsBase {
         gameOptionsList.Add(GOC_targetZ); // 5
         GameOptionChannel GOC_targetPosAxis = new GameOptionChannel(ref targetPosAxis, 0f, 1f, "Target Only Positive Axis");
         gameOptionsList.Add(GOC_targetPosAxis); // 5
-        GameOptionChannel GOC_moveSpeedMaxFit = new GameOptionChannel(ref moveSpeedMaxFit, 0.001f, 1f, "Move Speed Max Score");
-        gameOptionsList.Add(GOC_moveSpeedMaxFit); // 6
-        GameOptionChannel GOC_maxScoreDistance = new GameOptionChannel(ref maxScoreDistance, 0.001f, 50f, "Move Score Distance");
+        //GameOptionChannel GOC_moveSpeedMaxFit = new GameOptionChannel(ref moveSpeedMaxFit, 0.001f, 1f, "Move Speed Max Score");
+        //gameOptionsList.Add(GOC_moveSpeedMaxFit); // 6
+        GameOptionChannel GOC_minScoreDistance = new GameOptionChannel(ref minScoreDistance, 0.001f, 50f, "Min Target Distance");
+        gameOptionsList.Add(GOC_minScoreDistance); // 7
+        GameOptionChannel GOC_maxScoreDistance = new GameOptionChannel(ref maxScoreDistance, 0.001f, 50f, "Max Target Distance");
         gameOptionsList.Add(GOC_maxScoreDistance); // 7
         GameOptionChannel GOC_groundPositionY = new GameOptionChannel(ref groundPositionY, -20f, 0f, "Ground Position Y");
         gameOptionsList.Add(GOC_groundPositionY); // 7    

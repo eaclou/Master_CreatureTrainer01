@@ -7,8 +7,8 @@ public class GenomeNEAT {
     public List<GeneNodeNEAT> nodeNEATList;
     public List<GeneLinkNEAT> linkNEATList;
 
-    private int nextAvailableInnovationNumber = 0;
-
+    private static int nextAvailableInnovationNumber = 0;
+    
 	public GenomeNEAT() {
         // Constructor
     }
@@ -63,6 +63,14 @@ public class GenomeNEAT {
         }
     }
 
+    public void RemoveRandomLink() {
+        if(linkNEATList.Count > 0) {
+            int randomLinkID = (int)UnityEngine.Random.Range(0f, (float)linkNEATList.Count);
+            Debug.Log("Remove RandomLink #" + randomLinkID.ToString());
+            linkNEATList.RemoveAt(randomLinkID);
+        }        
+    }
+
     public void AddNewRandomLink() {
         
         List<GeneNodeNEAT> eligibleFromNodes = new List<GeneNodeNEAT>();
@@ -83,16 +91,25 @@ public class GenomeNEAT {
         int toNodeID = (int)UnityEngine.Random.Range(0f, (float)eligibleToNodes.Count);
         if(eligibleFromNodes[fromNodeID].id == eligibleToNodes[toNodeID].id) {
             Debug.Log("New Link TO ITSELF: " + fromNodeID.ToString() + " Doing it anyway!");
-            float randomWeight = Gaussian.GetRandomGaussian();
+            float randomWeight = Gaussian.GetRandomGaussian() * 0.2f; //0f; // start zeroed to give a chance to try both + and - //Gaussian.GetRandomGaussian();
             GeneLinkNEAT newLink = new GeneLinkNEAT(eligibleFromNodes[fromNodeID].id, eligibleToNodes[toNodeID].id, randomWeight, true, GetNextInnovNumber());
             linkNEATList.Add(newLink);
         }
         else {
-            float randomWeight = Gaussian.GetRandomGaussian();
-            GeneLinkNEAT newLink = new GeneLinkNEAT(eligibleFromNodes[fromNodeID].id, eligibleToNodes[toNodeID].id, randomWeight, true, GetNextInnovNumber());
-            linkNEATList.Add(newLink);
-        }
-        
+            // Check if this link already exists:
+            bool linkExists = false;
+            for(int i = 0; i < linkNEATList.Count; i++) {
+                if(linkNEATList[i].toNodeID == eligibleToNodes[toNodeID].id && linkNEATList[i].fromNodeID == eligibleFromNodes[fromNodeID].id) {
+                    Debug.Log("Attempted to add link but it already exists!!! from: " + eligibleFromNodes[fromNodeID].id.ToString() + ", to: " + eligibleToNodes[toNodeID].id.ToString());
+                    linkExists = true;                    
+                }
+            }
+            if(!linkExists) {
+                float randomWeight = Gaussian.GetRandomGaussian() * 0.2f; //0f; // start zeroed to give a chance to try both + and - //Gaussian.GetRandomGaussian();
+                GeneLinkNEAT newLink = new GeneLinkNEAT(eligibleFromNodes[fromNodeID].id, eligibleToNodes[toNodeID].id, randomWeight, true, GetNextInnovNumber());
+                linkNEATList.Add(newLink);
+            }            
+        }        
     }
 
     public void AddNewRandomNode() {
@@ -120,5 +137,78 @@ public class GenomeNEAT {
         int nextNum = nextAvailableInnovationNumber;
         nextAvailableInnovationNumber++;
         return nextNum;
+    }
+
+    public int ReadMaxInno() {
+        return nextAvailableInnovationNumber;
+    }
+
+    public static float MeasureGeneticDistance(GenomeNEAT genomeA, GenomeNEAT genomeB) {
+        
+        float weightCoefficient = 0.2f;
+        float disjointCoefficient = 0.4f;
+        float excessCoefficient = 0.4f;
+
+        int indexA = 0;
+        int indexB = 0;
+
+        float weightDeltaTotal = 0f;
+        float maxGenes = Mathf.Max((float)genomeA.linkNEATList.Count, (float)genomeB.linkNEATList.Count);
+        float matchingGenes = 0f;
+        float disjointGenes = 0f;
+        float excessGenes = 0f;
+
+        for(int i = 0; i < genomeA.linkNEATList.Count + genomeB.linkNEATList.Count; i++) {
+            if(indexA < genomeA.linkNEATList.Count) {
+
+                if (indexB < genomeB.linkNEATList.Count) { // both good
+
+                    if (genomeA.linkNEATList[indexA].innov < genomeB.linkNEATList[indexB].innov) {
+                        // disjoint A
+                        disjointGenes++;
+                        indexA++;
+                    }
+                    else if (genomeA.linkNEATList[indexA].innov > genomeB.linkNEATList[indexB].innov) {
+                        // disjoint B
+                        disjointGenes++;
+                        indexB++;
+                    }
+                    else if (genomeA.linkNEATList[indexA].innov == genomeB.linkNEATList[indexB].innov) {
+                        // match!
+                        
+                        weightDeltaTotal += Mathf.Abs(genomeA.linkNEATList[indexA].weight - genomeB.linkNEATList[indexB].weight);
+                        matchingGenes++;
+                        //Debug.Log("!@$#!$#!@$#!@$# MeasureGeneticDistance! innov MATCHING GENE: weightA: " + genomeA.linkNEATList[indexA].weight.ToString() + ", weightB: " + genomeB.linkNEATList[indexB].weight.ToString());
+                        indexA++;
+                        indexB++;
+                    }
+
+                }
+                else { // A is good, B is finished
+                    excessGenes++;
+                    indexA++;
+                }
+            }
+            else { // A done
+                if (indexB < genomeB.linkNEATList.Count) {  // A is finished, B is good
+                    excessGenes++;
+                    indexB++;
+
+                }
+                else { // both done
+                    break;
+                }
+            }            
+        }
+
+        float distance = 0f;
+        if(maxGenes > 0f) {
+            distance = disjointCoefficient * (disjointGenes) +
+                        excessCoefficient * (excessGenes) +
+                        weightCoefficient * (weightDeltaTotal / Mathf.Max((float)matchingGenes, 1f));
+            //Debug.Log("MeasureGeneticDistance! disjoint: " + (disjointGenes).ToString() + ", excess: " + (excessGenes).ToString() + ", weight: " + (weightDeltaTotal / Mathf.Max((float)matchingGenes, 1f)).ToString() + ", distance: " + distance.ToString());
+        }
+        
+        return distance;
     }
 }

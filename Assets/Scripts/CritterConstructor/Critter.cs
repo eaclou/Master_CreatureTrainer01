@@ -6,6 +6,7 @@ public class Critter : MonoBehaviour {
 
     public CritterGenome masterCritterGenome;
     public Material critterSegmentMaterial;
+    public PhysicMaterial segmentPhysicMaterial;
     // List of generated segments, based on critter's full Genome
     public List<GameObject> critterSegmentList;
     // Should these 'live' on each segment themselves, or stay as separate global lists??  v v v
@@ -516,7 +517,7 @@ public class Critter : MonoBehaviour {
                         newPhysicalAttributes.segmentID = newSegment.id;
                         segaddonPhysicalAttributesList.Add(newPhysicalAttributes);
 
-                        PhysicMaterial segmentPhysicMaterial = new PhysicMaterial();
+                        //PhysicMaterial segmentPhysicMaterial = new PhysicMaterial();
                         segmentPhysicMaterial.dynamicFriction = newPhysicalAttributes.dynamicFriction[0];
                         segmentPhysicMaterial.staticFriction = newPhysicalAttributes.staticFriction[0];
                         segmentPhysicMaterial.bounciness = newPhysicalAttributes.bounciness[0];
@@ -1084,6 +1085,9 @@ public class Critter : MonoBehaviour {
         if (critterSegmentMaterial == null) {
             critterSegmentMaterial = new Material(Shader.Find("Custom/CritterSegmentBasic"));
             critterSegmentMaterial.renderQueue = 2000;
+        }
+        if(segmentPhysicMaterial == null) {
+            segmentPhysicMaterial = new PhysicMaterial();
         }
     }
 

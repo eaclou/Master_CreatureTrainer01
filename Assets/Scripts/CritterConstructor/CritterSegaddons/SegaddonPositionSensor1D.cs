@@ -30,5 +30,6 @@ public class SegaddonPositionSensor1D {
         forwardVector = new Vector3[1];
         forwardVector[0] = sourceNode.forwardVector[0];
         targetPos = new Vector3[1];
+        relative = sourceNode.relative[0];
     }
 }

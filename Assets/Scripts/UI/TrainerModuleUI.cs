@@ -36,7 +36,8 @@ public class TrainerModuleUI : MonoBehaviour {
 	// Panel Scripts:
 	public TrainerPlayersUI panelPlayersScript;
 	public TrainerMenuBarUI panelMenuBarScript;
-	public TrainerMenuUI panelMenuScript;
+    public TrainerDataViewUI panelDataViewScript;
+    public TrainerMenuUI panelMenuScript;
 	public TrainerWarningUI panelWarningScript;
 	public TrainerPopulationUI panelPopulationScript;
 	public TrainerNewPopulationUI panelNewPopulationScript;
@@ -83,7 +84,8 @@ public class TrainerModuleUI : MonoBehaviour {
 
 		// Store sub-panel scripts in a variable
 		panelPlayersScript = panelPlayers.GetComponent<TrainerPlayersUI>();  
-		panelMenuBarScript = panelMenuBar.GetComponent<TrainerMenuBarUI>();  
+		panelMenuBarScript = panelMenuBar.GetComponent<TrainerMenuBarUI>();
+        panelDataViewScript = panelDataView.GetComponent<TrainerDataViewUI>(); 
 		panelMenuScript = panelMenu.GetComponent<TrainerMenuUI>();
 		panelWarningScript = panelWarning.GetComponent<TrainerWarningUI>(); 
 		panelPopulationScript = panelPopulation.GetComponent<TrainerPopulationUI>();
@@ -224,7 +226,7 @@ public class TrainerModuleUI : MonoBehaviour {
 		}
 		else {
 			panelArena.SetActive (false);
-			ArenaGroup.arenaGroupStatic.ArenaViewOff();
+			//ArenaGroup.arenaGroupStatic.ArenaViewOff();
 		}
 		if(panelCrossoverOn) {
 			panelCrossover.SetActive(true);

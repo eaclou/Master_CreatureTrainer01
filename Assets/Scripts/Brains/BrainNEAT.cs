@@ -121,8 +121,8 @@ public class BrainNEAT {
             if (neuronList[node].nodeType == GeneNodeNEAT.GeneNodeType.Out) {
                 neuronList[node].currentValue[0] = TransferFunctions.Evaluate(TransferFunctions.TransferFunction.RationalSigmoid, neuronList[node].currentValue[0]);
             }
-            else {
-                neuronList[node].currentValue[0] = TransferFunctions.Evaluate(TransferFunctions.TransferFunction.Linear, neuronList[node].currentValue[0]);
+            else if (neuronList[node].nodeType == GeneNodeNEAT.GeneNodeType.Hid) {
+                neuronList[node].currentValue[0] = TransferFunctions.Evaluate(TransferFunctions.TransferFunction.RationalSigmoid, neuronList[node].currentValue[0]);
             }
 
             //CalculateNodeInputs(outputNeuronList[endNode]);
@@ -203,7 +203,7 @@ public class BrainNEAT {
     public GenomeNEAT InitializeBlankBrain(int numInputNodes, int numOutputNodes) {
         
         sourceGenome = new GenomeNEAT(numInputNodes, numOutputNodes); // create blank genome with no connections
-        int numNewLinks = 2;
+        int numNewLinks = 0;
         int numNewNodes = 0;
         for(int i = 0; i < numNewLinks; i++) {
             sourceGenome.AddNewRandomLink();

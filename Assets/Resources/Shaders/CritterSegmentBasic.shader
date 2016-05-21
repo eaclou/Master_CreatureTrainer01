@@ -115,7 +115,7 @@
 				if (_Selected) {
 					baseColor = float4(0.4, 0.6, 0.7, 1.0);
 				}
-				i.color = baseColor;
+				i.color = diffuse * float4(0.25, 0.75, 0.55, 1.0);;
 				float4 edgeColor = float4(0.7, 0.7, 0.7, 1.0);
 				float edgeWidth = 0.025;
 				//i.color += float4(i.wpos * 0.02, 0.0);
@@ -199,8 +199,8 @@
 				}
 
 				float accumLight = 0.0;
-				float lightCoreRange = 0.6;
-				float lightMaxRange = 1.2;
+				float lightCoreRange = 0.3;
+				float lightMaxRange = 1.0;
 				float numNeurons = _NeuronPosTex_TexelSize.z; //contains width
 				float incrementSize = 1.0 / numNeurons;
 				float distanceToNeuron = 0.0;
@@ -213,11 +213,11 @@
 						//neuronInfo.w = (neuronInfo.w - 0.5) * 2.0;
 						float3 vectorToNeuron = neuronInfo.xyz - (i.wpos);
 						distanceToNeuron = sqrt(vectorToNeuron.x * vectorToNeuron.x + vectorToNeuron.y * vectorToNeuron.y + vectorToNeuron.z * vectorToNeuron.z);
-						accumLight += max(0.0, min(1.0, (lightMaxRange - distanceToNeuron) / lightMaxRange)) * neuronInfo.w * 0.25;
-						accumLight += max(0.0, min(1.0, (lightCoreRange - distanceToNeuron) / lightCoreRange)) * neuronInfo.w * 1.5;
+						accumLight += max(0.0, min(1.0, (lightMaxRange - distanceToNeuron) / lightMaxRange)) * neuronInfo.w * 0.35;
+						accumLight += max(0.0, min(1.0, (lightCoreRange - distanceToNeuron) / lightCoreRange)) * neuronInfo.w * 0.4;
 					}
 				}
-				float brightness = min(accumLight * 0.25, 0.6);
+				float brightness = min(accumLight * 0.4, 0.4);
 				
 				//return float4(xy, yz, _TargetPosZ, 1.0);
 				//i.color += float4(brightness, brightness, brightness, 0.0);

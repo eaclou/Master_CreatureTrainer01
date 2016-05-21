@@ -20,6 +20,7 @@ public class AddonPositionSensor1D {
 
     public AddonPositionSensor1D(int id) {
         Debug.Log("Constructor AddonPositionSensor1D(" + id.ToString() + ")");
+        // Defaults:
         critterNodeID = id;
         relative = new bool[1];
         relative[0] = true;

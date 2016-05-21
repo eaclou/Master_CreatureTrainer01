@@ -50,7 +50,7 @@ public class TrainerMenuBarUI : MonoBehaviour {
 		//Data View:
 		if(activeTrial) {  // Current criteria is merely to have an active population -- come back to this and tighten restrictions later
 			//Debug.Log ("trainer.PlayerList = null ");
-			dataViewActive = false;
+			dataViewActive = true;
 		}
 		else {
 			dataViewActive = false;

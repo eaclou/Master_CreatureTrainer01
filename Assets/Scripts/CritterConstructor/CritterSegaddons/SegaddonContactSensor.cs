@@ -12,7 +12,7 @@ public class SegaddonContactSensor {
         contactSensitivity = new float[1];
         contactSensitivity[0] = 0f;
         contactStatus = new float[1];
-        contactStatus[0] = 0f;
+        contactStatus[0] = -1f;
         fitnessContact = new float[1];
         fitnessContact[0] = 0f;
     }
@@ -21,7 +21,7 @@ public class SegaddonContactSensor {
         contactSensitivity = new float[1];
         contactSensitivity[0] = sourceNode.contactSensitivity[0];
         contactStatus = new float[1];
-        contactStatus[0] = 0f;
+        contactStatus[0] = -1f;
         fitnessContact = new float[1];
         fitnessContact[0] = 0f;
     }

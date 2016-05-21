@@ -11,6 +11,11 @@ public static class TransferFunctions
 		Linear,
 		Gaussian,
 		RationalSigmoid,
+        Abs,
+        Square,
+        Sin,
+        Cos,
+        Tan,
 		NumberOfTypes
 	}
 
@@ -37,8 +42,23 @@ public static class TransferFunctions
 			
 		case TransferFunction.RationalSigmoid:
 			return rationalsigmoid(input);
-			
-		case TransferFunction.None:
+
+        case TransferFunction.Abs:
+            return Abs(input);
+
+        case TransferFunction.Square:
+            return Square(input);
+
+        case TransferFunction.Sin:
+            return Sin(input);
+
+        case TransferFunction.Cos:
+            return Cos(input);
+
+        case TransferFunction.Tan:
+            return Tan(input);
+
+            case TransferFunction.None:
 		default:
 			return 0.0f;
 		}
@@ -103,4 +123,24 @@ public static class TransferFunctions
 		float val = (float)Math.Sqrt(1.0f + x * x);
 		return 1.0f / (val * (1f + val));
 	}
+
+    /*Square,
+        Sin,
+        Cos,
+        Tan,*/
+    private static float Abs(float x) {
+        return Mathf.Abs(x);
+    }
+    private static float Square(float x) {
+        return x * x;
+    }
+    private static float Sin(float x) {
+        return Mathf.Sin(x);
+    }
+    private static float Cos(float x) {
+        return Mathf.Cos(x);
+    }
+    private static float Tan(float x) {
+        return Mathf.Tan(x);
+    }
 }

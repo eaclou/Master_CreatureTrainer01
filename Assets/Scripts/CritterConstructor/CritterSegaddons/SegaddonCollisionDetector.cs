@@ -10,13 +10,13 @@ public class SegaddonCollisionDetector : MonoBehaviour {
     void OnCollisionEnter(Collision col) {
         numContacts++;
         if(referencedContactSensor != null) {
-            referencedContactSensor.contactStatus[0] = col.impulse.magnitude * referencedContactSensor.contactSensitivity[0];
+            referencedContactSensor.contactStatus[0] = col.impulse.magnitude * referencedContactSensor.contactSensitivity[0] + 1f;
             referencedContactSensor.fitnessContact[0] = 1f;
         }
         else {
-            Debug.Log("referencedContactSensor == null!");
+            //Debug.Log("referencedContactSensor == null!");
         }
-        Debug.Log("COLLISION! numContacts: " + numContacts.ToString());
+        //Debug.Log("COLLISION! numContacts: " + numContacts.ToString());
     }
 
     void OnCollisionStay(Collision col) {
@@ -27,7 +27,7 @@ public class SegaddonCollisionDetector : MonoBehaviour {
         numContacts--;
         if(numContacts <= 0) {   // exited all collisions
             if (referencedContactSensor != null) {
-                referencedContactSensor.contactStatus[0] = 0f;
+                referencedContactSensor.contactStatus[0] = -1f;
                 referencedContactSensor.fitnessContact[0] = 0f;
             }
         }        
