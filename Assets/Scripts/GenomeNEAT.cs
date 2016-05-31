@@ -22,12 +22,12 @@ public class GenomeNEAT {
             nodeNEATList = new List<GeneNodeNEAT>();
             int currentID = 0;
             for (int i = 0; i < numInputs; i++) {
-                GeneNodeNEAT newInputNode = new GeneNodeNEAT(currentID, GeneNodeNEAT.GeneNodeType.In);
+                GeneNodeNEAT newInputNode = new GeneNodeNEAT(currentID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear);
                 nodeNEATList.Add(newInputNode);
                 currentID++;
             }
             for (int o = 0; o < numOutputs; o++) {
-                GeneNodeNEAT newOutputNode = new GeneNodeNEAT(currentID, GeneNodeNEAT.GeneNodeType.Out);
+                GeneNodeNEAT newOutputNode = new GeneNodeNEAT(currentID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid);
                 nodeNEATList.Add(newOutputNode);
                 currentID++;
             }
@@ -90,10 +90,21 @@ public class GenomeNEAT {
         int fromNodeID = (int)UnityEngine.Random.Range(0f, (float)eligibleFromNodes.Count);
         int toNodeID = (int)UnityEngine.Random.Range(0f, (float)eligibleToNodes.Count);
         if(eligibleFromNodes[fromNodeID].id == eligibleToNodes[toNodeID].id) {
-            Debug.Log("New Link TO ITSELF: " + fromNodeID.ToString() + " Doing it anyway!");
-            float randomWeight = Gaussian.GetRandomGaussian() * 0.2f; //0f; // start zeroed to give a chance to try both + and - //Gaussian.GetRandomGaussian();
-            GeneLinkNEAT newLink = new GeneLinkNEAT(eligibleFromNodes[fromNodeID].id, eligibleToNodes[toNodeID].id, randomWeight, true, GetNextInnovNumber());
-            linkNEATList.Add(newLink);
+            // Check if this link already exists:
+            bool linkExists = false;
+            for (int i = 0; i < linkNEATList.Count; i++) {
+                if (linkNEATList[i].toNodeID == eligibleToNodes[toNodeID].id && linkNEATList[i].fromNodeID == eligibleFromNodes[fromNodeID].id) {
+                    Debug.Log("Attempted to add link but it already exists!!! from: " + eligibleFromNodes[fromNodeID].id.ToString() + ", to: " + eligibleToNodes[toNodeID].id.ToString());
+                    linkExists = true;
+                }
+            }
+            if (!linkExists) {
+                Debug.Log("New Link TO ITSELF: " + eligibleFromNodes[fromNodeID].id.ToString() + " Doing it anyway!");
+                float randomWeight = Gaussian.GetRandomGaussian() * 0.2f; //0f; // start zeroed to give a chance to try both + and - //Gaussian.GetRandomGaussian();
+                GeneLinkNEAT newLink = new GeneLinkNEAT(eligibleFromNodes[fromNodeID].id, eligibleToNodes[toNodeID].id, randomWeight, true, GetNextInnovNumber());
+                linkNEATList.Add(newLink);
+            }
+            
         }
         else {
             // Check if this link already exists:
@@ -112,11 +123,104 @@ public class GenomeNEAT {
         }        
     }
 
+    public void AddNewExtraLink() {  // has a higher-than-random chance to create a new link with at least one node that is already connected
+
+        List<GeneNodeNEAT> eligibleFromNodes = new List<GeneNodeNEAT>();
+        List<GeneNodeNEAT> eligibleToNodes = new List<GeneNodeNEAT>();
+
+        bool reuseFromNode;  // true = use an existing FROM node,  false = use an existing TO node
+        float randToOrFrom = UnityEngine.Random.Range(0f, 1f);
+        if(randToOrFrom < 0.4f) {
+            reuseFromNode = true;
+        }
+        else {
+            reuseFromNode = false;
+        }
+        for (int k = 0; k < linkNEATList.Count; k++) {
+            // Populate eligible node lists with those nodes that are already connected:
+            if(linkNEATList[k].enabled) {
+                if(reuseFromNode) {  // reuse an exisiting fromNode
+                    if (eligibleFromNodes.Contains(nodeNEATList[linkNEATList[k].fromNodeID])) {
+                        //Debug.Log("AddNewExtraLink() EligibleFromNode Already Contains Node " + linkNEATList[k].fromNodeID.ToString());
+                    }
+                    else {
+                        eligibleFromNodes.Add(nodeNEATList[linkNEATList[k].fromNodeID]);
+                    }
+                }
+                else { // reuse an exisitng TO node
+                    if (eligibleToNodes.Contains(nodeNEATList[linkNEATList[k].toNodeID])) {
+                        //Debug.Log("AddNewExtraLink() EligibleToNode Already Contains Node " + linkNEATList[k].toNodeID.ToString());
+                    }
+                    else {
+                        eligibleToNodes.Add(nodeNEATList[linkNEATList[k].toNodeID]);
+                    }
+                }                
+            }
+        }
+        for (int i = 0; i < nodeNEATList.Count; i++) {
+            if (reuseFromNode) {  // if re-using an exisitng FROM node, then get a TO node from random:
+                if (nodeNEATList[i].nodeType == GeneNodeNEAT.GeneNodeType.Hid) {
+                    eligibleToNodes.Add(nodeNEATList[i]);
+                }
+                else if (nodeNEATList[i].nodeType == GeneNodeNEAT.GeneNodeType.Out) {
+                    eligibleToNodes.Add(nodeNEATList[i]);
+                }                
+            }
+            else {   // if re-using an exisitng TO node, then get a FROM node from random:
+                if (nodeNEATList[i].nodeType == GeneNodeNEAT.GeneNodeType.In) {
+                    eligibleFromNodes.Add(nodeNEATList[i]);
+                }
+                else if (nodeNEATList[i].nodeType == GeneNodeNEAT.GeneNodeType.Hid) {
+                    eligibleFromNodes.Add(nodeNEATList[i]);
+                }
+            }
+        }
+
+        if (eligibleFromNodes.Count > 0 && eligibleToNodes.Count > 0) {
+            // make sure that there is at least 1 from and to node that is possible
+            int fromNodeID = (int)UnityEngine.Random.Range(0f, (float)eligibleFromNodes.Count);
+            int toNodeID = (int)UnityEngine.Random.Range(0f, (float)eligibleToNodes.Count);
+            if (eligibleFromNodes[fromNodeID].id == eligibleToNodes[toNodeID].id) {
+                // Check if this link already exists:
+                bool linkExists = false;
+                for (int i = 0; i < linkNEATList.Count; i++) {
+                    if (linkNEATList[i].toNodeID == eligibleToNodes[toNodeID].id && linkNEATList[i].fromNodeID == eligibleFromNodes[fromNodeID].id) {
+                        Debug.Log("AddNewExtraLink() Attempted to add link but it already exists!!! from: " + eligibleFromNodes[fromNodeID].id.ToString() + ", to: " + eligibleToNodes[toNodeID].id.ToString());
+                        linkExists = true;
+                    }
+                }
+                if (!linkExists) {
+                    Debug.Log("AddNewExtraLink() New Link TO ITSELF: " + eligibleFromNodes[fromNodeID].id.ToString() + " Doing it anyway!");
+                    float randomWeight = Gaussian.GetRandomGaussian() * 0.2f; //0f; // start zeroed to give a chance to try both + and - //Gaussian.GetRandomGaussian();
+                    GeneLinkNEAT newLink = new GeneLinkNEAT(eligibleFromNodes[fromNodeID].id, eligibleToNodes[toNodeID].id, randomWeight, true, GetNextInnovNumber());
+                    linkNEATList.Add(newLink);
+                }                
+            }
+            else {
+                // Check if this link already exists:
+                bool linkExists = false;
+                for (int i = 0; i < linkNEATList.Count; i++) {
+                    if (linkNEATList[i].toNodeID == eligibleToNodes[toNodeID].id && linkNEATList[i].fromNodeID == eligibleFromNodes[fromNodeID].id) {
+                        Debug.Log("AddNewExtraLink() Attempted to add link but it already exists!!! from: " + eligibleFromNodes[fromNodeID].id.ToString() + ", to: " + eligibleToNodes[toNodeID].id.ToString());
+                        linkExists = true;
+                    }
+                }
+                if (!linkExists) {
+
+                    float randomWeight = Gaussian.GetRandomGaussian() * 0.2f; //0f; // start zeroed to give a chance to try both + and - //Gaussian.GetRandomGaussian();
+                    Debug.Log("AddNewExtraLink() NEW LINK!!! from: " + eligibleFromNodes[fromNodeID].id.ToString() + ", to: " + eligibleToNodes[toNodeID].id.ToString());
+                    GeneLinkNEAT newLink = new GeneLinkNEAT(eligibleFromNodes[fromNodeID].id, eligibleToNodes[toNodeID].id, randomWeight, true, GetNextInnovNumber());
+                    linkNEATList.Add(newLink);
+                }
+            }
+        }        
+    }
+
     public void AddNewRandomNode() {
         if(linkNEATList.Count > 0) {
             int linkID = (int)UnityEngine.Random.Range(0f, (float)linkNEATList.Count);
             linkNEATList[linkID].enabled = false;  // disable old connection
-            GeneNodeNEAT newHiddenNode = new GeneNodeNEAT(nodeNEATList.Count, GeneNodeNEAT.GeneNodeType.Hid);
+            GeneNodeNEAT newHiddenNode = new GeneNodeNEAT(nodeNEATList.Count, GeneNodeNEAT.GeneNodeType.Hid, TransferFunctions.TransferFunction.RationalSigmoid);
             nodeNEATList.Add(newHiddenNode);
             // add new node between old connection
             // create two new connections
@@ -145,9 +249,9 @@ public class GenomeNEAT {
 
     public static float MeasureGeneticDistance(GenomeNEAT genomeA, GenomeNEAT genomeB) {
         
-        float weightCoefficient = 0.2f;
-        float disjointCoefficient = 0.4f;
-        float excessCoefficient = 0.4f;
+        float weightCoefficient = 0.1f;
+        float disjointCoefficient = 0.45f;
+        float excessCoefficient = 0.45f;
 
         int indexA = 0;
         int indexB = 0;

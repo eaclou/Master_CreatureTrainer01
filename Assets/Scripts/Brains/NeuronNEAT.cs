@@ -11,15 +11,17 @@ public class NeuronNEAT {
     public List<ConnectionNEAT> incomingConnectionsList;  // used for more easily traversing the network forward
     public int segmentID;
     public Vector3 worldPos;
+    public TransferFunctions.TransferFunction activationFunction;
 
     // Constructor
     public NeuronNEAT() {
 
     }
-    public NeuronNEAT(int nodeID, GeneNodeNEAT.GeneNodeType type) {
+    public NeuronNEAT(int nodeID, GeneNodeNEAT.GeneNodeType type, TransferFunctions.TransferFunction function) {
         id = nodeID;
         nodeType = type;
         currentValue = new float[1];
         incomingConnectionsList = new List<ConnectionNEAT>();
+        activationFunction = function;
     }
 }

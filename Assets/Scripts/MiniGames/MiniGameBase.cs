@@ -86,4 +86,8 @@ public class MiniGameBase {
     public virtual void ClearGame() {
         gameCleared = true;        
     }
+
+    public virtual void ResetTargetPositions(int numRounds, int numTimeSteps) {
+
+    }
 }

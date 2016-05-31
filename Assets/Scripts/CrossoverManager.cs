@@ -11,17 +11,18 @@ public class CrossoverManager {
     public bool useCrossover = true;
     public bool useSpeciation = true;
 
-	public float masterMutationRate = 0.18f;
-	public float maximumWeightMagnitude = 3.5f;
-	public float mutationDriftScale = 0.5f;
-	public float mutationRemoveLinkChance = 0.05f;
-	public float mutationAddLinkChance = 0.1f;
+	public float masterMutationRate = 0.2f;
+	public float maximumWeightMagnitude = 4f;
+	public float mutationDriftScale = 0.45f;
+	public float mutationRemoveLinkChance = 0.1f;
+	public float mutationAddLinkChance = 0.2f;
 	public float mutationAddNodeChance = 0.0f; // temp?
-    public float mutationRemoveNodeChance = 0f;
+    public float mutationRemoveNodeChance = 0.0f;
 	public float mutationBodyChance = 0.5f;
 	public float maxBodyMutationFactor = 1.25f;
+    public float mutationActivationFunctionChance = 0.0f;
 
-	public int numSwapPositions = 1;
+    public int numSwapPositions = 1;
 	public int numFactions = 1;
 	public int minNumParents = 2;
 	public int maxNumParents = 2;
@@ -62,6 +63,7 @@ public class CrossoverManager {
 		mutationRemoveLinkChance = sourceManager.mutationRemoveLinkChance;
 		mutationAddLinkChance = sourceManager.mutationAddLinkChance;
 		mutationAddNodeChance = sourceManager.mutationAddNodeChance;
+        mutationRemoveNodeChance = sourceManager.mutationRemoveNodeChance;
 
         largeBrainPenalty = sourceManager.largeBrainPenalty;
         speciesSimilarityThreshold = sourceManager.speciesSimilarityThreshold;
@@ -232,34 +234,6 @@ public class CrossoverManager {
 
 		return newFloat;
 	}
-
-	
-
-    /*public void SortNewAgentIntoSpecies(Agent agent, List<Species> speciesList) {
-        bool speciesInList = false;
-        for (int s = 0; s < speciesList.Count; s++) {
-            if(agent.species.id == speciesList[s].id) {
-                speciesInList = true;
-                speciesList[s].AddNewMember(agent);
-            }
-        }
-        if(!speciesInList) {
-            // create new species:
-            Species newSpecies = new Species(agent);
-            Debug.Log("SortNewAgentIntoSpecies(Agent agent, List<Species> speciesList) ID: " + newSpecies.id.ToString() + ", members: " + newSpecies.currentMemberCount.ToString());
-            speciesList.Add(newSpecies);
-        }
-    }*/
-
-    /*public SpeciesBreedingPool FindMatchingBreedingPool(List<SpeciesBreedingPool> poolList, Species species) {
-        for(int p = 0; p < poolList.Count; p++) {
-            if(poolList[p].speciesID == species.id) {
-                return poolList[p];
-            }
-        }
-        Debug.Log("FindMatchingBreedPool FAILED! " + species.id.ToString());
-        return new SpeciesBreedingPool(species);
-    }*/
 
     public Agent SelectAgentFromPopForBreeding(Population breedingPop, int numEligibleBreederAgents, ref int currentRankIndex) {
         //		Iterate over numberOfParents :
@@ -630,7 +604,7 @@ public class CrossoverManager {
                     // once childLinkList is built -- use nodes of the moreFit parent:
                     for (int i = 0; i < parentNodeListArray[moreFitParent].Count; i++) { 
                         // iterate through all nodes in the parent List and copy them into fresh new geneNodes:
-                        GeneNodeNEAT clonedNode = new GeneNodeNEAT(parentNodeListArray[moreFitParent][i].id, parentNodeListArray[moreFitParent][i].nodeType);
+                        GeneNodeNEAT clonedNode = new GeneNodeNEAT(parentNodeListArray[moreFitParent][i].id, parentNodeListArray[moreFitParent][i].nodeType, parentNodeListArray[moreFitParent][i].activationFunction);
                         childNodeList.Add(clonedNode);
                     }
 
@@ -651,7 +625,64 @@ public class CrossoverManager {
                         }
                         if (CheckForMutation(mutationAddLinkChance)) { // Adds new connection
                             //Debug.Log("Add Link Mutation Agent[" + newChildIndex.ToString() + "]");
-                            childGenome.AddNewRandomLink();
+                            if (CheckForMutation(0.15f)) {
+                                childGenome.AddNewExtraLink();
+                            }
+                            else {
+                                childGenome.AddNewRandomLink();
+                            }
+                        }
+
+                        for (int t = 0; t < childNodeList.Count; t++) {
+                            if (CheckForMutation(mutationRemoveNodeChance)) {  // CHANGE THIS TO FUNCTION CHANCE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!&&&&&&&&&&&&&&&&&                              
+                                TransferFunctions.TransferFunction newFunction;
+
+                                int randomTF = (int)UnityEngine.Random.Range(0f, 10f);
+
+                                switch (randomTF) {
+                                    case 0:
+                                        newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
+                                        break;
+                                    case 1:
+                                        newFunction = TransferFunctions.TransferFunction.Linear;
+                                        break;
+                                    case 2:
+                                        newFunction = TransferFunctions.TransferFunction.Gaussian;
+                                        break;
+                                    case 3:
+                                        newFunction = TransferFunctions.TransferFunction.Abs;
+                                        break;
+                                    case 4:
+                                        newFunction = TransferFunctions.TransferFunction.Cos;
+                                        break;
+                                    case 5:
+                                        newFunction = TransferFunctions.TransferFunction.Sin;
+                                        break;
+                                    case 6:
+                                        newFunction = TransferFunctions.TransferFunction.Tan;
+                                        break;
+                                    case 7:
+                                        newFunction = TransferFunctions.TransferFunction.Square;
+                                        break;
+                                    case 8:
+                                        newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
+                                        break;
+                                    case 9:
+                                        newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
+                                        break;
+                                    case 10:
+                                        newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
+                                        break;
+                                    default:
+                                        newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
+                                        break;
+                                }
+                                if (childNodeList[t].nodeType != GeneNodeNEAT.GeneNodeType.Out) {  // keep outputs -1 to 1 range
+                                    Debug.Log("ActivationFunction Mutation Node[" + t.ToString() + "] prev: " + childNodeList[t].activationFunction.ToString() + ", new: " + newFunction.ToString());
+                                    childNodeList[t].activationFunction = newFunction;
+                                }
+
+                            }
                         }
                     }
                     else {
@@ -662,7 +693,7 @@ public class CrossoverManager {
                     
                     for (int i = 0; i < parentNodeListArray[0].Count; i++) {
                         // iterate through all nodes in the parent List and copy them into fresh new geneNodes:
-                        GeneNodeNEAT clonedNode = new GeneNodeNEAT(parentNodeListArray[0][i].id, parentNodeListArray[0][i].nodeType);
+                        GeneNodeNEAT clonedNode = new GeneNodeNEAT(parentNodeListArray[0][i].id, parentNodeListArray[0][i].nodeType, parentNodeListArray[0][i].activationFunction);
                         childNodeList.Add(clonedNode);
                     }
                     for (int j = 0; j < parentLinkListArray[0].Count; j++) {
@@ -688,7 +719,64 @@ public class CrossoverManager {
                         }
                         if (CheckForMutation(mutationAddLinkChance)) { // Adds new connection
                             //Debug.Log("Add Link Mutation Agent[" + newChildIndex.ToString() + "]");
-                            childGenome.AddNewRandomLink();
+                            if(CheckForMutation(0.15f)) {
+                                childGenome.AddNewExtraLink();
+                            }
+                            else {
+                                childGenome.AddNewRandomLink();
+                            }
+                        }
+
+                        for (int t = 0; t < childNodeList.Count; t++) {
+                            if (CheckForMutation(mutationRemoveNodeChance)) {  // CHANGE THIS TO FUNCTION CHANCE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!&&&&&&&&&&&&&&&&&                                   
+                                TransferFunctions.TransferFunction newFunction;
+
+                                int randomTF = (int)UnityEngine.Random.Range(0f, 10f);
+
+                                switch(randomTF) {
+                                    case 0:
+                                        newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
+                                        break;
+                                    case 1:
+                                        newFunction = TransferFunctions.TransferFunction.Linear;
+                                        break;
+                                    case 2:
+                                        newFunction = TransferFunctions.TransferFunction.Gaussian;
+                                        break;
+                                    case 3:
+                                        newFunction = TransferFunctions.TransferFunction.Abs;
+                                        break;
+                                    case 4:
+                                        newFunction = TransferFunctions.TransferFunction.Cos;
+                                        break;
+                                    case 5:
+                                        newFunction = TransferFunctions.TransferFunction.Sin;
+                                        break;
+                                    case 6:
+                                        newFunction = TransferFunctions.TransferFunction.Tan;
+                                        break;
+                                    case 7:
+                                        newFunction = TransferFunctions.TransferFunction.Square;
+                                        break;
+                                    case 8:
+                                        newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
+                                        break;
+                                    case 9:
+                                        newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
+                                        break;
+                                    case 10:
+                                        newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
+                                        break;
+                                    default:
+                                        newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
+                                        break;
+                                }
+                                if(childNodeList[t].nodeType != GeneNodeNEAT.GeneNodeType.Out) {  // keep outputs -1 to 1 range
+                                    Debug.Log("ActivationFunction Mutation Node[" + t.ToString() + "] prev: " + childNodeList[t].activationFunction.ToString() + ", new: " + newFunction.ToString());
+                                    childNodeList[t].activationFunction = newFunction;
+                                }
+                                
+                            }
                         }
                     }
                     else {
@@ -756,6 +844,25 @@ public class CrossoverManager {
             Debug.Log(poolString);
         }*/
 
+        // Clear out extinct species:
+        int listIndex = 0;
+        for (int s = 0; s < childSpeciesPoolsList.Count; s++) {
+            if (listIndex >= childSpeciesPoolsList.Count) {
+                Debug.Log("end childSpeciesPoolsList " + childSpeciesPoolsList.Count.ToString() + ", index= " + listIndex.ToString());
+                break;
+            }
+            else {
+                if (childSpeciesPoolsList[listIndex].agentList.Count == 0) {  // if empty:
+                    Debug.Log("Species " + childSpeciesPoolsList[listIndex].speciesID.ToString() + " WENT EXTINCT!!! --- childSpeciesPoolsList[" + listIndex.ToString() + "] old Count: " + childSpeciesPoolsList.Count.ToString() + ", s: " + s.ToString());
+                    childSpeciesPoolsList.RemoveAt(listIndex);
+                    //s--;  // see if this works                    
+                }
+                else {
+                    listIndex++;
+                }
+            }
+        }
+
         //Debug.Log("Finished Crossover! numChildSpeciesPools: " + childSpeciesPoolsList.Count.ToString() + " species0size: " + childSpeciesPoolsList[0].agentList.Count.ToString());
         sourcePopulation.masterAgentArray = newAgentArray;
         sourcePopulation.speciesBreedingPoolList = childSpeciesPoolsList;
@@ -771,6 +878,32 @@ public class CrossoverManager {
 
         return sourcePopulation;
     }
+
+    /*public void SortNewAgentIntoSpecies(Agent agent, List<Species> speciesList) {
+      bool speciesInList = false;
+      for (int s = 0; s < speciesList.Count; s++) {
+          if(agent.species.id == speciesList[s].id) {
+              speciesInList = true;
+              speciesList[s].AddNewMember(agent);
+          }
+      }
+      if(!speciesInList) {
+          // create new species:
+          Species newSpecies = new Species(agent);
+          Debug.Log("SortNewAgentIntoSpecies(Agent agent, List<Species> speciesList) ID: " + newSpecies.id.ToString() + ", members: " + newSpecies.currentMemberCount.ToString());
+          speciesList.Add(newSpecies);
+      }
+  }*/
+
+    /*public SpeciesBreedingPool FindMatchingBreedingPool(List<SpeciesBreedingPool> poolList, Species species) {
+        for(int p = 0; p < poolList.Count; p++) {
+            if(poolList[p].speciesID == species.id) {
+                return poolList[p];
+            }
+        }
+        Debug.Log("FindMatchingBreedPool FAILED! " + species.id.ToString());
+        return new SpeciesBreedingPool(species);
+    }*/
 
     /*public Population BreedPopulation(ref Population sourcePopulation) {
 		for(int m = 0; m < sourcePopulation.masterAgentArray.Length; m++) {
@@ -935,7 +1068,7 @@ public class CrossoverManager {
 
 
 
-	/*
+    /*
 	public void PerformCrossover(ref Population sourcePopulation) {
 		for(int m = 0; m < sourcePopulation.masterAgentArray.Length; m++) {
 			//sourcePopulation.masterAgentArray[m].brain.genome.PrintBiases("sourcePop " + sourcePopulation.masterAgentArray[m].fitnessScore.ToString() + ", " + m.ToString() + ", ");
@@ -1120,7 +1253,7 @@ sourcePopulation = newPop;
 }
 */
 
-	/*void Crossover()
+    /*void Crossover()
 	{
 		int spliceBias;
 		int spliceWeight;

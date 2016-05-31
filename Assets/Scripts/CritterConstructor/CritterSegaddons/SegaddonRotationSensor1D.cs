@@ -24,6 +24,7 @@ public class SegaddonRotationSensor1D {
         rotationRate[0] = 0f;
         fitnessRotationRate = new float[1];
         fitnessRotationRate[0] = 0f;
+        localAxis = new Vector3[1];
         localAxis[0] = sourceNode.localAxis[0];
     }
 }

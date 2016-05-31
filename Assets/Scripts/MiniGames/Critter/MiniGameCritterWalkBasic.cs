@@ -37,6 +37,9 @@ public class MiniGameCritterWalkBasic : MiniGameBase
     public float[] targetDirY = new float[1];
     public float[] targetDirZ = new float[1];
 
+    public List<Vector3> targetPositionList;  // will hold the target positions for each gameRound -- re-randomized each generation rather than per-agent
+    public List<int> endGameTimesList;  // holds the percentage of the Maximum #timeSteps for each round of play, to create variable testing durations
+
     //public float[][] compassSensors3D_X;
     //public float[][] compassSensors3D_Y;
     //public float[][] compassSensors3D_Z;
@@ -44,7 +47,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
     MiniGameCritterWalkBasicSettings gameSettings;
 
     // Game Settings:
-    public int numberOfSegments = 12; // cleanup?
+    public int numberOfSegments = 12; // clean this up!!!
     
     // Debug & Diagnostic:
     public float debugVectorLength = 0.7f;
@@ -62,6 +65,9 @@ public class MiniGameCritterWalkBasic : MiniGameBase
     //public float[][] fitCompass3DZ;
     public float[] fitMoveToTarget = new float[1];
     public float[] fitMoveSpeed = new float[1];
+    public float[] fitCustomTarget = new float[1];
+    public float[] fitCustomPole = new float[1];
+    //public float[] fitCustomOutTarget = new float[1];
 
     public List<float[]> fitnessCompassSensor1DList;
     public List<float[]> fitnessCompassSensor3DListRight;
@@ -148,6 +154,8 @@ public class MiniGameCritterWalkBasic : MiniGameBase
     }
 
     public void InitializeGame() {  // run the first time a miniGame is started to be played, to avoid the UI miniGame instance from being run
+        //ResetTargetPositions(0);  // create new List<Vector3>()
+
         // Build Critter
         critterBeingTested.RebuildCritterFromGenomeRecursive(true);  //  REVISIT THIS!! UGGGGLLLYYYYYY!!!!
         numberOfSegments = critterBeingTested.critterSegmentList.Count;
@@ -199,6 +207,90 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         critterBeingTested.RebuildCritterFromGenomeRecursive(true); // builds critter     and segment addons   
     }
 
+    public override void ResetTargetPositions(int numRounds, int numTimeSteps) {
+        
+        if(targetPositionList == null) {
+            targetPositionList = new List<Vector3>();
+
+        }
+        else {
+            targetPositionList.Clear();
+        }
+        if(endGameTimesList == null) {
+            endGameTimesList = new List<int>();
+        }
+        else {
+            endGameTimesList.Clear();
+        }
+
+        for(int i = 0; i < numRounds; i++) {
+            //float targDist = UnityEngine.Random.Range(gameSettings.minScoreDistance[0], gameSettings.maxScoreDistance[0]);
+            // Using maxScoreDistance as an overall multiplier
+            // Using minScoreDistance as a cap to prevent target from being too close
+            float randX = gameSettings.maxScoreDistance[0] * UnityEngine.Random.Range(Mathf.Min(gameSettings.minTargetX[0], gameSettings.maxTargetX[0]), Mathf.Max(gameSettings.minTargetX[0], gameSettings.maxTargetX[0]));
+            float randY = gameSettings.maxScoreDistance[0] * UnityEngine.Random.Range(Mathf.Min(gameSettings.minTargetY[0], gameSettings.maxTargetY[0]), Mathf.Max(gameSettings.minTargetY[0], gameSettings.maxTargetY[0]));
+            float randZ = gameSettings.maxScoreDistance[0] * UnityEngine.Random.Range(Mathf.Min(gameSettings.minTargetZ[0], gameSettings.maxTargetZ[0]), Mathf.Max(gameSettings.minTargetZ[0], gameSettings.maxTargetZ[0]));
+            //float randY = UnityEngine.Random.Range(-1f, 1f);
+            //float randZ = UnityEngine.Random.Range(-1f, 1f);
+            Vector3 randDir = new Vector3(randX, randY, randZ);
+            float randMag = randDir.magnitude;
+            randDir.Normalize();
+            if(randMag < gameSettings.minScoreDistance[0]) {
+                targetPos = new Vector3(randDir.x * gameSettings.minScoreDistance[0], randDir.y * gameSettings.minScoreDistance[0], randDir.z * gameSettings.minScoreDistance[0]);
+            }
+            else {
+                targetPos = new Vector3(randX, randY, randZ);
+            }
+            
+            //Debug.Log("ResetTargetPositions targetPos: " + targetPos.ToString() + ", currentRound: " + gameCurrentRound.ToString());
+            targetPositionList.Add(targetPos);
+
+            int randEndTime = Mathf.RoundToInt(UnityEngine.Random.Range(1f, 1f) * numTimeSteps); // gameplay round will end after this percentage of maxTimeSteps
+            endGameTimesList.Add(randEndTime);
+
+            /*float delta = gameSettings.targetPosAxis[0] - 0.5f;
+            if (gameSettings.targetX[0] <= 0.5f) {  // if x-axis is enabled, use randX, else set to 0;
+                randX = 0f;
+            }
+            else {
+                if (delta > 0.16667f) {
+                    randX = Mathf.Abs(randX);
+                }
+                else if (delta < -0.16667f) {
+                    randX = -Mathf.Abs(randX);
+                }
+                else { // btw 0.333 and 0.667 ==> use full random
+
+                }
+            }
+            if (gameSettings.targetY[0] < 0.5f) {
+                randY = 0f;
+            }
+            else {
+                if (delta > 0.16667f) {
+                    randY = Mathf.Abs(randY);
+                }
+                else if (delta < -0.16667f) {
+                    randY = -Mathf.Abs(randY);
+                }
+            }
+            if (gameSettings.targetZ[0] < 0.5f) {  // if x-axis is enabled, use randX, else set to 0;
+                randZ = 0f;
+            }
+            else {
+                if (delta > 0.16667f) {
+                    randZ = Mathf.Abs(randZ);
+                }
+                else if (delta < -0.16667f) {
+                    randZ = -Mathf.Abs(randZ);
+                }
+            }*/
+
+
+        }  
+        
+    }
+
     public override void Reset()
     {
         // Delete Critter Segments
@@ -213,7 +305,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         ResetFitnessComponentValues(); // Fitness component list currently does not change based on Agent, so no need to regenerate list, only reset values
 
         //Debug.Log("Reset! CurrentRound: " + gameCurrentRound.ToString());
-
+        /*
         #region setup Target
         float targDist = UnityEngine.Random.Range(gameSettings.minScoreDistance[0], gameSettings.maxScoreDistance[0]);
         float randX = UnityEngine.Random.Range(-1f, 1f);
@@ -283,7 +375,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
                 break;
         }
 
-        
+
         /*float randX = UnityEngine.Random.Range(-1f, 1f);
         float randY = UnityEngine.Random.Range(-1f, 1f);
         float randZ = UnityEngine.Random.Range(-1f, 1f);
@@ -344,9 +436,16 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         targetPosX[0] = targetPos.x;
         targetPosY[0] = targetPos.y;
         targetPosZ[0] = targetPos.z;
-        */
-        #endregion
         
+        #endregion
+        */
+        targetPos = targetPositionList[gameCurrentRound];
+        //Debug.Log("targetPos: " + targetPos.ToString() + ", currentRound: " + gameCurrentRound.ToString());
+        targetPosX[0] = targetPos.x;
+        targetPosY[0] = targetPos.y;
+        targetPosZ[0] = targetPos.z;
+        //targetPos = targetPositionList[gameCurrentRound];
+
         Vector3 avgPos = new Vector3(0f, 0f, 0f);
         wormTotalMass = 0f;
 
@@ -359,7 +458,9 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             wormSegmentArray_ScaleY[i][0] = currentSegment.scalingFactor * currentSegment.sourceNode.dimensions.y;
             wormSegmentArray_ScaleZ[i][0] = currentSegment.scalingFactor * currentSegment.sourceNode.dimensions.z;
 
-            wormSegmentArray_Mass[i] = Mathf.Lerp(1f, wormSegmentArray_ScaleX[i][0] * wormSegmentArray_ScaleY[i][0] * wormSegmentArray_ScaleZ[i][0], gameSettings.variableMass[0]);
+            // Temporariliy diasbled VARIABLE MASS *****************************************************************************************************
+            wormSegmentArray_Mass[i] = 1f;
+            //wormSegmentArray_Mass[i] = Mathf.Lerp(1f, wormSegmentArray_ScaleX[i][0] * wormSegmentArray_ScaleY[i][0] * wormSegmentArray_ScaleZ[i][0], gameSettings.variableMass[0]);
             wormTotalMass += wormSegmentArray_Mass[i];
 
             sa_x[i] = currentSegment.surfaceArea.x;
@@ -409,6 +510,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         wormCOM.y = 0f;
         wormCOM.z = 0f;
 
+        gameEndStateReached = false;
         gameInitialized = true;
         gameTicked = false;
         gameUpdatedFromPhysX = false;
@@ -440,6 +542,17 @@ public class MiniGameCritterWalkBasic : MiniGameBase
        //Debug.Log("Tick-- angularVelocity: " + critterBeingTested.critterSegmentList[1].GetComponent<Rigidbody>().angularVelocity.ToString());
        //clockValue[0] = Mathf.Sin(Time.fixedTime * clockFrequency[0]);
 
+        /*if(gameCurrentTimeStep == 1) {  // initial force // temporary hacky!!!! (for double pole-balancing)
+            float randRoll = UnityEngine.Random.Range(0f, 1f);
+            float randDir = 1f;
+            if(randRoll < 0.5f) {
+                randDir *= -1f;
+            }
+            Vector3 directionOfForce = new Vector3(0f, 0f, randDir);
+            float forceMagnitude = 6f;
+            Vector3 forceVector = new Vector3(directionOfForce.x * forceMagnitude, directionOfForce.y * forceMagnitude, directionOfForce.z * forceMagnitude);
+            critterBeingTested.critterSegmentList[0].GetComponent<Rigidbody>().AddForce(forceVector);
+        }*/
         
 
         // Inputs!!
@@ -738,7 +851,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             //fitEnergySpent[0] += Mathf.Abs(wormSegmentArray_MotorTargetZ[e][0]) / 3f;
         }
         Vector3 comVel = wormCOM - prevFrameWormCOM;
-        ArenaCameraController.arenaCameraControllerStatic.focusPosition = wormCOM;
+        //ArenaCameraController.arenaCameraControllerStatic.focusPosition = wormCOM;
         Vector3 targetDirection = new Vector3(targetPosX[0] - wormCOM.x, targetPosY[0] - wormCOM.y, targetPosZ[0] - wormCOM.z);
         float distToTarget = targetDirection.magnitude;
         //if(preWarm == false) {
@@ -756,11 +869,29 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         {
             fitTimeInTarget[0] += 1f;
             inTarget = true;
+
+            fitCustomTarget[0] += 4f; // + for being IN target
+            fitCustomTarget[0] -= comVel.magnitude;  // encourage slower movement inside target
+            //fitCustomTarget[0]
         }
         else
         {
             fitTimeInTarget[0] += 0f;
+
+            fitCustomTarget[0] -= 0.01f; // - for being Outside target (small penalty)
+            fitCustomTarget[0] += comVel.magnitude * 0.25f;  // encourage faster movement outside target
+            fitCustomTarget[0] += Vector3.Dot(comVel, targetDirection.normalized);  // move quickly towards target
         }
+
+        if(Mathf.Abs(wormCOM.z) < 6f) {  // can't move more than this
+            //fitCustomPole[0] += 1f; 
+        }
+        else {
+            //fitCustomPole[0] -= 250f;
+            //gameEndStateReached = true;
+        }
+
+        //fitCustomTarget[0] += 1f;
 
         /*if (inTarget)
         {
@@ -828,6 +959,11 @@ public class MiniGameCritterWalkBasic : MiniGameBase
 
         gameTicked = true;
         //gameCurrentTimeStep++;  This is updated in base class function: GameTimeStepCompleted()
+
+        if(gameCurrentTimeStep >= endGameTimesList[gameCurrentRound] ) {
+            gameEndStateReached = true;
+            //Debug.Log("GameEndStateReached! gameCurrentTimeStep: " + gameCurrentTimeStep.ToString() + " endGameTimesList[gameCurrentRound]: " + endGameTimesList[gameCurrentRound].ToString());
+        }
     }
 
     #region SETUP METHODS:
@@ -1087,6 +1223,10 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         fitnessComponentList.Add(FC_moveToTarget); // 7
         FitnessComponent FC_moveSpeed = new FitnessComponent(ref fitMoveSpeed, true, true, 1f, 0f, "Average Speed", true);
         fitnessComponentList.Add(FC_moveSpeed); // 8
+        FitnessComponent FC_customTarget = new FitnessComponent(ref fitCustomTarget, true, true, 1f, 1f, "Custom Target", true);
+        fitnessComponentList.Add(FC_customTarget); // 8
+        FitnessComponent FC_customPole = new FitnessComponent(ref fitCustomPole, true, true, 1f, 1f, "Custom Pole", false);
+        fitnessComponentList.Add(FC_customPole); // 8
 
         fitnessContactSensorList = new List<float[]>();
         for (int contactSensorIndex = 0; contactSensorIndex < critterBeingTested.segaddonContactSensorList.Count; contactSensorIndex++) {
@@ -1199,6 +1339,8 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         fitTimeInTarget[0] = 0f;
         fitMoveToTarget[0] = 0f;
         fitMoveSpeed[0] = 0f;
+        fitCustomTarget[0] = 0f;
+        fitCustomPole[0] = 0f;
 
         for (int contactSensorIndex = 0; contactSensorIndex < critterBeingTested.segaddonContactSensorList.Count; contactSensorIndex++) {
             critterBeingTested.segaddonContactSensorList[contactSensorIndex].fitnessContact[0] = 0f;
@@ -1317,6 +1459,11 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         Vector3 bindPoseForwardVector = segmentArrayRestRotation[angleSensor.segmentID] * critterBeingTested.critterSegmentList[angleSensor.segmentID].GetComponent<CritterSegment>().parentSegment.gameObject.transform.forward;
 
         angleSensor.angleX[0] = Mathf.Asin(Vector3.Dot(critterBeingTested.critterSegmentList[angleSensor.segmentID].transform.forward, bindPoseUpVector)) * Mathf.Rad2Deg * angleSensor.angleSensitivity[0] * gameSettings.angleSensorSensitivity[0];
+        if(Mathf.Abs(angleSensor.angleX[0]) > 75f) {
+            //Debug.Log("Pole FELL!!! " + angleSensor.angleX[0].ToString());
+            //fitCustomPole[0] -= 500f;
+            //gameEndStateReached = true;
+        }
         angleSensor.angleY[0] = Mathf.Asin(Vector3.Dot(critterBeingTested.critterSegmentList[angleSensor.segmentID].transform.right, bindPoseForwardVector)) * Mathf.Rad2Deg * angleSensor.angleSensitivity[0] * gameSettings.angleSensorSensitivity[0];
         angleSensor.angleZ[0] = Mathf.Asin(Vector3.Dot(critterBeingTested.critterSegmentList[angleSensor.segmentID].transform.right, bindPoseUpVector)) * Mathf.Rad2Deg * angleSensor.angleSensitivity[0] * gameSettings.angleSensorSensitivity[0];
 

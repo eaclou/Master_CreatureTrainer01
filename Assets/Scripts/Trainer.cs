@@ -367,7 +367,7 @@ public class Trainer {
                 playerList[p].masterPopulation.masterAgentArray[j].fitnessScore = agentScores01[j];
                 playerList[p].masterPopulation.masterAgentArray[j].parentFitnessScoreA = agentScores01[j];
                 int numMembersOfSpecies = playerList[p].masterPopulation.GetBreedingPoolByID(playerList[p].masterPopulation.speciesBreedingPoolList, playerList[p].masterPopulation.masterAgentArray[j].speciesID).agentList.Count;
-                Debug.Log("Trainer fit -- numMembersOfSpecies: " + numMembersOfSpecies.ToString() + ", speciesID: " + playerList[p].masterPopulation.masterAgentArray[j].speciesID.ToString());               
+                //Debug.Log("Trainer fit -- numMembersOfSpecies: " + numMembersOfSpecies.ToString() + ", speciesID: " + playerList[p].masterPopulation.masterAgentArray[j].speciesID.ToString());               
                 playerList[p].masterPopulation.masterAgentArray[j].fitnessScoreSpecies = agentScores01[j] / (1f + numMembersOfSpecies * playerList[p].masterCupid.largeSpeciesPenalty);
                               
             }
@@ -449,7 +449,7 @@ public class Trainer {
 		MiniGameManager currentGameManager = PlayerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].miniGameManager;  // <-- to help readability
 		betweenGenerations = false;
 		//Debug.Log ("UpdatePlayingState - curGameTimeSteps: " + playingCurMiniGameTimeStep.ToString());
-		if(playingCurMiniGameTimeStep >= playingNumMiniGameTimeSteps) {  // hit time limit of minigame
+		if(playingCurMiniGameTimeStep >= playingNumMiniGameTimeSteps || currentGameManager.miniGameInstance.gameEndStateReached) {  // hit time limit of minigame or the game reported a finish State:
 			ProcessFitnessScoresEndRound();  // divides accumulated fitness score by time-steps, to keep it in 0-1 range and stores it in AgentScoresArray
 			//playerList[0].masterPopulation.masterAgentArray[playingCurAgent].fitnessScore = currentGameManager.miniGameInstance.fitnessScore;
 			playingCurMiniGameTimeStep = 0;
@@ -470,9 +470,7 @@ public class Trainer {
             if (playingCurTrialRound >= playingNumTrialRounds) {   // finished all rounds of current Trial for current Agent
 				ProcessFitnessScoresEndAgent(playingCurAgent);  // combines the raw scores from all game rounds to get the agent's Fitness score for that TrialIndex
 				playingCurTrialRound = 0;
-				playingCurAgent++;  // Move on to next agent
-
-                
+				playingCurAgent++;  // Move on to next agent                
 
                 if (playingCurAgent >= playingNumAgents) {
 					playingCurAgent = 0;
@@ -483,7 +481,6 @@ public class Trainer {
 						//DebugBot.DebugFunctionCall("Trainer; UpdatePlayingState; PLAYERS!! playingCurPlayer >= playingNumPlayers: " + playingNumPlayers.ToString(), true);
 						playingCurPlayer = 0;
 						playingCurTrialIndex++;  // Move on to next Trial Index
-
 
 						if(playingCurTrialIndex >= playingNumTrials) {
 							ProcessFitnessScoresEndGeneration(); // combines the scores for all agents' TrialIndex's to get final Agent Fitness Scores
@@ -504,8 +501,15 @@ public class Trainer {
 							for(int p = 0; p < playerList.Count; p++) {
 								playerList[p].dataManager.InitializeNewGenerationDataArrays(playingCurGeneration);
 							}
-							//DebugBot.DebugFunctionCall("Trainer; UpdatePlayingState; " + playingCurGeneration + ", " + playingCurTrialIndex + "/" + playingNumTrials + ", " + playingCurPlayer + "/" + playingNumPlayers + ", " + playingCurTrialRound + "/" + playingNumTrialRounds + ", " + playingCurAgent + "/" + playingNumAgents + ", " + playingCurMiniGameTimeStep + "/" + playingNumMiniGameTimeSteps, debugFunctionCalls);
-						}
+                            for (int p = 0; p < numPlayers; p++) {  // iterate through playerList
+                                // Randomly generates the target positions in each minigame once now, and use those positions for all agents:
+                                for (int t = 0; t < PlayerList[p].masterTrialsList.Count - 1; t++) {
+                                    //Debug.Log("TEST@@" + PlayerList[p].masterTrialsList[t].miniGameManager.miniGameInstance.ToString());
+                                    PlayerList[p].masterTrialsList[t].miniGameManager.miniGameInstance.ResetTargetPositions(PlayerList[p].masterTrialsList[t].numberOfPlays, PlayerList[p].masterTrialsList[t].maxEvaluationTimeSteps);
+                                }
+                            }
+                            //DebugBot.DebugFunctionCall("Trainer; UpdatePlayingState; " + playingCurGeneration + ", " + playingCurTrialIndex + "/" + playingNumTrials + ", " + playingCurPlayer + "/" + playingNumPlayers + ", " + playingCurTrialRound + "/" + playingNumTrialRounds + ", " + playingCurAgent + "/" + playingNumAgents + ", " + playingCurMiniGameTimeStep + "/" + playingNumMiniGameTimeSteps, debugFunctionCalls);
+                        }
 						else{ // reset player back to 0, incremented Trial
 							UpdatePlayingNumTrialRounds();  // new player means potentially different number of trial rounds
 							UpdatePlayingNumAgents();
@@ -583,8 +587,9 @@ public class Trainer {
                                                                    //currentGameManager.miniGameInstance.Reset();
             //Debug.Log("CalculateOneStep()Trainer BEFORE: " + playerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].miniGameManager.miniGameInstance.agentBodyBeingTested.creatureBodySegmentGenomeList[0].addOn1.ToString());
             currentGameManager.miniGameInstance.InstantiateGamePieces();  // first time Game has been Reset, so instantiateGamePieces
-			//currentGameManager.miniGameInstance.DisablePhysicsGamePieceComponents();
-			currentGameManager.miniGameInstance.Reset(); // <-- OLD PLACEMENT
+            currentGameManager.miniGameInstance.ResetTargetPositions(PlayerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].numberOfPlays, PlayerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].maxEvaluationTimeSteps);
+            //currentGameManager.miniGameInstance.DisablePhysicsGamePieceComponents();
+            currentGameManager.miniGameInstance.Reset(); // <-- OLD PLACEMENT
             currentGameManager.SetInputOutputArrays();
                        
             BuildBrainMesh(playerList[playingCurPlayer].masterPopulation.masterAgentArray[playingCurAgent].brain);
@@ -725,12 +730,14 @@ public class Trainer {
                 //}
                 // looks at player's Population instance and does Crossover based on masterCupid instances settings, and population's size/brain-type
                 // Creates a new population and updates the player's masterPopulation to that new Agent population
+
+                // Randomly generates the target positions in each minigame once now, and use those positions for all agents:
+                //for (int t = 0; t < PlayerList[p].masterTrialsList.Count; t++) {
+                //    Debug.Log("TEST@@" + PlayerList[p].masterTrialsList[t].miniGameManager.miniGameInstance.ToString());
+                //    PlayerList[p].masterTrialsList[t].miniGameManager.miniGameInstance.ResetTargetPositions(PlayerList[p].masterTrialsList[t].numberOfPlays);
+                //}                
             }
 		}
-
-
-
-
 	}
 
 	public string GetCurrentGamePlayingState() {

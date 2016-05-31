@@ -111,21 +111,23 @@ public class BrainNEAT {
             //processedNodes.Add(inputNeuronList[m]);  // if it's an inputNode, it's ready to be used, so mark as processed
         }
         for (int node = 0; node < neuronList.Count; node++) {
-            // loop through all output nodes, if all their inputs are processed and ready to go, add weights and run transfer function, else, dive deeper into unprocessed nodes
+            // loop through all nodes, if all their inputs are processed and ready to go, add weights and run transfer function, else, dive deeper into unprocessed nodes
             //Debug.Log("CalculateNodeInputs endNode(" + endNode.ToString() + ")");
 
             for(int inputs = 0; inputs < neuronList[node].incomingConnectionsList.Count; inputs++) {
                 neuronList[node].currentValue[0] += neuronList[neuronList[node].incomingConnectionsList[inputs].fromNodeID].previousValue * neuronList[node].incomingConnectionsList[inputs].weight[0];
             }
-            
-            if (neuronList[node].nodeType == GeneNodeNEAT.GeneNodeType.Out) {
+
+            neuronList[node].currentValue[0] = TransferFunctions.Evaluate(neuronList[node].activationFunction, neuronList[node].currentValue[0]);
+            // OLD BELOW:
+            /*if (neuronList[node].nodeType == GeneNodeNEAT.GeneNodeType.Out) {
                 neuronList[node].currentValue[0] = TransferFunctions.Evaluate(TransferFunctions.TransferFunction.RationalSigmoid, neuronList[node].currentValue[0]);
             }
             else if (neuronList[node].nodeType == GeneNodeNEAT.GeneNodeType.Hid) {
                 neuronList[node].currentValue[0] = TransferFunctions.Evaluate(TransferFunctions.TransferFunction.RationalSigmoid, neuronList[node].currentValue[0]);
-            }
+            }*/
 
-            //CalculateNodeInputs(outputNeuronList[endNode]);
+            
         }
 
         //============================================================================================
@@ -247,7 +249,7 @@ public class BrainNEAT {
         // Create nodes:
         string nodesString = "BuildBrainNetwork() nodes: ";
         for (int i = 0; i < sourceGenome.nodeNEATList.Count; i++) {
-            NeuronNEAT newNeuron = new NeuronNEAT(sourceGenome.nodeNEATList[i].id, sourceGenome.nodeNEATList[i].nodeType);
+            NeuronNEAT newNeuron = new NeuronNEAT(sourceGenome.nodeNEATList[i].id, sourceGenome.nodeNEATList[i].nodeType, sourceGenome.nodeNEATList[i].activationFunction);
             neuronList.Add(newNeuron);
             if(newNeuron.nodeType == GeneNodeNEAT.GeneNodeType.In) {
                 inputNeuronList.Add(newNeuron);  // save reference to node 

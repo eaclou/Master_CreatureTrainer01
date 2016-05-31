@@ -75,7 +75,7 @@ public class TrainerDataViewUI : MonoBehaviour {
                             curOutput++;
                         }
                     }
-                    bodyText += "Neuron #" + n.ToString() + " (" + sourceAgent.brain.neuronList[n].nodeType.ToString() + " - " + neuronName + ") pVal: "
+                    bodyText += "Neuron #" + n.ToString() + " (" + sourceAgent.brain.neuronList[n].nodeType.ToString() + " - " + neuronName + ") f: " + sourceAgent.brain.neuronList[n].activationFunction.ToString() + ", pVal: "
                                 + sourceAgent.brain.neuronList[n].previousValue.ToString() + ", curVal: " + sourceAgent.brain.neuronList[n].currentValue[0].ToString() + "\n";
                 }
                 // Go through all Connections:

@@ -10,13 +10,15 @@ public class GeneNodeNEAT {
         Out
     }
     public int id;
+    public TransferFunctions.TransferFunction activationFunction = TransferFunctions.TransferFunction.RationalSigmoid;
 
 	public GeneNodeNEAT() {
 
     }
 
-    public GeneNodeNEAT(int id, GeneNodeType nodeType) {
+    public GeneNodeNEAT(int id, GeneNodeType nodeType, TransferFunctions.TransferFunction function) {
         this.id = id;
         this.nodeType = nodeType;
+        this.activationFunction = function;
     }
 }
