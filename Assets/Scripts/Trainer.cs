@@ -91,7 +91,13 @@ public class Trainer {
 
 	// Playing Game States! 
 	private int playingCurGeneration = 0;
-	private int playingCurTrialIndex;
+    public int PlayingCurGeneration {
+        get {
+            return playingCurGeneration;
+        }
+        set { }
+    }
+    private int playingCurTrialIndex;
 	private int playingNumTrials = 0; // keep track of highest index Trial for any player
 	private int playingCurPlayer;
 	private int playingNumPlayers = 0;
@@ -104,6 +110,7 @@ public class Trainer {
 
 	public bool betweenGenerations = true;
 
+    public TrainingSave loadedTrainingSave;
 
     // MOVE THIS LATER!!!
     public GameObject brainNetworkGO;
@@ -720,7 +727,7 @@ public class Trainer {
 		if(crossoverOn) {
 			for(int p = 0; p < numPlayers; p++) {  // iterate through playerList
 				//Debug.Log ("crossover, player" + p.ToString () + ", " + playerList[p].MasterPopulation.brainType.ToString() + playerList[p].masterCupid.tempName);
-				playerList[p].masterCupid.PerformCrossover(ref playerList[p].masterPopulation);
+				playerList[p].masterCupid.PerformCrossover(ref playerList[p].masterPopulation, playingCurGeneration);
                 //Debug.Log("playerList[p].masterPopulation.masterAgentArray[0].bodyGenome.creatureBodySegmentGenomeList[0].size.x: " + playerList[p].masterPopulation.masterAgentArray[0].bodyGenome.creatureBodySegmentGenomeList[0].size.x.ToString());
                 //for(int t = 0; t < playerList[p].masterTrialsList.Count; t++ ) { // Hacky zero out fitness Scores
                 //playerList[p].masterTrialsList[t].fitnessManager = 0f;
@@ -749,5 +756,4 @@ public class Trainer {
 						"\nCurrent Game Time Step: " + (playingCurMiniGameTimeStep + 1) + "/" + playingNumMiniGameTimeSteps;
 		return output;
 	}
-
 }

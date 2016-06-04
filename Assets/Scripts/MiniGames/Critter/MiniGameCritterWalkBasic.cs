@@ -9,21 +9,11 @@ public class MiniGameCritterWalkBasic : MiniGameBase
 
     public float[][] wormSegmentArray_PosX;
     public float[][] wormSegmentArray_PosY;
-    public float[][] wormSegmentArray_PosZ;
-    //public float[][] wormSegmentArray_AngleX;   // DEPRECATED!!  These will now exist within the Critter itself
-    //public float[][] wormSegmentArray_MotorTargetX;
-    //public float[][] wormSegmentArray_AngleY;
-    //public float[][] wormSegmentArray_MotorTargetY;
-    //public float[][] wormSegmentArray_AngleZ;
-    //public float[][] wormSegmentArray_MotorTargetZ;
-    
+    public float[][] wormSegmentArray_PosZ;    
     public float[][] wormSegmentArray_ScaleX;
     public float[][] wormSegmentArray_ScaleY;
     public float[][] wormSegmentArray_ScaleZ;
-
-    //public Vector3[] segmentArrayRestRight;
-    //public Vector3[] segmentArrayRestUp;
-    //public Vector3[] segmentArrayRestForward;
+    
     public Quaternion[] segmentArrayRestRotation;
 
     public float[] wormSegmentArray_Mass;
@@ -39,13 +29,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
 
     public List<Vector3> targetPositionList;  // will hold the target positions for each gameRound -- re-randomized each generation rather than per-agent
     public List<int> endGameTimesList;  // holds the percentage of the Maximum #timeSteps for each round of play, to create variable testing durations
-
-    //public float[][] compassSensors3D_X;
-    //public float[][] compassSensors3D_Y;
-    //public float[][] compassSensors3D_Z;
-    //public float[][] contactSensors;
-    MiniGameCritterWalkBasicSettings gameSettings;
-
+    
     // Game Settings:
     public int numberOfSegments = 12; // clean this up!!!
     
@@ -60,14 +44,10 @@ public class MiniGameCritterWalkBasic : MiniGameBase
     public float[] fitEnergySpent = new float[1];
     public float[] fitDistToTarget = new float[1];
     public float[] fitTimeInTarget = new float[1];
-    //public float[][] fitCompass3DX;
-    //public float[][] fitCompass3DY;
-    //public float[][] fitCompass3DZ;
     public float[] fitMoveToTarget = new float[1];
     public float[] fitMoveSpeed = new float[1];
     public float[] fitCustomTarget = new float[1];
     public float[] fitCustomPole = new float[1];
-    //public float[] fitCustomOutTarget = new float[1];
 
     public List<float[]> fitnessCompassSensor1DList;
     public List<float[]> fitnessCompassSensor3DListRight;
@@ -81,8 +61,9 @@ public class MiniGameCritterWalkBasic : MiniGameBase
     public List<float[]> fitnessAltimeterList;
     public List<float[]> fitnessContactSensorList;
 
-    // Game Pieces!
-    
+    private MiniGameCritterWalkBasicSettings customSettings;  // shitty hacky workaround for saving/loading
+
+    // Game Pieces!    
     private GameObject critterBeingTestedGO;
     private GameObject GOgroundPlane;
     private GameObject GOtargetSphere;
@@ -100,7 +81,6 @@ public class MiniGameCritterWalkBasic : MiniGameBase
     Material headFacingVecMat = new Material(Shader.Find("Diffuse"));
     Material wormCenterOfMassMat = new Material(Shader.Find("Diffuse"));
     public Material segmentMaterial = new Material(Shader.Find("Diffuse"));
-    
 
     // Surface Areas for each pair of faces (neg x will be same as pos x): can't initialize because numberOfSegments is also declared in parallel
     private float[] sa_x;
@@ -108,7 +88,6 @@ public class MiniGameCritterWalkBasic : MiniGameBase
     private float[] sa_z;
 
     private bool preWarm = true;
-
     
     public MiniGameCritterWalkBasic(CritterGenome templateBodyGenome)
     {
@@ -126,8 +105,6 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             critterBeingTestedGO = new GameObject("critterGO");
             critterBeingTestedGO.transform.SetParent(ArenaGroup.arenaGroupStatic.gameObject.transform);
             critterBeingTested = critterBeingTestedGO.AddComponent<Critter>();
-
-            
             critterBeingTested.InitializeCritterFromGenome(templateBodyGenome); // creates segmentList List<> and sets genome            
         }
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -142,15 +119,13 @@ public class MiniGameCritterWalkBasic : MiniGameBase
 
         // GAME OPTIONS INIT:
         //gameSettings = new MiniGameCritterWalkBasicSettings();
-        //gameSettings.InitGameOptionsList();
-        
-        
-        //InitializeGame();
-        
+        //gameSettings.InitGameOptionsList();        
+        //InitializeGame();        
     }
 
     public void UseSettings(MiniGameCritterWalkBasicSettings newSettings) {
-        gameSettings = newSettings;
+        customSettings = (MiniGameCritterWalkBasicSettings)newSettings;
+        gameSettings = (MiniGameCritterWalkBasicSettings)newSettings;
     }
 
     public void InitializeGame() {  // run the first time a miniGame is started to be played, to avoid the UI miniGame instance from being run
@@ -227,16 +202,16 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             //float targDist = UnityEngine.Random.Range(gameSettings.minScoreDistance[0], gameSettings.maxScoreDistance[0]);
             // Using maxScoreDistance as an overall multiplier
             // Using minScoreDistance as a cap to prevent target from being too close
-            float randX = gameSettings.maxScoreDistance[0] * UnityEngine.Random.Range(Mathf.Min(gameSettings.minTargetX[0], gameSettings.maxTargetX[0]), Mathf.Max(gameSettings.minTargetX[0], gameSettings.maxTargetX[0]));
-            float randY = gameSettings.maxScoreDistance[0] * UnityEngine.Random.Range(Mathf.Min(gameSettings.minTargetY[0], gameSettings.maxTargetY[0]), Mathf.Max(gameSettings.minTargetY[0], gameSettings.maxTargetY[0]));
-            float randZ = gameSettings.maxScoreDistance[0] * UnityEngine.Random.Range(Mathf.Min(gameSettings.minTargetZ[0], gameSettings.maxTargetZ[0]), Mathf.Max(gameSettings.minTargetZ[0], gameSettings.maxTargetZ[0]));
+            float randX = customSettings.maxScoreDistance[0] * UnityEngine.Random.Range(Mathf.Min(customSettings.minTargetX[0], customSettings.maxTargetX[0]), Mathf.Max(customSettings.minTargetX[0], customSettings.maxTargetX[0]));
+            float randY = customSettings.maxScoreDistance[0] * UnityEngine.Random.Range(Mathf.Min(customSettings.minTargetY[0], customSettings.maxTargetY[0]), Mathf.Max(customSettings.minTargetY[0], customSettings.maxTargetY[0]));
+            float randZ = customSettings.maxScoreDistance[0] * UnityEngine.Random.Range(Mathf.Min(customSettings.minTargetZ[0], customSettings.maxTargetZ[0]), Mathf.Max(customSettings.minTargetZ[0], customSettings.maxTargetZ[0]));
             //float randY = UnityEngine.Random.Range(-1f, 1f);
             //float randZ = UnityEngine.Random.Range(-1f, 1f);
             Vector3 randDir = new Vector3(randX, randY, randZ);
             float randMag = randDir.magnitude;
             randDir.Normalize();
-            if(randMag < gameSettings.minScoreDistance[0]) {
-                targetPos = new Vector3(randDir.x * gameSettings.minScoreDistance[0], randDir.y * gameSettings.minScoreDistance[0], randDir.z * gameSettings.minScoreDistance[0]);
+            if(randMag < customSettings.minScoreDistance[0]) {
+                targetPos = new Vector3(randDir.x * customSettings.minScoreDistance[0], randDir.y * customSettings.minScoreDistance[0], randDir.z * customSettings.minScoreDistance[0]);
             }
             else {
                 targetPos = new Vector3(randX, randY, randZ);
@@ -245,7 +220,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             //Debug.Log("ResetTargetPositions targetPos: " + targetPos.ToString() + ", currentRound: " + gameCurrentRound.ToString());
             targetPositionList.Add(targetPos);
 
-            int randEndTime = Mathf.RoundToInt(UnityEngine.Random.Range(1f, 1f) * numTimeSteps); // gameplay round will end after this percentage of maxTimeSteps
+            int randEndTime = Mathf.RoundToInt(UnityEngine.Random.Range(0.5f, 1.2f) * numTimeSteps); // gameplay round will end after this percentage of maxTimeSteps
             endGameTimesList.Add(randEndTime);
 
             /*float delta = gameSettings.targetPosAxis[0] - 0.5f;
@@ -300,7 +275,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         SetupInputOutputChannelLists();
 
         //Debug.Log("Reset " + gameCurrentTimeStep.ToString() + ", angularVelocity: " + critterBeingTested.critterSegmentList[1].GetComponent<Rigidbody>().angularVelocity.ToString());
-        Physics.gravity = new Vector3(0f, gameSettings.gravityStrength[0], 0f);
+        Physics.gravity = new Vector3(0f, customSettings.gravityStrength[0], 0f);
                 
         ResetFitnessComponentValues(); // Fitness component list currently does not change based on Agent, so no need to regenerate list, only reset values
 
@@ -721,42 +696,42 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             if (critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>() != null) {
                 if (critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<CritterSegment>().sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeX) {
                     JointDrive drive = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularXDrive;
-                    drive.maximumForce = motor.motorForce[0] * gameSettings.jointMotorForce[0];  // game option is a global multiplier on force/speed
+                    drive.maximumForce = motor.motorForce[0] * customSettings.jointMotorForce[0];  // game option is a global multiplier on force/speed
                     critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularXDrive = drive;
                     Vector3 targetVel = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity;
                     //Debug.Log(motor.targetAngularX[0].ToString());
-                    targetVel.x = motor.targetAngularX[0] * motor.motorSpeed[0] * gameSettings.jointMotorSpeed[0]; // game option is a global multiplier on force/speed
+                    targetVel.x = motor.targetAngularX[0] * motor.motorSpeed[0] * customSettings.jointMotorSpeed[0]; // game option is a global multiplier on force/speed
                     critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity = targetVel;
                 }
                 else if (critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<CritterSegment>().sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeY) {
                     JointDrive drive = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularYZDrive;
-                    drive.maximumForce = motor.motorForce[0] * gameSettings.jointMotorForce[0];  // game option is a global multiplier on force/speed
+                    drive.maximumForce = motor.motorForce[0] * customSettings.jointMotorForce[0];  // game option is a global multiplier on force/speed
                     critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularYZDrive = drive;
                     Vector3 targetVel = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity;
-                    targetVel.y = motor.targetAngularY[0] * motor.motorSpeed[0] * gameSettings.jointMotorSpeed[0]; // game option is a global multiplier on force/speed
+                    targetVel.y = motor.targetAngularY[0] * motor.motorSpeed[0] * customSettings.jointMotorSpeed[0]; // game option is a global multiplier on force/speed
                     critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity = targetVel;
                 }
                 else if (critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<CritterSegment>().sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeZ) {
                     JointDrive drive = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularYZDrive;
-                    drive.maximumForce = motor.motorForce[0] * gameSettings.jointMotorForce[0];  // game option is a global multiplier on force/speed
+                    drive.maximumForce = motor.motorForce[0] * customSettings.jointMotorForce[0];  // game option is a global multiplier on force/speed
                     critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularYZDrive = drive;
                     Vector3 targetVel = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity;
-                    targetVel.z = motor.targetAngularZ[0] * motor.motorSpeed[0] * gameSettings.jointMotorSpeed[0]; // game option is a global multiplier on force/speed
+                    targetVel.z = motor.targetAngularZ[0] * motor.motorSpeed[0] * customSettings.jointMotorSpeed[0]; // game option is a global multiplier on force/speed
                     critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity = targetVel;
                 }
                 else if (critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<CritterSegment>().sourceNode.jointLink.jointType == CritterJointLink.JointType.DualXY) {
                     JointDrive drive = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularXDrive;
-                    drive.maximumForce = motor.motorForce[0] * gameSettings.jointMotorForce[0];  // game option is a global multiplier on force/speed
+                    drive.maximumForce = motor.motorForce[0] * customSettings.jointMotorForce[0];  // game option is a global multiplier on force/speed
                     critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularXDrive = drive;
                     Vector3 targetVel = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity;
-                    targetVel.x = motor.targetAngularX[0] * motor.motorSpeed[0] * gameSettings.jointMotorSpeed[0]; // game option is a global multiplier on force/speed
+                    targetVel.x = motor.targetAngularX[0] * motor.motorSpeed[0] * customSettings.jointMotorSpeed[0]; // game option is a global multiplier on force/speed
                                                                                                         //critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity = targetVel;
 
                     drive = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularYZDrive;
-                    drive.maximumForce = motor.motorForce[0] * gameSettings.jointMotorForce[0];  // game option is a global multiplier on force/speed
+                    drive.maximumForce = motor.motorForce[0] * customSettings.jointMotorForce[0];  // game option is a global multiplier on force/speed
                     critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularYZDrive = drive;
                     //Vector3 targetVel = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity;
-                    targetVel.y = motor.targetAngularY[0] * motor.motorSpeed[0] * gameSettings.jointMotorSpeed[0]; // game option is a global multiplier on force/speed
+                    targetVel.y = motor.targetAngularY[0] * motor.motorSpeed[0] * customSettings.jointMotorSpeed[0]; // game option is a global multiplier on force/speed
                     critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity = targetVel;
                 }
             }
@@ -829,7 +804,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         for (int w = 0; w < numberOfSegments; w++)
         {
             // VISCOSITY!!!!!!!!!!! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-            ApplyViscosityForces(critterBeingTested.critterSegmentList[w], w, gameSettings.viscosityDrag[0]);          
+            ApplyViscosityForces(critterBeingTested.critterSegmentList[w], w, customSettings.viscosityDrag[0]);          
         }
 
         // FITNESS COMPONENTS!
@@ -865,13 +840,14 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         fitMoveSpeed[0] += comVel.magnitude;
 
         bool inTarget = false;
-        if (distToTarget < gameSettings.targetRadius[0])
+        if (distToTarget < customSettings.targetRadius[0])
         {
             fitTimeInTarget[0] += 1f;
             inTarget = true;
 
             fitCustomTarget[0] += 4f; // + for being IN target
             fitCustomTarget[0] -= comVel.magnitude;  // encourage slower movement inside target
+            fitCustomTarget[0] += Vector3.Dot(comVel, targetDirection.normalized);  // move quickly towards target
             //fitCustomTarget[0]
         }
         else
@@ -1458,14 +1434,14 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         Vector3 bindPoseUpVector = segmentArrayRestRotation[angleSensor.segmentID] * critterBeingTested.critterSegmentList[angleSensor.segmentID].GetComponent<CritterSegment>().parentSegment.gameObject.transform.up;
         Vector3 bindPoseForwardVector = segmentArrayRestRotation[angleSensor.segmentID] * critterBeingTested.critterSegmentList[angleSensor.segmentID].GetComponent<CritterSegment>().parentSegment.gameObject.transform.forward;
 
-        angleSensor.angleX[0] = Mathf.Asin(Vector3.Dot(critterBeingTested.critterSegmentList[angleSensor.segmentID].transform.forward, bindPoseUpVector)) * Mathf.Rad2Deg * angleSensor.angleSensitivity[0] * gameSettings.angleSensorSensitivity[0];
+        angleSensor.angleX[0] = Mathf.Asin(Vector3.Dot(critterBeingTested.critterSegmentList[angleSensor.segmentID].transform.forward, bindPoseUpVector)) * Mathf.Rad2Deg * angleSensor.angleSensitivity[0] * customSettings.angleSensorSensitivity[0];
         if(Mathf.Abs(angleSensor.angleX[0]) > 75f) {
             //Debug.Log("Pole FELL!!! " + angleSensor.angleX[0].ToString());
             //fitCustomPole[0] -= 500f;
             //gameEndStateReached = true;
         }
-        angleSensor.angleY[0] = Mathf.Asin(Vector3.Dot(critterBeingTested.critterSegmentList[angleSensor.segmentID].transform.right, bindPoseForwardVector)) * Mathf.Rad2Deg * angleSensor.angleSensitivity[0] * gameSettings.angleSensorSensitivity[0];
-        angleSensor.angleZ[0] = Mathf.Asin(Vector3.Dot(critterBeingTested.critterSegmentList[angleSensor.segmentID].transform.right, bindPoseUpVector)) * Mathf.Rad2Deg * angleSensor.angleSensitivity[0] * gameSettings.angleSensorSensitivity[0];
+        angleSensor.angleY[0] = Mathf.Asin(Vector3.Dot(critterBeingTested.critterSegmentList[angleSensor.segmentID].transform.right, bindPoseForwardVector)) * Mathf.Rad2Deg * angleSensor.angleSensitivity[0] * customSettings.angleSensorSensitivity[0];
+        angleSensor.angleZ[0] = Mathf.Asin(Vector3.Dot(critterBeingTested.critterSegmentList[angleSensor.segmentID].transform.right, bindPoseUpVector)) * Mathf.Rad2Deg * angleSensor.angleSensitivity[0] * customSettings.angleSensorSensitivity[0];
 
         
         //   OLD BELOW!!!!!
@@ -1537,7 +1513,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         }*/
 
         GOtargetSphere = new GameObject("GOtargetSphere");
-        GOtargetSphere.transform.localScale = new Vector3(gameSettings.targetRadius[0], gameSettings.targetRadius[0], gameSettings.targetRadius[0]);
+        GOtargetSphere.transform.localScale = new Vector3(customSettings.targetRadius[0], customSettings.targetRadius[0], customSettings.targetRadius[0]);
         GOtargetSphere.transform.SetParent(ArenaGroup.arenaGroupStatic.gameObject.transform);
         GOtargetSphere.AddComponent<GamePieceCommonSphere>().InitGamePiece();
         GOtargetSphere.GetComponent<Renderer>().material = targetSphereMat;
@@ -1545,7 +1521,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         GOgroundPlane = new GameObject("GOgroundPlane");
         GOgroundPlane.transform.localScale = new Vector3(250f, 1f, 250f);
         GOgroundPlane.transform.SetParent(ArenaGroup.arenaGroupStatic.gameObject.transform);
-        GOgroundPlane.transform.position = new Vector3(0f, gameSettings.groundPositionY[0], 0f);
+        GOgroundPlane.transform.position = new Vector3(0f, customSettings.groundPositionY[0], 0f);
         GOgroundPlane.AddComponent<GamePieceCommonPlane>().InitGamePiece();
         Vector3 colliderCenter = new Vector3(0f, -0.5f, 0f);
         GOgroundPlane.AddComponent<BoxCollider>().center = colliderCenter;
@@ -1680,12 +1656,12 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         
         //GOgroundPlane.transform.localScale = new Vector3(20f, 1f, 20f);
         //GOgroundPlane.transform.SetParent(ArenaGroup.arenaGroupStatic.gameObject.transform);
-        GOgroundPlane.transform.position = new Vector3(0f, gameSettings.groundPositionY[0], 0f);
+        GOgroundPlane.transform.position = new Vector3(0f, customSettings.groundPositionY[0], 0f);
         //Vector3 colliderCenter = new Vector3(0f, 0f, 0f);
         //GOgroundPlane.GetComponent<BoxCollider>().center = colliderCenter;
 
         GOtargetSphere.transform.localPosition = new Vector3(targetPosX[0], targetPosY[0], targetPosZ[0]);
-        GOtargetSphere.transform.localScale = new Vector3(gameSettings.targetRadius[0], gameSettings.targetRadius[0], gameSettings.targetRadius[0]);
+        GOtargetSphere.transform.localScale = new Vector3(customSettings.targetRadius[0], customSettings.targetRadius[0], customSettings.targetRadius[0]);
     }
 
     private void ApplyViscosityForces(GameObject body, int segmentIndex, float drag)
@@ -1707,17 +1683,17 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         Vector3 pointVelPosZ = rigidBod.GetPointVelocity(zpos_face_center); // Get velocity of face's center (doesn't catch torque around center of mass)
         Vector3 fluidDragVecPosZ = -forward *    // in the direction opposite the face's normal
             Vector3.Dot(forward, pointVelPosZ) *    // 
-                sa_z[segmentIndex] * gameSettings.viscosityDrag[0];  // multiplied by face's surface area, and user-defined multiplier
+                sa_z[segmentIndex] * customSettings.viscosityDrag[0];  // multiplied by face's surface area, and user-defined multiplier
         rigidBod.AddForceAtPosition(fluidDragVecPosZ * 2f, zpos_face_center);  // Apply force at face's center, in the direction opposite the face normal
 
         // TOP (posY):
         Vector3 pointVelPosY = rigidBod.GetPointVelocity(ypos_face_center);
-        Vector3 fluidDragVecPosY = -up * Vector3.Dot(up, pointVelPosY) * sa_y[segmentIndex] * gameSettings.viscosityDrag[0];
+        Vector3 fluidDragVecPosY = -up * Vector3.Dot(up, pointVelPosY) * sa_y[segmentIndex] * customSettings.viscosityDrag[0];
         rigidBod.AddForceAtPosition(fluidDragVecPosY * 2f, ypos_face_center);
 
         // RIGHT (posX):
         Vector3 pointVelPosX = rigidBod.GetPointVelocity(xpos_face_center);
-        Vector3 fluidDragVecPosX = -right * Vector3.Dot(right, pointVelPosX) * sa_x[segmentIndex] * gameSettings.viscosityDrag[0];
+        Vector3 fluidDragVecPosX = -right * Vector3.Dot(right, pointVelPosX) * sa_x[segmentIndex] * customSettings.viscosityDrag[0];
         rigidBod.AddForceAtPosition(fluidDragVecPosX, xpos_face_center);
     }
     /*

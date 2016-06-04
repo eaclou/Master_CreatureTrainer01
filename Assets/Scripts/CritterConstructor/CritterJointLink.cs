@@ -39,12 +39,12 @@ public class CritterJointLink {
     }
 
     public CritterJointLink() {
-        Debug.Log("CritterJointLink Constructor()! NO ID NO ID NO ID NO ID");
+        //Debug.Log("CritterJointLink Constructor()! NO ID NO ID NO ID NO ID");
         jointType = JointType.HingeX;  // Default!
         symmetryType = SymmetryType.None;
     }
     public CritterJointLink(int thisID) {
-        Debug.Log("CritterJointLink Constructor( " + thisID.ToString() + " )!");
+        //Debug.Log("CritterJointLink Constructor( " + thisID.ToString() + " )!");
         this.thisNodeID = thisID;
         jointType = JointType.HingeX;  // Default!
         symmetryType = SymmetryType.None;

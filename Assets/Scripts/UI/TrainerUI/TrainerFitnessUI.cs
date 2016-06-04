@@ -229,4 +229,22 @@ public class TrainerFitnessUI : MonoBehaviour {
 		InitializePanelWithTrainerData();
 		//DebugFunctionCall("ClickCancel()");
 	}
+
+    public void ClickUpdateFromSave() {
+        // adjusts settings on fitness components based on saved data:
+
+        if(trainerModuleScript.gameController.masterTrainer.loadedTrainingSave != null) {
+            Player currentPlayer = trainerModuleScript.gameController.masterTrainer.PlayerList[trainerModuleScript.gameController.masterTrainer.CurPlayer - 1];
+            if (trainerModuleScript.gameController.masterTrainer.loadedTrainingSave.savedFitnessComponentList.Count == currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].fitnessManager.gameFitnessComponentList.Count) {
+                for(int i = 0; i < currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].fitnessManager.gameFitnessComponentList.Count; i++) {
+                    currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].fitnessManager.gameFitnessComponentList[i].bigIsBetter = trainerModuleScript.gameController.masterTrainer.loadedTrainingSave.savedFitnessComponentList[i].bigIsBetter;
+                    currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].fitnessManager.gameFitnessComponentList[i].divideByTimeSteps = trainerModuleScript.gameController.masterTrainer.loadedTrainingSave.savedFitnessComponentList[i].divideByTimeSteps;
+                    currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].fitnessManager.gameFitnessComponentList[i].on = trainerModuleScript.gameController.masterTrainer.loadedTrainingSave.savedFitnessComponentList[i].on;
+                    currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].fitnessManager.gameFitnessComponentList[i].power = trainerModuleScript.gameController.masterTrainer.loadedTrainingSave.savedFitnessComponentList[i].power;
+                    currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit].fitnessManager.gameFitnessComponentList[i].weight = trainerModuleScript.gameController.masterTrainer.loadedTrainingSave.savedFitnessComponentList[i].weight;
+                }
+                InitializePanelWithTrainerData();
+            }
+        }
+    }
 }

@@ -8,7 +8,7 @@ public class AddonJointMotor {
     public float[] motorSpeed;
 
 	public AddonJointMotor() {
-        Debug.Log("Constructor AddonJointMotor()");
+        //Debug.Log("Constructor AddonJointMotor()");
         motorForce = new float[1];
         motorForce[0] = 100f;
         motorSpeed = new float[1];
@@ -16,7 +16,7 @@ public class AddonJointMotor {
     }
 
     public AddonJointMotor(int id) {
-        Debug.Log("Constructor AddonJointMotor(" + id.ToString() + ")");
+        //Debug.Log("Constructor AddonJointMotor(" + id.ToString() + ")");
         critterNodeID = id;
         motorForce = new float[1];
         motorForce[0] = 100f;

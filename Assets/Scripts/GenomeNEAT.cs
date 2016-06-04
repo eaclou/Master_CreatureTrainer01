@@ -58,7 +58,7 @@ public class GenomeNEAT {
         for(int o = 0; o < outputNodeList.Count; o++) {
             int inNodeID = (int)UnityEngine.Random.Range(0f, (float)inputNodeList.Count);
             float randomWeight = Gaussian.GetRandomGaussian();
-            GeneLinkNEAT newLink = new GeneLinkNEAT(inputNodeList[inNodeID].id, outputNodeList[o].id, randomWeight, true, GetNextInnovNumber());
+            GeneLinkNEAT newLink = new GeneLinkNEAT(inputNodeList[inNodeID].id, outputNodeList[o].id, randomWeight, true, GetNextInnovNumber(), 0);
             linkNEATList.Add(newLink);
         }
     }
@@ -71,7 +71,7 @@ public class GenomeNEAT {
         }        
     }
 
-    public void AddNewRandomLink() {
+    public void AddNewRandomLink(int gen) {
         
         List<GeneNodeNEAT> eligibleFromNodes = new List<GeneNodeNEAT>();
         List<GeneNodeNEAT> eligibleToNodes = new List<GeneNodeNEAT>();
@@ -101,7 +101,7 @@ public class GenomeNEAT {
             if (!linkExists) {
                 Debug.Log("New Link TO ITSELF: " + eligibleFromNodes[fromNodeID].id.ToString() + " Doing it anyway!");
                 float randomWeight = Gaussian.GetRandomGaussian() * 0.2f; //0f; // start zeroed to give a chance to try both + and - //Gaussian.GetRandomGaussian();
-                GeneLinkNEAT newLink = new GeneLinkNEAT(eligibleFromNodes[fromNodeID].id, eligibleToNodes[toNodeID].id, randomWeight, true, GetNextInnovNumber());
+                GeneLinkNEAT newLink = new GeneLinkNEAT(eligibleFromNodes[fromNodeID].id, eligibleToNodes[toNodeID].id, randomWeight, true, GetNextInnovNumber(), gen);
                 linkNEATList.Add(newLink);
             }
             
@@ -117,20 +117,20 @@ public class GenomeNEAT {
             }
             if(!linkExists) {
                 float randomWeight = Gaussian.GetRandomGaussian() * 0.2f; //0f; // start zeroed to give a chance to try both + and - //Gaussian.GetRandomGaussian();
-                GeneLinkNEAT newLink = new GeneLinkNEAT(eligibleFromNodes[fromNodeID].id, eligibleToNodes[toNodeID].id, randomWeight, true, GetNextInnovNumber());
+                GeneLinkNEAT newLink = new GeneLinkNEAT(eligibleFromNodes[fromNodeID].id, eligibleToNodes[toNodeID].id, randomWeight, true, GetNextInnovNumber(), gen);
                 linkNEATList.Add(newLink);
             }            
         }        
     }
 
-    public void AddNewExtraLink() {  // has a higher-than-random chance to create a new link with at least one node that is already connected
+    public void AddNewExtraLink(float fromBias, int gen) {  // has a higher-than-random chance to create a new link with at least one node that is already connected
 
         List<GeneNodeNEAT> eligibleFromNodes = new List<GeneNodeNEAT>();
         List<GeneNodeNEAT> eligibleToNodes = new List<GeneNodeNEAT>();
 
         bool reuseFromNode;  // true = use an existing FROM node,  false = use an existing TO node
         float randToOrFrom = UnityEngine.Random.Range(0f, 1f);
-        if(randToOrFrom < 0.4f) {
+        if(randToOrFrom < fromBias) {
             reuseFromNode = true;
         }
         else {
@@ -192,7 +192,7 @@ public class GenomeNEAT {
                 if (!linkExists) {
                     Debug.Log("AddNewExtraLink() New Link TO ITSELF: " + eligibleFromNodes[fromNodeID].id.ToString() + " Doing it anyway!");
                     float randomWeight = Gaussian.GetRandomGaussian() * 0.2f; //0f; // start zeroed to give a chance to try both + and - //Gaussian.GetRandomGaussian();
-                    GeneLinkNEAT newLink = new GeneLinkNEAT(eligibleFromNodes[fromNodeID].id, eligibleToNodes[toNodeID].id, randomWeight, true, GetNextInnovNumber());
+                    GeneLinkNEAT newLink = new GeneLinkNEAT(eligibleFromNodes[fromNodeID].id, eligibleToNodes[toNodeID].id, randomWeight, true, GetNextInnovNumber(), gen);
                     linkNEATList.Add(newLink);
                 }                
             }
@@ -209,14 +209,14 @@ public class GenomeNEAT {
 
                     float randomWeight = Gaussian.GetRandomGaussian() * 0.2f; //0f; // start zeroed to give a chance to try both + and - //Gaussian.GetRandomGaussian();
                     Debug.Log("AddNewExtraLink() NEW LINK!!! from: " + eligibleFromNodes[fromNodeID].id.ToString() + ", to: " + eligibleToNodes[toNodeID].id.ToString());
-                    GeneLinkNEAT newLink = new GeneLinkNEAT(eligibleFromNodes[fromNodeID].id, eligibleToNodes[toNodeID].id, randomWeight, true, GetNextInnovNumber());
+                    GeneLinkNEAT newLink = new GeneLinkNEAT(eligibleFromNodes[fromNodeID].id, eligibleToNodes[toNodeID].id, randomWeight, true, GetNextInnovNumber(), gen);
                     linkNEATList.Add(newLink);
                 }
             }
         }        
     }
 
-    public void AddNewRandomNode() {
+    public void AddNewRandomNode(int gen) {
         if(linkNEATList.Count > 0) {
             int linkID = (int)UnityEngine.Random.Range(0f, (float)linkNEATList.Count);
             linkNEATList[linkID].enabled = false;  // disable old connection
@@ -224,8 +224,8 @@ public class GenomeNEAT {
             nodeNEATList.Add(newHiddenNode);
             // add new node between old connection
             // create two new connections
-            GeneLinkNEAT newLinkA = new GeneLinkNEAT(linkNEATList[linkID].fromNodeID, newHiddenNode.id, linkNEATList[linkID].weight, true, GetNextInnovNumber());
-            GeneLinkNEAT newLinkB = new GeneLinkNEAT(newHiddenNode.id, linkNEATList[linkID].toNodeID, 1f, true, GetNextInnovNumber());
+            GeneLinkNEAT newLinkA = new GeneLinkNEAT(linkNEATList[linkID].fromNodeID, newHiddenNode.id, linkNEATList[linkID].weight, true, GetNextInnovNumber(), gen);
+            GeneLinkNEAT newLinkB = new GeneLinkNEAT(newHiddenNode.id, linkNEATList[linkID].toNodeID, 1f, true, GetNextInnovNumber(), gen);
 
             linkNEATList.Add(newLinkA);
             linkNEATList.Add(newLinkB);
@@ -247,12 +247,8 @@ public class GenomeNEAT {
         return nextAvailableInnovationNumber;
     }
 
-    public static float MeasureGeneticDistance(GenomeNEAT genomeA, GenomeNEAT genomeB) {
+    public static float MeasureGeneticDistance(GenomeNEAT genomeA, GenomeNEAT genomeB, float excessCoefficient, float disjointCoefficient, float weightCoefficient, float normExcess, float normDisjoint, float normWeight) {
         
-        float weightCoefficient = 0.1f;
-        float disjointCoefficient = 0.45f;
-        float excessCoefficient = 0.45f;
-
         int indexA = 0;
         int indexB = 0;
 
@@ -307,12 +303,13 @@ public class GenomeNEAT {
 
         float distance = 0f;
         if(maxGenes > 0f) {
-            distance = disjointCoefficient * (disjointGenes) +
-                        excessCoefficient * (excessGenes) +
-                        weightCoefficient * (weightDeltaTotal / Mathf.Max((float)matchingGenes, 1f));
+            float excessComponent = excessCoefficient * Mathf.Lerp(excessGenes, excessGenes / maxGenes, normExcess);
+            float disjointComponent = disjointCoefficient * Mathf.Lerp(disjointGenes, disjointGenes / maxGenes, normDisjoint);
+            float weightComponent = weightCoefficient * Mathf.Lerp(weightDeltaTotal, weightDeltaTotal / Mathf.Max((float)matchingGenes, 1f), normWeight);
+            distance = excessComponent + disjointComponent + weightComponent;
             //Debug.Log("MeasureGeneticDistance! disjoint: " + (disjointGenes).ToString() + ", excess: " + (excessGenes).ToString() + ", weight: " + (weightDeltaTotal / Mathf.Max((float)matchingGenes, 1f)).ToString() + ", distance: " + distance.ToString());
         }
-        
+        // else stays 0f;
         return distance;
     }
 }

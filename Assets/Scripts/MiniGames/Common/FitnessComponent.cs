@@ -11,6 +11,9 @@ public class FitnessComponent {
 	public string componentName;
 	public bool divideByTimeSteps;
 
+    public FitnessComponent() {
+        //empty constructor for EasySave2
+    }
 	public FitnessComponent(ref float[] value, bool active, bool bigBetter, float scorePower, float scoreWeight, string name, bool avg) {
 		on = active;
 		componentScore = value;

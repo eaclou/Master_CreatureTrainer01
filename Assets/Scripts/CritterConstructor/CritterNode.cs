@@ -23,7 +23,7 @@ public class CritterNode {
     public Vector3 dimensions = new Vector3(1f, 1f, 1f);
 
     public CritterNode() {
-        Debug.Log("CritterNode Constructor()!  NO ID NO ID NO ID NO ID");
+        //Debug.Log("CritterNode Constructor()!  NO ID NO ID NO ID NO ID");
         jointLink = new CritterJointLink();
         //attachedJointLinkList = new List<CritterJointLink>();
         attachedChildNodesIdList = new List<int>();
@@ -31,7 +31,7 @@ public class CritterNode {
     }
 
     public CritterNode(int i) {
-        Debug.Log("CritterNode Constructor(int id " + i.ToString() + ")!");
+        //Debug.Log("CritterNode Constructor(int id " + i.ToString() + ")!");
 
         this.iD = i;
         jointLink = new CritterJointLink(i);

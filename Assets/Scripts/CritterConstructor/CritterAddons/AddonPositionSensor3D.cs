@@ -8,7 +8,7 @@ public class AddonPositionSensor3D {
     public float[] sensitivity;
 
     public AddonPositionSensor3D() {
-        Debug.Log("Constructor AddonPositionSensor3D()");
+        //Debug.Log("Constructor AddonPositionSensor3D()");
         relative = new bool[1];
         relative[0] = true;
         sensitivity = new float[1];
@@ -16,7 +16,7 @@ public class AddonPositionSensor3D {
     }
 
     public AddonPositionSensor3D(int id) {
-        Debug.Log("Constructor AddonPositionSensor3D(" + id.ToString() + ")");
+        //Debug.Log("Constructor AddonPositionSensor3D(" + id.ToString() + ")");
         critterNodeID = id;
         relative = new bool[1];
         relative[0] = true;

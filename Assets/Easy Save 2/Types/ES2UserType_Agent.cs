@@ -10,11 +10,12 @@ public class ES2UserType_Agent : ES2Type
 	{
 		Agent data = (Agent)obj;
         // Add your writer.Write calls here.
-        writer.Write(1); // Version 1 is current version number
+        writer.Write(0); // Version 1 is current version number
         // Make sure to edit Read() function to properly handle version control!
         // VERSION 0:
         writer.Write(data.brainGenome);
 		writer.Write(data.bodyGenome);
+        writer.Write(data.speciesID);
         // VERSION 1:
 
     }
@@ -38,6 +39,7 @@ public class ES2UserType_Agent : ES2Type
         {
             data.brainGenome = reader.Read<GenomeNEAT>();
             data.bodyGenome = reader.Read<CritterGenome>();
+            data.speciesID = reader.Read<int>();
             if (fileVersion >= 1)
             {
                 // new attributes

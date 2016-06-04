@@ -16,7 +16,6 @@ public class MiniGameCritterWalkBasicSettings : MiniGameSettingsBase {
     public float[] maxTargetY = new float[1];
     public float[] minTargetZ = new float[1];
     public float[] maxTargetZ = new float[1];
-    //public float[] moveSpeedMaxFit = new float[1];
     public float[] minScoreDistance = new float[1];
     public float[] maxScoreDistance = new float[1];
     public float[] targetRadius = new float[1];
@@ -30,7 +29,7 @@ public class MiniGameCritterWalkBasicSettings : MiniGameSettingsBase {
         viscosityDrag[0] = 1f;
         gravityStrength[0] = 0f;
         jointMotorForce[0] = 2f; // global multipliers on individual joint motor settings
-        jointMotorSpeed[0] = 2f;
+        jointMotorSpeed[0] = 0.6f;
         //variableMass[0] = 0.0f;
         minTargetX[0] = -5f;
         maxTargetX[0] = 5f;
@@ -40,10 +39,12 @@ public class MiniGameCritterWalkBasicSettings : MiniGameSettingsBase {
         maxTargetZ[0] = 10f;
         minScoreDistance[0] = 15f;
         maxScoreDistance[0] = 1f;
-        //moveSpeedMaxFit[0] = 0.1f;
         targetRadius[0] = 5f;
-        groundPositionY[0] = -25f;
+        groundPositionY[0] = -50f;
         angleSensorSensitivity[0] = 0.1f;
+
+        groundBounce[0] = 0f;
+        groundFriction[0] = 1f;
 
         gameOptionsList = new List<GameOptionChannel>();
     }
@@ -60,8 +61,7 @@ public class MiniGameCritterWalkBasicSettings : MiniGameSettingsBase {
         //GameOptionChannel GOC_variableMass = new GameOptionChannel(ref variableMass, 0f, 1f, "VariableMass");
         //gameOptionsList.Add(GOC_variableMass); // 
         GameOptionChannel GOC_targetRadius = new GameOptionChannel(ref targetRadius, 0.01f, 25f, "Target Size");
-        gameOptionsList.Add(GOC_targetRadius); // 
-
+        gameOptionsList.Add(GOC_targetRadius); //
         GameOptionChannel GOC_minTargetX = new GameOptionChannel(ref minTargetX, -10f, 10f, "X Min");
         gameOptionsList.Add(GOC_minTargetX); // 
         GameOptionChannel GOC_maxTargetX = new GameOptionChannel(ref maxTargetX, -10f, 10f, "X Max");
@@ -74,17 +74,53 @@ public class MiniGameCritterWalkBasicSettings : MiniGameSettingsBase {
         gameOptionsList.Add(GOC_minTargetZ); // 
         GameOptionChannel GOC_maxTargetZ = new GameOptionChannel(ref maxTargetZ, -10f, 10f, "Z Max");
         gameOptionsList.Add(GOC_maxTargetZ); // 
-        //GameOptionChannel GOC_targetPosAxis = new GameOptionChannel(ref targetPosAxis, 0f, 1f, "Target Only Positive Axis");
-        //gameOptionsList.Add(GOC_targetPosAxis); // 5
-        //GameOptionChannel GOC_moveSpeedMaxFit = new GameOptionChannel(ref moveSpeedMaxFit, 0.001f, 1f, "Move Speed Max Score");
-        //gameOptionsList.Add(GOC_moveSpeedMaxFit); // 6
         GameOptionChannel GOC_minScoreDistance = new GameOptionChannel(ref minScoreDistance, 0.01f, 50f, "Min Target Distance");
         gameOptionsList.Add(GOC_minScoreDistance); // 7
         GameOptionChannel GOC_maxScoreDistance = new GameOptionChannel(ref maxScoreDistance, 0.01f, 50f, "Max Target Distance");
         gameOptionsList.Add(GOC_maxScoreDistance); // 7
-        GameOptionChannel GOC_groundPositionY = new GameOptionChannel(ref groundPositionY, -20f, 0f, "Ground Position Y");
+        GameOptionChannel GOC_groundPositionY = new GameOptionChannel(ref groundPositionY, -50f, 0f, "Ground Position Y");
         gameOptionsList.Add(GOC_groundPositionY); // 7    
         GameOptionChannel GOC_angleSensorSensitivity = new GameOptionChannel(ref angleSensorSensitivity, 0f, 1f, "Angle Sensor Sensitivity");
         gameOptionsList.Add(GOC_angleSensorSensitivity); // 7
-    }    
+    }
+
+    public override void CopySettingsToSave(MiniGameSettingsSaves miniGameSettingsSaves) {
+        miniGameSettingsSaves.angleSensorSensitivity = angleSensorSensitivity[0];
+        miniGameSettingsSaves.gravityStrength = gravityStrength[0];
+        miniGameSettingsSaves.groundBounce = groundBounce[0];
+        miniGameSettingsSaves.groundFriction = groundFriction[0];
+        miniGameSettingsSaves.groundPositionY = groundPositionY[0];
+        miniGameSettingsSaves.jointMotorForce = jointMotorForce[0];
+        miniGameSettingsSaves.jointMotorSpeed = jointMotorSpeed[0];
+        miniGameSettingsSaves.maxScoreDistance = maxScoreDistance[0];
+        miniGameSettingsSaves.maxTargetX = maxTargetX[0];
+        miniGameSettingsSaves.maxTargetY = maxTargetY[0];
+        miniGameSettingsSaves.maxTargetZ = maxTargetZ[0];
+        miniGameSettingsSaves.minScoreDistance = minScoreDistance[0];
+        miniGameSettingsSaves.minTargetX = minTargetX[0];
+        miniGameSettingsSaves.minTargetY = minTargetY[0];
+        miniGameSettingsSaves.minTargetZ = minTargetZ[0];
+        miniGameSettingsSaves.targetRadius = targetRadius[0];
+        miniGameSettingsSaves.viscosityDrag = viscosityDrag[0];
+    }
+
+    public override void CopySettingsFromLoad(MiniGameSettingsSaves miniGameSettingsSaves) {
+        viscosityDrag[0] = miniGameSettingsSaves.viscosityDrag;
+        gravityStrength[0] = miniGameSettingsSaves.gravityStrength;
+        jointMotorForce[0] = miniGameSettingsSaves.jointMotorForce;
+        jointMotorSpeed[0] = miniGameSettingsSaves.jointMotorSpeed;
+        minTargetX[0] = miniGameSettingsSaves.minTargetX;
+        maxTargetX[0] = miniGameSettingsSaves.maxTargetX;
+        minTargetY[0] = miniGameSettingsSaves.minTargetY;
+        maxTargetY[0] = miniGameSettingsSaves.maxTargetY;
+        minTargetZ[0] = miniGameSettingsSaves.minTargetZ;
+        maxTargetZ[0] = miniGameSettingsSaves.maxTargetZ;
+        minScoreDistance[0] = miniGameSettingsSaves.minScoreDistance;
+        maxScoreDistance[0] = miniGameSettingsSaves.maxScoreDistance;
+        targetRadius[0] = miniGameSettingsSaves.targetRadius;
+        groundPositionY[0] = miniGameSettingsSaves.groundPositionY;
+        groundBounce[0] = miniGameSettingsSaves.groundBounce;
+        groundFriction[0] = miniGameSettingsSaves.groundFriction;
+        angleSensorSensitivity[0] = miniGameSettingsSaves.angleSensorSensitivity;
+    }
 }

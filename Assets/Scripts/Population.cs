@@ -4,17 +4,8 @@ using System.Collections.Generic;
 
 public class Population {
 	public bool debugFunctionCalls = false; // turns debug messages on/off
-
-    //public enum BrainType {
-    //	None,
-    //	Test,
-    //	ANN_FF_Layered_AllToAll
-    //};
-    // Brain Settings!
-    //public BrainType brainType = BrainType.None;
-    //public BrainBase templateBrain; // do I need this? would be used as currently selected brain for use in displaying/choosing brain settings
+    
     public BrainSettings brainSettings;
-    //public Agent templateAgent;  // ?????????????????????  This might eventually be better....
     public CritterGenome templateGenome;
     public int numInputNodes = 0;
 	public int numOutputNodes = 0;
@@ -22,7 +13,9 @@ public class Population {
 	public int numAgents = 0;
 	public Agent[] masterAgentArray;
     public List<SpeciesBreedingPool> speciesBreedingPoolList;
-    private int nextAvailableSpeciesID = 0;
+    public int nextAvailableSpeciesID = 0;
+
+    public int trainingGenerations = 0; // ONLY UPDATE ON SAVE
     
 	public bool initRandom = false;
 	public bool isFunctional = false;
@@ -71,7 +64,7 @@ public class Population {
     public void SortAgentIntoBreedingPool(Agent agent) {
         bool speciesGenomeMatch = false;
         for(int s = 0; s < speciesBreedingPoolList.Count; s++) {
-            float geneticDistance = GenomeNEAT.MeasureGeneticDistance(agent.brainGenome, speciesBreedingPoolList[s].templateGenome);
+            float geneticDistance = GenomeNEAT.MeasureGeneticDistance(agent.brainGenome, speciesBreedingPoolList[s].templateGenome, 0.425f, 0.425f, 0.15f, 0f, 0f, 1f);
             
             if (geneticDistance < 1f) { //speciesSimilarityThreshold) {  // !!! figure out how/where to place this attribute or get a ref from crossoverManager
                 speciesGenomeMatch = true;
@@ -175,7 +168,10 @@ public class Population {
 	}
 
     private void InitializeAgentBrainsFromGenome(Agent agent) {  // set up agent's brain in the case of a loaded population		
-        agent.brain.InitializeBrainFromGenome(agent.brainGenome);
+
+        //agent.brain.InitializeBrainFromGenome(agent.brainGenome);
+        agent.brain = new BrainNEAT(agent.brainGenome);
+        agent.brain.BuildBrainNetwork();  // constructs the brain from its sourceGenome
     }
 
 	public void SetMaxPopulationSize(int size) {

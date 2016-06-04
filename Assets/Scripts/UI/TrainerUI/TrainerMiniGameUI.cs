@@ -285,7 +285,11 @@ public class TrainerMiniGameUI : MonoBehaviour {
 				pendingMiniGameType = parsed_enum;
 				valuesChanged = true;
                 //pendingMiniGameManager.SetMiniGameType(pendingMiniGameManager.gameType); 
+                
                 pendingMiniGameSettings = new MiniGameCritterWalkBasicSettings();
+                if (trainerModuleScript.gameController.masterTrainer.loadedTrainingSave != null) {
+                    pendingMiniGameSettings.CopySettingsFromLoad(trainerModuleScript.gameController.masterTrainer.loadedTrainingSave.savedMiniGameSettings);
+                }
                 pendingMiniGameSettings.InitGameOptionsList();
 				// Inputs / Outputs button toggles
 				//InitializePanelInputList();

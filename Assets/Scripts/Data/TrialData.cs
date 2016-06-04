@@ -15,6 +15,9 @@ public class TrialData {
 	//public float weightedValueAvg;
 	public float totalSumOfWeights = 0f; // keeps track of total of all fitnessComponent weight values for this Trial
 	
+    public TrialData() {
+        //empty constructor for EasySave2
+    }
 	public TrialData(int numFitnessComponents) {  // number of fitness components for this player's current Trial
 		fitnessComponentDataArray = new FitnessComponentData[numFitnessComponents];
 	}

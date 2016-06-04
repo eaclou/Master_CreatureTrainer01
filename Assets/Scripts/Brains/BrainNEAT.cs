@@ -208,10 +208,10 @@ public class BrainNEAT {
         int numNewLinks = 0;
         int numNewNodes = 0;
         for(int i = 0; i < numNewLinks; i++) {
-            sourceGenome.AddNewRandomLink();
+            sourceGenome.AddNewRandomLink(0);
         }
         for (int j = 0; j < numNewNodes; j++) {
-            sourceGenome.AddNewRandomNode();
+            sourceGenome.AddNewRandomNode(0);
         }
 
         //Debug.Log("InitializeBlankBrain #nodes: " + sourceGenome.nodeNEATList.Count.ToString() + ", #links: " + sourceGenome.linkNEATList.Count.ToString());

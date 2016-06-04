@@ -11,40 +11,48 @@ public class CrossoverManager {
     public bool useCrossover = true;
     public bool useSpeciation = true;
 
-	public float masterMutationRate = 0.2f;
+    // Body OLD:
+    public float mutationBodyChance = 0.5f;
+    public float maxBodyMutationFactor = 1.25f;
+    // MUTATION:
+    public float masterMutationRate = 0.2f;
 	public float maximumWeightMagnitude = 4f;
 	public float mutationDriftScale = 0.45f;
 	public float mutationRemoveLinkChance = 0.1f;
-	public float mutationAddLinkChance = 0.2f;
-	public float mutationAddNodeChance = 0.0f; // temp?
+	public float mutationAddLinkChance = 0.2f;	
     public float mutationRemoveNodeChance = 0.0f;
-	public float mutationBodyChance = 0.5f;
-	public float maxBodyMutationFactor = 1.25f;
+    public float mutationAddNodeChance = 0.0f;
     public float mutationActivationFunctionChance = 0.0f;
+    public float largeBrainPenalty = 0.05f;
+    public float newLinkMutateBonus = 1f;  // 1 = does nothing 
+    public int newLinkBonusDuration = 20;
+    public float existingNetworkBias = 0.05f;
+    public float existingFromNodeBias = 0.5f;
+    // CROSSOVER!!:
+    public float crossoverRandomLinkChance = 0f;
+    // SPECIES!!!:
+    public float speciesSimilarityThreshold = 1.5f;
+    public float excessLinkWeight = 0.425f;
+    public float disjointLinkWeight = 0.425f;
+    public float linkWeightWeight = 0.15f;
+    public float normalizeExcess = 0f;
+    public float normalizeDisjoint = 0f;
+    public float normalizeLinkWeight = 1f;
+    public float adoptionRate = 0.05f;
+    public float largeSpeciesPenalty = 0.04f;
+    public float interspeciesBreedingRate = 0.01f; 
 
-    public int numSwapPositions = 1;
-	public int numFactions = 1;
-	public int minNumParents = 2;
-	public int maxNumParents = 2;
-	public bool breedWithSimilar = false;
-
-	public float survivalRate = 0.05f;
+    public float survivalRate = 0.03f;   // top-performers are copied into the next generation
 	public bool survivalByRank = true;
 	public bool survivalStochastic = false;
 	public bool survivalByRaffle = false;
 
-	public float breedingRate = 0.65f;
+	public float breedingRate = 0.6f;   // percentage of population that performed well enough to breed
 	public bool breedingByRank = false;
 	public bool breedingStochastic = false;
 	public bool breedingByRaffle = true;
 
-    public float largeBrainPenalty = 0.05f;
-    public float adoptionRate = 0.05f;
-    public float interspeciesBreedingRate = 0.01f;
-    public float speciesSimilarityThreshold = 1.5f;
-    public float largeSpeciesPenalty = 0.04f;
-
-    //empty constructor
+    //empty constructor for easySave2
     public CrossoverManager() {
 
 	}
@@ -61,22 +69,29 @@ public class CrossoverManager {
 		maximumWeightMagnitude = sourceManager.maximumWeightMagnitude;
 		mutationDriftScale = sourceManager.mutationDriftScale;
 		mutationRemoveLinkChance = sourceManager.mutationRemoveLinkChance;
-		mutationAddLinkChance = sourceManager.mutationAddLinkChance;
-		mutationAddNodeChance = sourceManager.mutationAddNodeChance;
+		mutationAddLinkChance = sourceManager.mutationAddLinkChance;		
         mutationRemoveNodeChance = sourceManager.mutationRemoveNodeChance;
-
+        mutationAddNodeChance = sourceManager.mutationAddNodeChance;
+        mutationActivationFunctionChance = sourceManager.mutationActivationFunctionChance;
         largeBrainPenalty = sourceManager.largeBrainPenalty;
+        newLinkMutateBonus = sourceManager.newLinkMutateBonus;
+        newLinkBonusDuration = sourceManager.newLinkBonusDuration;
+        existingNetworkBias = sourceManager.existingNetworkBias;
+        existingFromNodeBias = sourceManager.existingFromNodeBias;
+
+        crossoverRandomLinkChance = sourceManager.crossoverRandomLinkChance;
+
         speciesSimilarityThreshold = sourceManager.speciesSimilarityThreshold;
+        excessLinkWeight = sourceManager.excessLinkWeight;
+        disjointLinkWeight = sourceManager.disjointLinkWeight;
+        linkWeightWeight = sourceManager.linkWeightWeight;
+        normalizeExcess = sourceManager.normalizeExcess;
+        normalizeDisjoint = sourceManager.normalizeDisjoint;
+        normalizeLinkWeight = sourceManager.normalizeLinkWeight;
         adoptionRate = sourceManager.adoptionRate;
         largeSpeciesPenalty = sourceManager.largeSpeciesPenalty;
         interspeciesBreedingRate = sourceManager.interspeciesBreedingRate;
-
-		numSwapPositions = sourceManager.numSwapPositions;
-		numFactions = sourceManager.numFactions;
-		minNumParents = sourceManager.minNumParents;
-		maxNumParents = sourceManager.maxNumParents;
-		breedWithSimilar = sourceManager.breedWithSimilar;
-
+        
 		survivalRate = sourceManager.survivalRate;
 		survivalByRank = sourceManager.survivalByRank;
 		survivalStochastic = sourceManager.survivalStochastic;
@@ -88,36 +103,14 @@ public class CrossoverManager {
 		breedingByRaffle = sourceManager.breedingByRaffle;
 	}
 
-	public void PerformCrossover(ref Population sourcePopulation) {
+	public void PerformCrossover(ref Population sourcePopulation, int gen) {
 		//Population newPop = sourcePopulation.CopyPopulationSettings();
-        BreedPopulation(ref sourcePopulation);
-
-        /*if(numFactions > 1) {
-
-			Population[] sourceFactions = sourcePopulation.SplitPopulation(numFactions);
-			Population[] newFactions = new Population[numFactions];
-			for(int i = 0; i < numFactions; i++) {
-				// Make a Genome array of each faction
-				// Then BreedAgentPool on each Array?
-				// Then Add those genomes to new Population masterAgentArray?
-				//newFactions[i] = sourceFactions[i].CopyPopulationSettings();
-				Debug.Log ("FactionSize: " + sourceFactions[i].populationMaxSize.ToString());
-				newFactions[i] = BreedPopulation(ref sourceFactions[i]);
-			}
-			// Add them back together!
-			newPop.SetToCombinedPopulations(newFactions);
-
-		}*/
-        //else {
-        //newPop = BreedPopulation(ref sourcePopulation);
-        //}
-        //newPop = BreedPopulation(ref sourcePopulation);
-        //sourcePopulation = newPop;
-
+        BreedPopulation(ref sourcePopulation, gen);
+                
         //Debug.Log("sourcePopulation.masterAgentArray[0].bodyGenome.creatureBodySegmentGenomeList[0].size.x: " + sourcePopulation.masterAgentArray[0].bodyGenome.creatureBodySegmentGenomeList[0].size.x.ToString());
     }
 
-	public float[][] MixFloatChromosomes(float[][] parentFloatGenes, int numOffspring) {  // takes A number of Genomes and returns new mixed up versions
+    /*public float[][] MixFloatChromosomes(float[][] parentFloatGenes, int numOffspring) {  // takes A number of Genomes and returns new mixed up versions
 		int geneArrayLength = parentFloatGenes[0].Length;
 		float[][] childFloatGenes = new float[numOffspring][];
 
@@ -182,8 +175,9 @@ public class CrossoverManager {
 		}
 		return childFloatGenes;
 	}
+    */
 
-	public CritterGenome[] MixBodyChromosomes(CritterGenome[] parentGenomes, int numOffspring) {  // takes A number of Genomes and returns new mixed up versions
+    public CritterGenome[] MixBodyChromosomes(CritterGenome[] parentGenomes, int numOffspring) {  // takes A number of Genomes and returns new mixed up versions
                                                                                                   //int geneArrayLength = parentGenomes.Length;
         CritterGenome[] childGenomes = new CritterGenome[numOffspring];
         Debug.Log("CURRENTLY BROKEN! public CritterGenome[] MixBodyChromosomes(CritterGenome[] parentGenomes, int numOffspring)");
@@ -322,7 +316,7 @@ public class CrossoverManager {
 
     
 
-    public Population BreedPopulation(ref Population sourcePopulation) {
+    public Population BreedPopulation(ref Population sourcePopulation, int currentGeneration) {
         
         // go through species list and adjust fitness
         List<SpeciesBreedingPool> childSpeciesPoolsList = new List<SpeciesBreedingPool>(); // will hold agents in an internal list to facilitate crossover
@@ -333,8 +327,7 @@ public class CrossoverManager {
             // copies the existing breeding pools but leaves their agentLists empty for future children
             childSpeciesPoolsList.Add(newChildSpeciesPool);            // Add to list of pools
             //Debug.Log("BreedPopulation -- newChildSpeciesPool# " + s.ToString() + ", id: " + newChildSpeciesPool.speciesID.ToString());
-            //
-            
+            //            
         }
 
         sourcePopulation.RankAgentArray(); // based on modified species fitness score, so compensated for species sizes
@@ -400,31 +393,33 @@ public class CrossoverManager {
         int currentRankIndex = 0;
 
         // Once the agents are ranked, trim the BreedingPools of agents that didn't make the cut for mating:
-        for (int s = 0; s < sourcePopulation.speciesBreedingPoolList.Count; s++) {
-            int index = 0;
-            int failsafe = 0;
-            int numAgents = sourcePopulation.speciesBreedingPoolList[s].agentList.Count;
-            while (index < numAgents) {   
-                if(index < sourcePopulation.speciesBreedingPoolList[s].agentList.Count) {
-                    if (sourcePopulation.speciesBreedingPoolList[s].agentList[index].fitnessRank >= numEligibleBreederAgents) {
-                        sourcePopulation.speciesBreedingPoolList[s].agentList.RemoveAt(index);
+        if(useSpeciation) {
+            for (int s = 0; s < sourcePopulation.speciesBreedingPoolList.Count; s++) {
+                int index = 0;
+                int failsafe = 0;
+                int numAgents = sourcePopulation.speciesBreedingPoolList[s].agentList.Count;
+                while (index < numAgents) {
+                    if (index < sourcePopulation.speciesBreedingPoolList[s].agentList.Count) {
+                        if (sourcePopulation.speciesBreedingPoolList[s].agentList[index].fitnessRank >= numEligibleBreederAgents) {
+                            sourcePopulation.speciesBreedingPoolList[s].agentList.RemoveAt(index);
+                        }
+                        else {
+                            index++;
+                        }
                     }
                     else {
-                        index++;
+                        break;
+                    }
+                    failsafe++;
+                    if (failsafe > 500) {
+                        Debug.Log("INFINITE LOOP! hit failsafe 500 iters -- Trimming BreedingPools!");
+                        break;
                     }
                 }
-                else {
-                    break;
-                }
-                failsafe++;
-                if(failsafe > 500) {
-                    Debug.Log("INFINITE LOOP! hit failsafe 500 iters -- Trimming BreedingPools!");
-                    break;
-                }
+                //Debug.Log("BreedPopulation -- TRIMSpeciesPool# " + s.ToString() + ", id: " + sourcePopulation.speciesBreedingPoolList[s].speciesID.ToString() + ", Count: " + sourcePopulation.speciesBreedingPoolList[s].agentList.Count.ToString());
+                //
             }
-            //Debug.Log("BreedPopulation -- TRIMSpeciesPool# " + s.ToString() + ", id: " + sourcePopulation.speciesBreedingPoolList[s].speciesID.ToString() + ", Count: " + sourcePopulation.speciesBreedingPoolList[s].agentList.Count.ToString());
-            //
-        }
+        }        
 
         float totalScoreBreeders = 0f;
         if (breedingByRaffle) {  // calculate total fitness scores to determine lottery weights
@@ -457,20 +452,23 @@ public class CrossoverManager {
             parentNodeListArray[0] = firstParentNodeList;
             parentLinkListArray[0] = firstParentLinkList;
 
-            SpeciesBreedingPool parentAgentBreedingPool = sourcePopulation.GetBreedingPoolByID(sourcePopulation.speciesBreedingPoolList, firstParentAgent.speciesID);
-
-            //Debug.Log("NewFirstParent--Species: " + firstParentAgent.speciesID.ToString() + ", parentAgentBreedingPoolID: " + parentAgentBreedingPool.speciesID.ToString() + ", Count: " + parentAgentBreedingPool.agentList.Count.ToString() + ", fitRank: " + firstParentAgent.fitnessRank.ToString());
-
             Agent secondParentAgent;
-            float randBreedOutsideSpecies = UnityEngine.Random.Range(0f, 1f);
-            if (randBreedOutsideSpecies < interspeciesBreedingRate) { // Attempts to Found a new species
-                // allowed to breed outside its own species:
-                secondParentAgent = SelectAgentFromPopForBreeding(sourcePopulation, numEligibleBreederAgents, ref currentRankIndex);
+            SpeciesBreedingPool parentAgentBreedingPool = sourcePopulation.GetBreedingPoolByID(sourcePopulation.speciesBreedingPoolList, firstParentAgent.speciesID);
+            if (useSpeciation) {
+                //parentAgentBreedingPool
+                float randBreedOutsideSpecies = UnityEngine.Random.Range(0f, 1f);
+                if (randBreedOutsideSpecies < interspeciesBreedingRate) { // Attempts to Found a new species
+                                                                          // allowed to breed outside its own species:
+                    secondParentAgent = SelectAgentFromPopForBreeding(sourcePopulation, numEligibleBreederAgents, ref currentRankIndex);
+                }
+                else {
+                    // Selects mate only from within its own species:
+                    secondParentAgent = SelectAgentFromPoolForBreeding(parentAgentBreedingPool);
+                }
             }
             else {
-                // Selects mate only from within its own species:
-                secondParentAgent = SelectAgentFromPoolForBreeding(parentAgentBreedingPool);
-            }
+                secondParentAgent = SelectAgentFromPopForBreeding(sourcePopulation, numEligibleBreederAgents, ref currentRankIndex);
+            }           
             
             parentAgentsArray[1] = secondParentAgent;
             List<GeneNodeNEAT> secondParentNodeList = new List<GeneNodeNEAT>();
@@ -494,6 +492,8 @@ public class CrossoverManager {
                 childGenome.nodeNEATList = childNodeList;
                 childGenome.linkNEATList = childLinkList;
 
+                int numEnabledLinkGenes = 0;
+
                 if (useCrossover) {
                     //float dist = GenomeNEAT.MeasureGeneticDistance(parentAgentsArray[0].brainGenome, parentAgentsArray[1].brainGenome);
                     //Debug.Log("Parent Distance: " + dist.ToString());
@@ -511,14 +511,19 @@ public class CrossoverManager {
                     bool endReached = false;
 
                     int moreFitParent = 0;  // which parent is more Fit
-                    float fitSliceA = 0.01f * parentAgentsArray[0].fitnessScoreSpecies / (parentAgentsArray[0].fitnessScoreSpecies + parentAgentsArray[1].fitnessScoreSpecies);
-                    float fitSliceB = 0.01f * parentAgentsArray[1].fitnessScoreSpecies / (parentAgentsArray[0].fitnessScoreSpecies + parentAgentsArray[1].fitnessScoreSpecies);
+                    //float fitSliceA = 0.01f * parentAgentsArray[0].fitnessScoreSpecies / (parentAgentsArray[0].fitnessScoreSpecies + parentAgentsArray[1].fitnessScoreSpecies);
+                    //float fitSliceB = 0.01f * parentAgentsArray[1].fitnessScoreSpecies / (parentAgentsArray[0].fitnessScoreSpecies + parentAgentsArray[1].fitnessScoreSpecies);
                     if (parentAgentsArray[0].fitnessScoreSpecies < parentAgentsArray[1].fitnessScoreSpecies) {
                         moreFitParent = 1;
                     }
                     else if (parentAgentsArray[0].fitnessScoreSpecies == parentAgentsArray[1].fitnessScoreSpecies) {
                         moreFitParent = Mathf.RoundToInt(UnityEngine.Random.Range(0f, 1f));
                     }
+
+                    if (moreFitParent < 0.5f)
+                        newChildAgent.bodyGenome = parentAgentsArray[0].bodyGenome;
+                    else
+                        newChildAgent.bodyGenome = parentAgentsArray[1].bodyGenome;
 
                     while (!endReached) {
                     //for(int i = 0; i < parentAgentsArray[0].brainGenome.ReadMaxInno(); i++) { 
@@ -557,28 +562,32 @@ public class CrossoverManager {
                         if (innoDelta < 0) {  // Parent A has an earlier link mutation
                             //Debug.Log("newChildIndex: " + newChildIndex.ToString() + ", IndexA: " + parentListIndexA.ToString() + ", IndexB: " + parentListIndexB.ToString() + ", innoDelta < 0 (" + innoDelta.ToString() + ") --  moreFitP: " + moreFitParent.ToString() + ", nextLinkInnoA: " + nextLinkInnoA.ToString() + ", nextLinkInnoB: " + nextLinkInnoB.ToString());
                             if (moreFitParent == 0) {  // Parent A is more fit:
-                                GeneLinkNEAT newChildLink = new GeneLinkNEAT(parentLinkListArray[0][parentListIndexA].fromNodeID, parentLinkListArray[0][parentListIndexA].toNodeID, parentLinkListArray[0][parentListIndexA].weight, parentLinkListArray[0][parentListIndexA].enabled, parentLinkListArray[0][parentListIndexA].innov);
+                                GeneLinkNEAT newChildLink = new GeneLinkNEAT(parentLinkListArray[0][parentListIndexA].fromNodeID, parentLinkListArray[0][parentListIndexA].toNodeID, parentLinkListArray[0][parentListIndexA].weight, parentLinkListArray[0][parentListIndexA].enabled, parentLinkListArray[0][parentListIndexA].innov, currentGeneration);
                                 childLinkList.Add(newChildLink);
+                                if (parentLinkListArray[0][parentListIndexA].enabled)
+                                    numEnabledLinkGenes++;
                             }
                             else {
-                                /*if(fitSliceA < UnityEngine.Random.Range(0f, 1f)) {  // was less fit parent, but still passed on a gene!:
-                                    GeneLinkNEAT newChildLink = new GeneLinkNEAT(parentLinkListArray[0][parentListIndexA].fromNodeID, parentLinkListArray[0][parentListIndexA].toNodeID, parentLinkListArray[0][parentListIndexA].weight, parentLinkListArray[0][parentListIndexA].enabled, parentLinkListArray[0][parentListIndexA].innov);
+                                if(CheckForMutation(crossoverRandomLinkChance)) {  // was less fit parent, but still passed on a gene!:
+                                    GeneLinkNEAT newChildLink = new GeneLinkNEAT(parentLinkListArray[0][parentListIndexA].fromNodeID, parentLinkListArray[0][parentListIndexA].toNodeID, parentLinkListArray[0][parentListIndexA].weight, parentLinkListArray[0][parentListIndexA].enabled, parentLinkListArray[0][parentListIndexA].innov, currentGeneration);
                                     childLinkList.Add(newChildLink);
-                                }*/
+                                }
                             }
                             parentListIndexA++;
                         }
                         if (innoDelta > 0) {  // Parent B has an earlier link mutation
                             //Debug.Log("newChildIndex: " + newChildIndex.ToString() + ", IndexA: " + parentListIndexA.ToString() + ", IndexB: " + parentListIndexB.ToString() + ", innoDelta > 0 (" + innoDelta.ToString() + ") --  moreFitP: " + moreFitParent.ToString() + ", nextLinkInnoA: " + nextLinkInnoA.ToString() + ", nextLinkInnoB: " + nextLinkInnoB.ToString());
                             if (moreFitParent == 1) {  // Parent B is more fit:
-                                GeneLinkNEAT newChildLink = new GeneLinkNEAT(parentLinkListArray[1][parentListIndexB].fromNodeID, parentLinkListArray[1][parentListIndexB].toNodeID, parentLinkListArray[1][parentListIndexB].weight, parentLinkListArray[1][parentListIndexB].enabled, parentLinkListArray[1][parentListIndexB].innov);
+                                GeneLinkNEAT newChildLink = new GeneLinkNEAT(parentLinkListArray[1][parentListIndexB].fromNodeID, parentLinkListArray[1][parentListIndexB].toNodeID, parentLinkListArray[1][parentListIndexB].weight, parentLinkListArray[1][parentListIndexB].enabled, parentLinkListArray[1][parentListIndexB].innov, currentGeneration);
                                 childLinkList.Add(newChildLink);
+                                if (parentLinkListArray[1][parentListIndexB].enabled)
+                                    numEnabledLinkGenes++;
                             }
                             else {
-                                /*if (fitSliceB < UnityEngine.Random.Range(0f, 1f)) {  // was less fit parent, but still passed on a gene!:
-                                    GeneLinkNEAT newChildLink = new GeneLinkNEAT(parentLinkListArray[1][parentListIndexB].fromNodeID, parentLinkListArray[1][parentListIndexB].toNodeID, parentLinkListArray[1][parentListIndexB].weight, parentLinkListArray[1][parentListIndexB].enabled, parentLinkListArray[1][parentListIndexB].innov);
+                                if (CheckForMutation(crossoverRandomLinkChance)) {  // was less fit parent, but still passed on a gene!:
+                                    GeneLinkNEAT newChildLink = new GeneLinkNEAT(parentLinkListArray[1][parentListIndexB].fromNodeID, parentLinkListArray[1][parentListIndexB].toNodeID, parentLinkListArray[1][parentListIndexB].weight, parentLinkListArray[1][parentListIndexB].enabled, parentLinkListArray[1][parentListIndexB].innov, currentGeneration);
                                     childLinkList.Add(newChildLink);
-                                }*/
+                                }
                             }
                             parentListIndexB++;
                         }
@@ -593,8 +602,10 @@ public class CrossoverManager {
                                 newWeightValue = parentLinkListArray[1][parentListIndexB].weight;
                             }
                             //Debug.Log("newChildIndex: " + newChildIndex.ToString() + ", IndexA: " + parentListIndexA.ToString() + ", IndexB: " + parentListIndexB.ToString() + ", innoDelta == 0 (" + innoDelta.ToString() + ") --  moreFitP: " + moreFitParent.ToString() + ", nextLinkInnoA: " + nextLinkInnoA.ToString() + ", nextLinkInnoB: " + nextLinkInnoB.ToString() + ", randParent: " + randParentIndex.ToString() + ", weight: " + newWeightValue.ToString());
-                            GeneLinkNEAT newChildLink = new GeneLinkNEAT(parentLinkListArray[0][parentListIndexA].fromNodeID, parentLinkListArray[0][parentListIndexA].toNodeID, newWeightValue, parentLinkListArray[0][parentListIndexA].enabled, parentLinkListArray[0][parentListIndexA].innov);
+                            GeneLinkNEAT newChildLink = new GeneLinkNEAT(parentLinkListArray[0][parentListIndexA].fromNodeID, parentLinkListArray[0][parentListIndexA].toNodeID, newWeightValue, parentLinkListArray[0][parentListIndexA].enabled, parentLinkListArray[0][parentListIndexA].innov, currentGeneration);
                             childLinkList.Add(newChildLink);
+                            if (parentLinkListArray[0][parentListIndexA].enabled)
+                                numEnabledLinkGenes++;
 
                             parentListIndexA++;
                             parentListIndexB++;
@@ -609,8 +620,16 @@ public class CrossoverManager {
                     }
 
                     if (useMutation) {
+                        if (numEnabledLinkGenes < 1)
+                            numEnabledLinkGenes = 1;
                         for (int k = 0; k < childLinkList.Count; k++) {
-                            if (CheckForMutation(masterMutationRate)) {  // Weight Mutation!
+                            float mutateChance = masterMutationRate / numEnabledLinkGenes;
+                            if (currentGeneration - childLinkList[k].birthGen < newLinkBonusDuration) {
+                                float t = 1 - ((currentGeneration - childLinkList[k].birthGen) / (float)newLinkBonusDuration);
+                                // t=0 means age of gene is same as bonusDuration, t=1 means it is brand new
+                                mutateChance *= Mathf.Lerp(mutateChance, mutateChance * newLinkMutateBonus, t);
+                            }
+                            if (CheckForMutation(mutateChance)) {  // Weight Mutation!
                                 //Debug.Log("Weight Mutation Link[" + k.ToString() + "] weight: " + childLinkList[k].weight.ToString() + ", mutate: " + MutateFloat(childLinkList[k].weight).ToString());
                                 childLinkList[k].weight = MutateFloat(childLinkList[k].weight);
                             }
@@ -621,67 +640,69 @@ public class CrossoverManager {
                         }
                         if (CheckForMutation(mutationAddNodeChance)) {   // Adds a new node
                             //Debug.Log("Add Node Mutation Agent[" + newChildIndex.ToString() + "]");
-                            childGenome.AddNewRandomNode();
+                            childGenome.AddNewRandomNode(currentGeneration);
                         }
                         if (CheckForMutation(mutationAddLinkChance)) { // Adds new connection
                             //Debug.Log("Add Link Mutation Agent[" + newChildIndex.ToString() + "]");
-                            if (CheckForMutation(0.15f)) {
-                                childGenome.AddNewExtraLink();
+                            if (CheckForMutation(existingNetworkBias)) {
+                                childGenome.AddNewExtraLink(existingFromNodeBias, currentGeneration);
                             }
                             else {
-                                childGenome.AddNewRandomLink();
+                                childGenome.AddNewRandomLink(currentGeneration);
                             }
                         }
+                        if (CheckForMutation(mutationActivationFunctionChance)) {
+                            TransferFunctions.TransferFunction newFunction;
+                            int randIndex = Mathf.RoundToInt(UnityEngine.Random.Range(0f, childNodeList.Count - 1));
+                            int randomTF = (int)UnityEngine.Random.Range(0f, 12f);
 
-                        for (int t = 0; t < childNodeList.Count; t++) {
-                            if (CheckForMutation(mutationRemoveNodeChance)) {  // CHANGE THIS TO FUNCTION CHANCE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!&&&&&&&&&&&&&&&&&                              
-                                TransferFunctions.TransferFunction newFunction;
-
-                                int randomTF = (int)UnityEngine.Random.Range(0f, 10f);
-
-                                switch (randomTF) {
-                                    case 0:
-                                        newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
-                                        break;
-                                    case 1:
-                                        newFunction = TransferFunctions.TransferFunction.Linear;
-                                        break;
-                                    case 2:
-                                        newFunction = TransferFunctions.TransferFunction.Gaussian;
-                                        break;
-                                    case 3:
-                                        newFunction = TransferFunctions.TransferFunction.Abs;
-                                        break;
-                                    case 4:
-                                        newFunction = TransferFunctions.TransferFunction.Cos;
-                                        break;
-                                    case 5:
-                                        newFunction = TransferFunctions.TransferFunction.Sin;
-                                        break;
-                                    case 6:
-                                        newFunction = TransferFunctions.TransferFunction.Tan;
-                                        break;
-                                    case 7:
-                                        newFunction = TransferFunctions.TransferFunction.Square;
-                                        break;
-                                    case 8:
-                                        newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
-                                        break;
-                                    case 9:
-                                        newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
-                                        break;
-                                    case 10:
-                                        newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
-                                        break;
-                                    default:
-                                        newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
-                                        break;
-                                }
-                                if (childNodeList[t].nodeType != GeneNodeNEAT.GeneNodeType.Out) {  // keep outputs -1 to 1 range
-                                    Debug.Log("ActivationFunction Mutation Node[" + t.ToString() + "] prev: " + childNodeList[t].activationFunction.ToString() + ", new: " + newFunction.ToString());
-                                    childNodeList[t].activationFunction = newFunction;
-                                }
-
+                            switch (randomTF) {
+                                case 0:
+                                    newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
+                                    break;
+                                case 1:
+                                    newFunction = TransferFunctions.TransferFunction.Linear;
+                                    break;
+                                case 2:
+                                    newFunction = TransferFunctions.TransferFunction.Gaussian;
+                                    break;
+                                case 3:
+                                    newFunction = TransferFunctions.TransferFunction.Abs;
+                                    break;
+                                case 4:
+                                    newFunction = TransferFunctions.TransferFunction.Cos;
+                                    break;
+                                case 5:
+                                    newFunction = TransferFunctions.TransferFunction.Sin;
+                                    break;
+                                case 6:
+                                    newFunction = TransferFunctions.TransferFunction.Tan;
+                                    break;
+                                case 7:
+                                    newFunction = TransferFunctions.TransferFunction.Square;
+                                    break;
+                                case 8:
+                                    newFunction = TransferFunctions.TransferFunction.Threshold01;
+                                    break;
+                                case 9:
+                                    newFunction = TransferFunctions.TransferFunction.ThresholdNegPos;
+                                    break;
+                                case 10:
+                                    newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
+                                    break;
+                                case 11:
+                                    newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
+                                    break;
+                                case 12:
+                                    newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
+                                    break;
+                                default:
+                                    newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
+                                    break;
+                            }
+                            if (childNodeList[randIndex].nodeType != GeneNodeNEAT.GeneNodeType.Out) {  // keep outputs -1 to 1 range
+                                Debug.Log("ActivationFunction Mutation Node[" + randIndex.ToString() + "] prev: " + childNodeList[randIndex].activationFunction.ToString() + ", new: " + newFunction.ToString());
+                                childNodeList[randIndex].activationFunction = newFunction;
                             }
                         }
                     }
@@ -690,7 +711,8 @@ public class CrossoverManager {
                     }
                 }
                 else { // no crossover:                    
-                    
+                    newChildAgent.bodyGenome = parentAgentsArray[0].bodyGenome;
+
                     for (int i = 0; i < parentNodeListArray[0].Count; i++) {
                         // iterate through all nodes in the parent List and copy them into fresh new geneNodes:
                         GeneNodeNEAT clonedNode = new GeneNodeNEAT(parentNodeListArray[0][i].id, parentNodeListArray[0][i].nodeType, parentNodeListArray[0][i].activationFunction);
@@ -698,13 +720,23 @@ public class CrossoverManager {
                     }
                     for (int j = 0; j < parentLinkListArray[0].Count; j++) {
                         //same thing with connections
-                        GeneLinkNEAT clonedLink = new GeneLinkNEAT(parentLinkListArray[0][j].fromNodeID, parentLinkListArray[0][j].toNodeID, parentLinkListArray[0][j].weight, parentLinkListArray[0][j].enabled, parentLinkListArray[0][j].innov);
+                        GeneLinkNEAT clonedLink = new GeneLinkNEAT(parentLinkListArray[0][j].fromNodeID, parentLinkListArray[0][j].toNodeID, parentLinkListArray[0][j].weight, parentLinkListArray[0][j].enabled, parentLinkListArray[0][j].innov, currentGeneration);
                         childLinkList.Add(clonedLink);
+                        if (parentLinkListArray[0][j].enabled)
+                            numEnabledLinkGenes++;
                     }
                     // MUTATION:
                     if (useMutation) {
+                        if (numEnabledLinkGenes < 1)
+                            numEnabledLinkGenes = 1;
                         for (int k = 0; k < childLinkList.Count; k++) {
-                            if (CheckForMutation(masterMutationRate)) {  // Weight Mutation!
+                            float mutateChance = masterMutationRate / numEnabledLinkGenes;
+                            if (currentGeneration - childLinkList[k].birthGen < newLinkBonusDuration) {
+                                float t = 1 - ((currentGeneration - childLinkList[k].birthGen) / (float)newLinkBonusDuration);
+                                // t=0 means age of gene is same as bonusDuration, t=1 means it is brand new
+                                mutateChance *= Mathf.Lerp(mutateChance, mutateChance * newLinkMutateBonus, t);
+                            }
+                            if (CheckForMutation(mutateChance)) {  // Weight Mutation!
                                 //Debug.Log("Weight Mutation Link[" + k.ToString() + "] weight: " + childLinkList[k].weight.ToString() + ", mutate: " + MutateFloat(childLinkList[k].weight).ToString());
                                 childLinkList[k].weight = MutateFloat(childLinkList[k].weight);
                             }
@@ -715,69 +747,74 @@ public class CrossoverManager {
                         }
                         if (CheckForMutation(mutationAddNodeChance)) {   // Adds a new node
                             //Debug.Log("Add Node Mutation Agent[" + newChildIndex.ToString() + "]");
-                            childGenome.AddNewRandomNode();
+                            childGenome.AddNewRandomNode(currentGeneration);
                         }
                         if (CheckForMutation(mutationAddLinkChance)) { // Adds new connection
                             //Debug.Log("Add Link Mutation Agent[" + newChildIndex.ToString() + "]");
-                            if(CheckForMutation(0.15f)) {
-                                childGenome.AddNewExtraLink();
+                            if(CheckForMutation(existingNetworkBias)) {
+                                childGenome.AddNewExtraLink(existingFromNodeBias, currentGeneration);
                             }
                             else {
-                                childGenome.AddNewRandomLink();
+                                childGenome.AddNewRandomLink(currentGeneration);
                             }
                         }
+                        if (CheckForMutation(mutationActivationFunctionChance)) {
+                            TransferFunctions.TransferFunction newFunction;
+                            int randIndex = Mathf.RoundToInt(UnityEngine.Random.Range(0f, childNodeList.Count - 1));
+                            int randomTF = (int)UnityEngine.Random.Range(0f, 12f);
 
-                        for (int t = 0; t < childNodeList.Count; t++) {
-                            if (CheckForMutation(mutationRemoveNodeChance)) {  // CHANGE THIS TO FUNCTION CHANCE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!&&&&&&&&&&&&&&&&&                                   
-                                TransferFunctions.TransferFunction newFunction;
-
-                                int randomTF = (int)UnityEngine.Random.Range(0f, 10f);
-
-                                switch(randomTF) {
-                                    case 0:
-                                        newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
-                                        break;
-                                    case 1:
-                                        newFunction = TransferFunctions.TransferFunction.Linear;
-                                        break;
-                                    case 2:
-                                        newFunction = TransferFunctions.TransferFunction.Gaussian;
-                                        break;
-                                    case 3:
-                                        newFunction = TransferFunctions.TransferFunction.Abs;
-                                        break;
-                                    case 4:
-                                        newFunction = TransferFunctions.TransferFunction.Cos;
-                                        break;
-                                    case 5:
-                                        newFunction = TransferFunctions.TransferFunction.Sin;
-                                        break;
-                                    case 6:
-                                        newFunction = TransferFunctions.TransferFunction.Tan;
-                                        break;
-                                    case 7:
-                                        newFunction = TransferFunctions.TransferFunction.Square;
-                                        break;
-                                    case 8:
-                                        newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
-                                        break;
-                                    case 9:
-                                        newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
-                                        break;
-                                    case 10:
-                                        newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
-                                        break;
-                                    default:
-                                        newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
-                                        break;
-                                }
-                                if(childNodeList[t].nodeType != GeneNodeNEAT.GeneNodeType.Out) {  // keep outputs -1 to 1 range
-                                    Debug.Log("ActivationFunction Mutation Node[" + t.ToString() + "] prev: " + childNodeList[t].activationFunction.ToString() + ", new: " + newFunction.ToString());
-                                    childNodeList[t].activationFunction = newFunction;
-                                }
-                                
+                            switch (randomTF) {
+                                case 0:
+                                    newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
+                                    break;
+                                case 1:
+                                    newFunction = TransferFunctions.TransferFunction.Linear;
+                                    break;
+                                case 2:
+                                    newFunction = TransferFunctions.TransferFunction.Gaussian;
+                                    break;
+                                case 3:
+                                    newFunction = TransferFunctions.TransferFunction.Abs;
+                                    break;
+                                case 4:
+                                    newFunction = TransferFunctions.TransferFunction.Cos;
+                                    break;
+                                case 5:
+                                    newFunction = TransferFunctions.TransferFunction.Sin;
+                                    break;
+                                case 6:
+                                    newFunction = TransferFunctions.TransferFunction.Tan;
+                                    break;
+                                case 7:
+                                    newFunction = TransferFunctions.TransferFunction.Square;
+                                    break;
+                                case 8:
+                                    newFunction = TransferFunctions.TransferFunction.Threshold01;
+                                    break;
+                                case 9:
+                                    newFunction = TransferFunctions.TransferFunction.ThresholdNegPos;
+                                    break;
+                                case 10:
+                                    newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
+                                    break;
+                                case 11:
+                                    newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
+                                    break;
+                                case 12:
+                                    newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
+                                    break;
+                                default:
+                                    newFunction = TransferFunctions.TransferFunction.RationalSigmoid;
+                                    break;
+                            }
+                            if (childNodeList[randIndex].nodeType != GeneNodeNEAT.GeneNodeType.Out) {  // keep outputs -1 to 1 range
+                                Debug.Log("ActivationFunction Mutation Node[" + randIndex.ToString() + "] prev: " + childNodeList[randIndex].activationFunction.ToString() + ", new: " + newFunction.ToString());
+                                childNodeList[randIndex].activationFunction = newFunction;
                             }
                         }
+                        //for (int t = 0; t < childNodeList.Count; t++) {
+                            
+                        //}
                     }
                     else {
                         Debug.Log("Mutation Disabled!");
@@ -790,13 +827,14 @@ public class CrossoverManager {
                 BrainNEAT childBrain = new BrainNEAT(childGenome);
                 childBrain.BuildBrainNetwork();
                 newChildAgent.brain = childBrain;
+                
                 // Species:
                 if(useSpeciation) {
                     float randAdoption = UnityEngine.Random.Range(0f, 1f);
                     if (randAdoption < adoptionRate) { // Attempts to Found a new species
                         bool speciesGenomeMatch = false;
                         for (int s = 0; s < childSpeciesPoolsList.Count; s++) {
-                            float geneticDistance = GenomeNEAT.MeasureGeneticDistance(newChildAgent.brainGenome, childSpeciesPoolsList[s].templateGenome);
+                            float geneticDistance = GenomeNEAT.MeasureGeneticDistance(newChildAgent.brainGenome, childSpeciesPoolsList[s].templateGenome, excessLinkWeight, disjointLinkWeight, linkWeightWeight, normalizeExcess, normalizeDisjoint, normalizeLinkWeight);
 
                             if (geneticDistance < speciesSimilarityThreshold) {
                                 speciesGenomeMatch = true;
@@ -878,589 +916,4 @@ public class CrossoverManager {
 
         return sourcePopulation;
     }
-
-    /*public void SortNewAgentIntoSpecies(Agent agent, List<Species> speciesList) {
-      bool speciesInList = false;
-      for (int s = 0; s < speciesList.Count; s++) {
-          if(agent.species.id == speciesList[s].id) {
-              speciesInList = true;
-              speciesList[s].AddNewMember(agent);
-          }
-      }
-      if(!speciesInList) {
-          // create new species:
-          Species newSpecies = new Species(agent);
-          Debug.Log("SortNewAgentIntoSpecies(Agent agent, List<Species> speciesList) ID: " + newSpecies.id.ToString() + ", members: " + newSpecies.currentMemberCount.ToString());
-          speciesList.Add(newSpecies);
-      }
-  }*/
-
-    /*public SpeciesBreedingPool FindMatchingBreedingPool(List<SpeciesBreedingPool> poolList, Species species) {
-        for(int p = 0; p < poolList.Count; p++) {
-            if(poolList[p].speciesID == species.id) {
-                return poolList[p];
-            }
-        }
-        Debug.Log("FindMatchingBreedPool FAILED! " + species.id.ToString());
-        return new SpeciesBreedingPool(species);
-    }*/
-
-    /*public Population BreedPopulation(ref Population sourcePopulation) {
-		for(int m = 0; m < sourcePopulation.masterAgentArray.Length; m++) {
-			//sourcePopulation.masterAgentArray[m].brain.genome.PrintBiases("sourcePop " + sourcePopulation.masterAgentArray[m].fitnessScore.ToString() + ", " + m.ToString() + ", ");
-			//newPop.masterAgentArray[m].brain.genome.PrintBiases("newPop " + m.ToString() + ", ");
-		}
-		// rank sourcePop by fitness score // maybe do this as a method of Population class?
-		sourcePopulation.RankAgentArray();
-
-		// Create the Population that will hold the next Generation agentArray:
-		Population newPopulation = new Population();
-		newPopulation = sourcePopulation.CopyPopulationSettings();
-
-		// Calculate total fitness score:
-		float totalScore = 0f;
-		if(survivalByRaffle) {
-			for(int a = 0; a < sourcePopulation.populationMaxSize; a++) { // iterate through all agents
-				totalScore += sourcePopulation.masterAgentArray[a].fitnessScore;
-			}			
-		}
-
-		// Figure out How many Agents survive
-		int numSurvivors = Mathf.RoundToInt(survivalRate * (float)newPopulation.populationMaxSize);
-		//Depending on method, one at a time, select an Agent to survive until the max Number is reached
-		int newChildIndex = 0;
-
-		// For ( num Agents ) {
-		for(int i = 0; i < numSurvivors; i++) {
-			// If survival is by fitness score ranking:
-			if(survivalByRank) {
-				// Pop should already be ranked, so just traverse from top (best) to bottom (worst)
-				newPopulation.masterAgentArray[newChildIndex] = sourcePopulation.masterAgentArray[newChildIndex];
-				newChildIndex++;
-			}
-			// if survival is completely random, as a control:
-			if(survivalStochastic) {
-				int randomAgent = UnityEngine.Random.Range (0, numSurvivors-1);
-				// Set next newChild slot to a randomly-chosen agent within the survivor faction -- change to full random?
-				newPopulation.masterAgentArray[newChildIndex] = sourcePopulation.masterAgentArray[randomAgent];
-				newChildIndex++;
-			}
-			// if survival is based on a fitness lottery:
-			if(survivalByRaffle) {  // Try when Fitness is normalized from 0-1
-				float randomSlicePosition = UnityEngine.Random.Range(0f, totalScore);
-				float accumulatedFitness = 0f;
-				for(int a = 0; a < sourcePopulation.populationMaxSize; a++) { // iterate through all agents
-					accumulatedFitness += sourcePopulation.masterAgentArray[a].fitnessScore;
-					// if accum fitness is on slicePosition, copy this Agent
-					Debug.Log ("NumSurvivors: " + numSurvivors.ToString() + ", Surviving Agent " + a.ToString() + ": AccumFitness: " + accumulatedFitness.ToString() + ", RafflePos: " + randomSlicePosition.ToString() + ", TotalScore: " + totalScore.ToString() + ", newChildIndex: " + newChildIndex.ToString());
-					if(accumulatedFitness >= randomSlicePosition) {
-						newPopulation.masterAgentArray[newChildIndex] = sourcePopulation.masterAgentArray[a];
-						newChildIndex++;
-					}
-
-				}
-			}
-		//		set newPop Agent to lucky sourcePop index
-		//////////	Agent survivingAgent = sourcePopulation.Select
-		// Fill up newPop agentArray with the surviving Agents
-		// Keep track of Index, as that will be needed for new agents
-		}
-
-		// Figure out how many new agents must be created to fill up the new population:
-		int numNewChildAgents = newPopulation.populationMaxSize - numSurvivors;
-		int numEligibleBreederAgents = Mathf.RoundToInt(breedingRate * (float)newPopulation.populationMaxSize);
-		int currentRankIndex = 0;
-
-		float totalScoreBreeders = 0f;
-		if(breedingByRaffle) {  // calculate total fitness scores to determine lottery weights
-			for(int a = 0; a < numEligibleBreederAgents; a++) { // iterate through all agents
-				totalScoreBreeders += sourcePopulation.masterAgentArray[a].fitnessScore;
-			}			
-		}
-
-		// Iterate over numAgentsToCreate :
-		int newChildrenCreated = 0;
-		while(newChildrenCreated < numNewChildAgents) {
-		//		Find how many parents random number btw min/max:
-			int numParentAgents = UnityEngine.Random.Range (minNumParents, maxNumParents);
-			int numChildAgents = 1; // defaults to one child, but:
-			if(numNewChildAgents - newChildrenCreated >= 2) {  // room for two more!
-				numChildAgents = 2;
-				//Debug.Log ("numNewChildAgents: " + numNewChildAgents.ToString() + " - newChildrenCreated: " + newChildrenCreated.ToString() + " = numChildAgents: " + numChildAgents.ToString());
-			}
-			float[][] parentAgentBiases = new float[numParentAgents][];
-			float[][] parentAgentWeights = new float[numParentAgents][];
-			// %%%%%%%%%% hacky BodyGenome stuff:  -- to eventually be replaced by dynamic NEAT crossover -- for now only proportions/values:
-			//CritterGenome[] parentBodyGenomes = new CritterGenome[numParentAgents]; // will hold referneces to parent Agent's bodyGenomes
-
-			for(int p = 0; p < numParentAgents; p++) {
-		//		Iterate over numberOfParents :
-		//			Depending on method, select suitable agents' genome.Arrays until the numberOfPArents is reached, collect them in an array of arrays
-				// If breeding is by fitness score ranking:
-				if(breedingByRank) {
-					// Pop should already be ranked, so just traverse from top (best) to bottom (worst) to select parentAgents
-					if(currentRankIndex >= numEligibleBreederAgents) { // if current rank index is greater than the num of eligible breeders, then restart the index to 0;
-						currentRankIndex = 0;
-					}
-					//parentAgentChromosomes[p] = new float[sourcePopulation.masterAgentArray[currentRankIndex].genome.genomeBiases.Length];
-					parentAgentBiases[p] = sourcePopulation.masterAgentArray[currentRankIndex].genome.genomeBiases;
-					parentAgentWeights[p] = sourcePopulation.masterAgentArray[currentRankIndex].genome.genomeWeights;
-					//parentBodyGenomes[p] = sourcePopulation.masterAgentArray[currentRankIndex].bodyGenome;
-					currentRankIndex++;
-				}
-				// if survival is completely random, as a control:
-				if(breedingStochastic) {
-					int randomAgent = UnityEngine.Random.Range (0, numEligibleBreederAgents-1); // check if minus 1 is needed
-					// Set next newChild slot to a completely randomly-chosen agent
-					parentAgentBiases[p] = sourcePopulation.masterAgentArray[randomAgent].genome.genomeBiases;
-					parentAgentWeights[p] = sourcePopulation.masterAgentArray[randomAgent].genome.genomeWeights;
-					//parentBodyGenomes[p] = sourcePopulation.masterAgentArray[randomAgent].bodyGenome;
-				}
-				// if survival is based on a fitness lottery:
-				if(breedingByRaffle) {
-					float randomSlicePosition = UnityEngine.Random.Range(0f, totalScoreBreeders);
-					float accumulatedFitness = 0f;
-					for(int a = 0; a < numEligibleBreederAgents; a++) { // iterate through all agents
-						accumulatedFitness += sourcePopulation.masterAgentArray[a].fitnessScore;
-						// if accum fitness is on slicePosition, copy this Agent
-						Debug.Log ("Breeding Agent " + a.ToString() + ": AccumFitness: " + accumulatedFitness.ToString() + ", RafflePos: " + randomSlicePosition.ToString() + ", totalScoreBreeders: " + totalScoreBreeders.ToString() + ", numEligibleBreederAgents: " + numEligibleBreederAgents.ToString());
-						if(accumulatedFitness >= randomSlicePosition) {
-							parentAgentBiases[p] = sourcePopulation.masterAgentArray[a].genome.genomeBiases;
-							parentAgentWeights[p] = sourcePopulation.masterAgentArray[a].genome.genomeWeights;
-							//parentBodyGenomes[p] = sourcePopulation.masterAgentArray[a].bodyGenome;
-						}
-					}
-				}
-			}
-			// Combine the genes in the parentArrays and return the specified number of children genomes
-		//		Pass that array of parentAgent genome.Arrays into the float-based MixFloatChromosomes() function,
-			float[][] childAgentBiases = MixFloatChromosomes(parentAgentBiases, numChildAgents);
-			float[][] childAgentWeights = MixFloatChromosomes(parentAgentWeights, numChildAgents);
-            // BODY hack:
-            //CritterGenome[] childBodyGenomes = MixBodyChromosomes(parentBodyGenomes, numChildAgents);
-
-		//		It can return an Array of Arrays (of new childAgent genome.Arrays) 
-		//		Iterate over ChildArray.Length :  // how many newAgents created
-			for(int c = 0; c < numChildAgents; c++) { // for number of child Agents in floatArray[][]:
-				for(int b = 0; b < sourcePopulation.masterAgentArray[0].genome.genomeBiases.Length; b++) {
-					//Debug.Log ("ChildNumber: " + c.ToString() + ", BiasIndex: " + b.ToString() + ", biasValue: " + childAgentBiases[c][b].ToString () + ", newChildIndex: " + newChildIndex.ToString() + ", numNewChildren: " + numNewChildAgents.ToString() + ", numChildAgents: " + numChildAgents.ToString() + ", newChildrenCreated: " + newChildrenCreated.ToString());
-					newPopulation.masterAgentArray[newChildIndex].genome.genomeBiases[b] = childAgentBiases[c][b];
-					// weights and functions and more!
-				}
-				for(int w = 0; w < sourcePopulation.masterAgentArray[0].genome.genomeWeights.Length; w++) {
-					//Debug.Log ("ChildNumber: " + c.ToString() + ", BiasIndex: " + b.ToString() + ", biasValue: " + childAgentBiases[c][b].ToString () + ", newChildIndex: " + newChildIndex.ToString() + ", numNewChildren: " + numNewChildAgents.ToString() + ", numChildAgents: " + numChildAgents.ToString() + ", newChildrenCreated: " + newChildrenCreated.ToString());
-					newPopulation.masterAgentArray[newChildIndex].genome.genomeWeights[w] = childAgentWeights[c][w];
-					// weights and functions and more!
-				}
-				//newPopulation.masterAgentArray[newChildIndex].bodyGenome = childBodyGenomes[c];
-
-                // IMPORTANT!!!! v v v v v v
-				//newPopulation.masterAgentArray[newChildIndex].brain.SetBrainFromGenome(newPopulation.masterAgentArray[newChildIndex].genome);
-				newChildIndex++;  // new child created!
-				newChildrenCreated++;
-			}
-			
-		}
-        //newPop.isFunctional = true;
-        //Debug.Log("newPopulation.masterAgentArray[0].bodyGenome.creatureBodySegmentGenomeList[0].size.x: " + newPopulation.masterAgentArray[0].bodyGenome.creatureBodySegmentGenomeList[0].size.x.ToString());
-        return newPopulation;
-	}*/
-
-
-
-    /*
-	public void PerformCrossover(ref Population sourcePopulation) {
-		for(int m = 0; m < sourcePopulation.masterAgentArray.Length; m++) {
-			//sourcePopulation.masterAgentArray[m].brain.genome.PrintBiases("sourcePop " + sourcePopulation.masterAgentArray[m].fitnessScore.ToString() + ", " + m.ToString() + ", ");
-			//newPop.masterAgentArray[m].brain.genome.PrintBiases("newPop " + m.ToString() + ", ");
-		}
-		// rank sourcePop by fitness score // maybe do this as a method of Population class?
-		// So for now, assume it is already ranked
-		sourcePopulation.RankAgentArray();
-
-		// create pending newPopulation = sourcePop
-		Population newPop = new Population();
-		newPop.SetMaxPopulationSize(sourcePopulation.populationMaxSize);
-		newPop.brainType = sourcePopulation.brainType;
-		newPop.templateBrain = sourcePopulation.templateBrain;
-		newPop.numInputNodes = sourcePopulation.numInputNodes;
-		newPop.numOutputNodes = sourcePopulation.numOutputNodes;
-		newPop.numAgents = sourcePopulation.numAgents;
-		newPop.InitializeMasterAgentArray();  // TEMP
-		// set newPop maxSize (and a few other settings maybe) equal to sourcePop settings;
-
-		// Depending on Crossover Method, mix and match Agents until the newPop is full of new Agents
-		int spliceBias;
-		int spliceWeight;
-		int biasLength = sourcePopulation.masterAgentArray[0].genome.genomeBiases.Length;
-		int weightLength = sourcePopulation.masterAgentArray[0].genome.genomeWeights.Length;
-		int numMutations = 0;
-
-		// OLD CROSSOVER CODE::::::::::
-		for(int i = 0; i < (sourcePopulation.populationMaxSize / 2); i ++)
-		{
-			spliceBias = UnityEngine.Random.Range(0, biasLength);
-			spliceWeight = UnityEngine.Random.Range(0, weightLength);
-			//Debug.Log ("splice location: " + spliceBias + ", " + spliceWeight);
-			
-			float[] tempBias1 = new float[biasLength];
-			float[] tempBias2 = new float[biasLength];
-			TransferFunctions.TransferFunction[] tempFunctions1 = new TransferFunctions.TransferFunction[biasLength];
-			TransferFunctions.TransferFunction[] tempFunctions2 = new TransferFunctions.TransferFunction[biasLength];
-			float[] tempWeight1 = new float[weightLength];
-			float[] tempWeight2 = new float[weightLength];
-
-
-			string biasString1 = "WeightsString1: ";
-			for(int g = 0; g < weightLength; g++) {
-				biasString1 += sourcePopulation.masterAgentArray[i].brain.genome.genomeWeights[g] + ", ";
-			}
-			Debug.Log (biasString1);
-			string biasString2 = "WeightsString2: ";
-			for(int g = 0; g < weightLength; g++) {
-				biasString2 += sourcePopulation.masterAgentArray[i+1].brain.genome.genomeWeights[g] + ", ";
-			}
-			Debug.Log (biasString2);
-
-	
-	// BIAS CROSSOVER
-	for( int b = 0; b < biasLength; b++) {
-		if( b < spliceBias)	{
-			float mutateRoll = UnityEngine.Random.Range(0f, 1f);
-			if(mutateRoll < mutationRate) {
-				tempBias1[b] = Gaussian.GetRandomGaussian();
-				numMutations++;
-			}
-			else {
-				tempBias1[b] = sourcePopulation.masterAgentArray[i].genome.genomeBiases[b];
-			}
-			mutateRoll = UnityEngine.Random.Range(0f, 1f);
-			if(mutateRoll < mutationRate) {
-				tempBias2[b] = Gaussian.GetRandomGaussian();
-				numMutations++;
-			}
-			else {
-				tempBias2[b] = sourcePopulation.masterAgentArray[i+1].genome.genomeBiases[b];
-			}
-		}
-		else {
-			float mutateRoll = UnityEngine.Random.Range(0f, 1f);
-			if(mutateRoll < mutationRate) {
-				tempBias1[b] = Gaussian.GetRandomGaussian();
-				numMutations++;
-			}
-			else {
-				tempBias1[b] = sourcePopulation.masterAgentArray[i+1].genome.genomeBiases[b];
-			}
-			mutateRoll = UnityEngine.Random.Range(0f, 1f);
-			if(mutateRoll < mutationRate) {
-				tempBias2[b] = Gaussian.GetRandomGaussian();
-				numMutations++;
-			}
-			else {
-				tempBias2[b] = sourcePopulation.masterAgentArray[i].genome.genomeBiases[b];
-			}
-		}
-	}
-	// WEIGHT CROSSOVER
-	for( int w = 0; w < weightLength; w++) {
-		if( w < spliceWeight) {
-			// Offspring A:
-			float mutateRoll = UnityEngine.Random.Range(0f, 1f);
-			if(mutateRoll < mutationRate) {
-				tempWeight1[w] = Gaussian.GetRandomGaussian();
-				numMutations++;
-			}
-			else {
-				tempWeight1[w] = sourcePopulation.masterAgentArray[i].genome.genomeWeights[w];
-			}
-			// Offspring B:
-			mutateRoll = UnityEngine.Random.Range(0f, 1f);
-			if(mutateRoll < mutationRate) {
-				tempWeight2[w] = Gaussian.GetRandomGaussian();
-				numMutations++;
-			}
-			else {
-				tempWeight2[w] = sourcePopulation.masterAgentArray[i+1].genome.genomeWeights[w];
-			}
-		}
-		else {
-			// Offspring A:
-			float mutateRoll = UnityEngine.Random.Range(0f, 1f);
-			if(mutateRoll < mutationRate) {
-				tempWeight1[w] = Gaussian.GetRandomGaussian();
-				numMutations++;
-			}
-			else {
-				tempWeight1[w] = sourcePopulation.masterAgentArray[i+1].genome.genomeWeights[w];
-			}
-			// Offspring B:
-			mutateRoll = UnityEngine.Random.Range(0f, 1f);
-			if(mutateRoll < mutationRate) {
-				tempWeight2[w] = Gaussian.GetRandomGaussian();
-				numMutations++;
-			}
-			else
-			{
-				tempWeight2[w] = sourcePopulation.masterAgentArray[i].genome.genomeWeights[w];
-			}
-		}
-	}			
-	//Debug.Log ("numMutations: " + numMutations);			
-	//Add to new Genome Array:			
-	newPop.masterAgentArray[2*i].genome.genomeBiases = tempBias1;
-	//newPop.masterAgentArray[2*i].brain.genome.geneFunctions = tempFunctions1;
-	newPop.masterAgentArray[2*i].genome.genomeWeights = tempWeight1;
-	newPop.masterAgentArray[2*i].brain.SetBrainFromGenome(newPop.masterAgentArray[2*i].genome);
-	//newPop.masterAgentArray[2*i].brain.genome.PrintBiases();
-	
-	newPop.masterAgentArray[2*i+1].genome.genomeBiases = tempBias2;
-	//newPop.masterAgentArray[2*i+1].brain.genome.geneFunctions = tempFunctions2;
-	newPop.masterAgentArray[2*i+1].genome.genomeWeights = tempWeight2;
-	newPop.masterAgentArray[2*i+1].brain.SetBrainFromGenome(newPop.masterAgentArray[2*i+1].genome);
-	//newPop.masterAgentArray[2*i+1].brain.genome.PrintBiases();
-	
-
-			string newBiasString1 = "newWeightsString1: ";
-			for(int g = 0; g < weightLength; g++) {
-				newBiasString1 += newPop.masterAgentArray[2*i].brain.genome.genomeWeights[g] + ", ";
-			}
-			Debug.Log (newBiasString1);
-			string newBiasString2 = "newWeightsString2: ";
-			for(int g = 0; g < weightLength; g++) {
-				newBiasString2 += newPop.masterAgentArray[2*i+1].brain.genome.genomeWeights[g] + ", ";
-			}
-			Debug.Log (newBiasString2);
-
-}
-
-//Debug.Log ("NumMutations: " + numMutations.ToString ());
-
-newPop.isFunctional = true;
-sourcePopulation = newPop;
-// Back the other way!!
-//sourcePopulation.masterAgentArray = newPop.masterAgentArray;
-//for(int x = 0; x < sourcePopulation.masterAgentArray.Length; x++) {
-//
-//}
-
-		string rankedAfterString = "RankedAgentArrayAfter: ";
-		for(int h = 0; h < sourcePopulation.masterAgentArray.Length; h++) {
-			rankedAfterString += "Fit: " + sourcePopulation.masterAgentArray[h].fitnessScore.ToString () + ", " + sourcePopulation.masterAgentArray[h].brain.genome.genomeWeights[0].ToString() + ", ";
-		}
-		Debug.Log (rankedAfterString);
-
-}
-*/
-
-    /*void Crossover()
-	{
-		int spliceBias;
-		int spliceWeight;
-		int biasLength = genePool [0].genomeBiases.Length;
-		int weightLength = genePool [0].genomeWeights.Length;
-		int numMutations = 0;
-		
-		
-		
-		Genome[] newPop = new Genome[numAgents];
-		
-		for(int i = 0; i < (numAgents / 2); i ++)
-		{
-			spliceBias = rand.Next(0, biasLength);
-			spliceWeight = rand.Next(0, weightLength);
-			//Debug.Log ("splice location: " + spliceBias + ", " + spliceWeight);
-			
-			double[] tempBias1 = new double[biasLength];
-			double[] tempBias2 = new double[biasLength];
-			double[] tempWeight1 = new double[weightLength];
-			double[] tempWeight2 = new double[weightLength];
-			
-			// BIAS CROSSOVER
-			for( int b = 0; b < biasLength; b++)
-			{
-				if( b < spliceBias)
-				{
-					double mutateRoll = rand.NextDouble();
-					if(mutateRoll < mutationRate)
-					{
-						numMutations++;
-						tempBias1[b] = (genePool[i].genomeBiases[b] * (1.0 - mutationDriftScale)) + (MutateZeroBias(Gaussian.GetRandomGaussian()*maxPreyBias) * mutationDriftScale);
-						double zeroRoll = rand.NextDouble();
-						if(zeroRoll < mutationZeroBias) {
-							tempBias1[b] = 0;
-						}
-						//tempBias2[b] = (genePool[i+1].genomeBiases[b] * (1.0 - mutationDriftScale)) + (Gaussian.GetRandomGaussian() * mutationDriftScale);
-					}
-					else
-					{
-						tempBias1[b] = genePool[i].genomeBiases[b];
-						//tempBias2[b] = genePool[i+1].genomeBiases[b];
-					}
-					mutateRoll = rand.NextDouble();
-					if(mutateRoll < mutationRate)
-					{
-						numMutations++;
-						//tempBias1[b] = (genePool[i].genomeBiases[b] * (1.0 - mutationDriftScale)) + (Gaussian.GetRandomGaussian() * mutationDriftScale);
-						tempBias2[b] = (genePool[i+1].genomeBiases[b] * (1.0 - mutationDriftScale)) + (MutateZeroBias(Gaussian.GetRandomGaussian()*maxPreyBias) * mutationDriftScale);
-						double zeroRoll = rand.NextDouble();
-						if(zeroRoll < mutationZeroBias) {
-							tempBias2[b] = 0;
-						}
-					}
-					else
-					{
-						//tempBias1[b] = genePool[i].genomeBiases[b];
-						tempBias2[b] = genePool[i+1].genomeBiases[b];
-					}
-				}
-				else
-				{
-					double mutateRoll = rand.NextDouble();
-					if(mutateRoll < mutationRate)
-					{
-						numMutations++;
-						tempBias1[b] = (genePool[i+1].genomeBiases[b] * (1.0 - mutationDriftScale)) + (MutateZeroBias(Gaussian.GetRandomGaussian()*maxPreyBias) * mutationDriftScale);
-						double zeroRoll = rand.NextDouble();
-						if(zeroRoll < mutationZeroBias) {
-							tempBias1[b] = 0;
-						}
-						//tempBias2[b] = (genePool[i].genomeBiases[b] * (1.0 - mutationDriftScale)) + (Gaussian.GetRandomGaussian() * mutationDriftScale);
-					}
-					else
-					{
-						tempBias1[b] = genePool[i+1].genomeBiases[b];
-						//tempBias2[b] = genePool[i].genomeBiases[b];
-					}
-					mutateRoll = rand.NextDouble();
-					if(mutateRoll < mutationRate)
-					{
-						numMutations++;
-						//tempBias1[b] = (genePool[i+1].genomeBiases[b] * (1.0 - mutationDriftScale)) + (Gaussian.GetRandomGaussian() * mutationDriftScale);
-						tempBias2[b] = (genePool[i].genomeBiases[b] * (1.0 - mutationDriftScale)) + (MutateZeroBias(Gaussian.GetRandomGaussian()*maxPreyBias) * mutationDriftScale);
-						double zeroRoll = rand.NextDouble();
-						if(zeroRoll < mutationZeroBias) {
-							tempBias2[b] = 0;
-						}
-					}
-					else
-					{
-						//tempBias1[b] = genePool[i+1].genomeBiases[b];
-						tempBias2[b] = genePool[i].genomeBiases[b];
-					}
-				}
-			}
-			// WEIGHT CROSSOVER
-			for( int w = 0; w < weightLength; w++)
-			{
-				
-				
-				if( w < spliceWeight)
-				{
-					// Offspring A:
-					double mutateRoll = rand.NextDouble();
-					if(mutateRoll < mutationRate)
-					{
-						numMutations++;
-						// weighted avg of current value and random weight, so it can't move it too far
-						tempWeight1[w] = (genePool[i].genomeWeights[w] * (1.0 - mutationDriftScale)) + 
-							(MutateZeroBias(Gaussian.GetRandomGaussian()*maxPreyWeight) * mutationDriftScale);
-						double zeroRoll = rand.NextDouble();
-						if(zeroRoll < mutationZeroBias) {
-							tempWeight1[w] = 0;
-						}
-						//tempWeight2[w] = (genePool[i+1].genomeWeights[w] * (1.0 - mutationDriftScale)) + 
-						//	(Gaussian.GetRandomGaussian() * mutationDriftScale);
-					}
-					else
-					{
-						tempWeight1[w] = genePool[i].genomeWeights[w];
-						//tempWeight2[w] = genePool[i+1].genomeWeights[w];
-					}
-					// Offspring B:
-					mutateRoll = rand.NextDouble();
-					if(mutateRoll < mutationRate)
-					{
-						numMutations++;
-						// weighted avg of current value and random weight, so it can't move it too far
-						//tempWeight1[w] = (genePool[i].genomeWeights[w] * (1.0 - mutationDriftScale)) + 
-						//	(Gaussian.GetRandomGaussian() * mutationDriftScale);
-						tempWeight2[w] = (genePool[i+1].genomeWeights[w] * (1.0 - mutationDriftScale)) + 
-							(MutateZeroBias(Gaussian.GetRandomGaussian()*maxPreyWeight) * mutationDriftScale);
-						double zeroRoll = rand.NextDouble();
-						if(zeroRoll < mutationZeroBias) {
-							tempWeight2[w] = 0;
-						}
-					}
-					else
-					{
-						//tempWeight1[w] = genePool[i].genomeWeights[w];
-						tempWeight2[w] = genePool[i+1].genomeWeights[w];
-					}
-				}
-				else
-				{
-					// Offspring A:
-					double mutateRoll = rand.NextDouble();
-					if(mutateRoll < mutationRate)
-					{
-						numMutations++;
-						// weighted avg of current value and random weight, so it can't move it too far
-						tempWeight1[w] = (genePool[i+1].genomeWeights[w] * (1.0 - mutationDriftScale)) + 
-							(MutateZeroBias(Gaussian.GetRandomGaussian()*maxPreyWeight) * mutationDriftScale);
-						double zeroRoll = rand.NextDouble();
-						if(zeroRoll < mutationZeroBias) {
-							tempWeight1[w] = 0;
-						}
-						//tempWeight2[w] = (genePool[i].genomeWeights[w] * (1.0 - mutationDriftScale)) + 
-						//				   (Gaussian.GetRandomGaussian() * mutationDriftScale);
-					}
-					else
-					{
-						tempWeight1[w] = genePool[i+1].genomeWeights[w];
-						//tempWeight2[w] = genePool[i].genomeWeights[w];
-					}
-					// Offspring B:
-					mutateRoll = rand.NextDouble();
-					if(mutateRoll < mutationRate)
-					{
-						numMutations++;
-						// weighted avg of current value and random weight, so it can't move it too far
-						//tempWeight1[w] = (genePool[i+1].genomeWeights[w] * (1.0 - mutationDriftScale)) + 
-						//	(Gaussian.GetRandomGaussian() * mutationDriftScale);
-						tempWeight2[w] = (genePool[i].genomeWeights[w] * (1.0 - mutationDriftScale)) + 
-							(MutateZeroBias(Gaussian.GetRandomGaussian()*maxPreyWeight) * mutationDriftScale);
-						double zeroRoll = rand.NextDouble();
-						if(zeroRoll < mutationZeroBias) {
-							tempWeight2[w] = 0;
-						}
-					}
-					else
-					{
-						//tempWeight1[w] = genePool[i+1].genomeWeights[w];
-						tempWeight2[w] = genePool[i].genomeWeights[w];
-					}
-				}
-			}
-			
-			//Debug.Log ("numMutations: " + numMutations);
-			
-			//Add to new Genome Array:
-			newPop[2*i] = new Genome(layerSizes);
-			newPop[2*i+1] = new Genome(layerSizes);
-			
-			newPop[2*i].genomeBiases = tempBias1;
-			newPop[2*i].genomeWeights = tempWeight1;
-			newPop[2*i+1].genomeBiases = tempBias2;
-			newPop[2*i+1].genomeWeights = tempWeight2;
-		}
-		
-		//set last member of the population to the genome of the current record-holder
-		//newPop[numAgents - 1].genomeBiases = recordGenome.genomeBiases;
-		//newPop[numAgents - 1].genomeWeights = recordGenome.genomeWeights;
-		
-		//Update genePool!!!!!!!! FINALLY!
-		genePool = newPop;
-	}
-	*/
 }

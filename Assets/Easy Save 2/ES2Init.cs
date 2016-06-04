@@ -80,14 +80,25 @@ public class ES2Init : MonoBehaviour
 		ES2TypeManager.types[typeof(AddonTorqueEffector3D)] = new ES2UserType_AddonTorqueEffector3D();
 		ES2TypeManager.types[typeof(AddonValueInput)] = new ES2UserType_AddonValueInput();
 		ES2TypeManager.types[typeof(AddonVelocitySensor1D)] = new ES2UserType_AddonVelocitySensor1D();
+		ES2TypeManager.types[typeof(AddonVelocitySensor3D)] = new ES2UserType_AddonVelocitySensor3D();
 		ES2TypeManager.types[typeof(Agent)] = new ES2UserType_Agent();
+		ES2TypeManager.types[typeof(AgentData)] = new ES2UserType_AgentData();
 		ES2TypeManager.types[typeof(CritterGenome)] = new ES2UserType_CritterGenome();
 		ES2TypeManager.types[typeof(CritterJointLink)] = new ES2UserType_CritterJointLink();
 		ES2TypeManager.types[typeof(CritterNode)] = new ES2UserType_CritterNode();
+		ES2TypeManager.types[typeof(CrossoverManager)] = new ES2UserType_CrossoverManager();
+		ES2TypeManager.types[typeof(FitnessComponent)] = new ES2UserType_FitnessComponent();
+		ES2TypeManager.types[typeof(FitnessComponentData)] = new ES2UserType_FitnessComponentData();
+		ES2TypeManager.types[typeof(GeneLinkNEAT)] = new ES2UserType_GeneLinkNEAT();
+		ES2TypeManager.types[typeof(GeneNodeNEAT)] = new ES2UserType_GeneNodeNEAT();
 		ES2TypeManager.types[typeof(Genome)] = new ES2UserType_Genome();
+		ES2TypeManager.types[typeof(GenomeNEAT)] = new ES2UserType_GenomeNEAT();
+		ES2TypeManager.types[typeof(MiniGameSettingsSaves)] = new ES2UserType_MiniGameSettingsSaves();
 		ES2TypeManager.types[typeof(Population)] = new ES2UserType_Population();
+		ES2TypeManager.types[typeof(SpeciesBreedingPool)] = new ES2UserType_SpeciesBreedingPool();
+		ES2TypeManager.types[typeof(TrainingSave)] = new ES2UserType_TrainingSave();
 		ES2TypeManager.types[typeof(UnityEngine.AudioClip)] = new ES2_AudioClip();
-		ES2TypeManager.types[typeof(AddonVelocitySensor3D)] = new ES2UserType_AddonVelocitySensor3D();
+		ES2TypeManager.types[typeof(TrialData)] = new ES2UserType_TrialData();
 
 		ES2.initialised = true;
 	}

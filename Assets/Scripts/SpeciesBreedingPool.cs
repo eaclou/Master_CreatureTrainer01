@@ -9,6 +9,9 @@ public class SpeciesBreedingPool {
     public GenomeNEAT templateGenome;
     public int nextAgentIndex = 0;
 
+    public SpeciesBreedingPool() {
+        // empty constructor for EasySave2 to work
+    }
     public SpeciesBreedingPool(GenomeNEAT genome, int id) {
         agentList = new List<Agent>();
         templateGenome = genome;

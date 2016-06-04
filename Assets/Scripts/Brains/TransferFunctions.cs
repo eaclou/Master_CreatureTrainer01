@@ -16,7 +16,9 @@ public static class TransferFunctions
         Sin,
         Cos,
         Tan,
-		NumberOfTypes
+        Threshold01,
+        ThresholdNegPos,
+        NumberOfTypes
 	}
 
 	public static TransferFunction GetRandomTransferFunction() {
@@ -32,33 +34,29 @@ public static class TransferFunctions
 		switch (tFunc)
 		{
 		case TransferFunction.Sigmoid:
-			return sigmoid(input);
-			
+			return sigmoid(input);			
 		case TransferFunction.Linear:
-			return linear(input);
-			
+			return linear(input);			
 		case TransferFunction.Gaussian:
-			return gaussian(input);
-			
+			return gaussian(input);			
 		case TransferFunction.RationalSigmoid:
 			return rationalsigmoid(input);
-
         case TransferFunction.Abs:
             return Abs(input);
-
         case TransferFunction.Square:
             return Square(input);
-
         case TransferFunction.Sin:
             return Sin(input);
-
         case TransferFunction.Cos:
             return Cos(input);
-
         case TransferFunction.Tan:
             return Tan(input);
-
-            case TransferFunction.None:
+        case TransferFunction.Threshold01:
+            return Threshold01(input);
+        case TransferFunction.ThresholdNegPos:
+            return ThresholdNegPos(input);
+        case TransferFunction.None:
+            return 0.0f;
 		default:
 			return 0.0f;
 		}
@@ -142,5 +140,26 @@ public static class TransferFunctions
     }
     private static float Tan(float x) {
         return Mathf.Tan(x);
+    }
+    private static float Threshold01(float x) {
+        float newVal;
+        if (x > 0f)
+            newVal = 1f;
+        else {
+            newVal = 0f;
+        }
+        return newVal;
+    }
+    private static float ThresholdNegPos(float x) {
+        float newVal;
+        if (x > 0.5f)
+            newVal = 1f;
+        else if(x < -0.5f) {
+            newVal = 0f;
+        }
+        else {
+            newVal = 0f;
+        }
+        return newVal;
     }
 }

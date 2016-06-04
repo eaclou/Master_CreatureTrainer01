@@ -11,4 +11,12 @@ public class MiniGameSettingsBase {
     public virtual void InitGameOptionsList() {
 
     }
+
+    public virtual void CopySettingsToSave(MiniGameSettingsSaves miniGameSettingsSaves) {
+
+    }
+
+    public virtual void CopySettingsFromLoad(MiniGameSettingsSaves miniGameSettingsSaves) {
+
+    }
 }

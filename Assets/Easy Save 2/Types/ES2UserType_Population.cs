@@ -10,16 +10,19 @@ public class ES2UserType_Population : ES2Type
 	{
 		Population data = (Population)obj;
         // Add your writer.Write calls here.
-        writer.Write(1); // Version 1 is current version number
+        writer.Write(0); // Version 1 is current version number
         // Make sure to edit Read() function to properly handle version control!
         // VERSION 0:
         //writer.Write(data.brainType);
-		//writer.Write(data.templateGenome);
+		writer.Write(data.templateGenome);
 		writer.Write(data.numInputNodes);
 		writer.Write(data.numOutputNodes);
 		writer.Write(data.populationMaxSize);
 		writer.Write(data.numAgents);
 		writer.Write(data.masterAgentArray);
+        writer.Write(data.speciesBreedingPoolList);
+        writer.Write(data.nextAvailableSpeciesID);
+        writer.Write(data.trainingGenerations);
         // VERSION 1:
     }
 
@@ -41,12 +44,15 @@ public class ES2UserType_Population : ES2Type
         if (fileVersion >= 0)
         {
             //data.brainType = reader.Read<Population.BrainType>();
-            //data.templateGenome = reader.Read<CritterGenome>();
+            data.templateGenome = reader.Read<CritterGenome>();
             data.numInputNodes = reader.Read<System.Int32>();
             data.numOutputNodes = reader.Read<System.Int32>();
             data.populationMaxSize = reader.Read<System.Int32>();
             data.numAgents = reader.Read<System.Int32>();
             data.masterAgentArray = reader.ReadArray<Agent>();
+            data.speciesBreedingPoolList = reader.ReadList<SpeciesBreedingPool>();
+            data.nextAvailableSpeciesID = reader.Read<int>();
+            data.trainingGenerations = reader.Read<int>();
             if (fileVersion >= 1)
             {
                 // new attributes
