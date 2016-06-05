@@ -52,6 +52,8 @@ public class CrossoverManager {
 	public bool breedingStochastic = false;
 	public bool breedingByRaffle = true;
 
+    public float mutationBlastModifier = 1f;
+
     //empty constructor for easySave2
     public CrossoverManager() {
 
@@ -212,7 +214,7 @@ public class CrossoverManager {
 		float newFloat;
 		
 		newFloat = (sourceFloat * (1.0f - mutationDriftScale)) + 
-			(Gaussian.GetRandomGaussian()*maximumWeightMagnitude) * mutationDriftScale;
+			(Gaussian.GetRandomGaussian()*maximumWeightMagnitude) * mutationDriftScale * mutationBlastModifier;
 		
 		return newFloat;
 	}
@@ -623,26 +625,26 @@ public class CrossoverManager {
                         if (numEnabledLinkGenes < 1)
                             numEnabledLinkGenes = 1;
                         for (int k = 0; k < childLinkList.Count; k++) {
-                            float mutateChance = masterMutationRate / numEnabledLinkGenes;
+                            float mutateChance = mutationBlastModifier * masterMutationRate / numEnabledLinkGenes;
                             if (currentGeneration - childLinkList[k].birthGen < newLinkBonusDuration) {
                                 float t = 1 - ((currentGeneration - childLinkList[k].birthGen) / (float)newLinkBonusDuration);
                                 // t=0 means age of gene is same as bonusDuration, t=1 means it is brand new
-                                mutateChance *= Mathf.Lerp(mutateChance, mutateChance * newLinkMutateBonus, t);
+                                mutateChance = Mathf.Lerp(mutateChance, mutateChance * newLinkMutateBonus, t);
                             }
                             if (CheckForMutation(mutateChance)) {  // Weight Mutation!
                                 //Debug.Log("Weight Mutation Link[" + k.ToString() + "] weight: " + childLinkList[k].weight.ToString() + ", mutate: " + MutateFloat(childLinkList[k].weight).ToString());
                                 childLinkList[k].weight = MutateFloat(childLinkList[k].weight);
                             }
                         }
-                        if (CheckForMutation(mutationRemoveLinkChance)) {
+                        if (CheckForMutation(mutationBlastModifier * mutationRemoveLinkChance)) {
                             //Debug.Log("Remove Link Mutation Agent[" + newChildIndex.ToString() + "]");
                             childGenome.RemoveRandomLink();
                         }
-                        if (CheckForMutation(mutationAddNodeChance)) {   // Adds a new node
+                        if (CheckForMutation(mutationBlastModifier * mutationAddNodeChance)) {   // Adds a new node
                             //Debug.Log("Add Node Mutation Agent[" + newChildIndex.ToString() + "]");
                             childGenome.AddNewRandomNode(currentGeneration);
                         }
-                        if (CheckForMutation(mutationAddLinkChance)) { // Adds new connection
+                        if (CheckForMutation(mutationBlastModifier * mutationAddLinkChance)) { // Adds new connection
                             //Debug.Log("Add Link Mutation Agent[" + newChildIndex.ToString() + "]");
                             if (CheckForMutation(existingNetworkBias)) {
                                 childGenome.AddNewExtraLink(existingFromNodeBias, currentGeneration);
@@ -651,7 +653,7 @@ public class CrossoverManager {
                                 childGenome.AddNewRandomLink(currentGeneration);
                             }
                         }
-                        if (CheckForMutation(mutationActivationFunctionChance)) {
+                        if (CheckForMutation(mutationBlastModifier * mutationActivationFunctionChance)) {
                             TransferFunctions.TransferFunction newFunction;
                             int randIndex = Mathf.RoundToInt(UnityEngine.Random.Range(0f, childNodeList.Count - 1));
                             int randomTF = (int)UnityEngine.Random.Range(0f, 12f);
@@ -730,26 +732,26 @@ public class CrossoverManager {
                         if (numEnabledLinkGenes < 1)
                             numEnabledLinkGenes = 1;
                         for (int k = 0; k < childLinkList.Count; k++) {
-                            float mutateChance = masterMutationRate / numEnabledLinkGenes;
+                            float mutateChance = mutationBlastModifier * masterMutationRate / numEnabledLinkGenes;
                             if (currentGeneration - childLinkList[k].birthGen < newLinkBonusDuration) {
                                 float t = 1 - ((currentGeneration - childLinkList[k].birthGen) / (float)newLinkBonusDuration);
                                 // t=0 means age of gene is same as bonusDuration, t=1 means it is brand new
-                                mutateChance *= Mathf.Lerp(mutateChance, mutateChance * newLinkMutateBonus, t);
+                                mutateChance = Mathf.Lerp(mutateChance, mutateChance * newLinkMutateBonus, t);
                             }
                             if (CheckForMutation(mutateChance)) {  // Weight Mutation!
                                 //Debug.Log("Weight Mutation Link[" + k.ToString() + "] weight: " + childLinkList[k].weight.ToString() + ", mutate: " + MutateFloat(childLinkList[k].weight).ToString());
                                 childLinkList[k].weight = MutateFloat(childLinkList[k].weight);
                             }
                         }
-                        if (CheckForMutation(mutationRemoveLinkChance)) {
+                        if (CheckForMutation(mutationBlastModifier * mutationRemoveLinkChance)) {
                             //Debug.Log("Remove Link Mutation Agent[" + newChildIndex.ToString() + "]");
                             childGenome.RemoveRandomLink();
                         }
-                        if (CheckForMutation(mutationAddNodeChance)) {   // Adds a new node
+                        if (CheckForMutation(mutationBlastModifier * mutationAddNodeChance)) {   // Adds a new node
                             //Debug.Log("Add Node Mutation Agent[" + newChildIndex.ToString() + "]");
                             childGenome.AddNewRandomNode(currentGeneration);
                         }
-                        if (CheckForMutation(mutationAddLinkChance)) { // Adds new connection
+                        if (CheckForMutation(mutationBlastModifier * mutationAddLinkChance)) { // Adds new connection
                             //Debug.Log("Add Link Mutation Agent[" + newChildIndex.ToString() + "]");
                             if(CheckForMutation(existingNetworkBias)) {
                                 childGenome.AddNewExtraLink(existingFromNodeBias, currentGeneration);
@@ -758,7 +760,7 @@ public class CrossoverManager {
                                 childGenome.AddNewRandomLink(currentGeneration);
                             }
                         }
-                        if (CheckForMutation(mutationActivationFunctionChance)) {
+                        if (CheckForMutation(mutationBlastModifier * mutationActivationFunctionChance)) {
                             TransferFunctions.TransferFunction newFunction;
                             int randIndex = Mathf.RoundToInt(UnityEngine.Random.Range(0f, childNodeList.Count - 1));
                             int randomTF = (int)UnityEngine.Random.Range(0f, 12f);

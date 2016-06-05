@@ -182,8 +182,9 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         critterBeingTested.RebuildCritterFromGenomeRecursive(true); // builds critter     and segment addons   
     }
 
-    public override void ResetTargetPositions(int numRounds, int numTimeSteps) {
-        
+    public override void ResetTargetPositions(int numRounds, int numTimeStepsMin, int numTimeStepsMax) {
+        float ratio = (float)numTimeStepsMin / (float)numTimeStepsMax;
+
         if(targetPositionList == null) {
             targetPositionList = new List<Vector3>();
 
@@ -220,7 +221,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             //Debug.Log("ResetTargetPositions targetPos: " + targetPos.ToString() + ", currentRound: " + gameCurrentRound.ToString());
             targetPositionList.Add(targetPos);
 
-            int randEndTime = Mathf.RoundToInt(UnityEngine.Random.Range(0.5f, 1.2f) * numTimeSteps); // gameplay round will end after this percentage of maxTimeSteps
+            int randEndTime = Mathf.RoundToInt(UnityEngine.Random.Range(ratio, 1f) * numTimeStepsMax); // gameplay round will end after this percentage of maxTimeSteps
             endGameTimesList.Add(randEndTime);
 
             /*float delta = gameSettings.targetPosAxis[0] - 0.5f;

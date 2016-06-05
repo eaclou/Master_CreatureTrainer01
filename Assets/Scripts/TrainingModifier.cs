@@ -8,12 +8,14 @@ public class TrainingModifier {
         LinkExplosion,
         MutationBlast,
         PruneBrain,
-        TargetConeUI,
-        TargetForwardUI,
-        TargetOmniUI,
+        TargetCone,
+        TargetForward,
+        TargetOmni,
         VariableTrialTimes,
         WideSearch
     };
+
+    public int startGen;
 
     // Variables for all modifier types (should make saving/loading slightly easier)
     public int duration;

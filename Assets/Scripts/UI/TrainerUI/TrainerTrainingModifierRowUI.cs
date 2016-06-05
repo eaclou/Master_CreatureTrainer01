@@ -23,4 +23,8 @@ public class TrainerTrainingModifierRowUI : MonoBehaviour {
 	void Update () {
 	
 	}
+
+    public void ClickRemove() {
+        trainerTrainingModifiersUI.RemoveModifier(index);
+    }
 }

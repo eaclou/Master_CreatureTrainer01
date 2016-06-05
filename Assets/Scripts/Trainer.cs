@@ -111,6 +111,7 @@ public class Trainer {
 	public bool betweenGenerations = true;
 
     public TrainingSave loadedTrainingSave;
+    public TrainingModifierManager trainingModifierManager;
 
     // MOVE THIS LATER!!!
     public GameObject brainNetworkGO;
@@ -125,6 +126,9 @@ public class Trainer {
 		DebugBot.DebugFunctionCall("Trainer; Trainer() Constructor!; ", debugFunctionCalls);
 		//CheckPanelApplyCriteria();
 		InitializePlayerList();
+        if(trainingModifierManager == null) {
+            trainingModifierManager = new TrainingModifierManager();
+        }
 	}
 
 	public void InitializePlayerList() {
@@ -449,7 +453,7 @@ public class Trainer {
         minigame.SetShaderTextures(networkVisualizer);
         brainNetworkGO.GetComponent<MeshFilter>().sharedMesh = networkVisualizer.BuildNewMesh(brain);
     }
-
+        
 	private void UpdatePlayingState() {  // increments current state variables, keeping track of when each should roll-over into the next round
 		//Debug.Log ("UpdatePlayingState() playingCurGameStep: " + playingCurMiniGameTimeStep.ToString());
 
@@ -508,11 +512,13 @@ public class Trainer {
 							for(int p = 0; p < playerList.Count; p++) {
 								playerList[p].dataManager.InitializeNewGenerationDataArrays(playingCurGeneration);
 							}
+                            // TrainingModifiers!!!
+                            trainingModifierManager.ApplyTrainingModifierEffects(this);
                             for (int p = 0; p < numPlayers; p++) {  // iterate through playerList
                                 // Randomly generates the target positions in each minigame once now, and use those positions for all agents:
                                 for (int t = 0; t < PlayerList[p].masterTrialsList.Count - 1; t++) {
                                     //Debug.Log("TEST@@" + PlayerList[p].masterTrialsList[t].miniGameManager.miniGameInstance.ToString());
-                                    PlayerList[p].masterTrialsList[t].miniGameManager.miniGameInstance.ResetTargetPositions(PlayerList[p].masterTrialsList[t].numberOfPlays, PlayerList[p].masterTrialsList[t].maxEvaluationTimeSteps);
+                                    PlayerList[p].masterTrialsList[t].miniGameManager.miniGameInstance.ResetTargetPositions(PlayerList[p].masterTrialsList[t].numberOfPlays, PlayerList[p].masterTrialsList[t].minEvaluationTimeSteps, PlayerList[p].masterTrialsList[t].maxEvaluationTimeSteps);
                                 }
                             }
                             //DebugBot.DebugFunctionCall("Trainer; UpdatePlayingState; " + playingCurGeneration + ", " + playingCurTrialIndex + "/" + playingNumTrials + ", " + playingCurPlayer + "/" + playingNumPlayers + ", " + playingCurTrialRound + "/" + playingNumTrialRounds + ", " + playingCurAgent + "/" + playingNumAgents + ", " + playingCurMiniGameTimeStep + "/" + playingNumMiniGameTimeSteps, debugFunctionCalls);
@@ -594,7 +600,9 @@ public class Trainer {
                                                                    //currentGameManager.miniGameInstance.Reset();
             //Debug.Log("CalculateOneStep()Trainer BEFORE: " + playerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].miniGameManager.miniGameInstance.agentBodyBeingTested.creatureBodySegmentGenomeList[0].addOn1.ToString());
             currentGameManager.miniGameInstance.InstantiateGamePieces();  // first time Game has been Reset, so instantiateGamePieces
-            currentGameManager.miniGameInstance.ResetTargetPositions(PlayerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].numberOfPlays, PlayerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].maxEvaluationTimeSteps);
+            // TrainingModifiers!!!
+            trainingModifierManager.ApplyTrainingModifierEffects(this);
+            currentGameManager.miniGameInstance.ResetTargetPositions(PlayerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].numberOfPlays, PlayerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].minEvaluationTimeSteps, PlayerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].maxEvaluationTimeSteps);
             //currentGameManager.miniGameInstance.DisablePhysicsGamePieceComponents();
             currentGameManager.miniGameInstance.Reset(); // <-- OLD PLACEMENT
             currentGameManager.SetInputOutputArrays();

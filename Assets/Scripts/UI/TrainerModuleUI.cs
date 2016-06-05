@@ -6,11 +6,7 @@ public class TrainerModuleUI : MonoBehaviour {
 	#region Public and Private Data:
 
 	public bool debugFunctionCalls = false;
-
-	//private int numPlayers = 1; // waiting For REMOVAL!
-	//private int maxPlayers = 2;
-	//private int curPlayer = 1;
-
+    
 	public Color defaultBGColor = new Color(0.8f, 0.8f, 0.8f);
 
 	// Panels:
@@ -30,6 +26,7 @@ public class TrainerModuleUI : MonoBehaviour {
 	public GameObject panelMenuBar;
 	public GameObject panelTextLog;
 	public GameObject panelWarning;
+    public GameObject panelTrainingModifiers;
 
 	public GameController gameController;
 
@@ -49,6 +46,7 @@ public class TrainerModuleUI : MonoBehaviour {
 	public TrainerFitnessUI panelFitnessScript;
 	public TrainerMiniGameUI panelMiniGameScript;
 	public TrainerTextLogUI panelTextLogScript;
+    public TrainerTrainingModifiersUI panelTrainingModifierScript;
 
 	// Keeping track of active/inactive states of each panel:
 	private bool panelMenuOn = true;
@@ -62,6 +60,7 @@ public class TrainerModuleUI : MonoBehaviour {
 	private bool panelTrialsOn = true;
 	private bool panelFitnessFunctionOn = false;
 	private bool panelMiniGameSettingsOn = false;
+    private bool panelTrainingModifierOn = true;
 	//private bool panelDataVisualizationsOn = true;
 
 	#endregion
@@ -98,6 +97,7 @@ public class TrainerModuleUI : MonoBehaviour {
 		panelFitnessScript = panelFitnessFunction.GetComponent<TrainerFitnessUI>();
 		panelMiniGameScript = panelMiniGameSettings.GetComponent<TrainerMiniGameUI>();
 		panelTextLogScript = panelTextLog.GetComponent<TrainerTextLogUI>();
+        panelTrainingModifierScript = panelTrainingModifiers.GetComponent<TrainerTrainingModifiersUI>();
 		SetAllPanelsFromTrainerData(); // Updates UI elements in every Trainer sub-panel based on current data
 
 		UpdatePanelVisibility();  // Handles which panels should be currently visible
@@ -178,6 +178,7 @@ public class TrainerModuleUI : MonoBehaviour {
 		panelFitnessScript.InitializePanelWithTrainerData();
 		panelMiniGameScript.InitializePanelWithTrainerData();
 		panelTextLogScript.InitializePanelWithTrainerData();
+        panelTrainingModifierScript.InitializePanelWithTrainerData();
 	}
 
 	#endregion
@@ -252,6 +253,12 @@ public class TrainerModuleUI : MonoBehaviour {
 		else {
 			panelMiniGameSettings.SetActive (false);
 		}
+        if(panelTrainingModifierOn) {
+            panelTrainingModifiers.SetActive(true);
+        }
+        else {
+            panelTrainingModifiers.SetActive(false);
+        }
 		
 	}  // Looks at the bool values for each panel and turns it on or off
 

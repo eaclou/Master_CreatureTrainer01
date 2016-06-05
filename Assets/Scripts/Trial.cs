@@ -9,7 +9,8 @@ public class Trial {
 	public MiniGameManager miniGameManager;
 	public FitnessManager fitnessManager;
 	public int numberOfPlays;
-	public int maxEvaluationTimeSteps;
+    public int minEvaluationTimeSteps;
+    public int maxEvaluationTimeSteps;
 	public float power;
 	public float weight;
 
