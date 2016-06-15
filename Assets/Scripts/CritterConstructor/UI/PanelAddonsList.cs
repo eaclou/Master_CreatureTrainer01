@@ -215,6 +215,34 @@ public class PanelAddonsList : MonoBehaviour {
                 itemDisplay.Prime(sourceGenome);
             }
         }
+        // EarBasic:
+        for (int earBasicIndex = 0; earBasicIndex < sourceGenome.addonEarBasicList.Count; earBasicIndex++) {
+            if (sourceGenome.addonEarBasicList[earBasicIndex].critterNodeID == nodeID) {
+                GameObject itemDisplayGO = (GameObject)Instantiate(addonDisplayPrefab);
+                PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
+                itemDisplay.panelAddonsList = this;
+                itemDisplay.index = addonDisplayIndex;
+                addonDisplayIndex++;  // keeps track of position of this itemDisplay within the UI display addon List
+                itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.EarBasic;  // tells this display to look in masterGenome.AddonJointMotorList[]
+                itemDisplay.sourceAddonIndex = earBasicIndex;  // the index within masterGenome.AddonJointMotorList[] where the source Add-On is.
+                itemDisplayGO.transform.SetParent(this.transform);
+                itemDisplay.Prime(sourceGenome);
+            }
+        }
+        // GravitySensor:
+        for (int gravitySensorIndex = 0; gravitySensorIndex < sourceGenome.addonGravitySensorList.Count; gravitySensorIndex++) {
+            if (sourceGenome.addonGravitySensorList[gravitySensorIndex].critterNodeID == nodeID) {
+                GameObject itemDisplayGO = (GameObject)Instantiate(addonDisplayPrefab);
+                PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
+                itemDisplay.panelAddonsList = this;
+                itemDisplay.index = addonDisplayIndex;
+                addonDisplayIndex++;  // keeps track of position of this itemDisplay within the UI display addon List
+                itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.Gravity;  // tells this display to look in masterGenome.AddonJointMotorList[]
+                itemDisplay.sourceAddonIndex = gravitySensorIndex;  // the index within masterGenome.AddonJointMotorList[] where the source Add-On is.
+                itemDisplayGO.transform.SetParent(this.transform);
+                itemDisplay.Prime(sourceGenome);
+            }
+        }
 
         // Joint Motors:
         for (int jointMotorIndex = 0; jointMotorIndex < sourceGenome.addonJointMotorList.Count; jointMotorIndex++) {
@@ -288,6 +316,62 @@ public class PanelAddonsList : MonoBehaviour {
                 addonDisplayIndex++;
                 itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.TorqueEffector3D;
                 itemDisplay.sourceAddonIndex = torqueEffector3DIndex;
+                itemDisplayGO.transform.SetParent(this.transform);
+                itemDisplay.Prime(sourceGenome);
+            }
+        }
+        // MouthBasic:
+        for (int mouthBasicIndex = 0; mouthBasicIndex < sourceGenome.addonMouthBasicList.Count; mouthBasicIndex++) {
+            if (sourceGenome.addonMouthBasicList[mouthBasicIndex].critterNodeID == nodeID) {
+                GameObject itemDisplayGO = (GameObject)Instantiate(addonDisplayPrefab);
+                PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
+                itemDisplay.panelAddonsList = this;
+                itemDisplay.index = addonDisplayIndex;
+                addonDisplayIndex++;  // keeps track of position of this itemDisplay within the UI display addon List
+                itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.MouthBasic;  // tells this display to look in masterGenome.AddonJointMotorList[]
+                itemDisplay.sourceAddonIndex = mouthBasicIndex;  // the index within masterGenome.AddonJointMotorList[] where the source Add-On is.
+                itemDisplayGO.transform.SetParent(this.transform);
+                itemDisplay.Prime(sourceGenome);
+            }
+        }
+        // NoiseMakerBasic:
+        for (int noiseMakerBasicIndex = 0; noiseMakerBasicIndex < sourceGenome.addonNoiseMakerBasicList.Count; noiseMakerBasicIndex++) {
+            if (sourceGenome.addonNoiseMakerBasicList[noiseMakerBasicIndex].critterNodeID == nodeID) {
+                GameObject itemDisplayGO = (GameObject)Instantiate(addonDisplayPrefab);
+                PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
+                itemDisplay.panelAddonsList = this;
+                itemDisplay.index = addonDisplayIndex;
+                addonDisplayIndex++;  // keeps track of position of this itemDisplay within the UI display addon List
+                itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.NoiseMakerBasic;  // tells this display to look in masterGenome.AddonJointMotorList[]
+                itemDisplay.sourceAddonIndex = noiseMakerBasicIndex;  // the index within masterGenome.AddonJointMotorList[] where the source Add-On is.
+                itemDisplayGO.transform.SetParent(this.transform);
+                itemDisplay.Prime(sourceGenome);
+            }
+        }
+        // Sticky:
+        for (int stickyIndex = 0; stickyIndex < sourceGenome.addonStickyList.Count; stickyIndex++) {
+            if (sourceGenome.addonStickyList[stickyIndex].critterNodeID == nodeID) {
+                GameObject itemDisplayGO = (GameObject)Instantiate(addonDisplayPrefab);
+                PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
+                itemDisplay.panelAddonsList = this;
+                itemDisplay.index = addonDisplayIndex;
+                addonDisplayIndex++;  // keeps track of position of this itemDisplay within the UI display addon List
+                itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.Sticky;  // tells this display to look in masterGenome.AddonJointMotorList[]
+                itemDisplay.sourceAddonIndex = stickyIndex;  // the index within masterGenome.AddonJointMotorList[] where the source Add-On is.
+                itemDisplayGO.transform.SetParent(this.transform);
+                itemDisplay.Prime(sourceGenome);
+            }
+        }
+        // WeaponBasic:
+        for (int weaponBasicIndex = 0; weaponBasicIndex < sourceGenome.addonWeaponBasicList.Count; weaponBasicIndex++) {
+            if (sourceGenome.addonWeaponBasicList[weaponBasicIndex].critterNodeID == nodeID) {
+                GameObject itemDisplayGO = (GameObject)Instantiate(addonDisplayPrefab);
+                PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
+                itemDisplay.panelAddonsList = this;
+                itemDisplay.index = addonDisplayIndex;
+                addonDisplayIndex++;  // keeps track of position of this itemDisplay within the UI display addon List
+                itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.WeaponBasic;  // tells this display to look in masterGenome.AddonJointMotorList[]
+                itemDisplay.sourceAddonIndex = weaponBasicIndex;  // the index within masterGenome.AddonJointMotorList[] where the source Add-On is.
                 itemDisplayGO.transform.SetParent(this.transform);
                 itemDisplay.Prime(sourceGenome);
             }

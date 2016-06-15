@@ -6,6 +6,8 @@ public class TrainingModifierMutationBlastUI : MonoBehaviour {
 
     public Slider sliderDuration;
     public Text textDuration;
+    public Slider sliderMinMultiplier;
+    public Text textMinMultiplier;
     public Toggle toggleLiveForever;
 
 	// Use this for initialization
@@ -14,6 +16,11 @@ public class TrainingModifierMutationBlastUI : MonoBehaviour {
         sliderDuration.maxValue = 500f;
         sliderDuration.value = 0f;  // DEFAULT
         textDuration.text = sliderDuration.value.ToString();
+
+        sliderMinMultiplier.minValue = 0f;
+        sliderMinMultiplier.maxValue = 1f;
+        sliderMinMultiplier.value = 0f;  // DEFAULT
+        textMinMultiplier.text = sliderMinMultiplier.value.ToString();
 
         toggleLiveForever.isOn = true;
     }
@@ -24,7 +31,10 @@ public class TrainingModifierMutationBlastUI : MonoBehaviour {
 	}
 
     public void SliderDuration(float val) {
-
         textDuration.text = val.ToString();
+    }
+
+    public void SliderMinMultiplier(float val) {
+        textMinMultiplier.text = val.ToString();
     }
 }

@@ -72,12 +72,12 @@
 				//view direction
 				float3 camToWorldVector = _WorldSpaceCameraPos.xyz - posWorld.xyz;
 				//diffuse = lightDirection;
-				//o.wpos = mul( _Object2World, i.vertex ).xyz;
+				o.wpos = mul( _Object2World, i.vertex ).xyz;
 				//o.pos = posWorld;
-				o.wpos = posWorld;
+				//o.wpos = posWorld;
 				//o.pos = i.vertex;
 				//o.color = _Color;
-				
+				o.wpos = i.vertex;
 				// DEBUG options - sets color to other variables
 				
 				o.uv = i.texcoord;
@@ -96,7 +96,7 @@
 				float4 fogColor = float4(0.3, 0.5, 0.65, 1.0);
 				//o.color = fogColor;
 				o.color = float4(diffuse, 1.0);
-				o.color = lerp(o.color, fogColor, fogAmount);
+				o.color = lerp(o.color, fogColor, 0.25);
 				//float4 light = float4(brightness, brightness, brightness, 0.0);
 				
 				//o.color = float4(o.color.x + brightness, o.color.y + brightness, o.color.z + brightness, 1.0);
@@ -113,11 +113,12 @@
 				float4 baseColor = float4(0.32, 0.45, 0.62, 1.0);
 				//baseColor = float4(0.8, 0.8, 0.8, 1.0);
 				if (_Selected) {
-					baseColor = float4(0.4, 0.6, 0.7, 1.0);
+					baseColor = float4(0.6, 0.8, 0.9, 1.0);
 				}
-				i.color = diffuse * float4(0.25, 0.75, 0.55, 1.0);;
+				i.color = diffuse * 0.33 + baseColor * 0.6;
 				float4 edgeColor = float4(0.7, 0.7, 0.7, 1.0);
 				float edgeWidth = 0.025;
+				float edgeFade = 0.01;
 				//i.color += float4(i.wpos * 0.02, 0.0);
 				//i.color += i.wpos.z * 0.1;
 				i.wpos.x *= _SizeX;
@@ -129,14 +130,20 @@
 				float xy = sqrt(pow(0.5 * _SizeX - abs(i.wpos.x), 2.0) + pow(0.5 * _SizeY - abs(i.wpos.y), 2.0));
 				float xz = sqrt(pow(0.5 * _SizeX - abs(i.wpos.x), 2.0) + pow(0.5 * _SizeZ - abs(i.wpos.z), 2.0));
 				float yz = sqrt(pow(0.5 * _SizeY - abs(i.wpos.y), 2.0) + pow(0.5 * _SizeZ - abs(i.wpos.z), 2.0));
+				// smoothstep(min, max, x);
+				//For values of x between min and max , returns a smoothly varying value that ranges from 0 at x = min to 1 at x = max .
+				//x is clamped to the range[min, max] and then the interpolation formula is evaluated :
 				if (xy < edgeWidth) {
-					//i.color = edgeColor;
+					float amount = smoothstep(edgeWidth - edgeFade, edgeWidth, xy);
+					i.color = lerp(edgeColor, i.color, amount);
 				}
 				if (xz < edgeWidth) {
-					//i.color = edgeColor;
+					float amount = smoothstep(edgeWidth - edgeFade, edgeWidth, xz);
+					i.color = lerp(edgeColor, i.color, amount);
 				}
 				if (yz < edgeWidth) {
-					//i.color = edgeColor;
+					float amount = smoothstep(edgeWidth - edgeFade, edgeWidth, yz);
+					i.color = lerp(edgeColor, i.color, amount);
 				}
 				// Target:
 				if (_DisplayTarget >= 0.5) {
@@ -146,8 +153,8 @@
 					float targetDeltaZ = _TargetPosZ - i.wpos.z;
 					float targetdist = sqrt(targetDeltaX * targetDeltaX + targetDeltaY * targetDeltaY + targetDeltaZ * targetDeltaZ);
 
-					float targetEdgeWidth = 0.01;
-					float targetEdgeFadeWidth = 0.005;
+					float targetEdgeWidth = 0.015;
+					float targetEdgeFadeWidth = 0.01;
 					float4 targetEdgeColor = float4(0.75, 1.0, 0.8, 1.0) * 0.75;
 					//float txy = sqrt(pow(0.5 - abs(i.wpos.x), 2.0) + pow(0.5 - abs(i.wpos.y), 2.0));
 					//float txz = sqrt(pow(0.5 - abs(i.wpos.x), 2.0) + pow(0.5 - abs(i.wpos.z), 2.0));
@@ -175,25 +182,27 @@
 
 					if (!onFaceX) {
 						if (x < targetEdgeWidth) {
-							//i.color = targetEdgeColor;
+							float amount = smoothstep(targetEdgeWidth - targetEdgeFadeWidth, targetEdgeWidth, x);
+							i.color = lerp(targetEdgeColor, i.color, amount);
 						}
 					}
 					if (!onFaceY) {
 						if (y < targetEdgeWidth) {
-							//i.color = targetEdgeColor;
+							float amount = smoothstep(targetEdgeWidth - targetEdgeFadeWidth, targetEdgeWidth, y);
+							i.color = lerp(targetEdgeColor, i.color, amount);
 						}
 					}
 					if (!onFaceZ) {
 						if (z < targetEdgeWidth) {
-							//i.color = targetEdgeColor;
+							float amount = smoothstep(targetEdgeWidth - targetEdgeFadeWidth, targetEdgeWidth, z);
+							i.color = lerp(targetEdgeColor, i.color, amount);
 						}
 					}						
-					//i.color += float4(0.16, 0.16, 0.16, 0.0);  // brighten segment being hovered over
+					i.color += float4(0.16, 0.16, 0.16, 0.0);  // brighten segment being hovered over
 					
 					if (targetdist < targetRadius)
 					{
-						//i.color = lerp(float4(2.0, 3.0, 2.25, 1.0), i.color, pow((targetdist / targetRadius), 0.05));
-						
+						i.color = lerp(float4(2.0, 3.0, 2.25, 1.0), i.color, pow((targetdist / targetRadius), 0.05));					
 						
 					}
 				}

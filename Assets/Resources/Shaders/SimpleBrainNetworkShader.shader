@@ -3,14 +3,14 @@
 		_Color ("Color", Color) = (1,1,1,1)
 	}
 	SubShader {
-		//Tags{ "RenderType" = "Opaque"  "RenderQueue" = "Opaque" }
-		Tags{ "RenderType" = "Transparent" "Queue" = "Transparent"  }
+		Tags{ "RenderType" = "Opaque"  "RenderQueue" = "Opaque" }
+		//Tags{ "RenderType" = "Transparent" "Queue" = "Transparent"  }
 		//LOD 200
 		
 		pass {
 			//ZWrite Off
-			Cull Off
-			ZTest Always
+			//Cull Off
+			//ZTest Always
 			//ZWrite Off
 
 			CGPROGRAM

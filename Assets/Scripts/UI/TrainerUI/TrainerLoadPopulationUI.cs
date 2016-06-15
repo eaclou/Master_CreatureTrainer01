@@ -63,6 +63,7 @@ public class TrainerLoadPopulationUI : MonoBehaviour {
             trainerModuleScript.gameController.masterTrainer.loadedTrainingSave = trainingDataToLoad;
             // Leap of Faith:
             currentPlayer.masterPopulation = trainingDataToLoad.savedPopulation;
+            GenomeNEAT.nextAvailableInnovationNumber = trainingDataToLoad.savedPopulation.nextAvailableGeneInno;
             currentPlayer.masterPopulation.trainingGenerations = trainingDataToLoad.endGeneration;  // keep track of total gens this population has trained on
             currentPlayer.masterPopulation.InitializeLoadedMasterAgentArray(); // <-- somewhat hacky, re-assess later, but this is where the brains are created from genome
 			currentPlayer.masterPopulation.isFunctional = true;

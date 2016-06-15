@@ -45,5 +45,5 @@ public class TrainingModifier {
     public float speciesSimilarityThreshold;
     public float adoptionRate;
     public float largeSpeciesPenalty;
-    
+    public float minMultiplier;
 }

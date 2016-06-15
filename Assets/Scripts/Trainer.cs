@@ -85,9 +85,7 @@ public class Trainer {
 
 	public float playbackSpeed = 1.0f;
 
-
 	public bool hasValidPlayerList = false;
-
 
 	// Playing Game States! 
 	private int playingCurGeneration = 0;
@@ -501,26 +499,32 @@ public class Trainer {
 							// THE NEXT GENERATION!!!!!
 							//=========================
 							NextGenerationStart(); // Pending Changes Applied & Crossover
-							UpdatePlayingNumTimeSteps();
+
+                            playingCurGeneration++;
+                            // Initialize dataManager structs for new generation:
+                            for (int p = 0; p < playerList.Count; p++) {
+                                playerList[p].dataManager.InitializeNewGenerationDataArrays(playingCurGeneration);
+                            }
+                            // TrainingModifiers!!!
+                            trainingModifierManager.ApplyTrainingModifierEffects(this);
+
+                            // Figure out numTrialRounds based on modifiers, and set target positions / round durations:                            
+                            for (int p = 0; p < numPlayers; p++) {  // iterate through playerList
+                                trainingModifierManager.ApplyTrainingModifierEffectsTarget(this, PlayerList[p].masterTrialsList[0].miniGameManager.miniGameInstance);
+                                // Randomly generates the target positions in each minigame once now, and use those positions for all agents:
+                                //for (int t = 0; t < PlayerList[p].masterTrialsList.Count - 1; t++) {
+                                    //Debug.Log("TEST@@" + PlayerList[p].masterTrialsList[t].miniGameManager.miniGameInstance.ToString());
+                                //    PlayerList[p].masterTrialsList[t].miniGameManager.miniGameInstance.ResetTargetPositions(PlayerList[p].masterTrialsList[t].numberOfPlays, PlayerList[p].masterTrialsList[t].minEvaluationTimeSteps, PlayerList[p].masterTrialsList[t].maxEvaluationTimeSteps);
+                                //}
+                            }
+
+                            UpdatePlayingNumTimeSteps();
 							UpdatePlayingNumTrialRounds();
 							UpdatePlayingNumAgents();
 							UpdatePlayingNumPlayers();
 							UpdatePlayingNumTrials();
-
-							playingCurGeneration++;
-							// Initialize dataManager structs for new generation:
-							for(int p = 0; p < playerList.Count; p++) {
-								playerList[p].dataManager.InitializeNewGenerationDataArrays(playingCurGeneration);
-							}
-                            // TrainingModifiers!!!
-                            trainingModifierManager.ApplyTrainingModifierEffects(this);
-                            for (int p = 0; p < numPlayers; p++) {  // iterate through playerList
-                                // Randomly generates the target positions in each minigame once now, and use those positions for all agents:
-                                for (int t = 0; t < PlayerList[p].masterTrialsList.Count - 1; t++) {
-                                    //Debug.Log("TEST@@" + PlayerList[p].masterTrialsList[t].miniGameManager.miniGameInstance.ToString());
-                                    PlayerList[p].masterTrialsList[t].miniGameManager.miniGameInstance.ResetTargetPositions(PlayerList[p].masterTrialsList[t].numberOfPlays, PlayerList[p].masterTrialsList[t].minEvaluationTimeSteps, PlayerList[p].masterTrialsList[t].maxEvaluationTimeSteps);
-                                }
-                            }
+							
+                            //gameControllerRef.trainerUI.SetAllPanelsFromTrainerData();
                             //DebugBot.DebugFunctionCall("Trainer; UpdatePlayingState; " + playingCurGeneration + ", " + playingCurTrialIndex + "/" + playingNumTrials + ", " + playingCurPlayer + "/" + playingNumPlayers + ", " + playingCurTrialRound + "/" + playingNumTrialRounds + ", " + playingCurAgent + "/" + playingNumAgents + ", " + playingCurMiniGameTimeStep + "/" + playingNumMiniGameTimeSteps, debugFunctionCalls);
                         }
 						else{ // reset player back to 0, incremented Trial
@@ -624,11 +628,9 @@ public class Trainer {
 			// =================================================================================================================================================================
 			//      END OF GAME LOOP !!!!
 			// =================================================================================================================================================================
-
-
+            
 			playingCurMiniGameTimeStep++;
 			currentGameManager.miniGameInstance.GameTimeStepCompleted();  // sets gameTicked, gameUpdatedFromPhysX to 0, increments internal curGameTimeStep
-
 			UpdatePlayingState ();
 			// This should check to see if the next gameTimeStep results in a rollover,
 			// ... in which case it handles the incrementing of stateData and if a game needs to be Reset, resets curTimeStep to 0
@@ -637,11 +639,12 @@ public class Trainer {
         if(currentGameManager.miniGameInstance.waitingForReset) {
             //Debug.Log("CalculateOneStep() waitingForReset");
             currentGameManager.miniGameInstance.gameCurrentRound = playingCurTrialRound;
-            currentGameManager.miniGameInstance.Reset();
-            currentGameManager.SetInputOutputArrays();
+            currentGameManager.miniGameInstance.Reset();            
             if (currentGameManager.miniGameInstance.critterBeingTested != null) {
                 networkVisualizer.sourceCritter = currentGameManager.miniGameInstance.critterBeingTested;
+                playerList[playingCurPlayer].masterPopulation.masterAgentArray[playingCurAgent].brain.ClearBrainState();  // zeroes out all values
             }
+            currentGameManager.SetInputOutputArrays();
             BuildBrainMesh(playerList[playingCurPlayer].masterPopulation.masterAgentArray[playingCurAgent].brain);
             
         }
@@ -686,34 +689,30 @@ public class Trainer {
                         currentBrain.BrainMasterFunction(ref currentGameManager.brainInput, ref currentGameManager.brainOutput);
                         // Run the game for one timeStep: (Note that this will only modify non-physX variables -- the actual movement and physX sim happens just afterward -- so keep that in mind)
                         currentGameManager.miniGameInstance.Tick();
-                        //if (currentGameManager.miniGameInstance.critterBeingTested != null) {
-                        //networkVisualizer.sourceCritter = currentGameManager.miniGameInstance.critterBeingTested;
-                        //networkVisualizer.SetNeuronSegmentPositions(currentBrain);
-                        //}
-                        //networkVisualizer.UpdateVertexColors(currentBrain);
-                        //networkVisualizer.MoveNeurons(currentBrain, 1);
-                        //networkVisualizer.UpdateNodeVertexPositionsSphere(currentBrain);
-                        //networkVisualizer.UpdateConnectionVertexPositionsBezier(currentBrain);
-                        // Update Data text view:
-                        gameControllerRef.trainerUI.panelDataViewScript.populationRef = playerList[playingCurPlayer].masterPopulation;
-                        gameControllerRef.trainerUI.panelDataViewScript.minigameRef = currentGameManager.miniGameInstance;
-                        gameControllerRef.trainerUI.panelDataViewScript.dataManagerRef = playerList[playingCurPlayer].dataManager;
-                        gameControllerRef.trainerUI.panelDataViewScript.SetCurrentAgentID(playingCurAgent);
-                        gameControllerRef.trainerUI.panelDataViewScript.UpdateDataText();
-                        
-                        //MiniGameCritterWalkBasic minigame = (MiniGameCritterWalkBasic)currentGameManager.miniGameInstance as MiniGameCritterWalkBasic;
-                        //networkVisualizer.InitShaderTexture(brain);
-                        //minigame.SetShaderTextures(networkVisualizer);
 
-                        if (false) {  // if( playbackSpeed is > some threshold value...
-                                      // If it's running too fast, turn off gamePiece render components, certain graphs
+                        if(playbackSpeed < 6f) {
+                            
+                            // Update Data text view:
+                            gameControllerRef.trainerUI.panelDataViewScript.populationRef = playerList[playingCurPlayer].masterPopulation;
+                            gameControllerRef.trainerUI.panelDataViewScript.minigameRef = currentGameManager.miniGameInstance;
+                            gameControllerRef.trainerUI.panelDataViewScript.dataManagerRef = playerList[playingCurPlayer].dataManager;
+                            gameControllerRef.trainerUI.panelDataViewScript.SetCurrentAgentID(playingCurAgent);
+                            gameControllerRef.trainerUI.panelDataViewScript.UpdateDataText();
 
-                        }
-                        else {
-                            // turn on Visualizations and graphs:  // REVISIT THIS!!!!
-                            //playerList[playingCurPlayer].graphKing.BuildTexturesCurAgentPerTick(playerList[playingCurPlayer], playerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].miniGameManager, playingCurAgent);
-                        }
-                        //}
+                            //MiniGameCritterWalkBasic minigame = (MiniGameCritterWalkBasic)currentGameManager.miniGameInstance as MiniGameCritterWalkBasic;
+                            //networkVisualizer.InitShaderTexture(brain);
+                            //minigame.SetShaderTextures(networkVisualizer);
+                            if(playbackSpeed < 3f) {
+                                if (currentGameManager.miniGameInstance.critterBeingTested != null) {
+                                    networkVisualizer.sourceCritter = currentGameManager.miniGameInstance.critterBeingTested;
+                                    networkVisualizer.SetNeuronSegmentPositions(currentBrain);
+                                }
+                                networkVisualizer.UpdateVertexColors(currentBrain);
+                                networkVisualizer.MoveNeurons(currentBrain, 1);
+                                networkVisualizer.UpdateNodeVertexPositionsSphere(currentBrain);
+                                networkVisualizer.UpdateConnectionVertexPositionsBezier(currentBrain);
+                            }
+                        }                        
                     }
                     // Update playingState now that multiple agents have been evaluated -- messing up the playingCurAgent
                 }

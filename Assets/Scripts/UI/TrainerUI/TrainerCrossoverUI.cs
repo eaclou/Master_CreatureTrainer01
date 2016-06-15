@@ -264,6 +264,17 @@ public class TrainerCrossoverUI : MonoBehaviour {
 	
 	public void UpdateUIWithCurrentData() {
 		DebugBot.DebugFunctionCall("TCrossoverUI; UpdateUIWithCurrentData(); ", debugFunctionCalls);
+
+        toggleBreedingByFitLottery.isOn = pendingCrossoverManager.breedingByRaffle;
+        toggleBreedingByRanking.isOn = pendingCrossoverManager.breedingByRank;
+        toggleBreedingRandom.isOn = pendingCrossoverManager.breedingStochastic;
+        toggleCrossover.isOn = pendingCrossoverManager.useCrossover;
+        toggleMutation.isOn = pendingCrossoverManager.useMutation;
+        toggleSpeciation.isOn = pendingCrossoverManager.useSpeciation;
+        toggleSurvivalByFitLottery.isOn = pendingCrossoverManager.survivalByRaffle;
+        toggleSurvivalByRanking.isOn = pendingCrossoverManager.survivalByRank;
+        toggleSurvivalRandom.isOn = pendingCrossoverManager.survivalStochastic;
+
         // MUTATION TAB!!!!
         sliderMasterMutationRate.value = pendingCrossoverManager.masterMutationRate;
 		textMasterMutationRate.text = pendingCrossoverManager.masterMutationRate.ToString();

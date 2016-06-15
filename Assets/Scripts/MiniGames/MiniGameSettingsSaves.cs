@@ -7,7 +7,8 @@ public class MiniGameSettingsSaves {
     public float viscosityDrag; 
     public float gravityStrength;
     public float jointMotorForce;
-    public float jointMotorSpeed; 
+    public float jointMotorSpeed;
+    public float variableMass;
     public float minTargetX;
     public float maxTargetX;
     public float minTargetY;
@@ -21,6 +22,9 @@ public class MiniGameSettingsSaves {
     public float groundBounce;
     public float groundFriction;
     public float angleSensorSensitivity;
+    public float initForceMin;
+    public float initForceMax;
+    public float useRandomTargetPos;
 
     public MiniGameSettingsSaves() {
         //empty constructor for EasySave2

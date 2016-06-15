@@ -9,7 +9,7 @@ public class MiniGameCritterWalkBasicSettings : MiniGameSettingsBase {
     public float[] gravityStrength = new float[1];
     public float[] jointMotorForce = new float[1]; //100f;
     public float[] jointMotorSpeed = new float[1]; //500f;
-    //public float[] variableMass = new float[1]; // 0 means all segments have mass of 1.  // 1 means segment's mass is proportional to its volume
+    public float[] variableMass = new float[1]; // 0 means all segments have mass of 1.  // 1 means segment's mass is proportional to its volume
     public float[] minTargetX = new float[1];
     public float[] maxTargetX = new float[1];
     public float[] minTargetY = new float[1];
@@ -23,34 +23,39 @@ public class MiniGameCritterWalkBasicSettings : MiniGameSettingsBase {
     public float[] groundBounce = new float[1];
     public float[] groundFriction = new float[1];
     public float[] angleSensorSensitivity = new float[1];
+    public float[] initForceMin = new float[1];
+    public float[] initForceMax = new float[1];
+    public float[] useRandomTargetPos = new float[1];
 
     public MiniGameCritterWalkBasicSettings() {
         // DEFAULTS:
         viscosityDrag[0] = 1f;
         gravityStrength[0] = 0f;
         jointMotorForce[0] = 2f; // global multipliers on individual joint motor settings
-        jointMotorSpeed[0] = 0.6f;
-        //variableMass[0] = 0.0f;
-        minTargetX[0] = -5f;
-        maxTargetX[0] = 5f;
-        minTargetY[0] = -5f;
-        maxTargetY[0] = 5f;
+        jointMotorSpeed[0] = 1f;
+        variableMass[0] = 0.8f;
+        minTargetX[0] = 0f;
+        maxTargetX[0] = 0f;
+        minTargetY[0] = 0f;
+        maxTargetY[0] = 0f;
         minTargetZ[0] = 10f;
         maxTargetZ[0] = 10f;
         minScoreDistance[0] = 15f;
         maxScoreDistance[0] = 1f;
-        targetRadius[0] = 5f;
+        targetRadius[0] = 1f;
         groundPositionY[0] = -50f;
-        angleSensorSensitivity[0] = 0.1f;
-
+        angleSensorSensitivity[0] = 1f;
+        initForceMin[0] = 0f;
+        initForceMax[0] = 0f;
         groundBounce[0] = 0f;
         groundFriction[0] = 1f;
+        useRandomTargetPos[0] = 0f;
 
         gameOptionsList = new List<GameOptionChannel>();
     }
 
     public override void InitGameOptionsList() {
-        GameOptionChannel GOC_viscosityDrag = new GameOptionChannel(ref viscosityDrag, 0.0f, 200f, "Viscosity Drag");
+        GameOptionChannel GOC_viscosityDrag = new GameOptionChannel(ref viscosityDrag, 0.0f, 15f, "Viscosity Drag");
         gameOptionsList.Add(GOC_viscosityDrag); // 
         GameOptionChannel GOC_gravityStrength = new GameOptionChannel(ref gravityStrength, -36.0f, 4f, "Gravity Strength");
         gameOptionsList.Add(GOC_gravityStrength); // 
@@ -58,8 +63,8 @@ public class MiniGameCritterWalkBasicSettings : MiniGameSettingsBase {
         gameOptionsList.Add(GOC_jointMotorForce); // 
         GameOptionChannel GOC_jointMotorSpeed = new GameOptionChannel(ref jointMotorSpeed, 0f, 10f, "Joint Motor Speed");
         gameOptionsList.Add(GOC_jointMotorSpeed); // 
-        //GameOptionChannel GOC_variableMass = new GameOptionChannel(ref variableMass, 0f, 1f, "VariableMass");
-        //gameOptionsList.Add(GOC_variableMass); // 
+        GameOptionChannel GOC_variableMass = new GameOptionChannel(ref variableMass, 0f, 1f, "VariableMass");
+        gameOptionsList.Add(GOC_variableMass); // 
         GameOptionChannel GOC_targetRadius = new GameOptionChannel(ref targetRadius, 0.01f, 25f, "Target Size");
         gameOptionsList.Add(GOC_targetRadius); //
         GameOptionChannel GOC_minTargetX = new GameOptionChannel(ref minTargetX, -10f, 10f, "X Min");
@@ -82,6 +87,12 @@ public class MiniGameCritterWalkBasicSettings : MiniGameSettingsBase {
         gameOptionsList.Add(GOC_groundPositionY); // 7    
         GameOptionChannel GOC_angleSensorSensitivity = new GameOptionChannel(ref angleSensorSensitivity, 0f, 1f, "Angle Sensor Sensitivity");
         gameOptionsList.Add(GOC_angleSensorSensitivity); // 7
+        GameOptionChannel GOC_initForceMin = new GameOptionChannel(ref initForceMin, 0f, 10f, "Init Force Min");
+        gameOptionsList.Add(GOC_initForceMin); // 7
+        GameOptionChannel GOC_initForceMax = new GameOptionChannel(ref initForceMax, 0f, 100f, "Init Force Max");
+        gameOptionsList.Add(GOC_initForceMax); // 7
+        GameOptionChannel GOC_useRandomTargetPos = new GameOptionChannel(ref useRandomTargetPos, 0f, 1f, "Use Random Target Pos");
+        gameOptionsList.Add(GOC_useRandomTargetPos); // 7
     }
 
     public override void CopySettingsToSave(MiniGameSettingsSaves miniGameSettingsSaves) {
@@ -102,6 +113,10 @@ public class MiniGameCritterWalkBasicSettings : MiniGameSettingsBase {
         miniGameSettingsSaves.minTargetZ = minTargetZ[0];
         miniGameSettingsSaves.targetRadius = targetRadius[0];
         miniGameSettingsSaves.viscosityDrag = viscosityDrag[0];
+        miniGameSettingsSaves.initForceMin = initForceMin[0];
+        miniGameSettingsSaves.initForceMax = initForceMax[0];
+        miniGameSettingsSaves.useRandomTargetPos = useRandomTargetPos[0];
+        miniGameSettingsSaves.variableMass = variableMass[0];
     }
 
     public override void CopySettingsFromLoad(MiniGameSettingsSaves miniGameSettingsSaves) {
@@ -122,5 +137,9 @@ public class MiniGameCritterWalkBasicSettings : MiniGameSettingsBase {
         groundBounce[0] = miniGameSettingsSaves.groundBounce;
         groundFriction[0] = miniGameSettingsSaves.groundFriction;
         angleSensorSensitivity[0] = miniGameSettingsSaves.angleSensorSensitivity;
+        initForceMin[0] = miniGameSettingsSaves.initForceMin;
+        initForceMax[0] = miniGameSettingsSaves.initForceMax;
+        useRandomTargetPos[0] = miniGameSettingsSaves.useRandomTargetPos;
+        variableMass[0] = miniGameSettingsSaves.variableMass;
     }
 }

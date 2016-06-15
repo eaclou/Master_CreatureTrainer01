@@ -10,7 +10,7 @@ public class SegaddonCollisionDetector : MonoBehaviour {
     void OnCollisionEnter(Collision col) {
         numContacts++;
         if(referencedContactSensor != null) {
-            referencedContactSensor.contactStatus[0] = col.impulse.magnitude * referencedContactSensor.contactSensitivity[0] + 1f;
+            referencedContactSensor.contactStatus[0] = col.impulse.magnitude * referencedContactSensor.contactSensitivity[0];
             referencedContactSensor.fitnessContact[0] = 1f;
         }
         else {
@@ -20,7 +20,10 @@ public class SegaddonCollisionDetector : MonoBehaviour {
     }
 
     void OnCollisionStay(Collision col) {
-        
+        if (referencedContactSensor != null) {
+            referencedContactSensor.contactStatus[0] = col.impulse.magnitude * referencedContactSensor.contactSensitivity[0];
+            //referencedContactSensor.fitnessContact[0] = 1f;
+        }
     }
 
     void OnCollisionExit(Collision col) {

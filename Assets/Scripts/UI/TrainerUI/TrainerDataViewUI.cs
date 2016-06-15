@@ -20,7 +20,8 @@ public class TrainerDataViewUI : MonoBehaviour {
 
     public enum CurrentPage {
         EachAgentBrain,
-        AllAgentsBrains,
+        GeneLinks,
+        AllAgentsBrains,        
         FitnessRealtime,
         EachAgentFitnessPrev,
         AllAgentsFitnessPrev,
@@ -83,6 +84,28 @@ public class TrainerDataViewUI : MonoBehaviour {
                     bodyText += "Connection #" + c.ToString() + ", From: " + sourceAgent.brain.connectionList[c].fromNodeID.ToString() + ", To: "
                                  + sourceAgent.brain.connectionList[c].toNodeID.ToString() + ", Weight: " + sourceAgent.brain.connectionList[c].weight[0].ToString() + "\n";
                 }
+                break;
+
+            case CurrentPage.GeneLinks:
+                //populationRef.geneHistoryDict
+                bodyText += "GENE LINKS" + "\n";
+                if(populationRef.geneHistoryDict != null) {
+                    int failsafe = 0;
+                    var enumerator = populationRef.geneHistoryDict.GetEnumerator();
+                    while (enumerator.MoveNext()) {
+                        // Access value with enumerator.Current.Value;
+                        //bodyText += enumerator.Current.Value.ToString() + "\n";
+                        GeneHistoryInfo geneLink = enumerator.Current.Value;
+                        bodyText += "Gene Link #" + geneLink.innov.ToString() + "  numCopies: " + geneLink.numCopies.ToString() + ", from: " + geneLink.fromNode.ToString() + ", to: " + geneLink.toNode.ToString() + ", gen: " + geneLink.gen.ToString()  + ", avgWeight: " + geneLink.avgWeight.ToString() + "\n";
+                        failsafe++;
+                        if (failsafe > 5000) {
+                            break;
+                        }
+                    }
+                }  
+                else {
+                    bodyText += "Dict = NULL!";
+                }              
                 break;
 
             case CurrentPage.AllAgentsBrains:

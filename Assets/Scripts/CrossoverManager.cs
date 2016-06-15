@@ -108,8 +108,40 @@ public class CrossoverManager {
 	public void PerformCrossover(ref Population sourcePopulation, int gen) {
 		//Population newPop = sourcePopulation.CopyPopulationSettings();
         BreedPopulation(ref sourcePopulation, gen);
-                
-        //Debug.Log("sourcePopulation.masterAgentArray[0].bodyGenome.creatureBodySegmentGenomeList[0].size.x: " + sourcePopulation.masterAgentArray[0].bodyGenome.creatureBodySegmentGenomeList[0].size.x.ToString());
+
+        // Fill out Gene History stats:
+        if (sourcePopulation.geneHistoryDict == null) {
+            sourcePopulation.geneHistoryDict = new Dictionary<int, GeneHistoryInfo>();
+        }
+        else {
+            sourcePopulation.geneHistoryDict.Clear();
+        }
+        for (int i = 0; i < sourcePopulation.masterAgentArray.Length; i++) {
+            
+            for(int j = 0; j < sourcePopulation.masterAgentArray[i].brainGenome.linkNEATList.Count; j++) {                
+                if(sourcePopulation.masterAgentArray[i].brainGenome.linkNEATList[j].enabled) {
+                    int inno = sourcePopulation.masterAgentArray[i].brainGenome.linkNEATList[j].innov;
+                    if (sourcePopulation.geneHistoryDict.ContainsKey(inno)) {
+                        GeneHistoryInfo info = sourcePopulation.geneHistoryDict[inno];
+                        //info.innov = inno; // should have been set when it was created
+                        info.numCopies++;
+                        info.totalWeight += sourcePopulation.masterAgentArray[i].brainGenome.linkNEATList[j].weight;
+                        info.avgWeight = info.totalWeight / (float)info.numCopies;
+                    }
+                    else {
+                        GeneHistoryInfo geneInfo = new GeneHistoryInfo();
+                        geneInfo.innov = inno;
+                        geneInfo.numCopies++;
+                        geneInfo.totalWeight += sourcePopulation.masterAgentArray[i].brainGenome.linkNEATList[j].weight;
+                        geneInfo.avgWeight = geneInfo.totalWeight / (float)geneInfo.numCopies;
+                        geneInfo.fromNode = sourcePopulation.masterAgentArray[i].brainGenome.linkNEATList[j].fromNodeID;
+                        geneInfo.toNode = sourcePopulation.masterAgentArray[i].brainGenome.linkNEATList[j].toNodeID;
+                        geneInfo.gen = sourcePopulation.masterAgentArray[i].brainGenome.linkNEATList[j].birthGen;
+                        sourcePopulation.geneHistoryDict.Add(inno, geneInfo);
+                    }
+                }                
+            }
+        }        
     }
 
     /*public float[][] MixFloatChromosomes(float[][] parentFloatGenes, int numOffspring) {  // takes A number of Genomes and returns new mixed up versions
@@ -319,7 +351,8 @@ public class CrossoverManager {
     
 
     public Population BreedPopulation(ref Population sourcePopulation, int currentGeneration) {
-        
+
+        int LifetimeGeneration = currentGeneration + sourcePopulation.trainingGenerations;
         // go through species list and adjust fitness
         List<SpeciesBreedingPool> childSpeciesPoolsList = new List<SpeciesBreedingPool>(); // will hold agents in an internal list to facilitate crossover
         //List<Species> childSpeciesList = new List<Species>();  // the new species of the next generation
@@ -503,7 +536,7 @@ public class CrossoverManager {
                     int nextLinkInnoA = 0;
                     int nextLinkInnoB = 0;
 
-                    int failsafeMax = 50; // parentAgentsArray[0].brainGenome.ReadMaxInno();
+                    int failsafeMax = 500; // parentAgentsArray[0].brainGenome.ReadMaxInno();
                     int failsafe = 0;
                     //int currentInno = 0;
                     int parentListIndexA = 0;
@@ -564,14 +597,14 @@ public class CrossoverManager {
                         if (innoDelta < 0) {  // Parent A has an earlier link mutation
                             //Debug.Log("newChildIndex: " + newChildIndex.ToString() + ", IndexA: " + parentListIndexA.ToString() + ", IndexB: " + parentListIndexB.ToString() + ", innoDelta < 0 (" + innoDelta.ToString() + ") --  moreFitP: " + moreFitParent.ToString() + ", nextLinkInnoA: " + nextLinkInnoA.ToString() + ", nextLinkInnoB: " + nextLinkInnoB.ToString());
                             if (moreFitParent == 0) {  // Parent A is more fit:
-                                GeneLinkNEAT newChildLink = new GeneLinkNEAT(parentLinkListArray[0][parentListIndexA].fromNodeID, parentLinkListArray[0][parentListIndexA].toNodeID, parentLinkListArray[0][parentListIndexA].weight, parentLinkListArray[0][parentListIndexA].enabled, parentLinkListArray[0][parentListIndexA].innov, currentGeneration);
+                                GeneLinkNEAT newChildLink = new GeneLinkNEAT(parentLinkListArray[0][parentListIndexA].fromNodeID, parentLinkListArray[0][parentListIndexA].toNodeID, parentLinkListArray[0][parentListIndexA].weight, parentLinkListArray[0][parentListIndexA].enabled, parentLinkListArray[0][parentListIndexA].innov, parentLinkListArray[0][parentListIndexA].birthGen);
                                 childLinkList.Add(newChildLink);
                                 if (parentLinkListArray[0][parentListIndexA].enabled)
                                     numEnabledLinkGenes++;
                             }
                             else {
                                 if(CheckForMutation(crossoverRandomLinkChance)) {  // was less fit parent, but still passed on a gene!:
-                                    GeneLinkNEAT newChildLink = new GeneLinkNEAT(parentLinkListArray[0][parentListIndexA].fromNodeID, parentLinkListArray[0][parentListIndexA].toNodeID, parentLinkListArray[0][parentListIndexA].weight, parentLinkListArray[0][parentListIndexA].enabled, parentLinkListArray[0][parentListIndexA].innov, currentGeneration);
+                                    GeneLinkNEAT newChildLink = new GeneLinkNEAT(parentLinkListArray[0][parentListIndexA].fromNodeID, parentLinkListArray[0][parentListIndexA].toNodeID, parentLinkListArray[0][parentListIndexA].weight, parentLinkListArray[0][parentListIndexA].enabled, parentLinkListArray[0][parentListIndexA].innov, parentLinkListArray[0][parentListIndexA].birthGen);
                                     childLinkList.Add(newChildLink);
                                 }
                             }
@@ -580,14 +613,14 @@ public class CrossoverManager {
                         if (innoDelta > 0) {  // Parent B has an earlier link mutation
                             //Debug.Log("newChildIndex: " + newChildIndex.ToString() + ", IndexA: " + parentListIndexA.ToString() + ", IndexB: " + parentListIndexB.ToString() + ", innoDelta > 0 (" + innoDelta.ToString() + ") --  moreFitP: " + moreFitParent.ToString() + ", nextLinkInnoA: " + nextLinkInnoA.ToString() + ", nextLinkInnoB: " + nextLinkInnoB.ToString());
                             if (moreFitParent == 1) {  // Parent B is more fit:
-                                GeneLinkNEAT newChildLink = new GeneLinkNEAT(parentLinkListArray[1][parentListIndexB].fromNodeID, parentLinkListArray[1][parentListIndexB].toNodeID, parentLinkListArray[1][parentListIndexB].weight, parentLinkListArray[1][parentListIndexB].enabled, parentLinkListArray[1][parentListIndexB].innov, currentGeneration);
+                                GeneLinkNEAT newChildLink = new GeneLinkNEAT(parentLinkListArray[1][parentListIndexB].fromNodeID, parentLinkListArray[1][parentListIndexB].toNodeID, parentLinkListArray[1][parentListIndexB].weight, parentLinkListArray[1][parentListIndexB].enabled, parentLinkListArray[1][parentListIndexB].innov, parentLinkListArray[1][parentListIndexB].birthGen);
                                 childLinkList.Add(newChildLink);
                                 if (parentLinkListArray[1][parentListIndexB].enabled)
                                     numEnabledLinkGenes++;
                             }
                             else {
                                 if (CheckForMutation(crossoverRandomLinkChance)) {  // was less fit parent, but still passed on a gene!:
-                                    GeneLinkNEAT newChildLink = new GeneLinkNEAT(parentLinkListArray[1][parentListIndexB].fromNodeID, parentLinkListArray[1][parentListIndexB].toNodeID, parentLinkListArray[1][parentListIndexB].weight, parentLinkListArray[1][parentListIndexB].enabled, parentLinkListArray[1][parentListIndexB].innov, currentGeneration);
+                                    GeneLinkNEAT newChildLink = new GeneLinkNEAT(parentLinkListArray[1][parentListIndexB].fromNodeID, parentLinkListArray[1][parentListIndexB].toNodeID, parentLinkListArray[1][parentListIndexB].weight, parentLinkListArray[1][parentListIndexB].enabled, parentLinkListArray[1][parentListIndexB].innov, parentLinkListArray[1][parentListIndexB].birthGen);
                                     childLinkList.Add(newChildLink);
                                 }
                             }
@@ -604,7 +637,7 @@ public class CrossoverManager {
                                 newWeightValue = parentLinkListArray[1][parentListIndexB].weight;
                             }
                             //Debug.Log("newChildIndex: " + newChildIndex.ToString() + ", IndexA: " + parentListIndexA.ToString() + ", IndexB: " + parentListIndexB.ToString() + ", innoDelta == 0 (" + innoDelta.ToString() + ") --  moreFitP: " + moreFitParent.ToString() + ", nextLinkInnoA: " + nextLinkInnoA.ToString() + ", nextLinkInnoB: " + nextLinkInnoB.ToString() + ", randParent: " + randParentIndex.ToString() + ", weight: " + newWeightValue.ToString());
-                            GeneLinkNEAT newChildLink = new GeneLinkNEAT(parentLinkListArray[0][parentListIndexA].fromNodeID, parentLinkListArray[0][parentListIndexA].toNodeID, newWeightValue, parentLinkListArray[0][parentListIndexA].enabled, parentLinkListArray[0][parentListIndexA].innov, currentGeneration);
+                            GeneLinkNEAT newChildLink = new GeneLinkNEAT(parentLinkListArray[0][parentListIndexA].fromNodeID, parentLinkListArray[0][parentListIndexA].toNodeID, newWeightValue, parentLinkListArray[0][parentListIndexA].enabled, parentLinkListArray[0][parentListIndexA].innov, parentLinkListArray[0][parentListIndexA].birthGen);
                             childLinkList.Add(newChildLink);
                             if (parentLinkListArray[0][parentListIndexA].enabled)
                                 numEnabledLinkGenes++;
@@ -626,8 +659,8 @@ public class CrossoverManager {
                             numEnabledLinkGenes = 1;
                         for (int k = 0; k < childLinkList.Count; k++) {
                             float mutateChance = mutationBlastModifier * masterMutationRate / numEnabledLinkGenes;
-                            if (currentGeneration - childLinkList[k].birthGen < newLinkBonusDuration) {
-                                float t = 1 - ((currentGeneration - childLinkList[k].birthGen) / (float)newLinkBonusDuration);
+                            if (LifetimeGeneration - childLinkList[k].birthGen < newLinkBonusDuration) {
+                                float t = 1 - ((LifetimeGeneration - childLinkList[k].birthGen) / (float)newLinkBonusDuration);
                                 // t=0 means age of gene is same as bonusDuration, t=1 means it is brand new
                                 mutateChance = Mathf.Lerp(mutateChance, mutateChance * newLinkMutateBonus, t);
                             }
@@ -642,15 +675,15 @@ public class CrossoverManager {
                         }
                         if (CheckForMutation(mutationBlastModifier * mutationAddNodeChance)) {   // Adds a new node
                             //Debug.Log("Add Node Mutation Agent[" + newChildIndex.ToString() + "]");
-                            childGenome.AddNewRandomNode(currentGeneration);
+                            childGenome.AddNewRandomNode(LifetimeGeneration);
                         }
                         if (CheckForMutation(mutationBlastModifier * mutationAddLinkChance)) { // Adds new connection
                             //Debug.Log("Add Link Mutation Agent[" + newChildIndex.ToString() + "]");
                             if (CheckForMutation(existingNetworkBias)) {
-                                childGenome.AddNewExtraLink(existingFromNodeBias, currentGeneration);
+                                childGenome.AddNewExtraLink(existingFromNodeBias, LifetimeGeneration);
                             }
                             else {
-                                childGenome.AddNewRandomLink(currentGeneration);
+                                childGenome.AddNewRandomLink(LifetimeGeneration);
                             }
                         }
                         if (CheckForMutation(mutationBlastModifier * mutationActivationFunctionChance)) {
@@ -722,7 +755,7 @@ public class CrossoverManager {
                     }
                     for (int j = 0; j < parentLinkListArray[0].Count; j++) {
                         //same thing with connections
-                        GeneLinkNEAT clonedLink = new GeneLinkNEAT(parentLinkListArray[0][j].fromNodeID, parentLinkListArray[0][j].toNodeID, parentLinkListArray[0][j].weight, parentLinkListArray[0][j].enabled, parentLinkListArray[0][j].innov, currentGeneration);
+                        GeneLinkNEAT clonedLink = new GeneLinkNEAT(parentLinkListArray[0][j].fromNodeID, parentLinkListArray[0][j].toNodeID, parentLinkListArray[0][j].weight, parentLinkListArray[0][j].enabled, parentLinkListArray[0][j].innov, parentLinkListArray[0][j].birthGen);
                         childLinkList.Add(clonedLink);
                         if (parentLinkListArray[0][j].enabled)
                             numEnabledLinkGenes++;
@@ -733,8 +766,8 @@ public class CrossoverManager {
                             numEnabledLinkGenes = 1;
                         for (int k = 0; k < childLinkList.Count; k++) {
                             float mutateChance = mutationBlastModifier * masterMutationRate / numEnabledLinkGenes;
-                            if (currentGeneration - childLinkList[k].birthGen < newLinkBonusDuration) {
-                                float t = 1 - ((currentGeneration - childLinkList[k].birthGen) / (float)newLinkBonusDuration);
+                            if (LifetimeGeneration - childLinkList[k].birthGen < newLinkBonusDuration) {
+                                float t = 1 - ((LifetimeGeneration - childLinkList[k].birthGen) / (float)newLinkBonusDuration);
                                 // t=0 means age of gene is same as bonusDuration, t=1 means it is brand new
                                 mutateChance = Mathf.Lerp(mutateChance, mutateChance * newLinkMutateBonus, t);
                             }
@@ -749,15 +782,15 @@ public class CrossoverManager {
                         }
                         if (CheckForMutation(mutationBlastModifier * mutationAddNodeChance)) {   // Adds a new node
                             //Debug.Log("Add Node Mutation Agent[" + newChildIndex.ToString() + "]");
-                            childGenome.AddNewRandomNode(currentGeneration);
+                            childGenome.AddNewRandomNode(LifetimeGeneration);
                         }
                         if (CheckForMutation(mutationBlastModifier * mutationAddLinkChance)) { // Adds new connection
                             //Debug.Log("Add Link Mutation Agent[" + newChildIndex.ToString() + "]");
                             if(CheckForMutation(existingNetworkBias)) {
-                                childGenome.AddNewExtraLink(existingFromNodeBias, currentGeneration);
+                                childGenome.AddNewExtraLink(existingFromNodeBias, LifetimeGeneration);
                             }
                             else {
-                                childGenome.AddNewRandomLink(currentGeneration);
+                                childGenome.AddNewRandomLink(LifetimeGeneration);
                             }
                         }
                         if (CheckForMutation(mutationBlastModifier * mutationActivationFunctionChance)) {

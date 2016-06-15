@@ -1883,6 +1883,14 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
                 critterConstructorManager.masterCritter.masterCritterGenome.addonAltimeterList.Add(newAltimeter);
             }
         }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.EarBasic) {
+            AddonEarBasic newEarBasic = new AddonEarBasic(sourceNode.ID);
+            critterConstructorManager.masterCritter.masterCritterGenome.addonEarBasicList.Add(newEarBasic);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.Gravity) {
+            AddonGravitySensor newGravitySensor = new AddonGravitySensor(sourceNode.ID);
+            critterConstructorManager.masterCritter.masterCritterGenome.addonGravitySensorList.Add(newGravitySensor);
+        }
 
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.JointMotor) {
             bool listContainsType = false;
@@ -1928,6 +1936,46 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
             if (!listContainsType) {  // only allows 1 instance of the Torque type
                 AddonTorqueEffector3D newTorqueEffector3D = new AddonTorqueEffector3D(sourceNode.ID);
                 critterConstructorManager.masterCritter.masterCritterGenome.addonTorqueEffector3DList.Add(newTorqueEffector3D);
+            }
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.MouthBasic) {
+            bool listContainsType = false;
+            for (int i = 0; i < critterConstructorManager.masterCritter.masterCritterGenome.addonMouthBasicList.Count; i++) {  // check for existing addon of this type
+                if (critterConstructorManager.masterCritter.masterCritterGenome.addonMouthBasicList[i].critterNodeID == sourceNode.ID) {
+                    listContainsType = true;
+                }
+            }
+            if (!listContainsType) {  // only allows 1 instance of the MouthBasic type
+                AddonMouthBasic newMouthBasic = new AddonMouthBasic(sourceNode.ID);
+                critterConstructorManager.masterCritter.masterCritterGenome.addonMouthBasicList.Add(newMouthBasic);
+            }
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.NoiseMakerBasic) {
+            AddonNoiseMakerBasic newNoiseMakerBasic = new AddonNoiseMakerBasic(sourceNode.ID);
+            critterConstructorManager.masterCritter.masterCritterGenome.addonNoiseMakerBasicList.Add(newNoiseMakerBasic);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.Sticky) {
+            bool listContainsType = false;
+            for (int i = 0; i < critterConstructorManager.masterCritter.masterCritterGenome.addonStickyList.Count; i++) {  // check for existing addon of this type
+                if (critterConstructorManager.masterCritter.masterCritterGenome.addonStickyList[i].critterNodeID == sourceNode.ID) {
+                    listContainsType = true;
+                }
+            }
+            if (!listContainsType) {  // only allows 1 instance of the Sticky type
+                AddonSticky newSticky = new AddonSticky(sourceNode.ID);
+                critterConstructorManager.masterCritter.masterCritterGenome.addonStickyList.Add(newSticky);
+            }
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.WeaponBasic) {
+            bool listContainsType = false;
+            for (int i = 0; i < critterConstructorManager.masterCritter.masterCritterGenome.addonWeaponBasicList.Count; i++) {  // check for existing addon of this type
+                if (critterConstructorManager.masterCritter.masterCritterGenome.addonWeaponBasicList[i].critterNodeID == sourceNode.ID) {
+                    listContainsType = true;
+                }
+            }
+            if (!listContainsType) {  // only allows 1 instance of the WeaponBasic type
+                AddonWeaponBasic newWeaponBasic = new AddonWeaponBasic(sourceNode.ID);
+                critterConstructorManager.masterCritter.masterCritterGenome.addonWeaponBasicList.Add(newWeaponBasic);
             }
         }
 
@@ -1993,6 +2041,12 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.Altimeter) {
             critterConstructorManager.masterCritter.masterCritterGenome.addonAltimeterList.RemoveAt(addonIndex);
         }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.EarBasic) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonEarBasicList.RemoveAt(addonIndex);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.Gravity) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonGravitySensorList.RemoveAt(addonIndex);
+        }
 
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.JointMotor) {
             critterConstructorManager.masterCritter.masterCritterGenome.addonJointMotorList.RemoveAt(addonIndex);
@@ -2008,6 +2062,18 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.TorqueEffector3D) {
             critterConstructorManager.masterCritter.masterCritterGenome.addonTorqueEffector3DList.RemoveAt(addonIndex);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.MouthBasic) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonMouthBasicList.RemoveAt(addonIndex);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.NoiseMakerBasic) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonNoiseMakerBasicList.RemoveAt(addonIndex);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.Sticky) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonStickyList.RemoveAt(addonIndex);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.WeaponBasic) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonWeaponBasicList.RemoveAt(addonIndex);
         }
 
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.OscillatorInput) {

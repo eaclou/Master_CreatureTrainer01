@@ -279,4 +279,12 @@ public class BrainNEAT {
     public void InitializeBrainFromGenome(GenomeNEAT newGenome) {
         sourceGenome = newGenome;
     }
+
+    public void ClearBrainState() {
+        // Zero out all values:
+        for(int i = 0; i < neuronList.Count; i++) {
+            neuronList[i].previousValue = 0f;
+            neuronList[i].currentValue[0] = 0f;
+        }
+    }
 }

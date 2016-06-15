@@ -23,6 +23,7 @@ public class ES2UserType_Population : ES2Type
         writer.Write(data.speciesBreedingPoolList);
         writer.Write(data.nextAvailableSpeciesID);
         writer.Write(data.trainingGenerations);
+        writer.Write(data.nextAvailableGeneInno);
         // VERSION 1:
     }
 
@@ -53,6 +54,7 @@ public class ES2UserType_Population : ES2Type
             data.speciesBreedingPoolList = reader.ReadList<SpeciesBreedingPool>();
             data.nextAvailableSpeciesID = reader.Read<int>();
             data.trainingGenerations = reader.Read<int>();
+            data.nextAvailableGeneInno = reader.Read<int>();
             if (fileVersion >= 1)
             {
                 // new attributes

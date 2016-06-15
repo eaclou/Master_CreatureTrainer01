@@ -20,12 +20,18 @@ public class CritterGenome {
     public List<AddonVelocitySensor1D> addonVelocitySensor1DList;
     public List<AddonVelocitySensor3D> addonVelocitySensor3DList;
     public List<AddonAltimeter> addonAltimeterList;
+    public List<AddonEarBasic> addonEarBasicList;
+    public List<AddonGravitySensor> addonGravitySensorList;
 
     public List<AddonJointMotor> addonJointMotorList;    
     public List<AddonThrusterEffector1D> addonThrusterEffector1DList;
     public List<AddonThrusterEffector3D> addonThrusterEffector3DList;
     public List<AddonTorqueEffector1D> addonTorqueEffector1DList;
     public List<AddonTorqueEffector3D> addonTorqueEffector3DList;
+    public List<AddonMouthBasic> addonMouthBasicList;
+    public List<AddonNoiseMakerBasic> addonNoiseMakerBasicList;
+    public List<AddonSticky> addonStickyList;
+    public List<AddonWeaponBasic> addonWeaponBasicList;
 
     public List<AddonOscillatorInput> addonOscillatorInputList;
     public List<AddonValueInput> addonValueInputList;
@@ -52,12 +58,18 @@ public class CritterGenome {
         addonVelocitySensor1DList = new List<AddonVelocitySensor1D>();
         addonVelocitySensor3DList = new List<AddonVelocitySensor3D>();
         addonAltimeterList = new List<AddonAltimeter>();
+        addonEarBasicList = new List<AddonEarBasic>();
+        addonGravitySensorList = new List<AddonGravitySensor>();
 
         addonJointMotorList = new List<AddonJointMotor>();
         addonThrusterEffector1DList = new List<AddonThrusterEffector1D>();
         addonThrusterEffector3DList = new List<AddonThrusterEffector3D>();
         addonTorqueEffector1DList = new List<AddonTorqueEffector1D>();
         addonTorqueEffector3DList = new List<AddonTorqueEffector3D>();
+        addonMouthBasicList = new List<AddonMouthBasic>();
+        addonNoiseMakerBasicList = new List<AddonNoiseMakerBasic>();
+        addonStickyList = new List<AddonSticky>();
+        addonWeaponBasicList = new List<AddonWeaponBasic>();
 
         addonOscillatorInputList = new List<AddonOscillatorInput>();
         addonValueInputList = new List<AddonValueInput>();
@@ -173,84 +185,109 @@ public class CritterGenome {
                 numSegments++;
                 nextSegmentID++;
 
-                if (currentBuildSegmentList[i].sourceNode.ID == 0) {  // is ROOT segment  -- Look into doing Root build BEFORE for loop to avoid the need to do this check                                                                      
-                    int contactSensorIndex = CheckForAddonContactSensor(currentBuildSegmentList[i].sourceNode.ID);
-                    if (contactSensorIndex != -1) {
-                        numInputs++;
-                    }
-                    int raycastSensorIndex = CheckForAddonRaycastSensor(currentBuildSegmentList[i].sourceNode.ID);
-                    if (raycastSensorIndex != -1) {
-                        numInputs++;
-                    }
-                    int compassSensor1DIndex = CheckForAddonCompassSensor1D(currentBuildSegmentList[i].sourceNode.ID);
-                    if (compassSensor1DIndex != -1) {
-                        numInputs++;
-                    }
-                    int compassSensor3DIndex = CheckForAddonCompassSensor3D(currentBuildSegmentList[i].sourceNode.ID);
-                    if (compassSensor3DIndex != -1) {
-                        numInputs = numInputs + 3;
-                    }
-                    int positionSensor1DIndex = CheckForAddonPositionSensor1D(currentBuildSegmentList[i].sourceNode.ID);
-                    if (positionSensor1DIndex != -1) {
-                        numInputs++;
-                    }
-                    int positionSensor3DIndex = CheckForAddonPositionSensor3D(currentBuildSegmentList[i].sourceNode.ID);
-                    if (positionSensor3DIndex != -1) {
-                        numInputs = numInputs + 3;
-                    }
-                    int rotationSensor1DIndex = CheckForAddonRotationSensor1D(currentBuildSegmentList[i].sourceNode.ID);
-                    if (rotationSensor1DIndex != -1) {
-                        numInputs++;
-                    }
-                    int rotationSensor3DIndex = CheckForAddonRotationSensor3D(currentBuildSegmentList[i].sourceNode.ID);
-                    if (rotationSensor3DIndex != -1) {
-                        numInputs = numInputs + 3;
-                    }
-                    int velocitySensor1DIndex = CheckForAddonVelocitySensor1D(currentBuildSegmentList[i].sourceNode.ID);
-                    if (velocitySensor1DIndex != -1) {
-                        numInputs++;
-                    }
-                    int velocitySensor3DIndex = CheckForAddonVelocitySensor3D(currentBuildSegmentList[i].sourceNode.ID);
-                    if (velocitySensor3DIndex != -1) {
-                        numInputs = numInputs + 3;
-                    }
-                    int altimeterIndex = CheckForAddonAltimeter(currentBuildSegmentList[i].sourceNode.ID);
-                    if (altimeterIndex != -1) {
-                        numInputs++;
-                    }
-
-                    int thrusterEffector1DIndex = CheckForAddonThrusterEffector1D(currentBuildSegmentList[i].sourceNode.ID);
-                    if (thrusterEffector1DIndex != -1) {
-                        numOutputs++;
-                    }
-                    int thrusterEffector3DIndex = CheckForAddonThrusterEffector3D(currentBuildSegmentList[i].sourceNode.ID);
-                    if (thrusterEffector3DIndex != -1) {
-                        numOutputs = numOutputs + 3;
-                    }
-                    int torqueEffector1DIndex = CheckForAddonTorqueEffector1D(currentBuildSegmentList[i].sourceNode.ID);
-                    if (torqueEffector1DIndex != -1) {
-                        numOutputs++;
-                    }
-                    int torqueEffector3DIndex = CheckForAddonTorqueEffector3D(currentBuildSegmentList[i].sourceNode.ID);
-                    if (torqueEffector3DIndex != -1) {
-                        numOutputs = numOutputs + 3;
-                    }
-
-                    int oscillatorInputIndex = CheckForAddonOscillatorInput(currentBuildSegmentList[i].sourceNode.ID);
-                    if (oscillatorInputIndex != -1) {
-                        numInputs++;
-                    }
-                    int valueInputIndex = CheckForAddonValueInput(currentBuildSegmentList[i].sourceNode.ID);
-                    if (valueInputIndex != -1) {
-                        numInputs++;
-                    }
-                    int timerInputIndex = CheckForAddonTimerInput(currentBuildSegmentList[i].sourceNode.ID);
-                    if (timerInputIndex != -1) {
-                        numInputs++;
-                    }
+                int contactSensorIndex = CheckForAddonContactSensor(currentBuildSegmentList[i].sourceNode.ID);
+                if (contactSensorIndex != -1) {
+                    numInputs++;
                 }
-                else {  // if NOT root segment, can consider parent-related stuff:
-                    
+                int raycastSensorIndex = CheckForAddonRaycastSensor(currentBuildSegmentList[i].sourceNode.ID);
+                if (raycastSensorIndex != -1) {
+                    numInputs++;
+                }
+                int compassSensor1DIndex = CheckForAddonCompassSensor1D(currentBuildSegmentList[i].sourceNode.ID);
+                if (compassSensor1DIndex != -1) {
+                    numInputs++;
+                }
+                int compassSensor3DIndex = CheckForAddonCompassSensor3D(currentBuildSegmentList[i].sourceNode.ID);
+                if (compassSensor3DIndex != -1) {
+                    numInputs = numInputs + 3;
+                }
+                int positionSensor1DIndex = CheckForAddonPositionSensor1D(currentBuildSegmentList[i].sourceNode.ID);
+                if (positionSensor1DIndex != -1) {
+                    numInputs++;
+                }
+                int positionSensor3DIndex = CheckForAddonPositionSensor3D(currentBuildSegmentList[i].sourceNode.ID);
+                if (positionSensor3DIndex != -1) {
+                    numInputs = numInputs + 3;
+                }
+                int rotationSensor1DIndex = CheckForAddonRotationSensor1D(currentBuildSegmentList[i].sourceNode.ID);
+                if (rotationSensor1DIndex != -1) {
+                    numInputs++;
+                }
+                int rotationSensor3DIndex = CheckForAddonRotationSensor3D(currentBuildSegmentList[i].sourceNode.ID);
+                if (rotationSensor3DIndex != -1) {
+                    numInputs = numInputs + 3;
+                }
+                int velocitySensor1DIndex = CheckForAddonVelocitySensor1D(currentBuildSegmentList[i].sourceNode.ID);
+                if (velocitySensor1DIndex != -1) {
+                    numInputs++;
+                }
+                int velocitySensor3DIndex = CheckForAddonVelocitySensor3D(currentBuildSegmentList[i].sourceNode.ID);
+                if (velocitySensor3DIndex != -1) {
+                    numInputs = numInputs + 3;
+                }
+                int altimeterIndex = CheckForAddonAltimeter(currentBuildSegmentList[i].sourceNode.ID);
+                if (altimeterIndex != -1) {
+                    numInputs++;
+                }
+                int earBasicIndex = CheckForAddonEarBasic(currentBuildSegmentList[i].sourceNode.ID);
+                if (earBasicIndex != -1) {
+                    numInputs++;
+                }
+                int gravitySensorIndex = CheckForAddonGravitySensor(currentBuildSegmentList[i].sourceNode.ID);
+                if (gravitySensorIndex != -1) {
+                    numInputs++;
+                }
+
+                int thrusterEffector1DIndex = CheckForAddonThrusterEffector1D(currentBuildSegmentList[i].sourceNode.ID);
+                if (thrusterEffector1DIndex != -1) {
+                    numOutputs++;
+                }
+                int thrusterEffector3DIndex = CheckForAddonThrusterEffector3D(currentBuildSegmentList[i].sourceNode.ID);
+                if (thrusterEffector3DIndex != -1) {
+                    numOutputs = numOutputs + 3;
+                }
+                int torqueEffector1DIndex = CheckForAddonTorqueEffector1D(currentBuildSegmentList[i].sourceNode.ID);
+                if (torqueEffector1DIndex != -1) {
+                    numOutputs++;
+                }
+                int torqueEffector3DIndex = CheckForAddonTorqueEffector3D(currentBuildSegmentList[i].sourceNode.ID);
+                if (torqueEffector3DIndex != -1) {
+                    numOutputs = numOutputs + 3;
+                }
+                
+                int noiseMakerBasicIndex = CheckForAddonNoiseMakerBasic(currentBuildSegmentList[i].sourceNode.ID);
+                if (noiseMakerBasicIndex != -1) {
+                    numOutputs++;
+                }
+                int stickyIndex = CheckForAddonSticky(currentBuildSegmentList[i].sourceNode.ID);
+                if (stickyIndex != -1) {
+                    numOutputs++;
+                }
+                int weaponBasicIndex = CheckForAddonWeaponBasic(currentBuildSegmentList[i].sourceNode.ID);
+                if (weaponBasicIndex != -1) {
+                    numOutputs++;
+                }
+
+                int oscillatorInputIndex = CheckForAddonOscillatorInput(currentBuildSegmentList[i].sourceNode.ID);
+                if (oscillatorInputIndex != -1) {
+                    numInputs++;
+                }
+                int valueInputIndex = CheckForAddonValueInput(currentBuildSegmentList[i].sourceNode.ID);
+                if (valueInputIndex != -1) {
+                    numInputs++;
+                }
+                int timerInputIndex = CheckForAddonTimerInput(currentBuildSegmentList[i].sourceNode.ID);
+                if (timerInputIndex != -1) {
+                    numInputs++;
+                }
+
+                int mouthBasicIndex = CheckForAddonMouthBasic(currentBuildSegmentList[i].sourceNode.ID);
+                if (mouthBasicIndex != -1) {
+                    numInputs++;
+                    numOutputs++;
+                }
+
+                if (currentBuildSegmentList[i].sourceNode.ID != 0) {  // is NOT ROOT segment  -- Look into doing Root build BEFORE for loop to avoid the need to do this check                                                                      
                     int jointAngleSensorIndex = CheckForAddonJointAngleSensor(currentBuildSegmentList[i].sourceNode.ID);
                     if(jointAngleSensorIndex != -1) {
                         if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeX) {
@@ -263,54 +300,9 @@ public class CritterGenome {
                             numInputs++;
                         }
                         else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.DualXY) {
-                            numInputs = numInputs + 2;
+                            numInputs = numInputs + 3;
                         }
-                    }
-                    // DOESN'T currently handle multiple addons of same type on one segment!!!!!!!
-                    int contactSensorIndex = CheckForAddonContactSensor(currentBuildSegmentList[i].sourceNode.ID);
-                    if (contactSensorIndex != -1) {
-                        numInputs++;
-                    }
-                    int raycastSensorIndex = CheckForAddonRaycastSensor(currentBuildSegmentList[i].sourceNode.ID);
-                    if (raycastSensorIndex != -1) {
-                        numInputs++;
-                    }
-                    int compassSensor1DIndex = CheckForAddonCompassSensor1D(currentBuildSegmentList[i].sourceNode.ID);
-                    if(compassSensor1DIndex != -1) {
-                        numInputs++;
-                    }
-                    int compassSensor3DIndex = CheckForAddonCompassSensor3D(currentBuildSegmentList[i].sourceNode.ID);
-                    if (compassSensor3DIndex != -1) {
-                        numInputs = numInputs + 3;
-                    }
-                    int positionSensor1DIndex = CheckForAddonPositionSensor1D(currentBuildSegmentList[i].sourceNode.ID);
-                    if (positionSensor1DIndex != -1) {
-                        numInputs++;
-                    }
-                    int positionSensor3DIndex = CheckForAddonPositionSensor3D(currentBuildSegmentList[i].sourceNode.ID);
-                    if (positionSensor3DIndex != -1) {
-                        numInputs = numInputs + 3;
-                    }
-                    int rotationSensor1DIndex = CheckForAddonRotationSensor1D(currentBuildSegmentList[i].sourceNode.ID);
-                    if (rotationSensor1DIndex != -1) {
-                        numInputs++;
-                    }
-                    int rotationSensor3DIndex = CheckForAddonRotationSensor3D(currentBuildSegmentList[i].sourceNode.ID);
-                    if (rotationSensor3DIndex != -1) {
-                        numInputs = numInputs + 3;
-                    }
-                    int velocitySensor1DIndex = CheckForAddonVelocitySensor1D(currentBuildSegmentList[i].sourceNode.ID);
-                    if (velocitySensor1DIndex != -1) {
-                        numInputs++;
-                    }
-                    int velocitySensor3DIndex = CheckForAddonVelocitySensor3D(currentBuildSegmentList[i].sourceNode.ID);
-                    if (velocitySensor3DIndex != -1) {
-                        numInputs = numInputs + 3;
-                    }
-                    int altimeterIndex = CheckForAddonAltimeter(currentBuildSegmentList[i].sourceNode.ID);
-                    if (altimeterIndex != -1) {
-                        numInputs++;
-                    }
+                    }                    
 
                     int jointMotorIndex = CheckForAddonJointMotor(currentBuildSegmentList[i].sourceNode.ID);
                     if (jointMotorIndex != -1) { // if there is a jointMotor definition on this sourceNode
@@ -326,38 +318,7 @@ public class CritterGenome {
                         else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.DualXY) {
                             numOutputs = numOutputs + 2;
                         }
-                    }
-                    int thrusterEffector1DIndex = CheckForAddonThrusterEffector1D(currentBuildSegmentList[i].sourceNode.ID);
-                    if (thrusterEffector1DIndex != -1) {
-                        numOutputs++;
-                    }
-                    int thrusterEffector3DIndex = CheckForAddonThrusterEffector3D(currentBuildSegmentList[i].sourceNode.ID);
-                    if (thrusterEffector3DIndex != -1) {
-                        numOutputs = numOutputs + 3;
-                    }
-                    int torqueEffector1DIndex = CheckForAddonTorqueEffector1D(currentBuildSegmentList[i].sourceNode.ID);
-                    if (torqueEffector1DIndex != -1) {
-                        numOutputs++;
-                    }
-                    int torqueEffector3DIndex = CheckForAddonTorqueEffector3D(currentBuildSegmentList[i].sourceNode.ID);
-                    if (torqueEffector3DIndex != -1) {
-                        numOutputs = numOutputs + 3;
-                    }
-
-                    int oscillatorInputIndex = CheckForAddonOscillatorInput(currentBuildSegmentList[i].sourceNode.ID);
-                    if (oscillatorInputIndex != -1) {
-                        numInputs++;
-                    }
-                    int valueInputIndex = CheckForAddonValueInput(currentBuildSegmentList[i].sourceNode.ID);
-                    if (valueInputIndex != -1) {
-                        numInputs++;
-                    }
-                    int timerInputIndex = CheckForAddonTimerInput(currentBuildSegmentList[i].sourceNode.ID);
-                    if (timerInputIndex != -1) {
-                        numInputs++;
-                    }
-                    // ================================================================================ end of addons
-
+                    }                    
 
                     // Check for if the segment currently being built is a Mirror COPY:
                     if (currentBuildSegmentList[i].isMirror) {
@@ -605,6 +566,24 @@ public class CritterGenome {
         }
         return addonIndex;
     }
+    public int CheckForAddonEarBasic(int nodeID) {
+        int addonIndex = -1;
+        for (int earBasicIndex = 0; earBasicIndex < addonEarBasicList.Count; earBasicIndex++) {
+            if (addonEarBasicList[earBasicIndex].critterNodeID == nodeID) {
+                addonIndex = earBasicIndex;
+            }
+        }
+        return addonIndex;
+    }
+    public int CheckForAddonGravitySensor(int nodeID) {
+        int addonIndex = -1;
+        for (int gravitySensorIndex = 0; gravitySensorIndex < addonGravitySensorList.Count; gravitySensorIndex++) {
+            if (addonGravitySensorList[gravitySensorIndex].critterNodeID == nodeID) {
+                addonIndex = gravitySensorIndex;
+            }
+        }
+        return addonIndex;
+    }
     public int CheckForAddonJointMotor(int nodeID) {
         int addonIndex = -1;  // -1 means this node does not contain a jointMotor
         // Joint Motors:
@@ -650,6 +629,42 @@ public class CritterGenome {
         for (int torqueEffector3DIndex = 0; torqueEffector3DIndex < addonTorqueEffector3DList.Count; torqueEffector3DIndex++) {
             if (addonTorqueEffector3DList[torqueEffector3DIndex].critterNodeID == nodeID) {
                 addonIndex = torqueEffector3DIndex;
+            }
+        }
+        return addonIndex;
+    }
+    public int CheckForAddonMouthBasic(int nodeID) {
+        int addonIndex = -1;
+        for (int mouthBasicIndex = 0; mouthBasicIndex < addonMouthBasicList.Count; mouthBasicIndex++) {
+            if (addonMouthBasicList[mouthBasicIndex].critterNodeID == nodeID) {
+                addonIndex = mouthBasicIndex;
+            }
+        }
+        return addonIndex;
+    }
+    public int CheckForAddonNoiseMakerBasic(int nodeID) {
+        int addonIndex = -1;
+        for (int noiseMakerBasicIndex = 0; noiseMakerBasicIndex < addonNoiseMakerBasicList.Count; noiseMakerBasicIndex++) {
+            if (addonNoiseMakerBasicList[noiseMakerBasicIndex].critterNodeID == nodeID) {
+                addonIndex = noiseMakerBasicIndex;
+            }
+        }
+        return addonIndex;
+    }
+    public int CheckForAddonSticky(int nodeID) {
+        int addonIndex = -1;
+        for (int stickyIndex = 0; stickyIndex < addonStickyList.Count; stickyIndex++) {
+            if (addonStickyList[stickyIndex].critterNodeID == nodeID) {
+                addonIndex = stickyIndex;
+            }
+        }
+        return addonIndex;
+    }
+    public int CheckForAddonWeaponBasic(int nodeID) {
+        int addonIndex = -1;
+        for (int weaponBasicIndex = 0; weaponBasicIndex < addonWeaponBasicList.Count; weaponBasicIndex++) {
+            if (addonWeaponBasicList[weaponBasicIndex].critterNodeID == nodeID) {
+                addonIndex = weaponBasicIndex;
             }
         }
         return addonIndex;

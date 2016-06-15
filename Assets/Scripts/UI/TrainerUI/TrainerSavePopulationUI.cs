@@ -123,6 +123,7 @@ public class TrainerSavePopulationUI : MonoBehaviour {
 
                 // Create wrapper to hold all save info:
                 TrainingSave trainingSave = new TrainingSave();
+                populationToSave.nextAvailableGeneInno = GenomeNEAT.nextAvailableInnovationNumber;
                 trainingSave.savedPopulation = populationToSave;
                 trainingSave.beginGeneration = populationToSave.trainingGenerations;
                 trainingSave.endGeneration = trainingSave.beginGeneration + trainerModuleScript.gameController.masterTrainer.PlayingCurGeneration - 1; // Check if -1 is needed

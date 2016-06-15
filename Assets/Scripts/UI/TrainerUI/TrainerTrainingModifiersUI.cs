@@ -87,7 +87,7 @@ public class TrainerTrainingModifiersUI : MonoBehaviour {
                 modifierDisplayIndex++;
                 itemDisplay.trainingModifierType = activeTrainingModifiersList[i].modifierType;
                 itemDisplay.textHeader.text = itemDisplay.trainingModifierType.ToString();
-                itemDisplay.textInfo.text = "Start: " + activeTrainingModifiersList[i].startGen.ToString() + ", Duration: " + activeTrainingModifiersList[i].duration.ToString();
+                itemDisplay.textInfo.text = "Start: " + activeTrainingModifiersList[i].startGen.ToString() + ", Duration: " + activeTrainingModifiersList[i].duration.ToString() + ", " + activeTrainingModifiersList[i].liveForever.ToString();
                 itemDisplayGO.transform.SetParent(panelActiveModifierList);
                 /*itemDisplay.panelAddonsList = this;
                 itemDisplay.index = addonDisplayIndex;
@@ -212,6 +212,7 @@ public class TrainerTrainingModifiersUI : MonoBehaviour {
             case TrainingModifier.TrainingModifierType.MutationBlast:
                 TrainingModifierMutationBlastUI mutationBlastSettings = currentModifierPrefabGO.GetComponent<TrainingModifierMutationBlastUI>();
                 newModifier.duration = (int)mutationBlastSettings.sliderDuration.value;
+                newModifier.minMultiplier = mutationBlastSettings.sliderMinMultiplier.value;
                 newModifier.liveForever = mutationBlastSettings.toggleLiveForever.isOn;
                 break;
 

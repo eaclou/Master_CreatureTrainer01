@@ -38,6 +38,7 @@ public class Trial {
 		//miniGameManager.gameType = MiniGameManager.MiniGameType.None;
 		//masterMiniGame.Shout ();  // DEBUG METHOD
 		numberOfPlays = 1;
+        minEvaluationTimeSteps = 30;
 		maxEvaluationTimeSteps = 30;
 		power = 1f;
 		weight = 1f;

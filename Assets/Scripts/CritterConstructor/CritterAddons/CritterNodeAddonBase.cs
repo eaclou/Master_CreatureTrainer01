@@ -19,13 +19,19 @@ public class CritterNodeAddonBase {
         RotationSensor3D,     //
         VelocitySensor1D,     //
         VelocitySensor3D,     //
-        Altimeter,           // Sensors ^ ^ ^
+        Altimeter,           
+        EarBasic,
+        Gravity,             // Sensors ^ ^ ^
 
         JointMotor,          // Effectors v v v
         ThrusterEffector1D,  //
         ThrusterEffector3D,  //
         TorqueEffector1D,    //
-        TorqueEffector3D,    // Effectors ^ ^ ^
+        TorqueEffector3D,    
+        MouthBasic,
+        NoiseMakerBasic,
+        Sticky,
+        WeaponBasic,         // Effectors ^ ^ ^
 
         OscillatorInput,     // Inputs v v v
         ValueInput,          //

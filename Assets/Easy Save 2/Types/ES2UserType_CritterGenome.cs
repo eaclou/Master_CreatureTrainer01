@@ -10,13 +10,13 @@ public class ES2UserType_CritterGenome : ES2Type
 	{
 		CritterGenome data = (CritterGenome)obj;
         // Add your writer.Write calls here.
-        writer.Write(1); // Version 0 is current version number
+        writer.Write(0); // Version 0 is current version number
         // Make sure to edit Read() function to properly handle version control!
         // VERSION 0:
         writer.Write(data.CritterNodeList);
 
         writer.Write(data.addonPhysicalAttributesList);
-        
+                
         writer.Write(data.addonJointAngleSensorList);
         writer.Write(data.addonContactSensorList);
         writer.Write(data.addonRaycastSensorList);
@@ -29,12 +29,18 @@ public class ES2UserType_CritterGenome : ES2Type
         writer.Write(data.addonVelocitySensor1DList);
         writer.Write(data.addonVelocitySensor3DList);
         writer.Write(data.addonAltimeterList);
+        writer.Write(data.addonEarBasicList);
+        writer.Write(data.addonGravitySensorList);
 
         writer.Write(data.addonJointMotorList);
         writer.Write(data.addonThrusterEffector1DList);
         writer.Write(data.addonThrusterEffector3DList);
         writer.Write(data.addonTorqueEffector1DList);
         writer.Write(data.addonTorqueEffector3DList);
+        writer.Write(data.addonMouthBasicList);
+        writer.Write(data.addonNoiseMakerBasicList);
+        writer.Write(data.addonStickyList);
+        writer.Write(data.addonWeaponBasicList);
 
         writer.Write(data.addonOscillatorInputList);
         writer.Write(data.addonValueInputList);
@@ -73,12 +79,18 @@ public class ES2UserType_CritterGenome : ES2Type
             data.addonVelocitySensor1DList = reader.ReadList<AddonVelocitySensor1D>();
             data.addonVelocitySensor3DList = reader.ReadList<AddonVelocitySensor3D>();
             data.addonAltimeterList = reader.ReadList<AddonAltimeter>();
+            data.addonEarBasicList = reader.ReadList<AddonEarBasic>();
+            data.addonGravitySensorList = reader.ReadList<AddonGravitySensor>();
 
             data.addonJointMotorList = reader.ReadList<AddonJointMotor>();
             data.addonThrusterEffector1DList = reader.ReadList<AddonThrusterEffector1D>();
             data.addonThrusterEffector3DList = reader.ReadList<AddonThrusterEffector3D>();
             data.addonTorqueEffector1DList = reader.ReadList<AddonTorqueEffector1D>();
             data.addonTorqueEffector3DList = reader.ReadList<AddonTorqueEffector3D>();
+            data.addonMouthBasicList = reader.ReadList<AddonMouthBasic>();
+            data.addonNoiseMakerBasicList = reader.ReadList<AddonNoiseMakerBasic>();
+            data.addonStickyList = reader.ReadList<AddonSticky>();
+            data.addonWeaponBasicList = reader.ReadList<AddonWeaponBasic>();
 
             data.addonOscillatorInputList = reader.ReadList<AddonOscillatorInput>();
             data.addonValueInputList = reader.ReadList<AddonValueInput>();

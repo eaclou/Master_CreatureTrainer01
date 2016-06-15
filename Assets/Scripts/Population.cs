@@ -14,11 +14,14 @@ public class Population {
 	public Agent[] masterAgentArray;
     public List<SpeciesBreedingPool> speciesBreedingPoolList;
     public int nextAvailableSpeciesID = 0;
-
+    public int nextAvailableGeneInno;
+    
     public int trainingGenerations = 0; // ONLY UPDATE ON SAVE
     
 	public bool initRandom = false;
 	public bool isFunctional = false;
+
+    public Dictionary<int, GeneHistoryInfo> geneHistoryDict;
 
 	// Constructor Methods:
 	public Population() {
@@ -27,6 +30,7 @@ public class Population {
             speciesBreedingPoolList = new List<SpeciesBreedingPool>();
         }
         brainSettings = new BrainSettings(); // CHANGE THIS LATER!!!!!
+        
 	}
 
     public int GetNextSpeciesID() {

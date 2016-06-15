@@ -25,17 +25,22 @@ public class Critter : MonoBehaviour {
     public List<SegaddonVelocitySensor1D> segaddonVelocitySensor1DList;
     public List<SegaddonVelocitySensor3D> segaddonVelocitySensor3DList;
     public List<SegaddonAltimeter> segaddonAltimeterList;
-
+    public List<SegaddonEarBasic> segaddonEarBasicList;
+    public List<SegaddonGravitySensor> segaddonGravitySensorList;
+    
     public List<SegaddonJointMotor> segaddonJointMotorList;
     public List<SegaddonThrusterEffector1D> segaddonThrusterEffector1DList;
     public List<SegaddonThrusterEffector3D> segaddonThrusterEffector3DList;
     public List<SegaddonTorqueEffector1D> segaddonTorqueEffector1DList;
     public List<SegaddonTorqueEffector3D> segaddonTorqueEffector3DList;
+    public List<SegaddonMouthBasic> segaddonMouthBasicList;
+    public List<SegaddonNoiseMakerBasic> segaddonNoiseMakerBasicList;
+    public List<SegaddonSticky> segaddonStickyList;
+    public List<SegaddonWeaponBasic> segaddonWeaponBasicList;
 
     public List<SegaddonOscillatorInput> segaddonOscillatorInputList;
     public List<SegaddonValueInput> segaddonValueInputList;
     public List<SegaddonTimerInput> segaddonTimerInputList;
-
 
     public List<PhysicMaterial> segmentPhysicMaterialList;
 
@@ -103,6 +108,12 @@ public class Critter : MonoBehaviour {
         if (segaddonAltimeterList == null) {
             segaddonAltimeterList = new List<SegaddonAltimeter>();
         }
+        if (segaddonEarBasicList == null) {
+            segaddonEarBasicList = new List<SegaddonEarBasic>();
+        }
+        if (segaddonGravitySensorList == null) {
+            segaddonGravitySensorList = new List<SegaddonGravitySensor>();
+        }
 
         if (segaddonJointMotorList == null) {
             segaddonJointMotorList = new List<SegaddonJointMotor>(); 
@@ -118,6 +129,18 @@ public class Critter : MonoBehaviour {
         }
         if (segaddonTorqueEffector3DList == null) {
             segaddonTorqueEffector3DList = new List<SegaddonTorqueEffector3D>();
+        }
+        if (segaddonMouthBasicList == null) {
+            segaddonMouthBasicList = new List<SegaddonMouthBasic>();
+        }
+        if (segaddonNoiseMakerBasicList == null) {
+            segaddonNoiseMakerBasicList = new List<SegaddonNoiseMakerBasic>();
+        }
+        if (segaddonStickyList == null) {
+            segaddonStickyList = new List<SegaddonSticky>();
+        }
+        if (segaddonWeaponBasicList == null) {
+            segaddonWeaponBasicList = new List<SegaddonWeaponBasic>();
         }
 
         if (segaddonOscillatorInputList == null) {
@@ -391,12 +414,18 @@ public class Critter : MonoBehaviour {
         segaddonVelocitySensor1DList.Clear();
         segaddonVelocitySensor3DList.Clear();
         segaddonAltimeterList.Clear();
+        segaddonEarBasicList.Clear();
+        segaddonGravitySensorList.Clear();
 
         segaddonJointMotorList.Clear();
         segaddonThrusterEffector1DList.Clear();
         segaddonThrusterEffector3DList.Clear();
         segaddonTorqueEffector1DList.Clear();
         segaddonTorqueEffector3DList.Clear();
+        segaddonMouthBasicList.Clear();
+        segaddonNoiseMakerBasicList.Clear();
+        segaddonStickyList.Clear();
+        segaddonWeaponBasicList.Clear();
 
         segaddonOscillatorInputList.Clear();
         segaddonValueInputList.Clear();
@@ -633,6 +662,20 @@ public class Critter : MonoBehaviour {
                         newAltimeter.segmentID = newSegment.id;
                         segaddonAltimeterList.Add(newAltimeter);
                     }
+                    // Check for EarBasic:
+                    int earBasicIndex = masterCritterGenome.CheckForAddonEarBasic(currentBuildSegmentList[i].sourceNode.ID);
+                    if (earBasicIndex != -1) {
+                        SegaddonEarBasic newEarBasic = new SegaddonEarBasic(masterCritterGenome.addonEarBasicList[earBasicIndex]);
+                        newEarBasic.segmentID = newSegment.id;
+                        segaddonEarBasicList.Add(newEarBasic);
+                    }
+                    // Check for GravitySensors:
+                    int gravitySensorIndex = masterCritterGenome.CheckForAddonGravitySensor(currentBuildSegmentList[i].sourceNode.ID);
+                    if (gravitySensorIndex != -1) {
+                        SegaddonGravitySensor newGravitySensor = new SegaddonGravitySensor(masterCritterGenome.addonGravitySensorList[gravitySensorIndex]);
+                        newGravitySensor.segmentID = newSegment.id;
+                        segaddonGravitySensorList.Add(newGravitySensor);
+                    }
 
                     // Check for MOTORS:
                     int jointMotorIndex = masterCritterGenome.CheckForAddonJointMotor(currentBuildSegmentList[i].sourceNode.ID);
@@ -669,6 +712,37 @@ public class Critter : MonoBehaviour {
                         SegaddonTorqueEffector3D newTorqueEffector3D = new SegaddonTorqueEffector3D(masterCritterGenome.addonTorqueEffector3DList[torqueEffector3DIndex]);
                         newTorqueEffector3D.segmentID = newSegment.id;
                         segaddonTorqueEffector3DList.Add(newTorqueEffector3D);
+                    }
+                    // Check for MouthBasic:
+                    int mouthBasicIndex = masterCritterGenome.CheckForAddonMouthBasic(currentBuildSegmentList[i].sourceNode.ID);
+                    if (mouthBasicIndex != -1) {
+                        SegaddonMouthBasic newMouthBasic = new SegaddonMouthBasic(masterCritterGenome.addonMouthBasicList[mouthBasicIndex]);
+                        newMouthBasic.segmentID = newSegment.id;
+                        segaddonMouthBasicList.Add(newMouthBasic);
+                        
+                        SegaddonTriggerDetector triggerDetector = newGO.AddComponent<SegaddonTriggerDetector>();
+                        triggerDetector.referencedMouth = newMouthBasic;
+                    }
+                    // Check for NoiseMakerBasic:
+                    int noiseMakerBasicIndex = masterCritterGenome.CheckForAddonNoiseMakerBasic(currentBuildSegmentList[i].sourceNode.ID);
+                    if (noiseMakerBasicIndex != -1) {
+                        SegaddonNoiseMakerBasic newNoiseMakerBasic = new SegaddonNoiseMakerBasic(masterCritterGenome.addonNoiseMakerBasicList[noiseMakerBasicIndex]);
+                        newNoiseMakerBasic.segmentID = newSegment.id;
+                        segaddonNoiseMakerBasicList.Add(newNoiseMakerBasic);
+                    }
+                    // Check for Sticky Effector:
+                    int stickyIndex = masterCritterGenome.CheckForAddonSticky(currentBuildSegmentList[i].sourceNode.ID);
+                    if (stickyIndex != -1) {
+                        SegaddonSticky newSticky = new SegaddonSticky(masterCritterGenome.addonStickyList[stickyIndex]);
+                        newSticky.segmentID = newSegment.id;
+                        segaddonStickyList.Add(newSticky);
+                    }
+                    // Check for WeaponBasic:
+                    int weaponBasicIndex = masterCritterGenome.CheckForAddonWeaponBasic(currentBuildSegmentList[i].sourceNode.ID);
+                    if (weaponBasicIndex != -1) {
+                        SegaddonWeaponBasic newWeaponBasic = new SegaddonWeaponBasic(masterCritterGenome.addonWeaponBasicList[weaponBasicIndex]);
+                        newWeaponBasic.segmentID = newSegment.id;
+                        segaddonWeaponBasicList.Add(newWeaponBasic);
                     }
 
                     // Check for Oscillator Input:
@@ -876,9 +950,12 @@ public class Critter : MonoBehaviour {
             joint.angularZMotion = ConfigurableJointMotion.Locked;
             // Joint Limits:
             SoftJointLimit limitXMin = joint.lowAngularXLimit;
+            limitXMin.bounciness = 0f;
+            //limitXMin.contactDistance = 1f;
             limitXMin.limit = -node.jointLink.jointLimitPrimary;
             joint.lowAngularXLimit = limitXMin;
             SoftJointLimit limitXMax = joint.highAngularXLimit;
+            limitXMax.bounciness = 0f;
             limitXMax.limit = node.jointLink.jointLimitPrimary;
             joint.highAngularXLimit = limitXMax;
         }
@@ -902,6 +979,7 @@ public class Critter : MonoBehaviour {
             joint.angularZMotion = ConfigurableJointMotion.Locked;
             // Joint Limits:
             SoftJointLimit limitY = joint.angularYLimit;
+            limitY.bounciness = 0f;
             limitY.limit = node.jointLink.jointLimitPrimary;
             joint.angularYLimit = limitY;
         }
@@ -925,6 +1003,7 @@ public class Critter : MonoBehaviour {
                 joint.angularZMotion = ConfigurableJointMotion.Limited;
             // Joint Limits:
             SoftJointLimit limitZ = joint.angularZLimit;
+            limitZ.bounciness = 0f;
             limitZ.limit = node.jointLink.jointLimitPrimary;
             joint.angularZLimit = limitZ;
         }
@@ -955,12 +1034,15 @@ public class Critter : MonoBehaviour {
             joint.angularZMotion = ConfigurableJointMotion.Locked;
             // Joint Limits:
             SoftJointLimit limitXMin = joint.lowAngularXLimit;
+            limitXMin.bounciness = 0f;
             limitXMin.limit = -node.jointLink.jointLimitPrimary;
             joint.lowAngularXLimit = limitXMin;
             SoftJointLimit limitXMax = joint.highAngularXLimit;
+            limitXMax.bounciness = 0f;
             limitXMax.limit = node.jointLink.jointLimitPrimary;
             joint.highAngularXLimit = limitXMax;
             SoftJointLimit limitYMax = joint.angularYLimit;
+            limitYMax.bounciness = 0f;
             limitYMax.limit = node.jointLink.jointLimitSecondary;
             joint.angularYLimit = limitYMax;
         }

@@ -89,8 +89,6 @@ public class MiniGameManager {
 			currentOutputArrayIndex++; // increment current brainOutput Index
 		}*/
 
-
-
 		/*string debugMessage = "BrainInput: ";
 		for(int x = 0; x < brainInput.Length; x++) {
 			debugMessage += brainInput[x][0].ToString() + ", ";

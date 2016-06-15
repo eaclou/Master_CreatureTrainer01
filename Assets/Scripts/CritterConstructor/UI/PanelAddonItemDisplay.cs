@@ -379,6 +379,23 @@ public class PanelAddonItemDisplay : MonoBehaviour {
         else if (sourceAddonType == CritterNodeAddonBase.CritterNodeAddonTypes.Altimeter) {
             AddonAltimeter altimeter = sourceGenome.addonAltimeterList[sourceAddonIndex];
         }
+        else if(sourceAddonType == CritterNodeAddonBase.CritterNodeAddonTypes.EarBasic) {
+            AddonEarBasic earBasic = sourceGenome.addonEarBasicList[sourceAddonIndex];
+
+            GameObject floatDisplay1GO = (GameObject)Instantiate(floatDisplayPrefab);
+            PanelAddonDisplayFloat floatDisplay1 = floatDisplay1GO.GetComponent<PanelAddonDisplayFloat>();
+            floatDisplay1.textFloatName.text = "Sensitivity:";
+            floatDisplay1.sliderFloat.minValue = 0.01f;
+            floatDisplay1.sliderFloat.maxValue = 10f;
+            floatDisplay1.linkedFloatValue[0] = earBasic.sensitivity[0];
+            earBasic.sensitivity = floatDisplay1.linkedFloatValue;
+            floatDisplay1.sliderFloat.value = earBasic.sensitivity[0];
+            floatDisplay1.textFloatValue.text = earBasic.sensitivity[0].ToString();
+            floatDisplay1GO.transform.SetParent(this.transform);
+        }
+        else if (sourceAddonType == CritterNodeAddonBase.CritterNodeAddonTypes.Gravity) {
+            AddonGravitySensor gravitySensor = sourceGenome.addonGravitySensorList[sourceAddonIndex];
+        }
 
         else if (sourceAddonType == CritterNodeAddonBase.CritterNodeAddonTypes.JointMotor) {
             AddonJointMotor jointMotor = sourceGenome.addonJointMotorList[sourceAddonIndex];
@@ -498,7 +515,41 @@ public class PanelAddonItemDisplay : MonoBehaviour {
             floatDisplay1.textFloatValue.text = torqueEffector3D.maxTorque[0].ToString();
             floatDisplay1GO.transform.SetParent(this.transform);
         }
-        
+        else if (sourceAddonType == CritterNodeAddonBase.CritterNodeAddonTypes.MouthBasic) {
+            AddonMouthBasic mouthBasic = sourceGenome.addonMouthBasicList[sourceAddonIndex];
+        }
+        else if (sourceAddonType == CritterNodeAddonBase.CritterNodeAddonTypes.NoiseMakerBasic) {
+            AddonNoiseMakerBasic noiseMakerBasic = sourceGenome.addonNoiseMakerBasicList[sourceAddonIndex];
+
+            GameObject floatDisplay1GO = (GameObject)Instantiate(floatDisplayPrefab);
+            PanelAddonDisplayFloat floatDisplay1 = floatDisplay1GO.GetComponent<PanelAddonDisplayFloat>();
+            floatDisplay1.textFloatName.text = "Amplitude:";
+            floatDisplay1.sliderFloat.minValue = 0.1f;
+            floatDisplay1.sliderFloat.maxValue = 10f;
+            floatDisplay1.linkedFloatValue[0] = noiseMakerBasic.amplitude[0];
+            noiseMakerBasic.amplitude = floatDisplay1.linkedFloatValue;
+            floatDisplay1.sliderFloat.value = noiseMakerBasic.amplitude[0];
+            floatDisplay1.textFloatValue.text = noiseMakerBasic.amplitude[0].ToString();
+            floatDisplay1GO.transform.SetParent(this.transform);
+        }
+        else if (sourceAddonType == CritterNodeAddonBase.CritterNodeAddonTypes.Sticky) {
+            AddonSticky sticky = sourceGenome.addonStickyList[sourceAddonIndex];
+        }
+        else if (sourceAddonType == CritterNodeAddonBase.CritterNodeAddonTypes.WeaponBasic) {
+            AddonWeaponBasic weaponBasic = sourceGenome.addonWeaponBasicList[sourceAddonIndex];
+
+            GameObject floatDisplay1GO = (GameObject)Instantiate(floatDisplayPrefab);
+            PanelAddonDisplayFloat floatDisplay1 = floatDisplay1GO.GetComponent<PanelAddonDisplayFloat>();
+            floatDisplay1.textFloatName.text = "Strength:";
+            floatDisplay1.sliderFloat.minValue = 0.1f;
+            floatDisplay1.sliderFloat.maxValue = 10f;
+            floatDisplay1.linkedFloatValue[0] = weaponBasic.strength[0];
+            weaponBasic.strength = floatDisplay1.linkedFloatValue;
+            floatDisplay1.sliderFloat.value = weaponBasic.strength[0];
+            floatDisplay1.textFloatValue.text = weaponBasic.strength[0].ToString();
+            floatDisplay1GO.transform.SetParent(this.transform);
+        }
+
         else if (sourceAddonType == CritterNodeAddonBase.CritterNodeAddonTypes.OscillatorInput) {
             AddonOscillatorInput oscillatorInput = sourceGenome.addonOscillatorInputList[sourceAddonIndex];
             GameObject floatDisplay1GO = (GameObject)Instantiate(floatDisplayPrefab);

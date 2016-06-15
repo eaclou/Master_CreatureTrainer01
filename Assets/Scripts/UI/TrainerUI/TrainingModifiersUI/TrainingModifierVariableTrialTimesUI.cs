@@ -29,7 +29,7 @@ public class TrainingModifierVariableTrialTimesUI : MonoBehaviour {
         textBeginMinTime.text = sliderBeginMinTime.value.ToString();
 
         sliderBeginMaxTime.minValue = 0f;
-        sliderBeginMaxTime.maxValue = 1000f;
+        sliderBeginMaxTime.maxValue = 5000f;
         sliderBeginMaxTime.value = 0f;  // DEFAULT
         textBeginMaxTime.text = sliderBeginMaxTime.value.ToString();
 
@@ -39,7 +39,7 @@ public class TrainingModifierVariableTrialTimesUI : MonoBehaviour {
         textEndMinTime.text = sliderEndMinTime.value.ToString();
 
         sliderEndMaxTime.minValue = 0f;
-        sliderEndMaxTime.maxValue = 1000f;
+        sliderEndMaxTime.maxValue = 5000f;
         sliderEndMaxTime.value = 0f;  // DEFAULT
         textEndMaxTime.text = sliderEndMaxTime.value.ToString();
 

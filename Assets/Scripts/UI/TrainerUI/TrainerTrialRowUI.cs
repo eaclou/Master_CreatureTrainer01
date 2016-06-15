@@ -91,6 +91,7 @@ public class TrainerTrialRowUI : MonoBehaviour {
 	
 
 		currentPlayer.masterTrialsList[trialIndex].maxEvaluationTimeSteps = pendingEvalTime;
+        currentPlayer.masterTrialsList[trialIndex].minEvaluationTimeSteps = pendingEvalTime;
 		currentPlayer.masterTrialsList[trialIndex].numberOfPlays = pendingNumPlays;
 		currentPlayer.masterTrialsList[trialIndex].power = pendingPower;
 		currentPlayer.masterTrialsList[trialIndex].weight = pendingWeight;

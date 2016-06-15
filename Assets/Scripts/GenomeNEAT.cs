@@ -7,7 +7,7 @@ public class GenomeNEAT {
     public List<GeneNodeNEAT> nodeNEATList;
     public List<GeneLinkNEAT> linkNEATList;
 
-    private static int nextAvailableInnovationNumber = 0;
+    public static int nextAvailableInnovationNumber = 0;
     
 	public GenomeNEAT() {
         // Constructor
