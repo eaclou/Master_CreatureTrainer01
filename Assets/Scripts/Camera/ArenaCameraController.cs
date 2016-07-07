@@ -7,11 +7,11 @@ public class ArenaCameraController : MonoBehaviour {
 	public Vector3 focusPosition = new Vector3(0f, 0f, 0f);
 	public Vector3 targetCameraPosition = new Vector3(0f, 0f, -2.7f);
 	public Vector3 targetCameraDirection;
-	public float targetCameraDistance = 3f;
-	public float zoomRate = 4f;
+	public float targetCameraDistance = 5f;
+	public float zoomRate = 8f;
 	private float minCameraDistance = 0.1f;
 	private float maxCameraDistance = 20f;
-	public float cameraSpeed = 0.1f;
+	public float cameraSpeed = 0.5f;
 	private Vector3 cameraVelocity = new Vector3(0f, 0f, 0f);
 
 	private Vector3 aimDirection; 

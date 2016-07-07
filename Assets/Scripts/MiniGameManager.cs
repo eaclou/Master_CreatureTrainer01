@@ -61,7 +61,7 @@ public class MiniGameManager {
 		int currentInputArrayIndex = 0;
 		int currentOutputArrayIndex = 0;
 		for(int i = 0; i < numInputChannels; i++) {
-            //Debug.Log("i: " + i.ToString() + ", numInputChannels: " + numInputChannels.ToString() + ", inputChannelsListCount: " + miniGameInstance.inputChannelsList.Count.ToString());
+            //Debug.Log("SetInputOutputArrays... i: " + i.ToString() + ", numInputChannels: " + numInputChannels.ToString() + ", inputChannelsListCount: " + miniGameInstance.inputChannelsList.Count.ToString() + ", " + miniGameInstance.inputChannelsList[i].ToString() + ", " + miniGameInstance.inputChannelsList[i].channelName.ToString());
 			if(miniGameInstance.inputChannelsList[i].on) {
 				//brainInput[currentInputArrayIndex] = miniGameInstance.inputChannelsList[i].channelValue; // send reference of channel value to current brainInputArray Index
                 brainInput.Add(miniGameInstance.inputChannelsList[i].channelValue);

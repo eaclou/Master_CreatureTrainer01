@@ -28,12 +28,12 @@ public class ES2UserType_CrossoverManager : ES2Type
         writer.Write(data.largeSpeciesPenalty);
         writer.Write(data.linkWeightWeight);
         writer.Write(data.masterMutationRate);
-        writer.Write(data.maxBodyMutationFactor);
+        //writer.Write(data.maxBodyMutationFactor);
         writer.Write(data.maximumWeightMagnitude);
         writer.Write(data.mutationActivationFunctionChance);
         writer.Write(data.mutationAddLinkChance);
         writer.Write(data.mutationAddNodeChance);
-        writer.Write(data.mutationBodyChance);
+        //writer.Write(data.mutationBodyChance);
         writer.Write(data.mutationDriftScale);
         writer.Write(data.mutationRemoveLinkChance);
         writer.Write(data.mutationRemoveNodeChance);
@@ -43,6 +43,19 @@ public class ES2UserType_CrossoverManager : ES2Type
         writer.Write(data.normalizeExcess);
         writer.Write(data.normalizeLinkWeight);
         writer.Write(data.speciesSimilarityThreshold);
+        //Body:
+        writer.Write(data.maxAttributeValueChange);
+        writer.Write(data.newSegmentChance);
+        writer.Write(data.removeSegmentChance);
+        writer.Write(data.segmentProportionChance);
+        writer.Write(data.segmentAttachSettingsChance);
+        writer.Write(data.jointSettingsChance);
+        writer.Write(data.newAddonChance);
+        writer.Write(data.removeAddonChance);
+        writer.Write(data.addonSettingsChance);
+        writer.Write(data.recursionChance);
+        writer.Write(data.symmetryChance);
+
         writer.Write(data.survivalByRaffle);
         writer.Write(data.survivalByRank);
         writer.Write(data.survivalRate);
@@ -83,12 +96,12 @@ public class ES2UserType_CrossoverManager : ES2Type
             data.largeSpeciesPenalty = reader.Read<float>();
             data.linkWeightWeight = reader.Read<float>();
             data.masterMutationRate = reader.Read<float>();
-            data.maxBodyMutationFactor = reader.Read<float>();
+            //data.maxBodyMutationFactor = reader.Read<float>();
             data.maximumWeightMagnitude = reader.Read<float>();
             data.mutationActivationFunctionChance = reader.Read<float>();
             data.mutationAddLinkChance = reader.Read<float>();
             data.mutationAddNodeChance = reader.Read<float>();
-            data.mutationBodyChance = reader.Read<float>();
+            //data.mutationBodyChance = reader.Read<float>();
             data.mutationDriftScale = reader.Read<float>();
             data.mutationRemoveLinkChance = reader.Read<float>();
             data.mutationRemoveNodeChance = reader.Read<float>();
@@ -98,6 +111,19 @@ public class ES2UserType_CrossoverManager : ES2Type
             data.normalizeExcess = reader.Read<float>();
             data.normalizeLinkWeight = reader.Read<float>();
             data.speciesSimilarityThreshold = reader.Read<float>();
+            // body:
+            data.maxAttributeValueChange = reader.Read<float>();
+            data.newSegmentChance = reader.Read<float>();
+            data.removeSegmentChance = reader.Read<float>();
+            data.segmentProportionChance = reader.Read<float>();
+            data.segmentAttachSettingsChance = reader.Read<float>();
+            data.jointSettingsChance = reader.Read<float>();
+            data.newAddonChance = reader.Read<float>();
+            data.removeAddonChance = reader.Read<float>();
+            data.addonSettingsChance = reader.Read<float>();
+            data.recursionChance = reader.Read<float>();
+            data.symmetryChance = reader.Read<float>();
+
             data.survivalByRaffle = reader.Read<bool>();
             data.survivalByRank = reader.Read<bool>();
             data.survivalRate = reader.Read<float>();

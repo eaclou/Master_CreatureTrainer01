@@ -21,6 +21,7 @@ public class ES2UserType_TrainingSave : ES2Type
         writer.Write(data.savedPopulation);
         writer.Write(data.savedTrialDataBegin);
         writer.Write(data.savedTrialDataEnd);
+        writer.Write(data.savedTrainingModifierList);
         // VERSION 1:
 
     }
@@ -49,6 +50,7 @@ public class ES2UserType_TrainingSave : ES2Type
             data.savedPopulation = reader.Read<Population>();
             data.savedTrialDataBegin = reader.Read<TrialData>();
             data.savedTrialDataEnd = reader.Read<TrialData>();
+            data.savedTrainingModifierList = reader.ReadList<TrainingModifier>();
             if (fileVersion >= 1) {
                 // new attributes
             }

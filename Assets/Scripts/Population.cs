@@ -19,6 +19,8 @@ public class Population {
     public int trainingGenerations = 0; // ONLY UPDATE ON SAVE
     
 	public bool initRandom = false;
+    public int initNumHiddenNodes = 0;
+    public float initConnectedness = 0f;
 	public bool isFunctional = false;
 
     public Dictionary<int, GeneHistoryInfo> geneHistoryDict;
@@ -38,7 +40,7 @@ public class Population {
         return nextAvailableSpeciesID;
     }
     
-	public void InitializeMasterAgentArray(CritterGenome bodyGenome) {  // Creates a new population for the FIRST TIME!!!
+	public void InitializeMasterAgentArray(CritterGenome bodyGenome, bool useSpeciation) {  // Creates a new population for the FIRST TIME!!!
 		DebugBot.DebugFunctionCall("Population; InitializeMasterAgentArray(CritterGenome); ", debugFunctionCalls);
 		templateGenome = bodyGenome;
         
@@ -57,19 +59,33 @@ public class Population {
 			numAgents++;
 		}
 
-        InitializeSpeciesPoolsAndAgents(); // assigns agents to a species and populates the breeding pools    
+        InitializeSpeciesPoolsAndAgents(useSpeciation); // assigns agents to a species and populates the breeding pools    
     }
-    public void InitializeSpeciesPoolsAndAgents() {
-        for (int i = 0; i < populationMaxSize; i++) {
-            SortAgentIntoBreedingPool(masterAgentArray[i]);
+    public void InitializeSpeciesPoolsAndAgents(bool useSpeciation) {
+        if(useSpeciation) {
+            for (int i = 0; i < populationMaxSize; i++) {
+                SortAgentIntoBreedingPool(masterAgentArray[i]);
+            }
+        }
+        else {
+            SpeciesBreedingPool newSpeciesBreedingPool = new SpeciesBreedingPool(masterAgentArray[0].brainGenome, GetNextSpeciesID());
+            speciesBreedingPoolList.Add(newSpeciesBreedingPool);
+            for (int i = 0; i < populationMaxSize; i++) {
+                PlaceAgentInSpeciesZero(masterAgentArray[i]);
+            }
         }
     }
 
+    public void PlaceAgentInSpeciesZero(Agent agent) {
+        speciesBreedingPoolList[0].AddNewAgent(agent);
+    }
+
     public void SortAgentIntoBreedingPool(Agent agent) {
+        
         bool speciesGenomeMatch = false;
-        for(int s = 0; s < speciesBreedingPoolList.Count; s++) {
+        for (int s = 0; s < speciesBreedingPoolList.Count; s++) {
             float geneticDistance = GenomeNEAT.MeasureGeneticDistance(agent.brainGenome, speciesBreedingPoolList[s].templateGenome, 0.425f, 0.425f, 0.15f, 0f, 0f, 1f);
-            
+
             if (geneticDistance < 1f) { //speciesSimilarityThreshold) {  // !!! figure out how/where to place this attribute or get a ref from crossoverManager
                 speciesGenomeMatch = true;
                 //agent.speciesID = speciesBreedingPoolList[s].speciesID; // this is done inside the AddNewAgent method below v v v 
@@ -78,12 +94,12 @@ public class Population {
                 break;
             }
         }
-        if(!speciesGenomeMatch) {
+        if (!speciesGenomeMatch) {
             //Debug.Log("POPULATION SortAgentIntoBreedingPool NO MATCH!!! -- creating new BreedingPool ");
             SpeciesBreedingPool newSpeciesBreedingPool = new SpeciesBreedingPool(agent.brainGenome, GetNextSpeciesID()); // creates new speciesPool modeled on this agent's genome
             newSpeciesBreedingPool.AddNewAgent(agent);  // add this agent to breeding pool
             speciesBreedingPoolList.Add(newSpeciesBreedingPool);  // add new speciesPool to the population's list of all active species
-        }
+        }               
     }
 
     public SpeciesBreedingPool GetBreedingPoolByID(List<SpeciesBreedingPool> poolsList, int id) {
@@ -158,13 +174,15 @@ public class Population {
 		newAgent.brain = new BrainNEAT();        
 		
         GenomeNEAT brainGenome;
-		if(initRandom) {
+        Debug.Log("InitializeAgentBrainAndBody numInputNodes: " + numInputNodes.ToString() + ", NumHiddenNodes: " + initNumHiddenNodes.ToString() + ", numOutputNodes: " + numOutputNodes.ToString() + ", initConnectedness: " + initConnectedness.ToString() + ", initRandom: " + initRandom.ToString());
+        brainGenome = newAgent.brain.InitializeNewBrain(numInputNodes, initNumHiddenNodes, numOutputNodes, initConnectedness, initRandom);
+        /*if(initRandom) {  // OLD
             brainGenome = newAgent.brain.InitializeRandomBrain(numInputNodes, numOutputNodes); // 'builds' the brain and spits out a Genome
 		}
 		else {
             brainGenome = newAgent.brain.InitializeBlankBrain(numInputNodes, numOutputNodes);
-		}
-        
+		}*/
+
         newAgent.brainGenome = brainGenome;
 		newAgent.brain.BuildBrainNetwork();  // constructs the brain from its sourceGenome
         //AssignAgentToSpecies(newAgent);

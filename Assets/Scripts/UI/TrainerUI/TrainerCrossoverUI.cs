@@ -12,10 +12,12 @@ public class TrainerCrossoverUI : MonoBehaviour {
     public GameObject panelMutationPanel;
     public GameObject panelCrossoverPanel;
     public GameObject panelSpeciesPanel;
+    public GameObject panelBodyPanel;
 
     public Button buttonMutationTab;
     public Button buttonCrossoverTab;
     public Button buttonSpeciesTab;
+    public Button buttonBodyTab;
 
     // MUTATION PANEL!!!!:
     public Slider sliderMasterMutationRate;  // chance that an existing link will have a mutation
@@ -71,7 +73,32 @@ public class TrainerCrossoverUI : MonoBehaviour {
     public Slider sliderInterspeciesMatingRate;   //  the chance that an individual will be bred with a member of another species rather than its own
     public Text textInterspeciesMatingRate;
 
-	public Slider sliderSurvivalRate;
+    // BODY PANEL!!!!:
+    public Slider sliderMaxAttributeValueChange;  //
+    public Text textMaxAttributeValueChange;
+    public Slider sliderNewSegmentChance;  //
+    public Text textNewSegmentChance;
+    public Slider sliderRemoveSegmentChance;  //
+    public Text textRemoveSegmentChance;
+    public Slider sliderSegmentProportionChance;  //
+    public Text textSegmentProportionChance;
+    public Slider sliderSegmentAttachSettingsChance;  //
+    public Text textSegmentAttachSettingsChance;
+    public Slider sliderJointSettingsChance;  //
+    public Text textJointSettingsChance;
+    public Slider sliderNewAddonChance;  //
+    public Text textNewAddonChance;
+    public Slider sliderRemoveAddonChance;  //
+    public Text textRemoveAddonChance;
+    public Slider sliderAddonSettingsChance;  //
+    public Text textAddonSettingsChance;
+    public Slider sliderRecursionChance;  //
+    public Text textRecursionChance;
+    public Slider sliderSymmetryChance;  //
+    public Text textSymmetryChance;
+
+    // COMMON SETTINGS!:
+    public Slider sliderSurvivalRate;
 	public Text textSurvivalRate;
 	public Toggle toggleSurvivalByRanking;
 	public Toggle toggleSurvivalRandom;
@@ -92,7 +119,6 @@ public class TrainerCrossoverUI : MonoBehaviour {
 	public Image bgImage;
 
 	private Player playerRef;
-
 	public CrossoverManager pendingCrossoverManager;
 
 	// UI Settings:
@@ -101,6 +127,7 @@ public class TrainerCrossoverUI : MonoBehaviour {
     public bool mutationPanelOn = true;
     public bool crossoverPanelOn = false;
     public bool speciesPanelOn = false;
+    public bool bodyPanelOn = false;
 
     public bool valuesChanged = false;
 	public bool applyPressed = false;
@@ -174,11 +201,33 @@ public class TrainerCrossoverUI : MonoBehaviour {
         sliderInterspeciesMatingRate.minValue = 0f; // set up slider bounds
         sliderInterspeciesMatingRate.maxValue = 1f;
 
-		sliderSurvivalRate.minValue = 0f; // set up slider bounds
+        // BODY TAB!!!!
+        sliderMaxAttributeValueChange.minValue = 1f;  // multiplier
+        sliderMaxAttributeValueChange.maxValue = 5f;
+        sliderNewSegmentChance.minValue = 0f;
+        sliderNewSegmentChance.maxValue = 0.2f;
+        sliderRemoveSegmentChance.minValue = 0f;
+        sliderRemoveSegmentChance.maxValue = 0.2f;
+        sliderSegmentProportionChance.minValue = 0f;
+        sliderSegmentProportionChance.maxValue = 0.2f;
+        sliderSegmentAttachSettingsChance.minValue = 0f;
+        sliderSegmentAttachSettingsChance.maxValue = 0.2f;
+        sliderJointSettingsChance.minValue = 0f;
+        sliderJointSettingsChance.maxValue = 0.2f;
+        sliderNewAddonChance.minValue = 0f;
+        sliderNewAddonChance.maxValue = 0.2f;
+        sliderRemoveAddonChance.minValue = 0f;
+        sliderRemoveAddonChance.maxValue = 0.2f;
+        sliderAddonSettingsChance.minValue = 0f;
+        sliderAddonSettingsChance.maxValue = 0.2f;
+        sliderRecursionChance.minValue = 0f;
+        sliderSymmetryChance.maxValue = 0.2f;
+
+        // COMMON!!!!
+        sliderSurvivalRate.minValue = 0f; // set up slider bounds
 		sliderSurvivalRate.maxValue = 1f;
 		sliderBreedingRate.minValue = 0f; // set up slider bounds
 		sliderBreedingRate.maxValue = 1f;
-
         // Need to add the Toggles here ?!?????????????????????????????????????????
 
 		
@@ -221,25 +270,41 @@ public class TrainerCrossoverUI : MonoBehaviour {
                 buttonMutationTab.interactable = false;
                 buttonCrossoverTab.interactable = true;
                 buttonSpeciesTab.interactable = true;
+                buttonBodyTab.interactable = true;
                 panelMutationPanel.SetActive(true);
                 panelCrossoverPanel.SetActive(false);
                 panelSpeciesPanel.SetActive(false);
+                panelBodyPanel.SetActive(false);
             }
             if (crossoverPanelOn) {
                 buttonMutationTab.interactable = true;
                 buttonCrossoverTab.interactable = false;
                 buttonSpeciesTab.interactable = true;
+                buttonBodyTab.interactable = true;
                 panelMutationPanel.SetActive(false);
                 panelCrossoverPanel.SetActive(true);
                 panelSpeciesPanel.SetActive(false);
+                panelBodyPanel.SetActive(false);
             }
             if (speciesPanelOn) {
                 buttonMutationTab.interactable = true;
                 buttonCrossoverTab.interactable = true;
                 buttonSpeciesTab.interactable = false;
+                buttonBodyTab.interactable = true;
                 panelMutationPanel.SetActive(false);
                 panelCrossoverPanel.SetActive(false);
                 panelSpeciesPanel.SetActive(true);
+                panelBodyPanel.SetActive(false);
+            }
+            if (bodyPanelOn) {
+                buttonMutationTab.interactable = true;
+                buttonCrossoverTab.interactable = true;
+                buttonSpeciesTab.interactable = true;
+                buttonBodyTab.interactable = false;
+                panelMutationPanel.SetActive(false);
+                panelCrossoverPanel.SetActive(false);
+                panelSpeciesPanel.SetActive(false);
+                panelBodyPanel.SetActive(true);
             }
         }
 		else {
@@ -326,7 +391,32 @@ public class TrainerCrossoverUI : MonoBehaviour {
         textSpeciesSizePenalty.text = pendingCrossoverManager.largeSpeciesPenalty.ToString();
         sliderInterspeciesMatingRate.value = pendingCrossoverManager.interspeciesBreedingRate;
         textInterspeciesMatingRate.text = pendingCrossoverManager.interspeciesBreedingRate.ToString();
-		
+
+        // BODY TAB!!!!
+        sliderMaxAttributeValueChange.value = pendingCrossoverManager.maxAttributeValueChange;
+        textMaxAttributeValueChange.text = pendingCrossoverManager.maxAttributeValueChange.ToString();
+        sliderNewSegmentChance.value = pendingCrossoverManager.newSegmentChance;
+        textNewSegmentChance.text = pendingCrossoverManager.newSegmentChance.ToString();
+        sliderRemoveSegmentChance.value = pendingCrossoverManager.removeSegmentChance;
+        textRemoveSegmentChance.text = pendingCrossoverManager.removeSegmentChance.ToString();
+        sliderSegmentProportionChance.value = pendingCrossoverManager.segmentProportionChance;
+        textSegmentProportionChance.text = pendingCrossoverManager.segmentProportionChance.ToString();
+        sliderSegmentAttachSettingsChance.value = pendingCrossoverManager.segmentAttachSettingsChance;
+        textSegmentAttachSettingsChance.text = pendingCrossoverManager.segmentAttachSettingsChance.ToString();
+        sliderJointSettingsChance.value = pendingCrossoverManager.jointSettingsChance;
+        textJointSettingsChance.text = pendingCrossoverManager.jointSettingsChance.ToString();
+        sliderNewAddonChance.value = pendingCrossoverManager.newAddonChance;
+        textNewAddonChance.text = pendingCrossoverManager.newAddonChance.ToString();
+        sliderRemoveAddonChance.value = pendingCrossoverManager.removeAddonChance;
+        textRemoveAddonChance.text = pendingCrossoverManager.removeAddonChance.ToString();
+        sliderAddonSettingsChance.value = pendingCrossoverManager.addonSettingsChance;
+        textAddonSettingsChance.text = pendingCrossoverManager.addonSettingsChance.ToString();
+        sliderRecursionChance.value = pendingCrossoverManager.recursionChance;
+        textRecursionChance.text = pendingCrossoverManager.recursionChance.ToString();
+        sliderSymmetryChance.value = pendingCrossoverManager.symmetryChance;
+        textSymmetryChance.text = pendingCrossoverManager.symmetryChance.ToString();
+
+        // COMMON!!!
 		sliderSurvivalRate.value = pendingCrossoverManager.survivalRate; 
 		textSurvivalRate.text = pendingCrossoverManager.survivalRate.ToString(); 
 		sliderBreedingRate.value = pendingCrossoverManager.breedingRate; 
@@ -636,6 +726,142 @@ public class TrainerCrossoverUI : MonoBehaviour {
     }
     #endregion
 
+    #region ui functions BODY TAB
+    // BODY:
+    public void SliderMaxAttributeValueChange(float sliderValue) { // On Slider Value Changed
+        DebugBot.DebugFunctionCall("TCrossoverUI; SliderMaxAttributeValueChange(); ", debugFunctionCalls);
+        pendingCrossoverManager.maxAttributeValueChange = sliderValue;
+        float data = playerRef.masterCupid.maxAttributeValueChange;
+        if (pendingCrossoverManager.maxAttributeValueChange != data) {
+            valuesChanged = true;
+        }
+        else {
+            valuesChanged = false;
+        }
+        UpdateUIWithCurrentData();  // Will update text display of PENDING numPlayers value (NOT the applied value!)
+    }
+    public void SliderNewSegmentChance(float sliderValue) { // On Slider Value Changed
+        DebugBot.DebugFunctionCall("TCrossoverUI; SliderNewSegmentChance(); ", debugFunctionCalls);
+        pendingCrossoverManager.newSegmentChance = sliderValue;
+        float data = playerRef.masterCupid.newSegmentChance;
+        if (pendingCrossoverManager.newSegmentChance != data) {
+            valuesChanged = true;
+        }
+        else {
+            valuesChanged = false;
+        }
+        UpdateUIWithCurrentData();  // Will update text display of PENDING numPlayers value (NOT the applied value!)
+    }
+    public void SliderRemoveSegmentChance(float sliderValue) { // On Slider Value Changed
+        DebugBot.DebugFunctionCall("TCrossoverUI; SliderRemoveSegmentChance(); ", debugFunctionCalls);
+        pendingCrossoverManager.removeSegmentChance = sliderValue;
+        float data = playerRef.masterCupid.removeSegmentChance;
+        if (pendingCrossoverManager.removeSegmentChance != data) {
+            valuesChanged = true;
+        }
+        else {
+            valuesChanged = false;
+        }
+        UpdateUIWithCurrentData();  // Will update text display of PENDING numPlayers value (NOT the applied value!)
+    }
+    public void SliderSegmentProportionChance(float sliderValue) { // On Slider Value Changed
+        DebugBot.DebugFunctionCall("TCrossoverUI; SliderSegmentProportionChance(); ", debugFunctionCalls);
+        pendingCrossoverManager.segmentProportionChance = sliderValue;
+        float data = playerRef.masterCupid.segmentProportionChance;
+        if (pendingCrossoverManager.segmentProportionChance != data) {
+            valuesChanged = true;
+        }
+        else {
+            valuesChanged = false;
+        }
+        UpdateUIWithCurrentData();  // Will update text display of PENDING numPlayers value (NOT the applied value!)
+    }
+    public void SliderSegmentAttachSettingsChance(float sliderValue) { // On Slider Value Changed
+        DebugBot.DebugFunctionCall("TCrossoverUI; SliderSegmentAttachSettingsChance(); ", debugFunctionCalls);
+        pendingCrossoverManager.segmentAttachSettingsChance = sliderValue;
+        float data = playerRef.masterCupid.segmentAttachSettingsChance;
+        if (pendingCrossoverManager.segmentAttachSettingsChance != data) {
+            valuesChanged = true;
+        }
+        else {
+            valuesChanged = false;
+        }
+        UpdateUIWithCurrentData();  // Will update text display of PENDING numPlayers value (NOT the applied value!)
+    }
+    public void SliderJointSettingsChance(float sliderValue) { // On Slider Value Changed
+        DebugBot.DebugFunctionCall("TCrossoverUI; SliderJointSettingsChance(); ", debugFunctionCalls);
+        pendingCrossoverManager.jointSettingsChance = sliderValue;
+        float data = playerRef.masterCupid.jointSettingsChance;
+        if (pendingCrossoverManager.jointSettingsChance != data) {
+            valuesChanged = true;
+        }
+        else {
+            valuesChanged = false;
+        }
+        UpdateUIWithCurrentData();  // Will update text display of PENDING numPlayers value (NOT the applied value!)
+    }
+    public void SliderNewAddonChance(float sliderValue) { // On Slider Value Changed
+        DebugBot.DebugFunctionCall("TCrossoverUI; SliderNewAddonChance(); ", debugFunctionCalls);
+        pendingCrossoverManager.newAddonChance = sliderValue;
+        float data = playerRef.masterCupid.newAddonChance;
+        if (pendingCrossoverManager.newAddonChance != data) {
+            valuesChanged = true;
+        }
+        else {
+            valuesChanged = false;
+        }
+        UpdateUIWithCurrentData();  // Will update text display of PENDING numPlayers value (NOT the applied value!)
+    }
+    public void SliderRemoveAddonChance(float sliderValue) { // On Slider Value Changed
+        DebugBot.DebugFunctionCall("TCrossoverUI; SliderRemoveAddonChance(); ", debugFunctionCalls);
+        pendingCrossoverManager.removeAddonChance = sliderValue;
+        float data = playerRef.masterCupid.removeAddonChance;
+        if (pendingCrossoverManager.removeAddonChance != data) {
+            valuesChanged = true;
+        }
+        else {
+            valuesChanged = false;
+        }
+        UpdateUIWithCurrentData();  // Will update text display of PENDING numPlayers value (NOT the applied value!)
+    }
+    public void SliderAddonSettingsChance(float sliderValue) { // On Slider Value Changed
+        DebugBot.DebugFunctionCall("TCrossoverUI; SliderAddonSettingsChance(); ", debugFunctionCalls);
+        pendingCrossoverManager.addonSettingsChance = sliderValue;
+        float data = playerRef.masterCupid.addonSettingsChance;
+        if (pendingCrossoverManager.addonSettingsChance != data) {
+            valuesChanged = true;
+        }
+        else {
+            valuesChanged = false;
+        }
+        UpdateUIWithCurrentData();  // Will update text display of PENDING numPlayers value (NOT the applied value!)
+    }
+    public void SliderRecursionChance(float sliderValue) { // On Slider Value Changed
+        DebugBot.DebugFunctionCall("TCrossoverUI; SliderRecursionChance(); ", debugFunctionCalls);
+        pendingCrossoverManager.recursionChance = sliderValue;
+        float data = playerRef.masterCupid.recursionChance;
+        if (pendingCrossoverManager.recursionChance != data) {
+            valuesChanged = true;
+        }
+        else {
+            valuesChanged = false;
+        }
+        UpdateUIWithCurrentData();  // Will update text display of PENDING numPlayers value (NOT the applied value!)
+    }
+    public void SliderSymmetryChance(float sliderValue) { // On Slider Value Changed
+        DebugBot.DebugFunctionCall("TCrossoverUI; SliderSymmetryChance(); ", debugFunctionCalls);
+        pendingCrossoverManager.symmetryChance = sliderValue;
+        float data = playerRef.masterCupid.symmetryChance;
+        if (pendingCrossoverManager.symmetryChance != data) {
+            valuesChanged = true;
+        }
+        else {
+            valuesChanged = false;
+        }
+        UpdateUIWithCurrentData();  // Will update text display of PENDING numPlayers value (NOT the applied value!)
+    }
+    #endregion
+
     public void SliderSurvivalRate(float sliderValue) { // On Slider Value Changed
 		DebugBot.DebugFunctionCall("TCrossoverUI; SliderSurvivalRate(); ", debugFunctionCalls);
 		pendingCrossoverManager.survivalRate = sliderValue;
@@ -648,7 +874,6 @@ public class TrainerCrossoverUI : MonoBehaviour {
 		}
 		UpdateUIWithCurrentData();  // Will update text display of PENDING numPlayers value (NOT the applied value!)
 	}
-
 	public void SliderBreedingRate(float sliderValue) { // On Slider Value Changed
 		DebugBot.DebugFunctionCall("TCrossoverUI; SliderBreedingRate(); ", debugFunctionCalls);
 		pendingCrossoverManager.breedingRate = sliderValue;
@@ -661,7 +886,6 @@ public class TrainerCrossoverUI : MonoBehaviour {
 		}
 		UpdateUIWithCurrentData();  // Will update text display of PENDING numPlayers value (NOT the applied value!)
 	}
-
 	public void ToggleSurvivalByRank(bool value) {
 		DebugBot.DebugFunctionCall("TCrossoverUI; ToggleSurvivalByRank(); ", debugFunctionCalls);
 		if(value) {  // if was off, turning on:
@@ -714,7 +938,6 @@ public class TrainerCrossoverUI : MonoBehaviour {
 		}
         UpdateUIWithCurrentData();
     }
-
 	public void ToggleBreedingByRank(bool value) {
 		DebugBot.DebugFunctionCall("TCrossoverUI; ToggleBreedingByRank(); ", debugFunctionCalls);
 		if(value) {  // if was off, turning on:
@@ -767,7 +990,6 @@ public class TrainerCrossoverUI : MonoBehaviour {
 		}
         UpdateUIWithCurrentData();
     }
-
     public void ToggleMutation(bool value) {
         DebugBot.DebugFunctionCall("TCrossoverUI; ToggleMutation(" + value.ToString() + "); ", debugFunctionCalls);
         pendingCrossoverManager.useMutation = value;
@@ -792,22 +1014,31 @@ public class TrainerCrossoverUI : MonoBehaviour {
         mutationPanelOn = true;
         crossoverPanelOn = false;
         speciesPanelOn = false;
+        bodyPanelOn = false;
         UpdateUIWithCurrentData();
     }
-
     public void ClickCrossoverPanel() {
         DebugBot.DebugFunctionCall("TCrossoverUI; ClickCrossoverPanel(); ", debugFunctionCalls);
         mutationPanelOn = false;
         crossoverPanelOn = true;
         speciesPanelOn = false;
+        bodyPanelOn = false;
         UpdateUIWithCurrentData();
     }
-
     public void ClickSpeciesPanel() {
         DebugBot.DebugFunctionCall("TCrossoverUI; ClickSpeciesPanel(); ", debugFunctionCalls);
         mutationPanelOn = false;
         crossoverPanelOn = false;
         speciesPanelOn = true;
+        bodyPanelOn = false;
+        UpdateUIWithCurrentData();
+    }
+    public void ClickBodyPanel() {
+        DebugBot.DebugFunctionCall("TCrossoverUI; ClickBodyPanel(); ", debugFunctionCalls);
+        mutationPanelOn = false;
+        crossoverPanelOn = false;
+        speciesPanelOn = false;
+        bodyPanelOn = true;
         UpdateUIWithCurrentData();
     }
 

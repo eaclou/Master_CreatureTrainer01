@@ -65,6 +65,7 @@ public class ES2Init : MonoBehaviour
 		ES2TypeManager.types[typeof(AddonCompassSensor3D)] = new ES2UserType_AddonCompassSensor3D();
 		ES2TypeManager.types[typeof(AddonContactSensor)] = new ES2UserType_AddonContactSensor();
 		ES2TypeManager.types[typeof(AddonEarBasic)] = new ES2UserType_AddonEarBasic();
+		ES2TypeManager.types[typeof(AddonGravitySensor)] = new ES2UserType_AddonGravitySensor();
 		ES2TypeManager.types[typeof(AddonJointAngleSensor)] = new ES2UserType_AddonJointAngleSensor();
 		ES2TypeManager.types[typeof(AddonJointMotor)] = new ES2UserType_AddonJointMotor();
 		ES2TypeManager.types[typeof(AddonMouthBasic)] = new ES2UserType_AddonMouthBasic();
@@ -104,7 +105,7 @@ public class ES2Init : MonoBehaviour
 		ES2TypeManager.types[typeof(TrainingSave)] = new ES2UserType_TrainingSave();
 		ES2TypeManager.types[typeof(TrialData)] = new ES2UserType_TrialData();
 		ES2TypeManager.types[typeof(UnityEngine.AudioClip)] = new ES2_AudioClip();
-		ES2TypeManager.types[typeof(AddonGravitySensor)] = new ES2UserType_AddonGravitySensor();
+		ES2TypeManager.types[typeof(TrainingModifier)] = new ES2UserType_TrainingModifier();
 
 		ES2.initialised = true;
 	}

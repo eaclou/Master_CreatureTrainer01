@@ -207,7 +207,7 @@ public class CritterGenome {
                 }
                 int positionSensor3DIndex = CheckForAddonPositionSensor3D(currentBuildSegmentList[i].sourceNode.ID);
                 if (positionSensor3DIndex != -1) {
-                    numInputs = numInputs + 3;
+                    numInputs = numInputs + 4;
                 }
                 int rotationSensor1DIndex = CheckForAddonRotationSensor1D(currentBuildSegmentList[i].sourceNode.ID);
                 if (rotationSensor1DIndex != -1) {
@@ -223,7 +223,7 @@ public class CritterGenome {
                 }
                 int velocitySensor3DIndex = CheckForAddonVelocitySensor3D(currentBuildSegmentList[i].sourceNode.ID);
                 if (velocitySensor3DIndex != -1) {
-                    numInputs = numInputs + 3;
+                    numInputs = numInputs + 0;
                 }
                 int altimeterIndex = CheckForAddonAltimeter(currentBuildSegmentList[i].sourceNode.ID);
                 if (altimeterIndex != -1) {
@@ -283,15 +283,15 @@ public class CritterGenome {
 
                 int mouthBasicIndex = CheckForAddonMouthBasic(currentBuildSegmentList[i].sourceNode.ID);
                 if (mouthBasicIndex != -1) {
-                    numInputs++;
-                    numOutputs++;
+                    //numInputs++;
+                    //numOutputs++;
                 }
 
                 if (currentBuildSegmentList[i].sourceNode.ID != 0) {  // is NOT ROOT segment  -- Look into doing Root build BEFORE for loop to avoid the need to do this check                                                                      
                     int jointAngleSensorIndex = CheckForAddonJointAngleSensor(currentBuildSegmentList[i].sourceNode.ID);
                     if(jointAngleSensorIndex != -1) {
                         if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeX) {
-                            numInputs++;
+                            numInputs = numInputs + 2;
                         }
                         else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeY) {
                             numInputs++;
@@ -300,7 +300,7 @@ public class CritterGenome {
                             numInputs++;
                         }
                         else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.DualXY) {
-                            numInputs = numInputs + 3;
+                            numInputs = numInputs + 2;
                         }
                     }                    
 

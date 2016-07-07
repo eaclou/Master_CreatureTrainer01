@@ -37,6 +37,109 @@ public class GenomeNEAT {
         }        
     }
 
+    public GenomeNEAT(int numInputs, int numHidden, int numOutputs) {
+        // Constructor
+        if (numInputs < 1 || numOutputs < 1) {
+            Debug.LogError("New NEAT Genome requires at least 1 input and output node!! [" + numInputs.ToString() + "," + numOutputs.ToString() + "]");
+        }
+        else {
+            nodeNEATList = new List<GeneNodeNEAT>();
+            int currentID = 0;
+            for (int i = 0; i < numInputs; i++) {
+                GeneNodeNEAT newInputNode = new GeneNodeNEAT(currentID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear);
+                nodeNEATList.Add(newInputNode);
+                currentID++;
+            }
+            for (int h = 0; h < numHidden; h++) {
+                GeneNodeNEAT newHiddenNode = new GeneNodeNEAT(currentID, GeneNodeNEAT.GeneNodeType.Hid, TransferFunctions.TransferFunction.RationalSigmoid);
+                nodeNEATList.Add(newHiddenNode);
+                currentID++;
+            }
+            for (int o = 0; o < numOutputs; o++) {
+                GeneNodeNEAT newOutputNode = new GeneNodeNEAT(currentID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid);
+                nodeNEATList.Add(newOutputNode);
+                currentID++;
+            }
+
+            linkNEATList = new List<GeneLinkNEAT>();
+            // Empty for now
+        }
+    }
+
+    public void CreateInitialConnections(float connectedness, bool randomWeights) {
+        int numInputs = 0;
+        int numHidden = 0;
+        int numOutputs = 0;
+        List<GeneNodeNEAT> inputNodeList = new List<GeneNodeNEAT>();
+        List<GeneNodeNEAT> hiddenNodeList = new List<GeneNodeNEAT>();
+        List<GeneNodeNEAT> outputNodeList = new List<GeneNodeNEAT>();
+        for (int i = 0; i < nodeNEATList.Count; i++) {
+            if (nodeNEATList[i].nodeType == GeneNodeNEAT.GeneNodeType.In) {
+                numInputs++;
+                inputNodeList.Add(nodeNEATList[i]);
+            }
+            if (nodeNEATList[i].nodeType == GeneNodeNEAT.GeneNodeType.Hid) {
+                numHidden++;
+                hiddenNodeList.Add(nodeNEATList[i]);
+            }
+            if (nodeNEATList[i].nodeType == GeneNodeNEAT.GeneNodeType.Out) {
+                numOutputs++;
+                outputNodeList.Add(nodeNEATList[i]);
+            }
+        }
+
+        if(numHidden > 0) {  // if there is a hidden layer:
+            float accumulatedLinkChance = UnityEngine.Random.Range(0f, 1f);  // random offset
+            for (int i = 0; i < inputNodeList.Count; i++) {  // input layer to hidden layer
+                for (int h = 0; h < hiddenNodeList.Count; h++) {
+                    accumulatedLinkChance += connectedness;  // currently deterministic.... is this ok?
+                    if (accumulatedLinkChance >= 1f) {  // if connectedness is 0.34, link will be created every third cycle, for example
+                        float initialWeight = 0f;
+                        if (randomWeights) {
+                            initialWeight = Gaussian.GetRandomGaussian();
+                        }
+                        GeneLinkNEAT newLink = new GeneLinkNEAT(inputNodeList[i].id, hiddenNodeList[h].id, initialWeight, true, GetNextInnovNumber(), 0);
+                        linkNEATList.Add(newLink);
+                        accumulatedLinkChance -= 1f; 
+                    }
+                }
+            }
+            for (int h = 0; h < hiddenNodeList.Count; h++) {  // hidden layer to output layer
+                for (int o = 0; o < outputNodeList.Count; o++) {
+                    accumulatedLinkChance += connectedness;  // currently deterministic.... is this ok?
+                    if (accumulatedLinkChance >= 1f) {  // if connectedness is 0.34, link will be created every third cycle, for example
+                        float initialWeight = 0f;
+                        if (randomWeights) {
+                            initialWeight = Gaussian.GetRandomGaussian();
+                        }
+                        GeneLinkNEAT newLink = new GeneLinkNEAT(hiddenNodeList[h].id, outputNodeList[o].id, initialWeight, true, GetNextInnovNumber(), 0);
+                        linkNEATList.Add(newLink);
+                        accumulatedLinkChance -= 1f; 
+                    }
+                }
+            }
+        }
+        else {  // no hidden layer:
+            float accumulatedLinkChance = UnityEngine.Random.Range(0f, 1f);  // random offset
+            for (int i = 0; i < inputNodeList.Count; i++) {
+                
+                for(int o = 0; o < outputNodeList.Count; o++) {
+                    accumulatedLinkChance += connectedness;  // currently deterministic.... is this ok?
+                    if(accumulatedLinkChance >= 1f) {  // if connectedness is 0.34, link will be created every third cycle, for example
+                        float initialWeight = 0f;
+                        if (randomWeights) {
+                            initialWeight = Gaussian.GetRandomGaussian();
+                        }
+                        GeneLinkNEAT newLink = new GeneLinkNEAT(inputNodeList[i].id, outputNodeList[o].id, initialWeight, true, GetNextInnovNumber(), 0);
+                        linkNEATList.Add(newLink);
+
+                        accumulatedLinkChance -= 1f; 
+                    }                    
+                }                
+            }
+        }        
+    }
+
     // loops through all output nodes andcreates a connection from a random input node to the output, so that all output nodes are hooked up
     // should result in the minimum amount of connections required to have 'full' functionality
     public void CreateMinimumRandomConnections() {

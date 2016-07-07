@@ -60,6 +60,7 @@ public class BrainNEAT {
         string inputString = "inputList: ";
         string outputString = "outputList: ";
         for(int i = 0; i < inputList.Count; i++) {
+            //Debug.Log("BrainMasterFunction inputList[" + i.ToString() + "] " + inputList.Count.ToString());
             inputString += "[" + i.ToString() + "]: " + inputList[i][0].ToString() + ", ";
         }
 
@@ -205,14 +206,24 @@ public class BrainNEAT {
     public GenomeNEAT InitializeBlankBrain(int numInputNodes, int numOutputNodes) {
         
         sourceGenome = new GenomeNEAT(numInputNodes, numOutputNodes); // create blank genome with no connections
-        int numNewLinks = 0;
+        /*int numNewLinks = 0;
         int numNewNodes = 0;
         for(int i = 0; i < numNewLinks; i++) {
             sourceGenome.AddNewRandomLink(0);
         }
         for (int j = 0; j < numNewNodes; j++) {
             sourceGenome.AddNewRandomNode(0);
-        }
+        }*/
+
+        //Debug.Log("InitializeBlankBrain #nodes: " + sourceGenome.nodeNEATList.Count.ToString() + ", #links: " + sourceGenome.linkNEATList.Count.ToString());
+
+        return sourceGenome;
+    }
+
+    public GenomeNEAT InitializeNewBrain(int numInputNodes, int numHiddenNodes, int numOutputNodes, float connectedness, bool randomWeights) {
+
+        sourceGenome = new GenomeNEAT(numInputNodes, numHiddenNodes, numOutputNodes); // create blank genome with no connections
+        sourceGenome.CreateInitialConnections(connectedness, randomWeights);
 
         //Debug.Log("InitializeBlankBrain #nodes: " + sourceGenome.nodeNEATList.Count.ToString() + ", #links: " + sourceGenome.linkNEATList.Count.ToString());
 

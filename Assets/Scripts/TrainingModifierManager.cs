@@ -13,13 +13,11 @@ public class TrainingModifierManager {
         }        
     }
 
-    public float GetMutationBlastParameter() {
-
-        return 1f;
-    }
-
     public void ApplyTrainingModifierEffectsTarget(Trainer trainer, MiniGameBase minigame) {
-        int currentGen = trainer.PlayingCurGeneration;
+        int currentGen = trainer.PlayingCurGeneration; // + trainer.PlayerList[0].masterPopulation.trainingGenerations;
+        if (trainer.loadedTrainingSave != null) {
+            currentGen += trainer.loadedTrainingSave.endGeneration;
+        }
         int numModifiers = activeTrainingModifierList.Count;
         int numRounds = 0;
         int gameRoundIndex = 0;
@@ -212,8 +210,10 @@ public class TrainingModifierManager {
         if(trainer.loadedTrainingSave != null) {
             currentGen += trainer.loadedTrainingSave.endGeneration;
         }
+        Debug.Log("ApplyTrainingModifierEffects  currentGen: " + currentGen.ToString());
         CrossoverManager crossoverManager = trainer.PlayerList[0].masterCupid;
         int numModifiers = activeTrainingModifierList.Count;
+        crossoverManager.mutationBlastModifier = 1f;
         if (numModifiers > 0) {
             for (int i = numModifiers - 1; i >= 0; i--) {
                 float t = 0f;

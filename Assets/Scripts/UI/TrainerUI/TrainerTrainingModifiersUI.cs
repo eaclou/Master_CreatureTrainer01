@@ -200,8 +200,12 @@ public class TrainerTrainingModifiersUI : MonoBehaviour {
 
         TrainingModifier newModifier = new TrainingModifier();
         newModifier.modifierType = currentModifierType;
-        newModifier.startGen = trainerModuleScript.gameController.masterTrainer.PlayingCurGeneration;
-        
+
+        newModifier.startGen = trainerModuleScript.gameController.masterTrainer.PlayingCurGeneration;        
+        if (trainerModuleScript.gameController.masterTrainer.loadedTrainingSave != null) {
+            newModifier.startGen += trainerModuleScript.gameController.masterTrainer.loadedTrainingSave.endGeneration;
+        }
+
         switch (currentModifierType) {
             case TrainingModifier.TrainingModifierType.LinkExplosion:
                 TrainingModifierLinkExplosionUI linkExplosionSettings = currentModifierPrefabGO.GetComponent<TrainingModifierLinkExplosionUI>();

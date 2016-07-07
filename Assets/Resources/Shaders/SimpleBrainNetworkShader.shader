@@ -83,7 +83,7 @@
 				float4 fogColor = float4(0.5, 0.62, 0.94, 1.0);
 				
 				o.color = lerp(i.color * _Color, fogColor, 0.1);
-				o.color.xyz = lerp(o.color.xyz, diffuse, 0.01);
+				o.color.xyz = lerp(o.color.xyz, diffuse, 0.8);
 				//o.color.a = 0.0;
 				
 				return o;

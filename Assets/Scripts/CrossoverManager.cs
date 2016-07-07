@@ -9,24 +9,24 @@ public class CrossoverManager {
 
     public bool useMutation = true;
     public bool useCrossover = true;
-    public bool useSpeciation = true;
+    public bool useSpeciation = false;
 
     // Body OLD:
-    public float mutationBodyChance = 0.5f;
-    public float maxBodyMutationFactor = 1.25f;
+    //public float mutationBodyChance = 0.5f;
+    //public float maxBodyMutationFactor = 1.25f;
     // MUTATION:
-    public float masterMutationRate = 0.2f;
-	public float maximumWeightMagnitude = 4f;
-	public float mutationDriftScale = 0.45f;
+    public float masterMutationRate = 0.5f;
+	public float maximumWeightMagnitude = 5f;
+	public float mutationDriftScale = 0.8f;
 	public float mutationRemoveLinkChance = 0.1f;
-	public float mutationAddLinkChance = 0.2f;	
+	public float mutationAddLinkChance = 0.24f;	
     public float mutationRemoveNodeChance = 0.0f;
-    public float mutationAddNodeChance = 0.0f;
+    public float mutationAddNodeChance = 0.08f;
     public float mutationActivationFunctionChance = 0.0f;
-    public float largeBrainPenalty = 0.05f;
-    public float newLinkMutateBonus = 1f;  // 1 = does nothing 
-    public int newLinkBonusDuration = 20;
-    public float existingNetworkBias = 0.05f;
+    public float largeBrainPenalty = 0.04f;
+    public float newLinkMutateBonus = 1.3f;  // 1 = does nothing 
+    public int newLinkBonusDuration = 25;
+    public float existingNetworkBias = 0.01f;
     public float existingFromNodeBias = 0.5f;
     // CROSSOVER!!:
     public float crossoverRandomLinkChance = 0f;
@@ -40,8 +40,20 @@ public class CrossoverManager {
     public float normalizeLinkWeight = 1f;
     public float adoptionRate = 0.05f;
     public float largeSpeciesPenalty = 0.04f;
-    public float interspeciesBreedingRate = 0.01f; 
-
+    public float interspeciesBreedingRate = 0.01f;
+    // BODY!!!:
+    public float maxAttributeValueChange = 1.25f;
+    public float newSegmentChance = 0f;
+    public float removeSegmentChance = 0f;
+    public float segmentProportionChance = 0f;
+    public float segmentAttachSettingsChance = 0f;
+    public float jointSettingsChance = 0f;
+    public float newAddonChance = 0f;
+    public float removeAddonChance = 0f;
+    public float addonSettingsChance = 0f;
+    public float recursionChance = 0f;
+    public float symmetryChance = 0f;
+    // COMMON!!!
     public float survivalRate = 0.03f;   // top-performers are copied into the next generation
 	public bool survivalByRank = true;
 	public bool survivalStochastic = false;
@@ -66,7 +78,7 @@ public class CrossoverManager {
         useMutation = sourceManager.useMutation;
         useCrossover = sourceManager.useCrossover;
         useSpeciation = sourceManager.useSpeciation;
-
+        //Mutation
         masterMutationRate = sourceManager.masterMutationRate;
 		maximumWeightMagnitude = sourceManager.maximumWeightMagnitude;
 		mutationDriftScale = sourceManager.mutationDriftScale;
@@ -80,9 +92,9 @@ public class CrossoverManager {
         newLinkBonusDuration = sourceManager.newLinkBonusDuration;
         existingNetworkBias = sourceManager.existingNetworkBias;
         existingFromNodeBias = sourceManager.existingFromNodeBias;
-
+        //Crossover
         crossoverRandomLinkChance = sourceManager.crossoverRandomLinkChance;
-
+        //Species
         speciesSimilarityThreshold = sourceManager.speciesSimilarityThreshold;
         excessLinkWeight = sourceManager.excessLinkWeight;
         disjointLinkWeight = sourceManager.disjointLinkWeight;
@@ -93,8 +105,20 @@ public class CrossoverManager {
         adoptionRate = sourceManager.adoptionRate;
         largeSpeciesPenalty = sourceManager.largeSpeciesPenalty;
         interspeciesBreedingRate = sourceManager.interspeciesBreedingRate;
-        
-		survivalRate = sourceManager.survivalRate;
+        // Body
+        maxAttributeValueChange = sourceManager.maxAttributeValueChange;
+        newSegmentChance = sourceManager.newSegmentChance;
+        removeSegmentChance = sourceManager.removeSegmentChance;
+        segmentProportionChance = sourceManager.segmentProportionChance;
+        segmentAttachSettingsChance = sourceManager.segmentAttachSettingsChance;
+        jointSettingsChance = sourceManager.jointSettingsChance;
+        newAddonChance = sourceManager.newAddonChance;
+        removeAddonChance = sourceManager.removeAddonChance;
+        addonSettingsChance = sourceManager.addonSettingsChance;
+        recursionChance = sourceManager.recursionChance;
+        symmetryChance = sourceManager.symmetryChance;
+        // Common
+        survivalRate = sourceManager.survivalRate;
 		survivalByRank = sourceManager.survivalByRank;
 		survivalStochastic = sourceManager.survivalStochastic;
 		survivalByRaffle = sourceManager.survivalByRaffle;
@@ -211,7 +235,7 @@ public class CrossoverManager {
 	}
     */
 
-    public CritterGenome[] MixBodyChromosomes(CritterGenome[] parentGenomes, int numOffspring) {  // takes A number of Genomes and returns new mixed up versions
+    /*public CritterGenome[] MixBodyChromosomes(CritterGenome[] parentGenomes, int numOffspring) {  // takes A number of Genomes and returns new mixed up versions
                                                                                                   //int geneArrayLength = parentGenomes.Length;
         CritterGenome[] childGenomes = new CritterGenome[numOffspring];
         Debug.Log("CURRENTLY BROKEN! public CritterGenome[] MixBodyChromosomes(CritterGenome[] parentGenomes, int numOffspring)");
@@ -225,7 +249,8 @@ public class CrossoverManager {
 			return true;
 		}
 		return false;
-	}
+	}*/
+
     public bool CheckForMutation(float rate) {
         float rand = UnityEngine.Random.Range(0f, 1f);
         if (rand < rate) {
@@ -234,13 +259,13 @@ public class CrossoverManager {
         return false;
     }
 
-	public bool CheckForBodyMutation() {
+	/*public bool CheckForBodyMutation() {
 		float rand = UnityEngine.Random.Range(0f, 1f);
 		if(rand < masterMutationRate) { // change to custom body mutation rate at some point
 			return true;
 		}
 		return false;
-	}
+	}*/
 
 	public float MutateFloat(float sourceFloat) {
 		float newFloat;
@@ -252,9 +277,9 @@ public class CrossoverManager {
 	}
 
 	public float MutateBodyFloat(float sourceFloat) {
-		float newFloat;
+        float newFloat = 0f;
 		if(sourceFloat != 0f) {
-			newFloat = sourceFloat * UnityEngine.Random.Range(1f/maxBodyMutationFactor, maxBodyMutationFactor);
+			//newFloat = sourceFloat * UnityEngine.Random.Range(1f/maxBodyMutationFactor, maxBodyMutationFactor);
 		}
 		else {
 			newFloat = sourceFloat + UnityEngine.Random.Range(-0.1f, 0.1f);
@@ -347,12 +372,12 @@ public class CrossoverManager {
         }
         return newParentAgent;
     }
-
-    
-
+  
     public Population BreedPopulation(ref Population sourcePopulation, int currentGeneration) {
 
         int LifetimeGeneration = currentGeneration + sourcePopulation.trainingGenerations;
+        int totalNumWeightMutations = 0;
+        float totalWeightChangeValue = 0f;
         // go through species list and adjust fitness
         List<SpeciesBreedingPool> childSpeciesPoolsList = new List<SpeciesBreedingPool>(); // will hold agents in an internal list to facilitate crossover
         //List<Species> childSpeciesList = new List<Species>();  // the new species of the next generation
@@ -658,7 +683,7 @@ public class CrossoverManager {
                         if (numEnabledLinkGenes < 1)
                             numEnabledLinkGenes = 1;
                         for (int k = 0; k < childLinkList.Count; k++) {
-                            float mutateChance = mutationBlastModifier * masterMutationRate / numEnabledLinkGenes;
+                            float mutateChance = mutationBlastModifier * masterMutationRate / (1f + (float)numEnabledLinkGenes * 0.15f);
                             if (LifetimeGeneration - childLinkList[k].birthGen < newLinkBonusDuration) {
                                 float t = 1 - ((LifetimeGeneration - childLinkList[k].birthGen) / (float)newLinkBonusDuration);
                                 // t=0 means age of gene is same as bonusDuration, t=1 means it is brand new
@@ -667,6 +692,7 @@ public class CrossoverManager {
                             if (CheckForMutation(mutateChance)) {  // Weight Mutation!
                                 //Debug.Log("Weight Mutation Link[" + k.ToString() + "] weight: " + childLinkList[k].weight.ToString() + ", mutate: " + MutateFloat(childLinkList[k].weight).ToString());
                                 childLinkList[k].weight = MutateFloat(childLinkList[k].weight);
+                                totalNumWeightMutations++;
                             }
                         }
                         if (CheckForMutation(mutationBlastModifier * mutationRemoveLinkChance)) {
@@ -765,7 +791,7 @@ public class CrossoverManager {
                         if (numEnabledLinkGenes < 1)
                             numEnabledLinkGenes = 1;
                         for (int k = 0; k < childLinkList.Count; k++) {
-                            float mutateChance = mutationBlastModifier * masterMutationRate / numEnabledLinkGenes;
+                            float mutateChance = mutationBlastModifier * masterMutationRate / (1f + (float)numEnabledLinkGenes * 0.15f);
                             if (LifetimeGeneration - childLinkList[k].birthGen < newLinkBonusDuration) {
                                 float t = 1 - ((LifetimeGeneration - childLinkList[k].birthGen) / (float)newLinkBonusDuration);
                                 // t=0 means age of gene is same as bonusDuration, t=1 means it is brand new
@@ -774,6 +800,7 @@ public class CrossoverManager {
                             if (CheckForMutation(mutateChance)) {  // Weight Mutation!
                                 //Debug.Log("Weight Mutation Link[" + k.ToString() + "] weight: " + childLinkList[k].weight.ToString() + ", mutate: " + MutateFloat(childLinkList[k].weight).ToString());
                                 childLinkList[k].weight = MutateFloat(childLinkList[k].weight);
+                                totalNumWeightMutations++;
                             }
                         }
                         if (CheckForMutation(mutationBlastModifier * mutationRemoveLinkChance)) {
@@ -935,8 +962,8 @@ public class CrossoverManager {
                 }
             }
         }
-
-        //Debug.Log("Finished Crossover! numChildSpeciesPools: " + childSpeciesPoolsList.Count.ToString() + " species0size: " + childSpeciesPoolsList[0].agentList.Count.ToString());
+        
+        Debug.Log("Finished Crossover! totalNumWeightMutations: " + totalNumWeightMutations.ToString() + ", mutationBlastModifier: " + mutationBlastModifier.ToString() + ", LifetimeGeneration: " + LifetimeGeneration.ToString() + ", currentGeneration: " + currentGeneration.ToString() + ", sourcePopulation.trainingGenerations: " + sourcePopulation.trainingGenerations.ToString());
         sourcePopulation.masterAgentArray = newAgentArray;
         sourcePopulation.speciesBreedingPoolList = childSpeciesPoolsList;
 

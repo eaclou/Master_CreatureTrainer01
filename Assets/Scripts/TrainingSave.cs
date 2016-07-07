@@ -15,7 +15,9 @@ public class TrainingSave {
     public TrialData savedTrialDataEnd;
     public List<FitnessComponent> savedFitnessComponentList;   // used to look up individual weights and bigIsBetter in order to interpret raw scores
     // Minigame settings:
-    public MiniGameSettingsSaves savedMiniGameSettings;  // custom class to circumvent issues with saving Inherited Classes        
+    public MiniGameSettingsSaves savedMiniGameSettings;  // custom class to circumvent issues with saving Inherited Classes  
+
+    public List<TrainingModifier> savedTrainingModifierList;      
 
     public TrainingSave() {
         // empty constructor

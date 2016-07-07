@@ -20,6 +20,7 @@ public class TrainerDataViewUI : MonoBehaviour {
 
     public enum CurrentPage {
         EachAgentBrain,
+        EachAgentBrainConnections,
         GeneLinks,
         AllAgentsBrains,        
         FitnessRealtime,
@@ -86,6 +87,20 @@ public class TrainerDataViewUI : MonoBehaviour {
                 }
                 break;
 
+            case CurrentPage.EachAgentBrainConnections:
+                //+++++++++++++++++++++  EachAgentBrainConnections ++++++++++++++++++++++++++++++++++++++++
+                sourceAgent = populationRef.masterAgentArray[currentAgent];
+                // Intro Info:
+                bodyText += "Agent #" + currentAgent.ToString() + ", speciesID: " + sourceAgent.speciesID.ToString() + "\n";
+                // High-level stats:
+                bodyText += sourceAgent.brain.neuronList.Count.ToString() + " nodes, " + sourceAgent.brain.connectionList.Count + " connections\n";
+                // Go through all Connections:
+                for (int c = 0; c < sourceAgent.brain.connectionList.Count; c++) {
+                    bodyText += "Connection #" + c.ToString() + ", From: " + sourceAgent.brain.connectionList[c].fromNodeID.ToString() + ", To: "
+                                 + sourceAgent.brain.connectionList[c].toNodeID.ToString() + ", Weight: " + sourceAgent.brain.connectionList[c].weight[0].ToString() + "\n";
+                }
+                break;
+
             case CurrentPage.GeneLinks:
                 //populationRef.geneHistoryDict
                 bodyText += "GENE LINKS" + "\n";
@@ -131,9 +146,11 @@ public class TrainerDataViewUI : MonoBehaviour {
 
                 for (int f = 0; f < minigameRef.fitnessComponentList.Count; f++) {
                     float score = minigameRef.fitnessComponentList[f].componentScore[0];
-                    if(minigameRef.fitnessComponentList[f].divideByTimeSteps) {
-                        score /= minigameRef.gameCurrentTimeStep;
-                    }
+                    if(minigameRef.gameCurrentTimeStep > 0) {
+                        if (minigameRef.fitnessComponentList[f].divideByTimeSteps) {
+                            score /= ((float)minigameRef.gameCurrentTimeStep + 1f);
+                        }
+                    }                    
                     bodyText += minigameRef.fitnessComponentList[f].componentName + ": " + score.ToString() + "\n";
                 }
                 break;

@@ -66,7 +66,7 @@
 				o.pos = mul( UNITY_MATRIX_MVP, i.vertex );
 				float3 normalDirection = normalize(mul(float4(i.normal, 1.0), _World2Object).xyz);
 				//float3 lightDirection = normalize(_WorldSpaceLightPos0.xyz);
-				float3 lightDirection = float3(0.2, 1.0, 0.3);
+				float3 lightDirection = _WorldSpaceLightPos0.xyz;
 				float3 diffuse = _LightColor0.xyz * max(0.0, dot(normalDirection, lightDirection)) * _Color;
 				float4 posWorld = mul(_Object2World, i.vertex);
 				//view direction
@@ -88,8 +88,7 @@
 				//o.color = float4( i.normal * 0.5 + 0.5, 1.0 ); // scale and bias the normal to get it in range 0-1
 				//o.color = i.color // vertex colors
 				//o.color = float4( i.normal, 1.0);
-							
-
+				
 				float dist = sqrt(dot(camToWorldVector, camToWorldVector));
 				float maxFogDist = 5.0;
 				float fogAmount = 0.1 + clamp(0.0, 1.0, dist / maxFogDist);
@@ -110,12 +109,12 @@
 				float gradient = i.wpos.x + i.wpos.y + i.wpos.z;
 				gradient = (gradient + 3) / 6;
 				//float4 newColor = float4(gradient, gradient, gradient, 1.0);
-				float4 baseColor = float4(0.32, 0.45, 0.62, 1.0);
+				float4 baseColor = float4(1, 0.1, 0.1, 1.0);
 				//baseColor = float4(0.8, 0.8, 0.8, 1.0);
 				if (_Selected) {
 					baseColor = float4(0.6, 0.8, 0.9, 1.0);
 				}
-				i.color = diffuse * 0.33 + baseColor * 0.6;
+				i.color = diffuse * 0.7 + baseColor * 0.4;
 				float4 edgeColor = float4(0.7, 0.7, 0.7, 1.0);
 				float edgeWidth = 0.025;
 				float edgeFade = 0.01;
@@ -232,7 +231,7 @@
 				//i.color += float4(brightness, brightness, brightness, 0.0);
 
 				//i.color = lerp(diffuse, i.color, 0.5);
-				i.color += float4(brightness, brightness, brightness, 0.0);
+				//i.color += float4(brightness, brightness, brightness, 0.0);
 				return i.color;
 			}
 			ENDCG

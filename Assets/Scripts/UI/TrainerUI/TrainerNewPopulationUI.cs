@@ -39,6 +39,12 @@ public class TrainerNewPopulationUI : MonoBehaviour {
 	public Toggle toggleInverse;
 	public Toggle toggleRandom;
 	public Toggle toggleConstant;
+
+    public Slider sliderNumHiddenNodes;
+    public Text textNumHiddenNodes;
+    public Slider sliderConnectedness;
+    public Text textConnectedness;
+
 	public Toggle toggleRandomWeights;
 	public Toggle toggleZeroedWeights;
 	public Button buttonCreateNewPopulation;
@@ -58,9 +64,12 @@ public class TrainerNewPopulationUI : MonoBehaviour {
 	private int minBrainOutputs = 0;
 	private int maxBrainOutputs = 20;
 
-	private int pendingPopulationSize = 40;
+	private int pendingPopulationSize = 50;
 	private int pendingNumInputs = 4;
 	private int pendingNumOutputs = 4;
+
+    private int pendingNumHiddenNodes = 0;
+    private float pendingConnectedness = 0f;
 
 	private string pendingBodyTemplateFilename = "";
 
@@ -96,10 +105,6 @@ public class TrainerNewPopulationUI : MonoBehaviour {
 		DebugBot.DebugFunctionCall("TNewPopUI; InitializePanelWithTrainerData(); ", debugFunctionCalls);
 		sliderPopulationSize.minValue = minMaxPopulationSize;
 		sliderPopulationSize.maxValue = maxMaxPopulationSize;
-		//sliderNumInputs.minValue = minBrainInputs;
-		//sliderNumInputs.maxValue = maxBrainInputs;
-		//sliderNumOutputs.minValue = minBrainOutputs;
-		//sliderNumOutputs.maxValue = maxBrainOutputs;
 
 		UpdateUIWithCurrentData();
 	}
@@ -114,6 +119,11 @@ public class TrainerNewPopulationUI : MonoBehaviour {
 		textPopulationSize.text = pendingPopulationSize.ToString();
 		textNumInputs.text = pendingNumInputs.ToString();
 		textNumOutputs.text = pendingNumOutputs.ToString();
+
+        sliderNumHiddenNodes.value = pendingNumHiddenNodes;
+        textNumHiddenNodes.text = pendingNumHiddenNodes.ToString();
+        sliderConnectedness.value = pendingConnectedness;
+        textConnectedness.text = pendingConnectedness.ToString();
 
 		textLoadedBodyTemplateName.text = pendingBodyTemplateFilename;
 
@@ -224,7 +234,19 @@ public class TrainerNewPopulationUI : MonoBehaviour {
 		UpdateUIWithCurrentData();
 	}
 
-	/*public void SliderNumInputs(float sliderValue) { // On Slider Value Changed
+    public void SliderNumHiddenNodes(float sliderValue) { // On Slider Value Changed
+        DebugBot.DebugFunctionCall("TNewPopUI; SliderNumHiddenNodes(); ", debugFunctionCalls);
+        pendingNumHiddenNodes = (int)sliderValue;
+        UpdateUIWithCurrentData();
+    }
+
+    public void SliderConnectedness(float sliderValue) { // On Slider Value Changed
+        DebugBot.DebugFunctionCall("TNewPopUI; SliderConnectedness(); ", debugFunctionCalls);
+        pendingConnectedness = sliderValue;
+        UpdateUIWithCurrentData();
+    }
+
+    /*public void SliderNumInputs(float sliderValue) { // On Slider Value Changed
 		DebugBot.DebugFunctionCall("TNewPopUI; SliderNumInputs(); ", debugFunctionCalls);
 		pendingNumInputs = (int)sliderValue;
 		UpdateUIWithCurrentData();
@@ -236,7 +258,7 @@ public class TrainerNewPopulationUI : MonoBehaviour {
 		UpdateUIWithCurrentData();
 	}*/
 
-	public void ToggleRandomWeights(bool value) {
+    public void ToggleRandomWeights(bool value) {
 		DebugBot.DebugFunctionCall("TNewPopUI; ToggleRandomWeights(); ", debugFunctionCalls);
 		//Debug.Log ("ToggleRandomWeights(), NewPopPanelUI, " + value.ToString());
 		toggleZeroedWeights.isOn = !value;
@@ -270,10 +292,18 @@ public class TrainerNewPopulationUI : MonoBehaviour {
 
 				populationRef = trainer.PlayerList[curPlayer-1].masterPopulation; // grab current player's population -- this might not be needed
 				populationRef.SetMaxPopulationSize(pendingPopulationSize);
-                
+                if (toggleZeroedWeights.isOn) {
+                    populationRef.initRandom = false;
+                }
+                else {
+                    populationRef.initRandom = true;
+                }
+                populationRef.initNumHiddenNodes = pendingNumHiddenNodes;
+                populationRef.initConnectedness = pendingConnectedness;
+
                 // CREATE AGENT ARRAY!!!!!!! :                
                 CritterGenome genomeToLoad = ES2.Load<CritterGenome>(pendingBodyTemplateFilename);                
-                populationRef.InitializeMasterAgentArray(genomeToLoad);
+                populationRef.InitializeMasterAgentArray(genomeToLoad, trainer.PlayerList[curPlayer - 1].masterCupid.useSpeciation);
                 trainer.PlayerList[curPlayer-1].hasValidPopulation = true;
             }
 			else { 

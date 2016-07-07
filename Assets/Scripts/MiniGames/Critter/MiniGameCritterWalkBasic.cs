@@ -56,12 +56,15 @@ public class MiniGameCritterWalkBasic : MiniGameBase
     public List<float[]> fitnessCompassSensor3DListForward;
     public List<float[]> fitnessPositionSensor1DList;
     public List<float[]> fitnessPositionSensor3DList;
+    public List<float[]> fitnessPositionSensor3DTargetList;
     public List<float[]> fitnessRotationSensor1DList;
     public List<float[]> fitnessRotationSensor3DList;
     public List<float[]> fitnessVelocitySensor3DList;
     public List<float[]> fitnessRaycastSensorList;
     public List<float[]> fitnessAltimeterList;
+    public List<float[]> fitnessGravitySensorList;
     public List<float[]> fitnessContactSensorList;
+    public List<float[]> fitnessMouthBasicList;
 
     public MiniGameCritterWalkBasicSettings customSettings;  // shitty hacky workaround for saving/loading
 
@@ -75,7 +78,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
     private GameObject GOheadFacingVector;
     private GameObject GOwormCenterOfMass;
 
-    Material targetSphereMat = new Material(Shader.Find("Diffuse"));
+    Material targetSphereMat = new Material(Shader.Find("Standard"));    
     Material groundPlaneMat = new Material(Shader.Find("Diffuse"));
     Material headToTargetVecMat = new Material(Shader.Find("Diffuse"));
     Material headToTargetVecHorMat = new Material(Shader.Find("Diffuse"));
@@ -110,8 +113,10 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             critterBeingTested.InitializeCritterFromGenome(templateBodyGenome); // creates segmentList List<> and sets genome            
         }
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-        targetSphereMat.color = new Color(1f, 1f, 0.25f);
+                
+        targetSphereMat.SetFloat("_Mode", 3.0f);
+        //Debug.Log(targetSphereMat.GetFloat("_Mode"));
+        targetSphereMat.color = new Color(0.1f, 1f, 0.3f, 0.4f);
         groundPlaneMat.color = new Color(0.75f, 0.75f, 0.75f);
         headToTargetVecMat.color = new Color(1f, 1f, 0.25f);
         headToTargetVecHorMat.color = new Color(0.75f, 0f, 0f);
@@ -229,7 +234,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
 
             Vector3 forceDir = UnityEngine.Random.onUnitSphere;
             float forceMag = UnityEngine.Random.Range(customSettings.initForceMin[0], customSettings.initForceMax[0]);
-            initialForceList.Add(new Vector3(forceDir.x * forceMag, forceDir.y * forceMag, forceDir.z * forceMag));
+            initialForceList.Add(new Vector3(0f, forceDir.y * forceMag, forceDir.z * forceMag));
         }  
         
     }
@@ -354,7 +359,9 @@ public class MiniGameCritterWalkBasic : MiniGameBase
 
         // INITIAL PUSH!!!  (currently only on root segment)
         critterBeingTested.critterSegmentList[0].GetComponent<Rigidbody>().AddForce(initialForceList[gameCurrentRound], ForceMode.Impulse);
-
+        //critterBeingTested.critterSegmentList[4].GetComponent<Rigidbody>().AddForce(initialForceList[gameCurrentRound], ForceMode.Impulse);
+        //critterBeingTested.critterSegmentList[6].GetComponent<Rigidbody>().AddForce(initialForceList[gameCurrentRound], ForceMode.Impulse);
+        //critterBeingTested.critterSegmentList[7].GetComponent<Rigidbody>().AddForce(initialForceList[gameCurrentRound], ForceMode.Impulse);
 
         gameEndStateReached = false;
         gameInitialized = true;
@@ -399,8 +406,8 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             Vector3 forceVector = new Vector3(directionOfForce.x * forceMagnitude, directionOfForce.y * forceMagnitude, directionOfForce.z * forceMagnitude);
             critterBeingTested.critterSegmentList[0].GetComponent<Rigidbody>().AddForce(forceVector);
         }*/
-        
 
+        
         // Inputs!!
         // Contact Sensor:
         for (int contactSensorIndex = 0; contactSensorIndex < critterBeingTested.segaddonContactSensorList.Count; contactSensorIndex++) {
@@ -466,7 +473,8 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         // Position Sensor 3D:
         for (int positionSensor3DIndex = 0; positionSensor3DIndex < critterBeingTested.segaddonPositionSensor3DList.Count; positionSensor3DIndex++) {
             SegaddonPositionSensor3D positionSensor3D = critterBeingTested.segaddonPositionSensor3DList[positionSensor3DIndex];
-            Vector3 segmentToTargetVect = new Vector3(targetPosX[0] - wormSegmentArray_PosX[positionSensor3D.segmentID][0], targetPosY[0] - wormSegmentArray_PosY[positionSensor3D.segmentID][0], targetPosZ[0] - wormSegmentArray_PosZ[positionSensor3D.segmentID][0]);
+            //Vector3 segmentToTargetVect = new Vector3(targetPosX[0] - wormSegmentArray_PosX[positionSensor3D.segmentID][0], targetPosY[0] - wormSegmentArray_PosY[positionSensor3D.segmentID][0], targetPosZ[0] - wormSegmentArray_PosZ[positionSensor3D.segmentID][0]);
+            Vector3 segmentToTargetVect = new Vector3(targetPosX[0] - critterBeingTested.critterSegmentList[positionSensor3D.segmentID].transform.position.x, targetPosY[0] - critterBeingTested.critterSegmentList[positionSensor3D.segmentID].transform.position.y, targetPosZ[0] - critterBeingTested.critterSegmentList[positionSensor3D.segmentID].transform.position.z);
             Vector3 rightVector;
             Vector3 upVector;
             Vector3 forwardVector;
@@ -486,8 +494,29 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             positionSensor3D.distanceRight[0] = dotRight;
             positionSensor3D.distanceUp[0] = dotUp;
             positionSensor3D.distanceForward[0] = dotForward;
+            positionSensor3D.distanceRightDouble[0] = dotRight * 2f;
+            positionSensor3D.distanceUpDouble[0] = dotUp * 2f;
+            positionSensor3D.distanceForwardDouble[0] = dotForward * 2f;
+            positionSensor3D.distanceRightHalf[0] = dotRight * 0.5f;
+            positionSensor3D.distanceUpHalf[0] = dotUp * 0.5f;
+            positionSensor3D.distanceForwardHalf[0] = dotForward * 0.5f;
             float distance = new Vector3(positionSensor3D.distanceRight[0], positionSensor3D.distanceUp[0], positionSensor3D.distanceForward[0]).magnitude;
             fitnessPositionSensor3DList[positionSensor3DIndex][0] += distance;
+            positionSensor3D.fitnessDistance[0] = distance * positionSensor3D.sensitivity;
+            positionSensor3D.invDistance[0] = 1f / distance;
+            positionSensor3D.angle[0] = Mathf.Acos(dotForward / distance) * (dotUp / Mathf.Abs(dotUp));
+
+            float customTarget = 0f;
+            //bool insideTarget = false;
+            if (distance < customSettings.targetRadius[0]) {                
+                //insideTarget = true;
+                customTarget += 5f; // + for being IN target
+            }
+            else {
+                customTarget -= 0.1f; // - for being Outside target (small penalty)
+            }
+            fitnessPositionSensor3DTargetList[positionSensor3DIndex][0] += customTarget;
+            //Debug.Log("Segment " + critterBeingTested.segaddonPositionSensor3DList[positionSensor3DIndex].segmentID.ToString() + " Distance: " + distance.ToString() + ", score: " + fitnessPositionSensor3DTargetList[positionSensor3DIndex][0].ToString());
         }
         // Rotation Sensor 1D:
         for (int rotationSensor1DIndex = 0; rotationSensor1DIndex < critterBeingTested.segaddonRotationSensor1DList.Count; rotationSensor1DIndex++) {
@@ -552,7 +581,23 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             velocitySensor3D.velocityRight[0] = dotRight;
             velocitySensor3D.velocityUp[0] = dotUp;
             velocitySensor3D.velocityForward[0] = dotForward;
-            fitnessVelocitySensor3DList[velocitySensor3DIndex][0] += new Vector3(velocitySensor3D.velocityRight[0], velocitySensor3D.velocityUp[0], velocitySensor3D.velocityForward[0]).magnitude;
+
+            Vector3 segmentToTargetVect = new Vector3(targetPosX[0] - critterBeingTested.critterSegmentList[velocitySensor3D.segmentID].transform.position.x, targetPosY[0] - critterBeingTested.critterSegmentList[velocitySensor3D.segmentID].transform.position.y, targetPosZ[0] - critterBeingTested.critterSegmentList[velocitySensor3D.segmentID].transform.position.z);
+
+            float distance = segmentToTargetVect.magnitude;
+            float vel = Mathf.Min(0.0001f, velocityWorld.sqrMagnitude * 10f);
+            float maxScore = 25f;
+            float dot = Vector3.Dot(velocityWorld.normalized, segmentToTargetVect.normalized);
+            //bool insideTarget = false;
+            if (distance < customSettings.targetRadius[0]) {
+                //insideTarget = true;
+                fitnessVelocitySensor3DList[velocitySensor3DIndex][0] -= vel;
+                fitnessVelocitySensor3DList[velocitySensor3DIndex][0] += Mathf.Min(1f/vel, maxScore) * 10f;
+            }
+            else {
+                fitnessVelocitySensor3DList[velocitySensor3DIndex][0] += (vel * dot) * 1f;
+            }
+            //fitnessVelocitySensor3DList[velocitySensor3DIndex][0] += customTarget;            
         }
         // Altimeter:
         for (int altimeterIndex = 0; altimeterIndex < critterBeingTested.segaddonAltimeterList.Count; altimeterIndex++) {
@@ -568,8 +613,9 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         // GravitySensor:
         for (int gravitySensorIndex = 0; gravitySensorIndex < critterBeingTested.segaddonGravitySensorList.Count; gravitySensorIndex++) {
             SegaddonGravitySensor gravitySensor = critterBeingTested.segaddonGravitySensorList[gravitySensorIndex];
-            gravitySensor.gravityDot[0] = Vector3.Dot(critterBeingTested.critterSegmentList[gravitySensor.segmentID].transform.forward, Physics.gravity.normalized);
+            gravitySensor.gravityDot[0] = Mathf.Abs(Vector3.Dot(critterBeingTested.critterSegmentList[gravitySensor.segmentID].transform.forward, Physics.gravity.normalized));
             //fitnessAltimeterList[gravitySensorIndex][0] += gravitySensor.altitude[0];
+            fitnessGravitySensorList[gravitySensorIndex][0] += gravitySensor.gravityDot[0];
         }
 
         // Setup Joint MOTORS:  ..... was created within RebuildCritterFromGenomeRecursive...
@@ -579,12 +625,20 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             if (critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>() != null) {
                 if (critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<CritterSegment>().sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeX) {
                     JointDrive drive = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularXDrive;
-                    drive.maximumForce = motor.motorForce[0] * customSettings.jointMotorForce[0];  // game option is a global multiplier on force/speed
+                    drive.positionSpring = motor.motorForce[0] * customSettings.jointMotorForce[0]; // TEMP!
+                    drive.positionDamper = motor.motorForce[0] * customSettings.jointMotorForce[0] / 2f; // TEMP!
+                    //drive.maximumForce = motor.motorForce[0] * customSettings.jointMotorForce[0];  // game option is a global multiplier on force/speed
                     critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularXDrive = drive;
                     Vector3 targetVel = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity;
-                    //Debug.Log(motor.targetAngularX[0].ToString());
-                    targetVel.x = motor.targetAngularX[0] * motor.motorSpeed[0] * customSettings.jointMotorSpeed[0]; // game option is a global multiplier on force/speed
+
+                    targetVel.x = motor.targetAngularX[0] * customSettings.jointMotorSpeed[0]; // game option is a global multiplier on force/speed
                     critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity = targetVel;
+
+                    //Quaternion targetRot = Quaternion.Euler(motor.targetAngularX[0] * customSettings.jointMotorSpeed[0] * 180f / Mathf.PI, 0f, 0f);
+                    //Debug.Log("targetRot: " + targetRot.ToString());
+                    //critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetRotation = targetRot;
+
+                    fitEnergySpent[0] += Mathf.Abs(motor.targetAngularX[0]);
                 }
                 else if (critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<CritterSegment>().sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeY) {
                     JointDrive drive = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularYZDrive;
@@ -593,6 +647,8 @@ public class MiniGameCritterWalkBasic : MiniGameBase
                     Vector3 targetVel = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity;
                     targetVel.y = motor.targetAngularY[0] * motor.motorSpeed[0] * customSettings.jointMotorSpeed[0]; // game option is a global multiplier on force/speed
                     critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity = targetVel;
+
+                    fitEnergySpent[0] += Mathf.Abs(motor.targetAngularY[0]);
                 }
                 else if (critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<CritterSegment>().sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeZ) {
                     JointDrive drive = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularYZDrive;
@@ -601,6 +657,8 @@ public class MiniGameCritterWalkBasic : MiniGameBase
                     Vector3 targetVel = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity;
                     targetVel.z = motor.targetAngularZ[0] * motor.motorSpeed[0] * customSettings.jointMotorSpeed[0]; // game option is a global multiplier on force/speed
                     critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity = targetVel;
+
+                    fitEnergySpent[0] += Mathf.Abs(motor.targetAngularZ[0]);
                 }
                 else if (critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<CritterSegment>().sourceNode.jointLink.jointType == CritterJointLink.JointType.DualXY) {
                     JointDrive drive = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularXDrive;
@@ -608,7 +666,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
                     critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularXDrive = drive;
                     Vector3 targetVel = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity;
                     targetVel.x = motor.targetAngularX[0] * motor.motorSpeed[0] * customSettings.jointMotorSpeed[0]; // game option is a global multiplier on force/speed
-                                                                                                        //critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity = targetVel;
+                    //critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity = targetVel;
 
                     drive = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularYZDrive;
                     drive.maximumForce = motor.motorForce[0] * customSettings.jointMotorForce[0];  // game option is a global multiplier on force/speed
@@ -616,6 +674,9 @@ public class MiniGameCritterWalkBasic : MiniGameBase
                     //Vector3 targetVel = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity;
                     targetVel.y = motor.targetAngularY[0] * motor.motorSpeed[0] * customSettings.jointMotorSpeed[0]; // game option is a global multiplier on force/speed
                     critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity = targetVel;
+
+                    fitEnergySpent[0] += Mathf.Abs(motor.targetAngularX[0]);
+                    fitEnergySpent[0] += Mathf.Abs(motor.targetAngularY[0]);
                 }
             }
             else {
@@ -672,7 +733,38 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         }
         // MouthBasic:
         for (int mouthBasicIndex = 0; mouthBasicIndex < critterBeingTested.segaddonMouthBasicList.Count; mouthBasicIndex++) {
+            SegaddonMouthBasic mouthBasic3D = critterBeingTested.segaddonMouthBasicList[mouthBasicIndex];
+            //Vector3 segmentToTargetVect = new Vector3(targetPosX[0] - wormSegmentArray_PosX[positionSensor3D.segmentID][0], targetPosY[0] - wormSegmentArray_PosY[positionSensor3D.segmentID][0], targetPosZ[0] - wormSegmentArray_PosZ[positionSensor3D.segmentID][0]);
+            Vector3 segmentToTargetVect = new Vector3(targetPosX[0] - critterBeingTested.critterSegmentList[mouthBasic3D.segmentID].transform.position.x, targetPosY[0] - critterBeingTested.critterSegmentList[mouthBasic3D.segmentID].transform.position.y, targetPosZ[0] - critterBeingTested.critterSegmentList[mouthBasic3D.segmentID].transform.position.z);
+            Vector3 rightVector;
+            Vector3 upVector;
+            Vector3 forwardVector;
+                        
+            rightVector = new Vector3(1f, 0f, 0f);
+            upVector = new Vector3(0f, 1f, 0f);
+            forwardVector = new Vector3(0f, 0f, 1f);
             
+            float dotRight = Vector3.Dot(segmentToTargetVect, rightVector);
+            float dotUp = Vector3.Dot(segmentToTargetVect, upVector);
+            float dotForward = Vector3.Dot(segmentToTargetVect, forwardVector);
+            //mouthBasic3D.distanceRight[0] = dotRight;
+            //mouthBasic3D.distanceUp[0] = dotUp;
+            //mouthBasic3D.distanceForward[0] = dotForward;
+            float distance = new Vector3(segmentToTargetVect.x, segmentToTargetVect.y, segmentToTargetVect.z).sqrMagnitude;
+            fitnessMouthBasicList[mouthBasicIndex][0] += distance * 1f;
+
+            float customTarget = 0f;
+            //bool insideTarget = false;
+            if (distance < customSettings.targetRadius[0]) {
+                //insideTarget = true;
+                customTarget -= 5f; // + for being IN target
+            }
+            else {
+                customTarget = 1f; // - for being Outside target (small penalty)
+            }
+            fitnessMouthBasicList[mouthBasicIndex][0] += customTarget;
+            //fitnessPositionSensor3DTargetList[positionSensor3DIndex][0] += customTarget;
+            //Debug.Log("Segment " + critterBeingTested.segaddonPositionSensor3DList[positionSensor3DIndex].segmentID.ToString() + " Distance: " + distance.ToString() + ", score: " + fitnessPositionSensor3DTargetList[positionSensor3DIndex][0].ToString());
         }
         // NoiseMakerBasic:
         for (int noiseMakerBasicIndex = 0; noiseMakerBasicIndex < critterBeingTested.segaddonNoiseMakerBasicList.Count; noiseMakerBasicIndex++) {
@@ -725,7 +817,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             //fitEnergySpent[0] += Mathf.Abs(wormSegmentArray_MotorTargetZ[e][0]) / 3f;
         }
         Vector3 comVel = wormCOM - prevFrameWormCOM;
-        //ArenaCameraController.arenaCameraControllerStatic.focusPosition = wormCOM;
+        ArenaCameraController.arenaCameraControllerStatic.focusPosition = wormCOM;
         Vector3 targetDirection = new Vector3(targetPosX[0] - wormCOM.x, targetPosY[0] - wormCOM.y, targetPosZ[0] - wormCOM.z);
         float distToTarget = targetDirection.magnitude;
         //if(preWarm == false) {
@@ -767,7 +859,9 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         }
 
         //fitCustomTarget[0] += 1f;
-        
+
+        //SetNonPhysicsGamePieceTransformsFromData();  // debug objects that rely on PhysX object positions
+
         gameTicked = true;
         //gameCurrentTimeStep++;  This is updated in base class function: GameTimeStepCompleted()
 
@@ -799,10 +893,15 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         // Joint ANGLE SENSORS:
         for(int angleSensorIndex = 0; angleSensorIndex < critterBeingTested.segaddonJointAngleSensorList.Count; angleSensorIndex++) {
             SegaddonJointAngleSensor angleSensor = critterBeingTested.segaddonJointAngleSensorList[angleSensorIndex];
+            //Debug.Log("angleSensorIndex " + angleSensorIndex.ToString() + ", angleSensor.angleX: " + angleSensor.angleX.ToString());
             if (critterBeingTested.critterSegmentList[angleSensor.segmentID].GetComponent<CritterSegment>().sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeX) {
                 string inputChannelName = "Segment " + angleSensor.segmentID.ToString() + " AngleX";
                 BrainInputChannel BIC_SegmentAngle = new BrainInputChannel(ref angleSensor.angleX, true, inputChannelName);
                 inputChannelsList.Add(BIC_SegmentAngle);
+
+                inputChannelName = "Segment " + angleSensor.segmentID.ToString() + " AngleVelX";
+                BrainInputChannel BIC_SegmentAngleVel = new BrainInputChannel(ref angleSensor.angleVelX, true, inputChannelName);
+                inputChannelsList.Add(BIC_SegmentAngleVel);
             }
             else if (critterBeingTested.critterSegmentList[angleSensor.segmentID].GetComponent<CritterSegment>().sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeY) {
                 string inputChannelName = "Segment " + angleSensor.segmentID.ToString() + " AngleY";
@@ -823,9 +922,9 @@ public class MiniGameCritterWalkBasic : MiniGameBase
                 BrainInputChannel BIC_SegmentAngleY = new BrainInputChannel(ref angleSensor.angleY, true, inputChannelName);
                 inputChannelsList.Add(BIC_SegmentAngleY);
 
-                inputChannelName = "Segment " + angleSensor.segmentID.ToString() + " AngleZ";
-                BrainInputChannel BIC_SegmentAngleZ = new BrainInputChannel(ref angleSensor.angleZ, true, inputChannelName);
-                inputChannelsList.Add(BIC_SegmentAngleZ);
+                //inputChannelName = "Segment " + angleSensor.segmentID.ToString() + " AngleZ";
+                //BrainInputChannel BIC_SegmentAngleZ = new BrainInputChannel(ref angleSensor.angleZ, true, inputChannelName);
+                //inputChannelsList.Add(BIC_SegmentAngleZ);
             }
         }
         // Contact Sensor:
@@ -872,16 +971,47 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         // Position Sensor 3D:
         for (int positionSensor3DIndex = 0; positionSensor3DIndex < critterBeingTested.segaddonPositionSensor3DList.Count; positionSensor3DIndex++) {
             SegaddonPositionSensor3D positionSensor3D = critterBeingTested.segaddonPositionSensor3DList[positionSensor3DIndex];
-            string inputChannelName = "Segment " + positionSensor3D.segmentID.ToString() + " Position3D Right";
-            BrainInputChannel BIC_SegmentPosition3DRight = new BrainInputChannel(ref positionSensor3D.distanceRight, true, inputChannelName);
-            inputChannelsList.Add(BIC_SegmentPosition3DRight);
+            string inputChannelName = "Segment " + positionSensor3D.segmentID.ToString() + " Pos3D Distance";
+            BrainInputChannel BIC_SegmentPosition3DDist = new BrainInputChannel(ref positionSensor3D.fitnessDistance, true, inputChannelName);
+            inputChannelsList.Add(BIC_SegmentPosition3DDist);
+            inputChannelName = "Segment " + positionSensor3D.segmentID.ToString() + " Pos3D Inv. Distance";
+            BrainInputChannel BIC_SegmentPosition3DInvDist = new BrainInputChannel(ref positionSensor3D.invDistance, true, inputChannelName);
+            inputChannelsList.Add(BIC_SegmentPosition3DInvDist);
+            inputChannelName = "Segment " + positionSensor3D.segmentID.ToString() + " Pos3D Angle";
+            BrainInputChannel BIC_SegmentPosition3DAngle = new BrainInputChannel(ref positionSensor3D.angle, true, inputChannelName);
+            inputChannelsList.Add(BIC_SegmentPosition3DAngle);
+            //string inputChannelName = "Segment " + positionSensor3D.segmentID.ToString() + " Position3D Right";
+            //BrainInputChannel BIC_SegmentPosition3DRight = new BrainInputChannel(ref positionSensor3D.distanceRight, true, inputChannelName);
+            //inputChannelsList.Add(BIC_SegmentPosition3DRight);
             inputChannelName = "Segment " + positionSensor3D.segmentID.ToString() + " Position3D Up";
             BrainInputChannel BIC_SegmentPosition3DUp = new BrainInputChannel(ref positionSensor3D.distanceUp, true, inputChannelName);
             inputChannelsList.Add(BIC_SegmentPosition3DUp);
             inputChannelName = "Segment " + positionSensor3D.segmentID.ToString() + " Position3D Forward";
             BrainInputChannel BIC_SegmentPosition3DForward = new BrainInputChannel(ref positionSensor3D.distanceForward, true, inputChannelName);
             inputChannelsList.Add(BIC_SegmentPosition3DForward);
-        }
+            // second copy
+            /*inputChannelName = "Segment " + positionSensor3D.segmentID.ToString() + " Position3D Right2";
+            BrainInputChannel BIC_SegmentPosition3DRight2 = new BrainInputChannel(ref positionSensor3D.distanceRightDouble, true, inputChannelName);
+            inputChannelsList.Add(BIC_SegmentPosition3DRight2);
+            inputChannelName = "Segment " + positionSensor3D.segmentID.ToString() + " Position3D Up2";
+            BrainInputChannel BIC_SegmentPosition3DUp2 = new BrainInputChannel(ref positionSensor3D.distanceUpDouble, true, inputChannelName);
+            inputChannelsList.Add(BIC_SegmentPosition3DUp2);
+            inputChannelName = "Segment " + positionSensor3D.segmentID.ToString() + " Position3D Forward2";
+            BrainInputChannel BIC_SegmentPosition3DForward2 = new BrainInputChannel(ref positionSensor3D.distanceForwardDouble, true, inputChannelName);
+            inputChannelsList.Add(BIC_SegmentPosition3DForward2);
+            
+            //third copy
+            inputChannelName = "Segment " + positionSensor3D.segmentID.ToString() + " Position3D Right3";
+            BrainInputChannel BIC_SegmentPosition3DRight3 = new BrainInputChannel(ref positionSensor3D.distanceRightHalf, true, inputChannelName);
+            inputChannelsList.Add(BIC_SegmentPosition3DRight3);
+            inputChannelName = "Segment " + positionSensor3D.segmentID.ToString() + " Position3D Up3";
+            BrainInputChannel BIC_SegmentPosition3DUp3 = new BrainInputChannel(ref positionSensor3D.distanceUpHalf, true, inputChannelName);
+            inputChannelsList.Add(BIC_SegmentPosition3DUp3);
+            inputChannelName = "Segment " + positionSensor3D.segmentID.ToString() + " Position3D Forward3";
+            BrainInputChannel BIC_SegmentPosition3DForward3 = new BrainInputChannel(ref positionSensor3D.distanceForwardHalf, true, inputChannelName);
+            inputChannelsList.Add(BIC_SegmentPosition3DForward3);
+            */
+        }        
         // Rotation Sensor 1D:
         for (int rotationSensor1DIndex = 0; rotationSensor1DIndex < critterBeingTested.segaddonRotationSensor1DList.Count; rotationSensor1DIndex++) {
             SegaddonRotationSensor1D rotationSensor1D = critterBeingTested.segaddonRotationSensor1DList[rotationSensor1DIndex];
@@ -912,7 +1042,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         // Velocity Sensor 3D:
         for (int velocitySensor3DIndex = 0; velocitySensor3DIndex < critterBeingTested.segaddonVelocitySensor3DList.Count; velocitySensor3DIndex++) {
             SegaddonVelocitySensor3D velocitySensor3D = critterBeingTested.segaddonVelocitySensor3DList[velocitySensor3DIndex];
-            string inputChannelName = "Segment " + velocitySensor3D.segmentID.ToString() + " Velocity3D Right";
+            /*string inputChannelName = "Segment " + velocitySensor3D.segmentID.ToString() + " Velocity3D Right";
             BrainInputChannel BIC_SegmentVelocity3DRight = new BrainInputChannel(ref velocitySensor3D.velocityRight, true, inputChannelName);
             inputChannelsList.Add(BIC_SegmentVelocity3DRight);
             inputChannelName = "Segment " + velocitySensor3D.segmentID.ToString() + " Velocity3D Up";
@@ -920,7 +1050,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             inputChannelsList.Add(BIC_SegmentVelocity3DUp);
             inputChannelName = "Segment " + velocitySensor3D.segmentID.ToString() + " Velocity3D Forward";
             BrainInputChannel BIC_SegmentVelocity3DForward = new BrainInputChannel(ref velocitySensor3D.velocityForward, true, inputChannelName);
-            inputChannelsList.Add(BIC_SegmentVelocity3DForward);
+            inputChannelsList.Add(BIC_SegmentVelocity3DForward);*/
         }
         // Altimeter:
         for (int altimeterIndex = 0; altimeterIndex < critterBeingTested.segaddonAltimeterList.Count; altimeterIndex++) {
@@ -1016,13 +1146,14 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         for (int mouthBasicIndex = 0; mouthBasicIndex < critterBeingTested.segaddonMouthBasicList.Count; mouthBasicIndex++) {
             SegaddonMouthBasic mouthBasic = critterBeingTested.segaddonMouthBasicList[mouthBasicIndex];
 
-            string inputChannelName = "Segment " + mouthBasic.segmentID.ToString() + " MouthSensor";
+            /*string inputChannelName = "Segment " + mouthBasic.segmentID.ToString() + " MouthSensor";
             BrainInputChannel BIC_SegmentMouthBasic = new BrainInputChannel(ref mouthBasic.contactStatus, true, inputChannelName);
             inputChannelsList.Add(BIC_SegmentMouthBasic);
 
             string outputChannelName = "Segment " + mouthBasic.segmentID.ToString() + " MouthBite";
             BrainOutputChannel BOC_SegmentMouthBasic = new BrainOutputChannel(ref mouthBasic.biteStrength, true, outputChannelName);
             outputChannelsList.Add(BOC_SegmentMouthBasic);
+            */
         }
         // NoiseMakerBasic:
         for (int noiseMakerBasicIndex = 0; noiseMakerBasicIndex < critterBeingTested.segaddonNoiseMakerBasicList.Count; noiseMakerBasicIndex++) {
@@ -1073,22 +1204,22 @@ public class MiniGameCritterWalkBasic : MiniGameBase
     {
         // Fitness Component List:
         fitnessComponentList = new List<FitnessComponent>();
-        FitnessComponent FC_distFromOrigin = new FitnessComponent(ref fitDistFromOrigin, true, true, 1f, 0f, "Distance From Origin", true);
-        fitnessComponentList.Add(FC_distFromOrigin); // 0
-        //FitnessComponent FC_energySpent = new FitnessComponent(ref fitEnergySpent, true, false, 1f, 1f, "Energy Spent", true);
-        //fitnessComponentList.Add(FC_energySpent); // 1
+        //FitnessComponent FC_distFromOrigin = new FitnessComponent(ref fitDistFromOrigin, true, true, 1f, 0f, "Distance From Origin", true);
+        //fitnessComponentList.Add(FC_distFromOrigin); // 0
+        FitnessComponent FC_energySpent = new FitnessComponent(ref fitEnergySpent, true, false, 1f, 1f, "Energy Spent", true);
+        fitnessComponentList.Add(FC_energySpent); // 1
         FitnessComponent FC_distToTarget = new FitnessComponent(ref fitDistToTarget, true, false, 1f, 1f, "Distance To Target", true);
         fitnessComponentList.Add(FC_distToTarget); // 2
-        FitnessComponent FC_timeToTarget = new FitnessComponent(ref fitTimeInTarget, true, true, 1f, 1f, "Time In Target", true);
-        fitnessComponentList.Add(FC_timeToTarget); // 3
-        FitnessComponent FC_moveToTarget = new FitnessComponent(ref fitMoveToTarget, true, true, 1f, 1f, "Move Towards Target", true);
-        fitnessComponentList.Add(FC_moveToTarget); // 7
+        //FitnessComponent FC_timeToTarget = new FitnessComponent(ref fitTimeInTarget, true, true, 1f, 1f, "Time In Target", true);
+        //fitnessComponentList.Add(FC_timeToTarget); // 3
+        //FitnessComponent FC_moveToTarget = new FitnessComponent(ref fitMoveToTarget, true, true, 1f, 1f, "Move Towards Target", true);
+        //fitnessComponentList.Add(FC_moveToTarget); // 7
         FitnessComponent FC_moveSpeed = new FitnessComponent(ref fitMoveSpeed, true, true, 1f, 0f, "Average Speed", true);
         fitnessComponentList.Add(FC_moveSpeed); // 8
-        FitnessComponent FC_customTarget = new FitnessComponent(ref fitCustomTarget, true, true, 1f, 1f, "Custom Target", true);
-        fitnessComponentList.Add(FC_customTarget); // 8
-        FitnessComponent FC_customPole = new FitnessComponent(ref fitCustomPole, true, true, 1f, 1f, "Custom Pole", false);
-        fitnessComponentList.Add(FC_customPole); // 8
+        //FitnessComponent FC_customTarget = new FitnessComponent(ref fitCustomTarget, true, true, 1f, 1f, "Custom Target", true);
+        //fitnessComponentList.Add(FC_customTarget); // 8
+        //FitnessComponent FC_customPole = new FitnessComponent(ref fitCustomPole, true, true, 1f, 1f, "Custom Pole", false);
+        //fitnessComponentList.Add(FC_customPole); // 8
 
         fitnessContactSensorList = new List<float[]>();
         for (int contactSensorIndex = 0; contactSensorIndex < critterBeingTested.segaddonContactSensorList.Count; contactSensorIndex++) {
@@ -1160,6 +1291,15 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             FitnessComponent FC_segmentPosition3DDistance = new FitnessComponent(ref fitnessDistance, true, false, 1f, 1f, fitnessComponentName, true);
             fitnessComponentList.Add(FC_segmentPosition3DDistance);
         }
+        fitnessPositionSensor3DTargetList = new List<float[]>();
+        for (int positionSensor3DTargetIndex = 0; positionSensor3DTargetIndex < critterBeingTested.segaddonPositionSensor3DList.Count; positionSensor3DTargetIndex++) {
+            string fitnessComponentName = "Segment " + critterBeingTested.segaddonPositionSensor3DList[positionSensor3DTargetIndex].segmentID.ToString() + " Pos3D Custom Target";
+            float[] fitnessTarget = new float[1];
+            fitnessTarget[0] = 0f;
+            fitnessPositionSensor3DTargetList.Add(fitnessTarget);
+            FitnessComponent FC_segmentPosition3DTarget = new FitnessComponent(ref fitnessTarget, true, true, 1f, 1f, fitnessComponentName, true);
+            fitnessComponentList.Add(FC_segmentPosition3DTarget);
+        }
         fitnessRotationSensor1DList = new List<float[]>();
         for (int rotationSensor1DIndex = 0; rotationSensor1DIndex < critterBeingTested.segaddonRotationSensor1DList.Count; rotationSensor1DIndex++) {
             string fitnessComponentName = "Segment " + critterBeingTested.segaddonRotationSensor1DList[rotationSensor1DIndex].segmentID.ToString() + " Rotation1D Rate";
@@ -1185,7 +1325,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             float[] fitnessRate = new float[1];
             fitnessRate[0] = 0f;
             fitnessVelocitySensor3DList.Add(fitnessRate);
-            FitnessComponent FC_segmentVelocity3D = new FitnessComponent(ref fitnessRate, true, false, 1f, 0f, fitnessComponentName, true);
+            FitnessComponent FC_segmentVelocity3D = new FitnessComponent(ref fitnessRate, true, true, 1f, 0f, fitnessComponentName, true);
             fitnessComponentList.Add(FC_segmentVelocity3D);
         }
         fitnessAltimeterList = new List<float[]>();
@@ -1196,7 +1336,25 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             fitnessAltimeterList.Add(fitnessAltimeter);
             FitnessComponent FC_segmentAltimeter = new FitnessComponent(ref fitnessAltimeter, true, true, 1f, 1f, fitnessComponentName, true);
             fitnessComponentList.Add(FC_segmentAltimeter);
-        }        
+        }
+        fitnessGravitySensorList = new List<float[]>();
+        for (int gravitySensorIndex = 0; gravitySensorIndex < critterBeingTested.segaddonGravitySensorList.Count; gravitySensorIndex++) {
+            string fitnessComponentName = "Segment " + critterBeingTested.segaddonGravitySensorList[gravitySensorIndex].segmentID.ToString() + " Gravity";
+            float[] fitnessGravitySensor = new float[1];
+            fitnessGravitySensor[0] = 0f;
+            fitnessGravitySensorList.Add(fitnessGravitySensor);
+            FitnessComponent FC_segmentGravitySensor = new FitnessComponent(ref fitnessGravitySensor, true, false, 1f, 1f, fitnessComponentName, true);
+            fitnessComponentList.Add(FC_segmentGravitySensor);
+        }
+        fitnessMouthBasicList = new List<float[]>();
+        for (int mouthBasicIndex = 0; mouthBasicIndex < critterBeingTested.segaddonMouthBasicList.Count; mouthBasicIndex++) {
+            string fitnessComponentName = "Segment " + critterBeingTested.segaddonMouthBasicList[mouthBasicIndex].segmentID.ToString() + " MouthBasic";
+            float[] fitnessMouth = new float[1];
+            fitnessMouth[0] = 0f;
+            fitnessMouthBasicList.Add(fitnessMouth);
+            FitnessComponent FC_segmentMouthBasic = new FitnessComponent(ref fitnessMouth, true, false, 1f, 1f, fitnessComponentName, true);
+            fitnessComponentList.Add(FC_segmentMouthBasic);
+        }
 
         ResetFitnessComponentValues();
     }
@@ -1241,6 +1399,10 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             critterBeingTested.segaddonPositionSensor3DList[positionSensor3DIndex].fitnessDistance[0] = 0f;
             fitnessPositionSensor3DList[positionSensor3DIndex][0] = 0f;
         }
+        for (int positionSensor3DTargetIndex = 0; positionSensor3DTargetIndex < critterBeingTested.segaddonPositionSensor3DList.Count; positionSensor3DTargetIndex++) {
+            //critterBeingTested.segaddonPositionSensor3DList[positionSensor3DTargetIndex].fitnessDistance[0] = 0f;
+            fitnessPositionSensor3DTargetList[positionSensor3DTargetIndex][0] = 0f;
+        }
         for (int rotationSensor1DIndex = 0; rotationSensor1DIndex < critterBeingTested.segaddonRotationSensor1DList.Count; rotationSensor1DIndex++) {
             critterBeingTested.segaddonRotationSensor1DList[rotationSensor1DIndex].fitnessRotationRate[0] = 0f;
             fitnessRotationSensor1DList[rotationSensor1DIndex][0] = 0f;
@@ -1256,6 +1418,13 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         for (int altimeterIndex = 0; altimeterIndex < critterBeingTested.segaddonAltimeterList.Count; altimeterIndex++) {
             critterBeingTested.segaddonAltimeterList[altimeterIndex].fitnessAltitude[0] = 0f;
             fitnessAltimeterList[altimeterIndex][0] = 0f;
+        }
+        for (int gravitySensorIndex = 0; gravitySensorIndex < critterBeingTested.segaddonGravitySensorList.Count; gravitySensorIndex++) {
+            //critterBeingTested.segaddonGravitySensorList[gravitySensorIndex].fitnessAltitude[0] = 0f;
+            fitnessGravitySensorList[gravitySensorIndex][0] = 0f;
+        }
+        for (int mouthBasicIndex = 0; mouthBasicIndex < critterBeingTested.segaddonMouthBasicList.Count; mouthBasicIndex++) {            
+            fitnessMouthBasicList[mouthBasicIndex][0] = 0f;
         }
     }
     #endregion
@@ -1280,12 +1449,16 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         }
         
         gameUpdatedFromPhysX = true;
-        SetNonPhysicsGamePieceTransformsFromData();  // debug objects that rely on PhysX object positions
+        
     }
 
     private void MeasureJointAngles(int addonIndex)
     {
         SegaddonJointAngleSensor angleSensor = critterBeingTested.segaddonJointAngleSensorList[addonIndex];
+
+        float prevAngleX = angleSensor.angleX[0];
+        float prevAngleY = angleSensor.angleY[0];
+        float prevAngleZ = angleSensor.angleZ[0];
 
         Quaternion currentRotation = Quaternion.Inverse(critterBeingTested.critterSegmentList[angleSensor.segmentID].GetComponent<CritterSegment>().parentSegment.gameObject.transform.rotation) * critterBeingTested.critterSegmentList[angleSensor.segmentID].GetComponent<CritterSegment>().gameObject.transform.rotation;
         Quaternion DeltaRotation = Quaternion.Inverse(segmentArrayRestRotation[angleSensor.segmentID]) * currentRotation;
@@ -1307,10 +1480,15 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         eulerAngles.y /= Mathf.Rad2Deg;
         eulerAngles.z /= Mathf.Rad2Deg;
         //Debug.Log("TimeStep: " + gameCurrentTimeStep.ToString() + " JointAngles[" + angleSensor.segmentID.ToString() + "]: ( " + eulerAngles.x.ToString() + ", " + eulerAngles.y.ToString() + ", " + eulerAngles.z.ToString() + " )");
+
         angleSensor.angleX[0] = eulerAngles.x * angleSensor.angleSensitivity[0] * customSettings.angleSensorSensitivity[0];        
         angleSensor.angleY[0] = eulerAngles.y * angleSensor.angleSensitivity[0] * customSettings.angleSensorSensitivity[0];
         angleSensor.angleZ[0] = eulerAngles.z * angleSensor.angleSensitivity[0] * customSettings.angleSensorSensitivity[0];
 
+        // Get angle delta:
+        angleSensor.angleVelX[0] = (angleSensor.angleX[0] - prevAngleX) * 10f;
+        angleSensor.angleVelY[0] = (angleSensor.angleY[0] - prevAngleY) * 10f;
+        angleSensor.angleVelZ[0] = (angleSensor.angleZ[0] - prevAngleZ) * 10f;
 
         //Vector3 bindPoseRightVector = segmentArrayRestRotation[angleSensor.segmentID] * critterBeingTested.critterSegmentList[angleSensor.segmentID].GetComponent<CritterSegment>().parentSegment.gameObject.transform.right;
         //Vector3 bindPoseUpVector = segmentArrayRestRotation[angleSensor.segmentID] * critterBeingTested.critterSegmentList[angleSensor.segmentID].GetComponent<CritterSegment>().parentSegment.gameObject.transform.up;

@@ -467,6 +467,38 @@ public class Critter : MonoBehaviour {
                 newGO.GetComponent<MeshRenderer>().material.SetFloat("_Selected", 0f);
                 newGO.transform.SetParent(this.gameObject.transform);
                 newGO.AddComponent<BoxCollider>().isTrigger = false;
+                if (physicsOn) {
+                    newGO.AddComponent<Rigidbody>().isKinematic = false;
+
+                    //newGO.GetComponent<Rigidbody>().drag = 20f;
+                    //newGO.GetComponent<Rigidbody>().angularDrag = 20f;
+                    // Bouncy Root:
+                    //GameObject anchorGO = new GameObject("Anchor");
+                    //anchorGO.transform.SetParent(this.gameObject.transform);
+                    //anchorGO.AddComponent<Rigidbody>().isKinematic = true;
+                    /*ConfigurableJoint configJoint = newGO.AddComponent<ConfigurableJoint>();
+                    configJoint.autoConfigureConnectedAnchor = false;
+                    configJoint.connectedBody = anchorGO.GetComponent<Rigidbody>();
+                    configJoint.anchor = new Vector3(0f, 0f, 0f);
+                    configJoint.connectedAnchor = new Vector3(0f, 0f, 0f);
+                    configJoint.xMotion = ConfigurableJointMotion.Locked;
+                    configJoint.yMotion = ConfigurableJointMotion.Locked;
+                    configJoint.zMotion = ConfigurableJointMotion.Locked;
+                    configJoint.angularXMotion = ConfigurableJointMotion.Locked;
+                    configJoint.angularYMotion = ConfigurableJointMotion.Locked;
+                    configJoint.angularZMotion = ConfigurableJointMotion.Locked;
+                    SoftJointLimitSpring limitSpring = configJoint.linearLimitSpring;
+                    limitSpring.spring = 80f;
+                    limitSpring.damper = 800f;
+                    configJoint.linearLimitSpring = limitSpring;
+                    SoftJointLimit jointLimit = configJoint.linearLimit;
+                    jointLimit.limit = 0.01f;
+                    jointLimit.bounciness = 0.01f;
+                    configJoint.linearLimit = jointLimit;
+                    configJoint.angularXLimitSpring = limitSpring;
+                    configJoint.angularYZLimitSpring = limitSpring;
+                    */
+                }
                 critterSegmentList.Add(newGO);  // Add to master Linear list of Segments
                 newSegment.InitGamePiece();  // create the mesh and some other initialization stuff
                 newSegment.sourceNode = currentBuildSegmentList[i].sourceNode;
@@ -478,39 +510,7 @@ public class Critter : MonoBehaviour {
                     newSegment.scalingFactor = newSegment.sourceNode.jointLink.recursionScalingFactor;
                     newGO.transform.localScale = currentBuildSegmentList[i].sourceNode.dimensions * newSegment.scalingFactor;
                     newSegment.surfaceArea = new Vector3(newGO.transform.localScale.y * newGO.transform.localScale.z * 2f, newGO.transform.localScale.x * newGO.transform.localScale.z * 2f, newGO.transform.localScale.x * newGO.transform.localScale.y * 2f);
-                    if (physicsOn) {
-                        newGO.AddComponent<Rigidbody>().isKinematic = false;
-                        
-                        //newGO.GetComponent<Rigidbody>().drag = 20f;
-                        //newGO.GetComponent<Rigidbody>().angularDrag = 20f;
-                        // Bouncy Root:
-                        //GameObject anchorGO = new GameObject("Anchor");
-                        //anchorGO.transform.SetParent(this.gameObject.transform);
-                        //anchorGO.AddComponent<Rigidbody>().isKinematic = true;
-
-                        /*ConfigurableJoint configJoint = newGO.AddComponent<ConfigurableJoint>();
-                        configJoint.autoConfigureConnectedAnchor = false;
-                        configJoint.connectedBody = anchorGO.GetComponent<Rigidbody>();
-                        configJoint.anchor = new Vector3(0f, 0f, 0f);
-                        configJoint.connectedAnchor = new Vector3(0f, 0f, 0f);
-                        configJoint.xMotion = ConfigurableJointMotion.Locked;
-                        configJoint.yMotion = ConfigurableJointMotion.Locked;
-                        configJoint.zMotion = ConfigurableJointMotion.Locked;
-                        configJoint.angularXMotion = ConfigurableJointMotion.Locked;
-                        configJoint.angularYMotion = ConfigurableJointMotion.Locked;
-                        configJoint.angularZMotion = ConfigurableJointMotion.Locked;
-                        SoftJointLimitSpring limitSpring = configJoint.linearLimitSpring;
-                        limitSpring.spring = 80f;
-                        limitSpring.damper = 800f;
-                        configJoint.linearLimitSpring = limitSpring;
-                        SoftJointLimit jointLimit = configJoint.linearLimit;
-                        jointLimit.limit = 0.01f;
-                        jointLimit.bounciness = 0.01f;
-                        configJoint.linearLimit = jointLimit;
-                        configJoint.angularXLimitSpring = limitSpring;
-                        configJoint.angularYZLimitSpring = limitSpring;
-                        */
-                    }
+                    
                 }
                 else {  // if NOT root segment, can consider parent-related stuff:
                     
@@ -580,6 +580,7 @@ public class Critter : MonoBehaviour {
                     int jointAngleSensorIndex = masterCritterGenome.CheckForAddonJointAngleSensor(currentBuildSegmentList[i].sourceNode.ID);
                     if (jointAngleSensorIndex != -1) { // if there is a jointAngleSensor definition on this sourceNode
                         SegaddonJointAngleSensor newJointAngleSensor = new SegaddonJointAngleSensor(masterCritterGenome.addonJointAngleSensorList[jointAngleSensorIndex]);
+                        //Debug.Log("Critter Rebuild SegaddonJointAngleSensor #" + jointAngleSensorIndex.ToString() + newJointAngleSensor.angleX.ToString());
                         newJointAngleSensor.segmentID = newSegment.id;
                         segaddonJointAngleSensorList.Add(newJointAngleSensor);
                     }
@@ -888,7 +889,7 @@ public class Critter : MonoBehaviour {
                 else {
                     SetSegmentTransform(newGO);  // Properly position the SegmentGO where it should be  && scale!
                     if (physicsOn) {
-                        newGO.AddComponent<Rigidbody>().isKinematic = false;
+                        //newGO.GetComponent<Rigidbody>().isKinematic = false;
                         newGO.GetComponent<Rigidbody>().ResetInertiaTensor();
                         ConfigurableJoint configJoint = newGO.AddComponent<ConfigurableJoint>();
                         configJoint.autoConfigureConnectedAnchor = false;

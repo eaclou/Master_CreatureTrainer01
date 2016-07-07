@@ -30,6 +30,10 @@ public class ES2UserType_MiniGameSettingsSaves : ES2Type
         writer.Write(data.minTargetZ);
         writer.Write(data.targetRadius);
         writer.Write(data.viscosityDrag);
+        writer.Write(data.initForceMax);
+        writer.Write(data.initForceMin);
+        writer.Write(data.useRandomTargetPos);
+        writer.Write(data.variableMass);
     }
 	
 	public override object Read(ES2Reader reader)
@@ -65,6 +69,10 @@ public class ES2UserType_MiniGameSettingsSaves : ES2Type
             data.minTargetZ = reader.Read<float>();
             data.targetRadius = reader.Read<float>();
             data.viscosityDrag = reader.Read<float>();
+            data.initForceMax = reader.Read<float>();
+            data.initForceMin = reader.Read<float>();
+            data.useRandomTargetPos = reader.Read<float>();
+            data.variableMass = reader.Read<float>();
             if (fileVersion >= 1) {
                 // new attributes
             }

@@ -61,6 +61,7 @@ public class TrainerLoadPopulationUI : MonoBehaviour {
 		if(System.IO.File.Exists (fileRootPath + fileName)) { 
 			TrainingSave trainingDataToLoad = ES2.Load<TrainingSave>(fileRootPath + fileName);;
             trainerModuleScript.gameController.masterTrainer.loadedTrainingSave = trainingDataToLoad;
+            trainerModuleScript.gameController.masterTrainer.trainingModifierManager.activeTrainingModifierList = trainerModuleScript.gameController.masterTrainer.loadedTrainingSave.savedTrainingModifierList;
             // Leap of Faith:
             currentPlayer.masterPopulation = trainingDataToLoad.savedPopulation;
             GenomeNEAT.nextAvailableInnovationNumber = trainingDataToLoad.savedPopulation.nextAvailableGeneInno;

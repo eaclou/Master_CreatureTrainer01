@@ -29,19 +29,19 @@ public class MiniGameCritterWalkBasicSettings : MiniGameSettingsBase {
 
     public MiniGameCritterWalkBasicSettings() {
         // DEFAULTS:
-        viscosityDrag[0] = 1f;
+        viscosityDrag[0] = 0f;
         gravityStrength[0] = 0f;
         jointMotorForce[0] = 2f; // global multipliers on individual joint motor settings
-        jointMotorSpeed[0] = 1f;
+        jointMotorSpeed[0] = 2f;
         variableMass[0] = 0.8f;
         minTargetX[0] = 0f;
         maxTargetX[0] = 0f;
-        minTargetY[0] = 0f;
-        maxTargetY[0] = 0f;
-        minTargetZ[0] = 10f;
-        maxTargetZ[0] = 10f;
-        minScoreDistance[0] = 15f;
-        maxScoreDistance[0] = 1f;
+        minTargetY[0] = -5f;
+        maxTargetY[0] = 5f;
+        minTargetZ[0] = 0f;
+        maxTargetZ[0] = 6f;
+        minScoreDistance[0] = 1f;
+        maxScoreDistance[0] = 0.75f;
         targetRadius[0] = 1f;
         groundPositionY[0] = -50f;
         angleSensorSensitivity[0] = 1f;
@@ -81,7 +81,7 @@ public class MiniGameCritterWalkBasicSettings : MiniGameSettingsBase {
         gameOptionsList.Add(GOC_maxTargetZ); // 
         GameOptionChannel GOC_minScoreDistance = new GameOptionChannel(ref minScoreDistance, 0.01f, 50f, "Min Target Distance");
         gameOptionsList.Add(GOC_minScoreDistance); // 7
-        GameOptionChannel GOC_maxScoreDistance = new GameOptionChannel(ref maxScoreDistance, 0.01f, 50f, "Max Target Distance");
+        GameOptionChannel GOC_maxScoreDistance = new GameOptionChannel(ref maxScoreDistance, 0.01f, 20f, "Max Target Distance");
         gameOptionsList.Add(GOC_maxScoreDistance); // 7
         GameOptionChannel GOC_groundPositionY = new GameOptionChannel(ref groundPositionY, -50f, 0f, "Ground Position Y");
         gameOptionsList.Add(GOC_groundPositionY); // 7    

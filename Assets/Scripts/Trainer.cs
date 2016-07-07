@@ -416,11 +416,7 @@ public class Trainer {
                 }
                 //Debug.Log("ProcessFitnessScoresEndGeneration(" + genIndex.ToString() + ") totalAllAgentsScore: " + playerList[p].dataManager.generationDataList[genIndex].totalAllAgentsScore.ToString());
             }
-
-
-
             //Debug.Log("ProcessFitnessScoresEndGeneration(" + playingCurGeneration.ToString() + ") base01: " + baseGenerationScore01.ToString() + ", new01: " + newGenerationScore01.ToString() + ", scoreRatio: " + newScoreRatio.ToString());
-            
             
             //Debug.Log (agentFitnessTotals);
             playerList[p].graphKing.BuildTexturesFitnessPerGen(playerList[p]);
@@ -622,7 +618,8 @@ public class Trainer {
 			//Debug.Log ("CalculateOneStep() currentGameManager.miniGameInstance.gameTicked: " + playingCurMiniGameTimeStep.ToString());
 			// This should only update if game Ran before this function call, otherwise it's skipped and goes onto GameSimulation
 			currentGameManager.miniGameInstance.UpdateGameStateFromPhysX(); // integrate pending PhysX stateData back into primary gameData
-			if(currentGameManager.miniGameInstance.gameEndStateReached) {  // If, after the end of its gameLoop, some endGame conditions have been met:
+            currentGameManager.miniGameInstance.SetNonPhysicsGamePieceTransformsFromData();
+            if (currentGameManager.miniGameInstance.gameEndStateReached) {  // If, after the end of its gameLoop, some endGame conditions have been met:
 				// game ended for reason other than timeOut	
 			}
 			// =================================================================================================================================================================
@@ -730,8 +727,16 @@ public class Trainer {
 		gameControllerRef.trainerUI.CheckForAllPendingApply(); // apply any pending edits
 		gameControllerRef.trainerUI.panelDataVisScript.InitializePanelWithTrainerData();
 
-		// CROSSOVER!!!!!! ++++++++++++++++++
-		if(crossoverOn) {
+        // Update Data text view:
+        MiniGameManager currentGameManager = PlayerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].miniGameManager;  // <-- to help readability
+        gameControllerRef.trainerUI.panelDataViewScript.populationRef = playerList[playingCurPlayer].masterPopulation;
+        gameControllerRef.trainerUI.panelDataViewScript.minigameRef = currentGameManager.miniGameInstance;
+        gameControllerRef.trainerUI.panelDataViewScript.dataManagerRef = playerList[playingCurPlayer].dataManager;
+        gameControllerRef.trainerUI.panelDataViewScript.SetCurrentAgentID(playingCurAgent);
+        gameControllerRef.trainerUI.panelDataViewScript.UpdateDataText();
+
+        // CROSSOVER!!!!!! ++++++++++++++++++
+        if (crossoverOn) {
 			for(int p = 0; p < numPlayers; p++) {  // iterate through playerList
 				//Debug.Log ("crossover, player" + p.ToString () + ", " + playerList[p].MasterPopulation.brainType.ToString() + playerList[p].masterCupid.tempName);
 				playerList[p].masterCupid.PerformCrossover(ref playerList[p].masterPopulation, playingCurGeneration);
@@ -751,8 +756,8 @@ public class Trainer {
                 //    PlayerList[p].masterTrialsList[t].miniGameManager.miniGameInstance.ResetTargetPositions(PlayerList[p].masterTrialsList[t].numberOfPlays);
                 //}                
             }
-		}
-	}
+		}        
+    }
 
 	public string GetCurrentGamePlayingState() {
 		string output = "Current Generation: " + playingCurGeneration + 

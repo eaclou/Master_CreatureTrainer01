@@ -135,6 +135,8 @@ public class TrainerSavePopulationUI : MonoBehaviour {
                 // Copy the settings from the minigame instance into the SaveWrapper:
                 currentPlayer.masterTrialsList[0].miniGameManager.miniGameInstance.gameSettings.CopySettingsToSave(trainingSave.savedMiniGameSettings);
 
+                trainingSave.savedTrainingModifierList = trainerModuleScript.gameController.masterTrainer.trainingModifierManager.activeTrainingModifierList;
+
                 trainingSave.savedTrialDataBegin = currentPlayer.dataManager.generationDataList[0].trialDataArray[0];
                 trainingSave.savedTrialDataEnd = currentPlayer.dataManager.generationDataList[trainerModuleScript.gameController.masterTrainer.PlayingCurGeneration - 1].trialDataArray[0];
                

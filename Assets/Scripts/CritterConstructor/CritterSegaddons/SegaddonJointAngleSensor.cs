@@ -8,6 +8,9 @@ public class SegaddonJointAngleSensor {
     public float[] angleX;
     public float[] angleY;
     public float[] angleZ;
+    public float[] angleVelX;
+    public float[] angleVelY;
+    public float[] angleVelZ;
 
     public SegaddonJointAngleSensor() {        
         angleSensitivity = new float[1];
@@ -19,6 +22,13 @@ public class SegaddonJointAngleSensor {
         angleY[0] = 0f;
         angleZ = new float[1];
         angleZ[0] = 0f;
+
+        angleVelX = new float[1];
+        angleVelX[0] = 0f;
+        angleVelY = new float[1];
+        angleVelY[0] = 0f;
+        angleVelZ = new float[1];
+        angleVelZ[0] = 0f;
     }
 
     public SegaddonJointAngleSensor(AddonJointAngleSensor sourceNode) {
@@ -31,5 +41,12 @@ public class SegaddonJointAngleSensor {
         angleY[0] = 0f;
         angleZ = new float[1];
         angleZ[0] = 0f;
+
+        angleVelX = new float[1];
+        angleVelX[0] = 0f;
+        angleVelY = new float[1];
+        angleVelY[0] = 0f;
+        angleVelZ = new float[1];
+        angleVelZ[0] = 0f;
     }
 }
