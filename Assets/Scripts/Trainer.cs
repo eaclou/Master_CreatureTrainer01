@@ -600,6 +600,7 @@ public class Trainer {
                                                                    //currentGameManager.miniGameInstance.Reset();
             //Debug.Log("CalculateOneStep()Trainer BEFORE: " + playerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].miniGameManager.miniGameInstance.agentBodyBeingTested.creatureBodySegmentGenomeList[0].addOn1.ToString());
             currentGameManager.miniGameInstance.InstantiateGamePieces();  // first time Game has been Reset, so instantiateGamePieces
+            // Currently, this just includes the C.O.M, targetSphere, and groundPlane
             // TrainingModifiers!!!
             trainingModifierManager.ApplyTrainingModifierEffects(this);
             currentGameManager.miniGameInstance.ResetTargetPositions(PlayerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].numberOfPlays, PlayerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].minEvaluationTimeSteps, PlayerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].maxEvaluationTimeSteps);

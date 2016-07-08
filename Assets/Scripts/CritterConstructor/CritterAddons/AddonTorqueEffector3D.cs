@@ -4,6 +4,7 @@ using System.Collections;
 public class AddonTorqueEffector3D {
 
     public int critterNodeID;
+    public int innov;
     public float[] maxTorque;
     //public float[] throttle;
 
@@ -17,9 +18,10 @@ public class AddonTorqueEffector3D {
         //throttle[0] = 0f;
     }
 
-    public AddonTorqueEffector3D(int id) {
+    public AddonTorqueEffector3D(int id, int inno) {
         Debug.Log("Constructor AddonTorqueEffector3D(" + id.ToString() + ")");
         critterNodeID = id;
+        innov = inno;
         //directionVector = new Vector3[1];
         //directionVector[0] = new Vector3(0f, 0f, 1f);
         maxTorque = new float[1];

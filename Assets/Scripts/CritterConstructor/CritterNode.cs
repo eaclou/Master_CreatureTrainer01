@@ -14,6 +14,7 @@ public class CritterNode {
             RenumberNodeID(value);
         }
     }
+    public int innov;
     //public List<CritterJointLink> attachedJointLinkList;
     public List<int> attachedChildNodesIdList;
     //public List<CritterNodeAddonBase> addonsList;  // Deprecated
@@ -30,10 +31,11 @@ public class CritterNode {
         //addonsList = new List<CritterNodeAddonBase>();     // Deprecated     
     }
 
-    public CritterNode(int i) {
+    public CritterNode(int i, int inno) {
         //Debug.Log("CritterNode Constructor(int id " + i.ToString() + ")!");
 
         this.iD = i;
+        this.innov = inno;
         jointLink = new CritterJointLink(i);
         //attachedJointLinkList = new List<CritterJointLink>();
         attachedChildNodesIdList = new List<int>();

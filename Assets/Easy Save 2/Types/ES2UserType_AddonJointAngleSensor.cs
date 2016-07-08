@@ -14,7 +14,9 @@ public class ES2UserType_AddonJointAngleSensor : ES2Type
         // Make sure to edit Read() function to properly handle version control!
         // VERSION 0:
         writer.Write(data.critterNodeID);
+        writer.Write(data.innov);
         writer.Write(data.sensitivity);
+        writer.Write(data.measureVel);
     }
 	
 	public override object Read(ES2Reader reader)
@@ -34,7 +36,9 @@ public class ES2UserType_AddonJointAngleSensor : ES2Type
         // VERSION 0:
         if (fileVersion >= 0) {
             data.critterNodeID = reader.Read<System.Int32>();
+            data.innov = reader.Read<System.Int32>();
             data.sensitivity = reader.ReadArray<System.Single>();
+            data.measureVel = reader.ReadArray<bool>();
         }
     }
 	

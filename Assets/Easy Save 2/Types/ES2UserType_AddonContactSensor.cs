@@ -12,6 +12,7 @@ public class ES2UserType_AddonContactSensor : ES2Type {
         // Make sure to edit Read() function to properly handle version control!
         // VERSION 0:
         writer.Write(data.critterNodeID);
+        writer.Write(data.innov);
         writer.Write(data.contactSensitivity);
     }
 
@@ -30,6 +31,7 @@ public class ES2UserType_AddonContactSensor : ES2Type {
         // VERSION 0:
         if (fileVersion >= 0) {
             data.critterNodeID = reader.Read<System.Int32>();
+            data.innov = reader.Read<System.Int32>();
             data.contactSensitivity = reader.ReadArray<System.Single>();
         }
     }

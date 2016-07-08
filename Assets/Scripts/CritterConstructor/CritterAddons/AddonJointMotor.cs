@@ -4,6 +4,7 @@ using System.Collections;
 public class AddonJointMotor {
 
     public int critterNodeID;
+    public int innov;
     public float[] motorForce;
     public float[] motorSpeed;
 
@@ -15,9 +16,10 @@ public class AddonJointMotor {
         motorSpeed[0] = 100f;
     }
 
-    public AddonJointMotor(int id) {
+    public AddonJointMotor(int id, int inno) {
         //Debug.Log("Constructor AddonJointMotor(" + id.ToString() + ")");
         critterNodeID = id;
+        innov = inno;
         motorForce = new float[1];
         motorForce[0] = 100f;
         motorSpeed = new float[1];

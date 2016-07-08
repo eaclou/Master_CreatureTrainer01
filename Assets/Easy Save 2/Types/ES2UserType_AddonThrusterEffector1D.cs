@@ -12,6 +12,7 @@ public class ES2UserType_AddonThrusterEffector1D : ES2Type {
         // Make sure to edit Read() function to properly handle version control!
         // VERSION 0:
         writer.Write(data.critterNodeID);
+        writer.Write(data.innov);
         writer.Write(data.forwardVector);
         writer.Write(data.maxForce);
     }
@@ -31,6 +32,7 @@ public class ES2UserType_AddonThrusterEffector1D : ES2Type {
         // VERSION 0:
         if (fileVersion >= 0) {
             data.critterNodeID = reader.Read<System.Int32>();
+            data.innov = reader.Read<System.Int32>();
             data.forwardVector = reader.ReadArray<Vector3>();
             data.maxForce = reader.ReadArray<System.Single>();
         }

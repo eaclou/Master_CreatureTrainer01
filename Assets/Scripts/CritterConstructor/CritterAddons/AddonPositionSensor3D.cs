@@ -4,6 +4,7 @@ using System.Collections;
 public class AddonPositionSensor3D {
 
     public int critterNodeID;
+    public int innov;
     public bool[] relative;
     public float[] sensitivity;
 
@@ -15,9 +16,10 @@ public class AddonPositionSensor3D {
         sensitivity[0] = 1f;
     }
 
-    public AddonPositionSensor3D(int id) {
+    public AddonPositionSensor3D(int id, int inno) {
         //Debug.Log("Constructor AddonPositionSensor3D(" + id.ToString() + ")");
         critterNodeID = id;
+        innov = inno;
         relative = new bool[1];
         relative[0] = true;
         sensitivity = new float[1];

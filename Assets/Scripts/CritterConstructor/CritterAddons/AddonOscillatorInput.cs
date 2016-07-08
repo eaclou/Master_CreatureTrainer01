@@ -4,6 +4,7 @@ using System.Collections;
 public class AddonOscillatorInput {
 
     public int critterNodeID;
+    public int innov;
     public float[] frequency;
     public float[] amplitude;
     public float[] offset;
@@ -18,9 +19,10 @@ public class AddonOscillatorInput {
         offset[0] = 0f;
     }
 
-    public AddonOscillatorInput(int id) {
+    public AddonOscillatorInput(int id, int inno) {
         Debug.Log("Constructor AddonOscillatorInput(" + id.ToString() + ")");
         critterNodeID = id;
+        innov = inno;
         frequency = new float[1];
         frequency[0] = 1f;
         amplitude = new float[1];

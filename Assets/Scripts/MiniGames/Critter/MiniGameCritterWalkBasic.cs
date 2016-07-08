@@ -899,19 +899,33 @@ public class MiniGameCritterWalkBasic : MiniGameBase
                 BrainInputChannel BIC_SegmentAngle = new BrainInputChannel(ref angleSensor.angleX, true, inputChannelName);
                 inputChannelsList.Add(BIC_SegmentAngle);
 
-                inputChannelName = "Segment " + angleSensor.segmentID.ToString() + " AngleVelX";
-                BrainInputChannel BIC_SegmentAngleVel = new BrainInputChannel(ref angleSensor.angleVelX, true, inputChannelName);
-                inputChannelsList.Add(BIC_SegmentAngleVel);
+                if(angleSensor.measureVel) {
+                    inputChannelName = "Segment " + angleSensor.segmentID.ToString() + " AngleVelX";
+                    BrainInputChannel BIC_SegmentAngleVel = new BrainInputChannel(ref angleSensor.angleVelX, true, inputChannelName);
+                    inputChannelsList.Add(BIC_SegmentAngleVel);
+                }                
             }
             else if (critterBeingTested.critterSegmentList[angleSensor.segmentID].GetComponent<CritterSegment>().sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeY) {
                 string inputChannelName = "Segment " + angleSensor.segmentID.ToString() + " AngleY";
                 BrainInputChannel BIC_SegmentAngle = new BrainInputChannel(ref angleSensor.angleY, true, inputChannelName);
                 inputChannelsList.Add(BIC_SegmentAngle);
+
+                if (angleSensor.measureVel) {
+                    inputChannelName = "Segment " + angleSensor.segmentID.ToString() + " AngleVelY";
+                    BrainInputChannel BIC_SegmentAngleVel = new BrainInputChannel(ref angleSensor.angleVelY, true, inputChannelName);
+                    inputChannelsList.Add(BIC_SegmentAngleVel);
+                }
             }
             else if (critterBeingTested.critterSegmentList[angleSensor.segmentID].GetComponent<CritterSegment>().sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeZ) {
                 string inputChannelName = "Segment " + angleSensor.segmentID.ToString() + " AngleZ";
                 BrainInputChannel BIC_SegmentAngle = new BrainInputChannel(ref angleSensor.angleZ, true, inputChannelName);
                 inputChannelsList.Add(BIC_SegmentAngle);
+
+                if (angleSensor.measureVel) {
+                    inputChannelName = "Segment " + angleSensor.segmentID.ToString() + " AngleVelZ";
+                    BrainInputChannel BIC_SegmentAngleVel = new BrainInputChannel(ref angleSensor.angleVelZ, true, inputChannelName);
+                    inputChannelsList.Add(BIC_SegmentAngleVel);
+                }
             }
             else if (critterBeingTested.critterSegmentList[angleSensor.segmentID].GetComponent<CritterSegment>().sourceNode.jointLink.jointType == CritterJointLink.JointType.DualXY) {
                 string inputChannelName = "Segment " + angleSensor.segmentID.ToString() + " AngleX";
@@ -922,9 +936,15 @@ public class MiniGameCritterWalkBasic : MiniGameBase
                 BrainInputChannel BIC_SegmentAngleY = new BrainInputChannel(ref angleSensor.angleY, true, inputChannelName);
                 inputChannelsList.Add(BIC_SegmentAngleY);
 
-                //inputChannelName = "Segment " + angleSensor.segmentID.ToString() + " AngleZ";
-                //BrainInputChannel BIC_SegmentAngleZ = new BrainInputChannel(ref angleSensor.angleZ, true, inputChannelName);
-                //inputChannelsList.Add(BIC_SegmentAngleZ);
+                if (angleSensor.measureVel) {
+                    inputChannelName = "Segment " + angleSensor.segmentID.ToString() + " AngleVelX";
+                    BrainInputChannel BIC_SegmentAngleVelX = new BrainInputChannel(ref angleSensor.angleVelX, true, inputChannelName);
+                    inputChannelsList.Add(BIC_SegmentAngleVelX);
+
+                    inputChannelName = "Segment " + angleSensor.segmentID.ToString() + " AngleVelY";
+                    BrainInputChannel BIC_SegmentAngleVelY = new BrainInputChannel(ref angleSensor.angleVelY, true, inputChannelName);
+                    inputChannelsList.Add(BIC_SegmentAngleVelY);
+                }
             }
         }
         // Contact Sensor:
@@ -1204,8 +1224,8 @@ public class MiniGameCritterWalkBasic : MiniGameBase
     {
         // Fitness Component List:
         fitnessComponentList = new List<FitnessComponent>();
-        //FitnessComponent FC_distFromOrigin = new FitnessComponent(ref fitDistFromOrigin, true, true, 1f, 0f, "Distance From Origin", true);
-        //fitnessComponentList.Add(FC_distFromOrigin); // 0
+        FitnessComponent FC_distFromOrigin = new FitnessComponent(ref fitDistFromOrigin, true, true, 1f, 0f, "Distance From Origin", true);
+        fitnessComponentList.Add(FC_distFromOrigin); // 0
         FitnessComponent FC_energySpent = new FitnessComponent(ref fitEnergySpent, true, false, 1f, 1f, "Energy Spent", true);
         fitnessComponentList.Add(FC_energySpent); // 1
         FitnessComponent FC_distToTarget = new FitnessComponent(ref fitDistToTarget, true, false, 1f, 1f, "Distance To Target", true);
@@ -1486,9 +1506,11 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         angleSensor.angleZ[0] = eulerAngles.z * angleSensor.angleSensitivity[0] * customSettings.angleSensorSensitivity[0];
 
         // Get angle delta:
-        angleSensor.angleVelX[0] = (angleSensor.angleX[0] - prevAngleX) * 10f;
-        angleSensor.angleVelY[0] = (angleSensor.angleY[0] - prevAngleY) * 10f;
-        angleSensor.angleVelZ[0] = (angleSensor.angleZ[0] - prevAngleZ) * 10f;
+        if(angleSensor.measureVel) {
+            angleSensor.angleVelX[0] = (angleSensor.angleX[0] - prevAngleX) * 10f;
+            angleSensor.angleVelY[0] = (angleSensor.angleY[0] - prevAngleY) * 10f;
+            angleSensor.angleVelZ[0] = (angleSensor.angleZ[0] - prevAngleZ) * 10f;
+        }
 
         //Vector3 bindPoseRightVector = segmentArrayRestRotation[angleSensor.segmentID] * critterBeingTested.critterSegmentList[angleSensor.segmentID].GetComponent<CritterSegment>().parentSegment.gameObject.transform.right;
         //Vector3 bindPoseUpVector = segmentArrayRestRotation[angleSensor.segmentID] * critterBeingTested.critterSegmentList[angleSensor.segmentID].GetComponent<CritterSegment>().parentSegment.gameObject.transform.up;

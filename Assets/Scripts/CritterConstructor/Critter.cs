@@ -1200,88 +1200,12 @@ public class Critter : MonoBehaviour {
 
     public void DeleteNode(CritterNode node) {
         int deletedID = node.ID; // id of the node being deleted 
-        CritterNode parentNode = masterCritterGenome.CritterNodeList[node.jointLink.parentNodeID];  // get parent of node being deleted
-        //Debug.Log("DeleteNode before: " + masterCritterGenome.CritterNodeList.Count.ToString() + " deletedID: " + deletedID.ToString() + " parentChildCount: " + parentNode.attachedChildNodesIdList.Count.ToString());
-        int childIndex = -1;
-        // evalute parent of deleted node, go through its childList to find deleted Node ....        
-        for(int i = 0; i < parentNode.attachedChildNodesIdList.Count; i++) {
-            //Debug.Log("*******B$B$B$ i: " + i.ToString() + " deletedID: " + deletedID.ToString() + ", parentNodeID: " + parentNode.ID.ToString() + " attachedChildNodesIdList[i]: " + parentNode.attachedChildNodesIdList[i].ToString());
-            // go through parent node's children list and remove this node from it before deleting it from master list:
-            if (parentNode.attachedChildNodesIdList[i] == deletedID) { // if the child in parent's List is the child being deleted:
-                //Debug.Log("******* i: " + i.ToString() + " deletedID: " + deletedID.ToString() + ", parentNodeID: " + parentNode.ID.ToString());
-                childIndex = i;   // save index of node being deleted so it can be removed after loop             
-            }
-        }
-        // and remove it from childList
-        parentNode.attachedChildNodesIdList.RemoveAt(childIndex); // remove here to avoid shortening length of list while traversing it
-
-        // Attach children of deleted node to parentNode:
-        for(int j = 0; j < node.attachedChildNodesIdList.Count; j++) { // go through deleted node's children
-            //Debug.Log("**** j: " + j.ToString() + " jchildID: " + node.attachedChildNodesIdList[j].ToString());
-            //masterCritterGenome.CritterNodeList[  masterCritterGenome.CritterNodeList[  node.attachedChildNodesIdList[j]  ].jointLink.parentNodeID  ] = parentNode; // OLD; see if this needs to be done with ints rather than saving a ref to parentNode
-            // Set child of deleted-node's parentID  to the original parent of the deleted node:
-            masterCritterGenome.CritterNodeList[node.attachedChildNodesIdList[j]].jointLink.parentNodeID = parentNode.ID;
-            // add the orphaned child ID's to the original parent of the deleted node:
-            parentNode.attachedChildNodesIdList.Add(node.attachedChildNodesIdList[j]);
-        }
-        // Remove node from master List
-        masterCritterGenome.CritterNodeList.RemoveAt(deletedID);
-        //Debug.Log("DeleteNode after: " + masterCritterGenome.CritterNodeList.Count.ToString() + ", parentFullChildList: " + parentNode.attachedChildNodesIdList.Count.ToString());
-    }
+        masterCritterGenome.DeleteNode(deletedID);  // handled within Genome
+    }    
 
     public void RenumberNodes() {
         if(masterCritterGenome != null) {
-            // traverse the main node List, if there is a gap in id's, iterate through all nodes/joints and adjust all ID's down by 1 until no gaps exist
-            int checkingID = 0;
-            int lastConsecutiveID = 0;
-            for(int i = 0; i < masterCritterGenome.CritterNodeList.Count; i++) {
-                //Debug.Log("RenumberNodesBEFORE checkingID: " + checkingID.ToString() + ", nodeID: " + masterCritterGenome.CritterNodeList[i].ID.ToString() + ", i: " + i.ToString());
-                if (masterCritterGenome.CritterNodeList[i].ID == checkingID) { // if node exists for each checkingID
-                    lastConsecutiveID = checkingID;
-                    // no need to renumber, node exists for this number
-                }
-                else {  //  nodeID didn't match checkingID - there is a gap!
-                    //masterCritterGenome.CritterNodeList[i].RenumberNodeID(masterCritterGenome.CritterNodeList[i].ID - 1);
-                    
-                    // Iterate through all nodes:
-                    for (int j = 0; j < masterCritterGenome.CritterNodeList.Count; j++) {  // make this less of a brute force algo later!!!
-                        // check parentNodeID to see if it is above the current Gap ID:
-                        if (masterCritterGenome.CritterNodeList[j].jointLink.parentNodeID > checkingID) { 
-                            // if so, subtract 1 to fill in gap
-                            masterCritterGenome.CritterNodeList[j].jointLink.parentNodeID--;
-                            // OLD:
-                            //masterCritterGenome.CritterNodeList[  masterCritterGenome.CritterNodeList[j].jointLink.parentNodeID  ].jointLink.parentNodeID = masterCritterGenome.CritterNodeList[lastConsecutiveID].ID; // reset parentNodeID
-                            //masterCritterGenome.CritterNodeList[  masterCritterGenome.CritterNodeList[j].jointLink.parentNodeID  ].RenumberNodeID(lastConsecutiveID);        // reset thisNode ID                    
-                        }
-                        if (masterCritterGenome.CritterNodeList[j].jointLink.thisNodeID > checkingID) {    // check if this node's joint selfID > checkingID:                       
-                            masterCritterGenome.CritterNodeList[j].jointLink.thisNodeID--; // if so, subtract 1 to fill in gap
-                        }
-                        // check all child indices of this node:
-                        for (int k = 0; k < masterCritterGenome.CritterNodeList[j].attachedChildNodesIdList.Count; k++) {
-                            // if childID is greater than GapID, subtract 1 to bring it in line:
-                            if(masterCritterGenome.CritterNodeList[j].attachedChildNodesIdList[k] > checkingID) {
-                                masterCritterGenome.CritterNodeList[j].attachedChildNodesIdList[k]--;
-                                
-                            }
-                            //Debug.Log("RenumberNodesCHILDREN j: " + j.ToString() + ", k: " + k.ToString() + ", childID: " + masterCritterGenome.CritterNodeList[j].attachedChildNodesIdList[k].ToString());
-                        }
-                        // if current Node's id is greater than gapID, subtract 1:
-                        if(masterCritterGenome.CritterNodeList[j].ID > checkingID) {
-                            masterCritterGenome.CritterNodeList[j].RenumberNodeID(masterCritterGenome.CritterNodeList[j].ID - 1);
-                        }
-                    }
-                    //OLDOLD: masterCritterGenome.CritterNodeList[i].RenumberNodeID(checkingID); // set id of node to newID
-                    // Set all other references:
-                    //Debug.Log("RenumberNodesMIDDle checkingID: " + checkingID.ToString() + ", nodeID: " + masterCritterGenome.CritterNodeList[i].ID.ToString() + ", i: " + i.ToString());
-                }
-                if(i != 0) {
-                    //Debug.Log("RenumberNodes checkingID: " + checkingID.ToString() + ", nodeID: " + masterCritterGenome.CritterNodeList[i].ID.ToString() + ", i: " + i.ToString() + ", " + masterCritterGenome.CritterNodeList[i].jointLink.parentNodeID.ToString());
-                }
-                
-
-                checkingID++;
-            }
-            //Debug.Log("genome# nodes: " + masterCritterGenome.CritterNodeList.Count.ToString());
+            masterCritterGenome.RenumberNodes();            
         }
     }
 

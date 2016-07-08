@@ -14,6 +14,7 @@ public class PanelAddonItemDisplay : MonoBehaviour {
     public int sourceAddonIndex;
 
     public int index; // this is the index of the UI DISPLAY list 
+    public int addonInno;
 
     public GameObject floatDisplayPrefab;
     public GameObject boolDisplayPrefab;
@@ -31,7 +32,7 @@ public class PanelAddonItemDisplay : MonoBehaviour {
 	}
 
     public void Prime(CritterGenome sourceGenome) {
-        textHeader.text = sourceAddonType.ToString();
+        textHeader.text = sourceAddonType.ToString() + " [" + addonInno.ToString() + "]";
 
         if(sourceAddonType == CritterNodeAddonBase.CritterNodeAddonTypes.PhysicalAttributes) {
             AddonPhysicalAttributes physicalAttributes = sourceGenome.addonPhysicalAttributesList[sourceAddonIndex];
@@ -131,13 +132,21 @@ public class PanelAddonItemDisplay : MonoBehaviour {
             floatDisplay.sliderFloat.value = jointAngleSensor.sensitivity[0];
             floatDisplay.textFloatValue.text = jointAngleSensor.sensitivity[0].ToString();
 
+            GameObject boolDisplay1GO = (GameObject)Instantiate(boolDisplayPrefab);
+            PanelAddonDisplayBool boolDisplay1 = boolDisplay1GO.GetComponent<PanelAddonDisplayBool>();
+            boolDisplay1.textBoolName.text = "Measure Vel:";
+            boolDisplay1.linkedBoolValue[0] = jointAngleSensor.measureVel[0];
+            jointAngleSensor.measureVel = boolDisplay1.linkedBoolValue;
+            boolDisplay1.toggleBool.isOn = jointAngleSensor.measureVel[0];
+            boolDisplay1GO.transform.SetParent(this.transform);
+
             floatDisplayGO.transform.SetParent(this.transform);
         }
         else if (sourceAddonType == CritterNodeAddonBase.CritterNodeAddonTypes.ContactSensor) {
             AddonContactSensor contactSensor = sourceGenome.addonContactSensorList[sourceAddonIndex];
             GameObject floatDisplay1GO = (GameObject)Instantiate(floatDisplayPrefab);
             PanelAddonDisplayFloat floatDisplay1 = floatDisplay1GO.GetComponent<PanelAddonDisplayFloat>();
-            floatDisplay1.textFloatName.text = "Sensititivity:";
+            floatDisplay1.textFloatName.text = "Sensitivity:";
             floatDisplay1.sliderFloat.minValue = 0.05f;
             floatDisplay1.sliderFloat.maxValue = 20f;
             floatDisplay1.linkedFloatValue[0] = contactSensor.contactSensitivity[0];

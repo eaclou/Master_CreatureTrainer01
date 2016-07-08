@@ -33,6 +33,7 @@ public class PanelAddonsList : MonoBehaviour {
                 PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
                 itemDisplay.panelAddonsList = this;
                 itemDisplay.index = addonDisplayIndex;
+                itemDisplay.addonInno = sourceGenome.addonPhysicalAttributesList[physicalAttributesIndex].innov;
                 addonDisplayIndex++; 
                 itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.PhysicalAttributes; 
                 itemDisplay.sourceAddonIndex = physicalAttributesIndex; 
@@ -51,6 +52,7 @@ public class PanelAddonsList : MonoBehaviour {
                 PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
                 itemDisplay.panelAddonsList = this;
                 itemDisplay.index = addonDisplayIndex;
+                itemDisplay.addonInno = sourceGenome.addonJointAngleSensorList[jointAngleSensorIndex].innov;
                 addonDisplayIndex++;  // keeps track of position of this itemDisplay within the UI display addon List
                 itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.JointAngleSensor;  // tells this display to look in masterGenome.AddonJointMotorList[]
                 itemDisplay.sourceAddonIndex = jointAngleSensorIndex;  // the index within masterGenome.AddonJointMotorList[] where the source Add-On is.
@@ -65,6 +67,7 @@ public class PanelAddonsList : MonoBehaviour {
                 PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
                 itemDisplay.panelAddonsList = this;
                 itemDisplay.index = addonDisplayIndex;
+                itemDisplay.addonInno = sourceGenome.addonContactSensorList[contactSensorIndex].innov;
                 addonDisplayIndex++;  // keeps track of position of this itemDisplay within the UI display addon List
                 itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.ContactSensor;  // tells this display to look in masterGenome.AddonJointMotorList[]
                 itemDisplay.sourceAddonIndex = contactSensorIndex;  // the index within masterGenome.AddonJointMotorList[] where the source Add-On is.
@@ -79,6 +82,7 @@ public class PanelAddonsList : MonoBehaviour {
                 PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
                 itemDisplay.panelAddonsList = this;
                 itemDisplay.index = addonDisplayIndex;
+                itemDisplay.addonInno = sourceGenome.addonRaycastSensorList[raycastSensorIndex].innov;
                 addonDisplayIndex++;  // keeps track of position of this itemDisplay within the UI display addon List
                 itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.RaycastSensor;
                 itemDisplay.sourceAddonIndex = raycastSensorIndex;
@@ -93,6 +97,7 @@ public class PanelAddonsList : MonoBehaviour {
                 PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
                 itemDisplay.panelAddonsList = this;
                 itemDisplay.index = addonDisplayIndex;
+                itemDisplay.addonInno = sourceGenome.addonCompassSensor1DList[compassSensor1DIndex].innov;
                 addonDisplayIndex++;  // keeps track of position of this itemDisplay within the UI display addon List
                 itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.CompassSensor1D;  // tells this display to look in masterGenome.AddonJointMotorList[]
                 itemDisplay.sourceAddonIndex = compassSensor1DIndex;  // the index within masterGenome.AddonJointMotorList[] where the source Add-On is.
@@ -110,6 +115,7 @@ public class PanelAddonsList : MonoBehaviour {
                 PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
                 itemDisplay.panelAddonsList = this;
                 itemDisplay.index = addonDisplayIndex;
+                itemDisplay.addonInno = sourceGenome.addonCompassSensor3DList[compassSensor3DIndex].innov;
                 addonDisplayIndex++;  // keeps track of position of this itemDisplay within the UI display addon List
                 itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.CompassSensor3D;  // tells this display to look in masterGenome.AddonJointMotorList[]
                 itemDisplay.sourceAddonIndex = compassSensor3DIndex;  // the index within masterGenome.AddonJointMotorList[] where the source Add-On is.
@@ -124,6 +130,7 @@ public class PanelAddonsList : MonoBehaviour {
                 PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
                 itemDisplay.panelAddonsList = this;
                 itemDisplay.index = addonDisplayIndex;
+                itemDisplay.addonInno = sourceGenome.addonPositionSensor1DList[positionSensor1DIndex].innov;
                 addonDisplayIndex++;  // keeps track of position of this itemDisplay within the UI display addon List
                 itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.PositionSensor1D;  // tells this display to look in masterGenome.AddonJointMotorList[]
                 itemDisplay.sourceAddonIndex = positionSensor1DIndex;  // the index within masterGenome.AddonJointMotorList[] where the source Add-On is.
@@ -138,6 +145,7 @@ public class PanelAddonsList : MonoBehaviour {
                 PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
                 itemDisplay.panelAddonsList = this;
                 itemDisplay.index = addonDisplayIndex;
+                itemDisplay.addonInno = sourceGenome.addonPositionSensor3DList[positionSensor3DIndex].innov;
                 addonDisplayIndex++;  // keeps track of position of this itemDisplay within the UI display addon List
                 itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.PositionSensor3D;  // tells this display to look in masterGenome.AddonJointMotorList[]
                 itemDisplay.sourceAddonIndex = positionSensor3DIndex;  // the index within masterGenome.AddonJointMotorList[] where the source Add-On is.
@@ -152,6 +160,7 @@ public class PanelAddonsList : MonoBehaviour {
                 PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
                 itemDisplay.panelAddonsList = this;
                 itemDisplay.index = addonDisplayIndex;
+                itemDisplay.addonInno = sourceGenome.addonRotationSensor1DList[rotationSensor1DIndex].innov;
                 addonDisplayIndex++;  // keeps track of position of this itemDisplay within the UI display addon List
                 itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.RotationSensor1D;  // tells this display to look in masterGenome.AddonJointMotorList[]
                 itemDisplay.sourceAddonIndex = rotationSensor1DIndex;  // the index within masterGenome.AddonJointMotorList[] where the source Add-On is.
@@ -166,6 +175,7 @@ public class PanelAddonsList : MonoBehaviour {
                 PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
                 itemDisplay.panelAddonsList = this;
                 itemDisplay.index = addonDisplayIndex;
+                itemDisplay.addonInno = sourceGenome.addonRotationSensor3DList[rotationSensor3DIndex].innov;
                 addonDisplayIndex++;  // keeps track of position of this itemDisplay within the UI display addon List
                 itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.RotationSensor3D;  // tells this display to look in masterGenome.AddonJointMotorList[]
                 itemDisplay.sourceAddonIndex = rotationSensor3DIndex;  // the index within masterGenome.AddonJointMotorList[] where the source Add-On is.
@@ -180,6 +190,7 @@ public class PanelAddonsList : MonoBehaviour {
                 PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
                 itemDisplay.panelAddonsList = this;
                 itemDisplay.index = addonDisplayIndex;
+                itemDisplay.addonInno = sourceGenome.addonVelocitySensor1DList[velocitySensor1DIndex].innov;
                 addonDisplayIndex++;  // keeps track of position of this itemDisplay within the UI display addon List
                 itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.VelocitySensor1D;  // tells this display to look in masterGenome.AddonJointMotorList[]
                 itemDisplay.sourceAddonIndex = velocitySensor1DIndex;  // the index within masterGenome.AddonJointMotorList[] where the source Add-On is.
@@ -194,6 +205,7 @@ public class PanelAddonsList : MonoBehaviour {
                 PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
                 itemDisplay.panelAddonsList = this;
                 itemDisplay.index = addonDisplayIndex;
+                itemDisplay.addonInno = sourceGenome.addonVelocitySensor3DList[velocitySensor3DIndex].innov;
                 addonDisplayIndex++;  // keeps track of position of this itemDisplay within the UI display addon List
                 itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.VelocitySensor3D;  // tells this display to look in masterGenome.AddonJointMotorList[]
                 itemDisplay.sourceAddonIndex = velocitySensor3DIndex;  // the index within masterGenome.AddonJointMotorList[] where the source Add-On is.
@@ -208,6 +220,7 @@ public class PanelAddonsList : MonoBehaviour {
                 PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
                 itemDisplay.panelAddonsList = this;
                 itemDisplay.index = addonDisplayIndex;
+                itemDisplay.addonInno = sourceGenome.addonAltimeterList[altimeterIndex].innov;
                 addonDisplayIndex++;  // keeps track of position of this itemDisplay within the UI display addon List
                 itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.Altimeter;  // tells this display to look in masterGenome.AddonJointMotorList[]
                 itemDisplay.sourceAddonIndex = altimeterIndex;  // the index within masterGenome.AddonJointMotorList[] where the source Add-On is.
@@ -222,6 +235,7 @@ public class PanelAddonsList : MonoBehaviour {
                 PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
                 itemDisplay.panelAddonsList = this;
                 itemDisplay.index = addonDisplayIndex;
+                itemDisplay.addonInno = sourceGenome.addonEarBasicList[earBasicIndex].innov;
                 addonDisplayIndex++;  // keeps track of position of this itemDisplay within the UI display addon List
                 itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.EarBasic;  // tells this display to look in masterGenome.AddonJointMotorList[]
                 itemDisplay.sourceAddonIndex = earBasicIndex;  // the index within masterGenome.AddonJointMotorList[] where the source Add-On is.
@@ -236,6 +250,7 @@ public class PanelAddonsList : MonoBehaviour {
                 PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
                 itemDisplay.panelAddonsList = this;
                 itemDisplay.index = addonDisplayIndex;
+                itemDisplay.addonInno = sourceGenome.addonGravitySensorList[gravitySensorIndex].innov;
                 addonDisplayIndex++;  // keeps track of position of this itemDisplay within the UI display addon List
                 itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.Gravity;  // tells this display to look in masterGenome.AddonJointMotorList[]
                 itemDisplay.sourceAddonIndex = gravitySensorIndex;  // the index within masterGenome.AddonJointMotorList[] where the source Add-On is.
@@ -253,8 +268,8 @@ public class PanelAddonsList : MonoBehaviour {
                 GameObject itemDisplayGO = (GameObject)Instantiate(addonDisplayPrefab);
                 PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
                 itemDisplay.panelAddonsList = this;
-
                 itemDisplay.index = addonDisplayIndex;
+                itemDisplay.addonInno = sourceGenome.addonJointMotorList[jointMotorIndex].innov;
                 addonDisplayIndex++;  // keeps track of position of this itemDisplay within the UI display addon List
                 //itemDisplay.sourceAddon = sourceNode.addonsList[jointMotorIndex];
                 itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.JointMotor;  // tells this display to look in masterGenome.AddonJointMotorList[]
@@ -271,6 +286,7 @@ public class PanelAddonsList : MonoBehaviour {
                 PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
                 itemDisplay.panelAddonsList = this;
                 itemDisplay.index = addonDisplayIndex;
+                itemDisplay.addonInno = sourceGenome.addonThrusterEffector1DList[thrusterEffector1DIndex].innov;
                 addonDisplayIndex++;
                 itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.ThrusterEffector1D;
                 itemDisplay.sourceAddonIndex = thrusterEffector1DIndex;
@@ -285,6 +301,7 @@ public class PanelAddonsList : MonoBehaviour {
                 PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
                 itemDisplay.panelAddonsList = this;
                 itemDisplay.index = addonDisplayIndex;
+                itemDisplay.addonInno = sourceGenome.addonThrusterEffector3DList[thrusterEffector3DIndex].innov;
                 addonDisplayIndex++;
                 itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.ThrusterEffector3D;
                 itemDisplay.sourceAddonIndex = thrusterEffector3DIndex;
@@ -299,6 +316,7 @@ public class PanelAddonsList : MonoBehaviour {
                 PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
                 itemDisplay.panelAddonsList = this;
                 itemDisplay.index = addonDisplayIndex;
+                itemDisplay.addonInno = sourceGenome.addonTorqueEffector1DList[torqueEffector1DIndex].innov;
                 addonDisplayIndex++;
                 itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.TorqueEffector1D;
                 itemDisplay.sourceAddonIndex = torqueEffector1DIndex;
@@ -313,6 +331,7 @@ public class PanelAddonsList : MonoBehaviour {
                 PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
                 itemDisplay.panelAddonsList = this;
                 itemDisplay.index = addonDisplayIndex;
+                itemDisplay.addonInno = sourceGenome.addonTorqueEffector3DList[torqueEffector3DIndex].innov;
                 addonDisplayIndex++;
                 itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.TorqueEffector3D;
                 itemDisplay.sourceAddonIndex = torqueEffector3DIndex;
@@ -327,6 +346,7 @@ public class PanelAddonsList : MonoBehaviour {
                 PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
                 itemDisplay.panelAddonsList = this;
                 itemDisplay.index = addonDisplayIndex;
+                itemDisplay.addonInno = sourceGenome.addonMouthBasicList[mouthBasicIndex].innov;
                 addonDisplayIndex++;  // keeps track of position of this itemDisplay within the UI display addon List
                 itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.MouthBasic;  // tells this display to look in masterGenome.AddonJointMotorList[]
                 itemDisplay.sourceAddonIndex = mouthBasicIndex;  // the index within masterGenome.AddonJointMotorList[] where the source Add-On is.
@@ -341,6 +361,7 @@ public class PanelAddonsList : MonoBehaviour {
                 PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
                 itemDisplay.panelAddonsList = this;
                 itemDisplay.index = addonDisplayIndex;
+                itemDisplay.addonInno = sourceGenome.addonNoiseMakerBasicList[noiseMakerBasicIndex].innov;
                 addonDisplayIndex++;  // keeps track of position of this itemDisplay within the UI display addon List
                 itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.NoiseMakerBasic;  // tells this display to look in masterGenome.AddonJointMotorList[]
                 itemDisplay.sourceAddonIndex = noiseMakerBasicIndex;  // the index within masterGenome.AddonJointMotorList[] where the source Add-On is.
@@ -355,6 +376,7 @@ public class PanelAddonsList : MonoBehaviour {
                 PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
                 itemDisplay.panelAddonsList = this;
                 itemDisplay.index = addonDisplayIndex;
+                itemDisplay.addonInno = sourceGenome.addonStickyList[stickyIndex].innov;
                 addonDisplayIndex++;  // keeps track of position of this itemDisplay within the UI display addon List
                 itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.Sticky;  // tells this display to look in masterGenome.AddonJointMotorList[]
                 itemDisplay.sourceAddonIndex = stickyIndex;  // the index within masterGenome.AddonJointMotorList[] where the source Add-On is.
@@ -369,6 +391,7 @@ public class PanelAddonsList : MonoBehaviour {
                 PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
                 itemDisplay.panelAddonsList = this;
                 itemDisplay.index = addonDisplayIndex;
+                itemDisplay.addonInno = sourceGenome.addonWeaponBasicList[weaponBasicIndex].innov;
                 addonDisplayIndex++;  // keeps track of position of this itemDisplay within the UI display addon List
                 itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.WeaponBasic;  // tells this display to look in masterGenome.AddonJointMotorList[]
                 itemDisplay.sourceAddonIndex = weaponBasicIndex;  // the index within masterGenome.AddonJointMotorList[] where the source Add-On is.
@@ -387,6 +410,7 @@ public class PanelAddonsList : MonoBehaviour {
                 PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
                 itemDisplay.panelAddonsList = this;
                 itemDisplay.index = addonDisplayIndex;
+                itemDisplay.addonInno = sourceGenome.addonOscillatorInputList[oscillatorInputIndex].innov;
                 addonDisplayIndex++;  // keeps track of position of this itemDisplay within the UI display addon List
                 itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.OscillatorInput;  // tells this display to look in masterGenome.AddonJointMotorList[]
                 itemDisplay.sourceAddonIndex = oscillatorInputIndex;  // the index within masterGenome.AddonJointMotorList[] where the source Add-On is.
@@ -401,6 +425,7 @@ public class PanelAddonsList : MonoBehaviour {
                 PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
                 itemDisplay.panelAddonsList = this;
                 itemDisplay.index = addonDisplayIndex;
+                itemDisplay.addonInno = sourceGenome.addonValueInputList[valueInputIndex].innov;
                 addonDisplayIndex++;  // keeps track of position of this itemDisplay within the UI display addon List
                 itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.ValueInput;  // tells this display to look in masterGenome.AddonJointMotorList[]
                 itemDisplay.sourceAddonIndex = valueInputIndex;  // the index within masterGenome.AddonJointMotorList[] where the source Add-On is.
@@ -415,6 +440,7 @@ public class PanelAddonsList : MonoBehaviour {
                 PanelAddonItemDisplay itemDisplay = itemDisplayGO.GetComponent<PanelAddonItemDisplay>();
                 itemDisplay.panelAddonsList = this;
                 itemDisplay.index = addonDisplayIndex;
+                itemDisplay.addonInno = sourceGenome.addonTimerInputList[timerInputIndex].innov;
                 addonDisplayIndex++; 
                 itemDisplay.sourceAddonType = CritterNodeAddonBase.CritterNodeAddonTypes.TimerInput; 
                 itemDisplay.sourceAddonIndex = timerInputIndex; 

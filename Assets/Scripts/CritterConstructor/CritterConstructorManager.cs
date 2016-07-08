@@ -22,14 +22,16 @@ public class CritterConstructorManager : MonoBehaviour {
         }
     }
 
-    public void PressButtonTempReset() {
+    public void PressButtonTempReset() {        
         ResetToBlankCritter();
     }
 
     public void ResetToBlankCritter() {  // Check how to make sure no memory is leaked!
         //Debug.Log("ResetToBlankCritter()");
-
-        if(masterCritter == null) {  // first time!!!
+        CritterEditorState.nextNodeInnov = 0;
+        CritterEditorState.nextAddonInnov = 0;
+        
+        if (masterCritter == null) {  // first time!!!
             masterCritterGO = new GameObject("masterCritterGO");
             masterCritter = masterCritterGO.AddComponent<Critter>();
             masterCritter.InitializeBlankCritter();

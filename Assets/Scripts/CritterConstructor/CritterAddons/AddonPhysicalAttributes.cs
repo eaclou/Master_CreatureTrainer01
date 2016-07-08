@@ -4,6 +4,7 @@ using System.Collections;
 public class AddonPhysicalAttributes {
 
     public int critterNodeID;
+    public int innov;
     //public bool[] isKinematic;
     public float[] dynamicFriction;
     public float[] staticFriction;
@@ -37,9 +38,10 @@ public class AddonPhysicalAttributes {
         freezeRotationZ[0] = false;
     }
 
-    public AddonPhysicalAttributes(int id) {
+    public AddonPhysicalAttributes(int id, int inno) {
         Debug.Log("Constructor AddonPhysicalAttributes(" + id.ToString() + ")");
         critterNodeID = id;
+        innov = inno;
         dynamicFriction = new float[1];
         dynamicFriction[0] = 0.6f;
         staticFriction = new float[1];

@@ -290,7 +290,7 @@ public class CritterEditorUI : MonoBehaviour {
         }
         if (selectedSegment != null) {
             CritterNode sourceNode = selectedSegment.GetComponent<CritterSegment>().sourceNode;
-            panelNodeAddons.textNodeID.text = "Selected Node ID: " + sourceNode.ID.ToString();            
+            panelNodeAddons.textNodeID.text = "Selected Node ID: " + sourceNode.ID.ToString() + " [" + sourceNode.innov.ToString() + "]";            
         }
         else {
             panelNodeAddons.textNodeID.text = "Selected Node ID: none";

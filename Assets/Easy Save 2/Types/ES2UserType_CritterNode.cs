@@ -19,6 +19,7 @@ public class ES2UserType_CritterNode : ES2Type
         writer.Write(data.jointLink);       
         writer.Write(data.dimensions);
         writer.Write(data.ID);
+        writer.Write(data.innov);
     }
 	
 	public override object Read(ES2Reader reader)
@@ -43,6 +44,7 @@ public class ES2UserType_CritterNode : ES2Type
             data.jointLink = reader.Read<CritterJointLink>();           
             data.dimensions = reader.Read<Vector3>();
             data.ID = reader.Read<System.Int32>();
+            data.innov = reader.Read<System.Int32>();
         }
     }
 	

@@ -8,6 +8,9 @@ public class CritterEditorState : MonoBehaviour {
     public CritterEditorUI critterEditorUI;
     public CritterConstructorManager critterConstructorManager;
 
+    public static int nextNodeInnov = 0;
+    public static int nextAddonInnov = 0;
+
     private Vector3 mouseRayHitPos = new Vector3(0f, 0f, 0f);
     private RaycastHit mouseRayHitInfo; // = new RaycastHit();
     private Vector3 gizmoRayHitPos = new Vector3(0f, 0f, 0f);
@@ -111,6 +114,14 @@ public class CritterEditorState : MonoBehaviour {
         //Debug.Log(GetDistanceLineLine3D(new Vector3(-5f, 0f, 0f), new Vector3(-4f, 0f, 0f), new Vector3(0f, -6f, 0f), new Vector3(0f, 1f, 0f)).ToString());
 
         //Debug.Log(GetDistanceLinePoint2D(new Vector2(1f, 1f), new Vector2(0f, 0f), new Vector2(0f, 1f)).ToString());
+    }
+
+    public int GetNextNodeInnov() {
+        nextNodeInnov++;
+        return nextNodeInnov;
+    }
+    public int GetNextAddonInnov() {
+        return nextAddonInnov++;
     }
 
     public CurrentCameraState GetCurrentCameraState() {
@@ -371,9 +382,7 @@ public class CritterEditorState : MonoBehaviour {
         critterEditorInputManager.critterConstructorCameraController.UpdateCamera(this);  // pan, zoom, rotate, or do nothing
         UpdateGizmos();
     }
-
-
-
+    
     #region Command Functions
     
     private void CommandHoverSegmentEnter() {
@@ -1236,7 +1245,7 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
             // Determine attachCoords:
             Vector3 attachDir = ConvertWorldSpaceToAttachDir(selectedSegment, rightClickWorldPosition);            
             int nextID = critterConstructorManager.masterCritter.masterCritterGenome.CritterNodeList.Count;
-            critterConstructorManager.masterCritter.masterCritterGenome.AddNewNode(selectedSegment.GetComponent<CritterSegment>().sourceNode, attachDir, new Vector3(0f, 0f, 0f), nextID);            
+            critterConstructorManager.masterCritter.masterCritterGenome.AddNewNode(selectedSegment.GetComponent<CritterSegment>().sourceNode, attachDir, new Vector3(0f, 0f, 0f), nextID, GetNextNodeInnov());            
             critterConstructorManager.masterCritter.RebuildCritterFromGenomeRecursive(false);
             
             // TEMPORARY:  -- DUE to critter being fully destroyed and re-built, the references to selected/hoverSegments are broken:
@@ -1260,15 +1269,12 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
         //Debug.Log("MenuSegmentDelete");
         
         if (isSegmentSelected) {
-            //selectedSegmentID = selectedSegment.GetComponent<CritterSegment>().parentSegment.id;
             critterConstructorManager.masterCritter.DeleteNode(selectedSegment.GetComponent<CritterSegment>().sourceNode);
             critterConstructorManager.masterCritter.RenumberNodes();
             critterConstructorManager.masterCritter.DeleteSegments();
             critterConstructorManager.masterCritter.RebuildCritterFromGenomeRecursive(false);
             CommandSetSelected(0); // CHANGE THIS!!!!
             SetHoverFromID();
-            //critterConstructorManager.UpdateSegmentSelectionVis();
-            //critterConstructorManager.UpdateSegmentShaderStates();
         }
         rightClickMenuDeleteHover = false;
     }
@@ -1793,7 +1799,7 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
         Debug.Log("Attach Addon: " + ((CritterNodeAddonBase.CritterNodeAddonTypes)critterEditorUI.panelNodeAddons.dropdownAddonType.value).ToString());
         CritterNodeAddonBase.CritterNodeAddonTypes addonType = (CritterNodeAddonBase.CritterNodeAddonTypes)critterEditorUI.panelNodeAddons.dropdownAddonType.value;
         CritterNode sourceNode = selectedSegment.GetComponent<CritterSegment>().sourceNode;
-
+        
         if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.PhysicalAttributes) {
             bool listContainsType = false;
             for (int i = 0; i < critterConstructorManager.masterCritter.masterCritterGenome.addonPhysicalAttributesList.Count; i++) {  // check for existing addon of this type
@@ -1802,7 +1808,7 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
                 }
             }
             if (!listContainsType) {  // only allows 1 instance of the JointMotor type
-                AddonPhysicalAttributes newPhysicalAttributes = new AddonPhysicalAttributes(sourceNode.ID);
+                AddonPhysicalAttributes newPhysicalAttributes = new AddonPhysicalAttributes(sourceNode.ID, GetNextAddonInnov());
                 critterConstructorManager.masterCritter.masterCritterGenome.addonPhysicalAttributesList.Add(newPhysicalAttributes);
                 //critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(critterConstructorManager.masterCritter.masterCritterGenome, sourceNode.ID);
             }
@@ -1818,7 +1824,7 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
                 }
             }
             if (!listContainsType) {  // only allows 1 instance of the newJointAngleSensor type
-                AddonJointAngleSensor newJointAngleSensor = new AddonJointAngleSensor(sourceNode.ID);
+                AddonJointAngleSensor newJointAngleSensor = new AddonJointAngleSensor(sourceNode.ID, GetNextAddonInnov());
                 critterConstructorManager.masterCritter.masterCritterGenome.addonJointAngleSensorList.Add(newJointAngleSensor);
                 //critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(critterConstructorManager.masterCritter.masterCritterGenome, sourceNode.ID);
             }
@@ -1831,44 +1837,44 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
                 }
             }
             if (!listContainsType) {  // only allows 1 instance of the ContactSensor type
-                AddonContactSensor newContactSensor = new AddonContactSensor(sourceNode.ID);
+                AddonContactSensor newContactSensor = new AddonContactSensor(sourceNode.ID, GetNextAddonInnov());
                 critterConstructorManager.masterCritter.masterCritterGenome.addonContactSensorList.Add(newContactSensor);
             }
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.RaycastSensor) {
-            AddonRaycastSensor newRaycastSensor = new AddonRaycastSensor(sourceNode.ID);
+            AddonRaycastSensor newRaycastSensor = new AddonRaycastSensor(sourceNode.ID, GetNextAddonInnov());
             critterConstructorManager.masterCritter.masterCritterGenome.addonRaycastSensorList.Add(newRaycastSensor);            
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.CompassSensor1D) {
-            AddonCompassSensor1D newCompassSensor1D = new AddonCompassSensor1D(sourceNode.ID);
+            AddonCompassSensor1D newCompassSensor1D = new AddonCompassSensor1D(sourceNode.ID, GetNextAddonInnov());
             critterConstructorManager.masterCritter.masterCritterGenome.addonCompassSensor1DList.Add(newCompassSensor1D);
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.CompassSensor3D) {
-            AddonCompassSensor3D newCompassSensor3D = new AddonCompassSensor3D(sourceNode.ID);
+            AddonCompassSensor3D newCompassSensor3D = new AddonCompassSensor3D(sourceNode.ID, GetNextAddonInnov());
             critterConstructorManager.masterCritter.masterCritterGenome.addonCompassSensor3DList.Add(newCompassSensor3D);
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.PositionSensor1D) {
-            AddonPositionSensor1D newPositionSensor1D = new AddonPositionSensor1D(sourceNode.ID);
+            AddonPositionSensor1D newPositionSensor1D = new AddonPositionSensor1D(sourceNode.ID, GetNextAddonInnov());
             critterConstructorManager.masterCritter.masterCritterGenome.addonPositionSensor1DList.Add(newPositionSensor1D);
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.PositionSensor3D) {
-            AddonPositionSensor3D newPositionSensor3D = new AddonPositionSensor3D(sourceNode.ID);
+            AddonPositionSensor3D newPositionSensor3D = new AddonPositionSensor3D(sourceNode.ID, GetNextAddonInnov());
             critterConstructorManager.masterCritter.masterCritterGenome.addonPositionSensor3DList.Add(newPositionSensor3D);
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.RotationSensor1D) {
-            AddonRotationSensor1D newRotationSensor1D = new AddonRotationSensor1D(sourceNode.ID);
+            AddonRotationSensor1D newRotationSensor1D = new AddonRotationSensor1D(sourceNode.ID, GetNextAddonInnov());
             critterConstructorManager.masterCritter.masterCritterGenome.addonRotationSensor1DList.Add(newRotationSensor1D);
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.RotationSensor3D) {
-            AddonRotationSensor3D newRotationSensor3D = new AddonRotationSensor3D(sourceNode.ID);
+            AddonRotationSensor3D newRotationSensor3D = new AddonRotationSensor3D(sourceNode.ID, GetNextAddonInnov());
             critterConstructorManager.masterCritter.masterCritterGenome.addonRotationSensor3DList.Add(newRotationSensor3D);
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.VelocitySensor1D) {
-            AddonVelocitySensor1D newVelocitySensor1D = new AddonVelocitySensor1D(sourceNode.ID);
+            AddonVelocitySensor1D newVelocitySensor1D = new AddonVelocitySensor1D(sourceNode.ID, GetNextAddonInnov());
             critterConstructorManager.masterCritter.masterCritterGenome.addonVelocitySensor1DList.Add(newVelocitySensor1D);
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.VelocitySensor3D) {
-            AddonVelocitySensor3D newVelocitySensor3D = new AddonVelocitySensor3D(sourceNode.ID);
+            AddonVelocitySensor3D newVelocitySensor3D = new AddonVelocitySensor3D(sourceNode.ID, GetNextAddonInnov());
             critterConstructorManager.masterCritter.masterCritterGenome.addonVelocitySensor3DList.Add(newVelocitySensor3D);
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.Altimeter) {
@@ -1879,16 +1885,16 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
                 }
             }
             if (!listContainsType) {  // only allows 1 instance of the Altimeter type
-                AddonAltimeter newAltimeter = new AddonAltimeter(sourceNode.ID);
+                AddonAltimeter newAltimeter = new AddonAltimeter(sourceNode.ID, GetNextAddonInnov());
                 critterConstructorManager.masterCritter.masterCritterGenome.addonAltimeterList.Add(newAltimeter);
             }
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.EarBasic) {
-            AddonEarBasic newEarBasic = new AddonEarBasic(sourceNode.ID);
+            AddonEarBasic newEarBasic = new AddonEarBasic(sourceNode.ID, GetNextAddonInnov());
             critterConstructorManager.masterCritter.masterCritterGenome.addonEarBasicList.Add(newEarBasic);
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.Gravity) {
-            AddonGravitySensor newGravitySensor = new AddonGravitySensor(sourceNode.ID);
+            AddonGravitySensor newGravitySensor = new AddonGravitySensor(sourceNode.ID, GetNextAddonInnov());
             critterConstructorManager.masterCritter.masterCritterGenome.addonGravitySensorList.Add(newGravitySensor);
         }
 
@@ -1901,13 +1907,13 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
                 }
             }
             if (!listContainsType) {  // only allows 1 instance of the JointMotor type
-                AddonJointMotor newJointMotor = new AddonJointMotor(sourceNode.ID);
+                AddonJointMotor newJointMotor = new AddonJointMotor(sourceNode.ID, GetNextAddonInnov());
                 critterConstructorManager.masterCritter.masterCritterGenome.addonJointMotorList.Add(newJointMotor);
                 //critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(critterConstructorManager.masterCritter.masterCritterGenome, sourceNode.ID);
             }
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.ThrusterEffector1D) {
-            AddonThrusterEffector1D newThrusterEffector1D = new AddonThrusterEffector1D(sourceNode.ID);
+            AddonThrusterEffector1D newThrusterEffector1D = new AddonThrusterEffector1D(sourceNode.ID, GetNextAddonInnov());
             critterConstructorManager.masterCritter.masterCritterGenome.addonThrusterEffector1DList.Add(newThrusterEffector1D);
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.ThrusterEffector3D) {
@@ -1918,12 +1924,12 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
                 }
             }
             if (!listContainsType) { 
-                AddonThrusterEffector3D newThrusterEffector3D = new AddonThrusterEffector3D(sourceNode.ID);
+                AddonThrusterEffector3D newThrusterEffector3D = new AddonThrusterEffector3D(sourceNode.ID, GetNextAddonInnov());
                 critterConstructorManager.masterCritter.masterCritterGenome.addonThrusterEffector3DList.Add(newThrusterEffector3D);
             }
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.TorqueEffector1D) {
-            AddonTorqueEffector1D newTorqueEffector1D = new AddonTorqueEffector1D(sourceNode.ID);
+            AddonTorqueEffector1D newTorqueEffector1D = new AddonTorqueEffector1D(sourceNode.ID, GetNextAddonInnov());
             critterConstructorManager.masterCritter.masterCritterGenome.addonTorqueEffector1DList.Add(newTorqueEffector1D);
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.TorqueEffector3D) {
@@ -1934,7 +1940,7 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
                 }
             }
             if (!listContainsType) {  // only allows 1 instance of the Torque type
-                AddonTorqueEffector3D newTorqueEffector3D = new AddonTorqueEffector3D(sourceNode.ID);
+                AddonTorqueEffector3D newTorqueEffector3D = new AddonTorqueEffector3D(sourceNode.ID, GetNextAddonInnov());
                 critterConstructorManager.masterCritter.masterCritterGenome.addonTorqueEffector3DList.Add(newTorqueEffector3D);
             }
         }
@@ -1946,12 +1952,12 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
                 }
             }
             if (!listContainsType) {  // only allows 1 instance of the MouthBasic type
-                AddonMouthBasic newMouthBasic = new AddonMouthBasic(sourceNode.ID);
+                AddonMouthBasic newMouthBasic = new AddonMouthBasic(sourceNode.ID, GetNextAddonInnov());
                 critterConstructorManager.masterCritter.masterCritterGenome.addonMouthBasicList.Add(newMouthBasic);
             }
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.NoiseMakerBasic) {
-            AddonNoiseMakerBasic newNoiseMakerBasic = new AddonNoiseMakerBasic(sourceNode.ID);
+            AddonNoiseMakerBasic newNoiseMakerBasic = new AddonNoiseMakerBasic(sourceNode.ID, GetNextAddonInnov());
             critterConstructorManager.masterCritter.masterCritterGenome.addonNoiseMakerBasicList.Add(newNoiseMakerBasic);
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.Sticky) {
@@ -1962,7 +1968,7 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
                 }
             }
             if (!listContainsType) {  // only allows 1 instance of the Sticky type
-                AddonSticky newSticky = new AddonSticky(sourceNode.ID);
+                AddonSticky newSticky = new AddonSticky(sourceNode.ID, GetNextAddonInnov());
                 critterConstructorManager.masterCritter.masterCritterGenome.addonStickyList.Add(newSticky);
             }
         }
@@ -1974,22 +1980,22 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
                 }
             }
             if (!listContainsType) {  // only allows 1 instance of the WeaponBasic type
-                AddonWeaponBasic newWeaponBasic = new AddonWeaponBasic(sourceNode.ID);
+                AddonWeaponBasic newWeaponBasic = new AddonWeaponBasic(sourceNode.ID, GetNextAddonInnov());
                 critterConstructorManager.masterCritter.masterCritterGenome.addonWeaponBasicList.Add(newWeaponBasic);
             }
         }
 
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.OscillatorInput) {
-            AddonOscillatorInput newOscillatorInput = new AddonOscillatorInput(sourceNode.ID);
+            AddonOscillatorInput newOscillatorInput = new AddonOscillatorInput(sourceNode.ID, GetNextAddonInnov());
             critterConstructorManager.masterCritter.masterCritterGenome.addonOscillatorInputList.Add(newOscillatorInput);
             //critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(critterConstructorManager.masterCritter.masterCritterGenome, sourceNode.ID);
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.ValueInput) {
-            AddonValueInput newValueInput = new AddonValueInput(sourceNode.ID);
+            AddonValueInput newValueInput = new AddonValueInput(sourceNode.ID, GetNextAddonInnov());
             critterConstructorManager.masterCritter.masterCritterGenome.addonValueInputList.Add(newValueInput);
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.TimerInput) {
-            AddonTimerInput newTimerInput = new AddonTimerInput(sourceNode.ID);
+            AddonTimerInput newTimerInput = new AddonTimerInput(sourceNode.ID, GetNextAddonInnov());
             critterConstructorManager.masterCritter.masterCritterGenome.addonTimerInputList.Add(newTimerInput);
         }
 
@@ -2142,8 +2148,10 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
         
         bool save = false;
         bool overwriteFiles = true;
-        
+
         //string pendingCritterGenomeName = "";
+        critterConstructorManager.masterCritter.masterCritterGenome.savedNextNodeInno = nextNodeInnov;
+        critterConstructorManager.masterCritter.masterCritterGenome.savedNextAddonInno = nextAddonInnov;
         CritterGenome genomeToSave = critterConstructorManager.masterCritter.masterCritterGenome;
         // Open file explorer window to choose asset filename:
         //string absPath = EditorUtility.SaveFilePanel("Select Critter Genome", "Assets/SaveFiles/CritterEditorGenomes", "critter", "txt");
@@ -2221,6 +2229,8 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
         if (System.IO.File.Exists(filename)) {
             CritterGenome genomeToLoad = ES2.Load<CritterGenome>(filename);
             Debug.Log("genomeToLoad.Length: " + genomeToLoad.CritterNodeList.Count.ToString());
+            nextNodeInnov = genomeToLoad.savedNextNodeInno;
+            nextAddonInnov = genomeToLoad.savedNextAddonInno;
             critterConstructorManager.masterCritter.LoadCritterGenome(genomeToLoad);
             
             //Debug.Log("genomeBias[0]: " + populationToLoad.masterAgentArray[0].genome.genomeBiases[0].ToString());

@@ -5,6 +5,8 @@ using System.Collections.Generic;
 public class CritterGenome {
 
     public List<CritterNode> CritterNodeList;
+    public int savedNextNodeInno;
+    public int savedNextAddonInno;
 
     public List<AddonPhysicalAttributes> addonPhysicalAttributesList;
     
@@ -41,7 +43,7 @@ public class CritterGenome {
         Debug.Log("CritterGenome Constructor()!");
 
         CritterNodeList = new List<CritterNode>();
-        CritterNode critterRootNode = new CritterNode(0); // create root node
+        CritterNode critterRootNode = new CritterNode(0, 0); // create root node  // Does Root node ALWAYS have innov=0?
         CritterNodeList.Add(critterRootNode); // set it to first member of the list.
 
         addonPhysicalAttributesList = new List<AddonPhysicalAttributes>();
@@ -81,11 +83,45 @@ public class CritterGenome {
             CritterNodeList = new List<CritterNode>();
         }
         else {
+            ClearAllAddons();
             CritterNodeList.Clear();
         }
-        CritterNode critterRootNode = new CritterNode(0); // create root node
+        CritterNode critterRootNode = new CritterNode(0, 0); // create root node
         //critterRootNode.jointLink.parentNode = critterRootNode;
         CritterNodeList.Add(critterRootNode); // set it to first member of the list.
+    }
+
+    public void ClearAllAddons() {
+        addonPhysicalAttributesList.Clear();
+
+        addonJointAngleSensorList.Clear();
+        addonContactSensorList.Clear();
+        addonRaycastSensorList.Clear();
+        addonCompassSensor1DList.Clear();
+        addonCompassSensor3DList.Clear();
+        addonPositionSensor1DList.Clear();
+        addonPositionSensor3DList.Clear();
+        addonRotationSensor1DList.Clear();
+        addonRotationSensor3DList.Clear();
+        addonVelocitySensor1DList.Clear();
+        addonVelocitySensor3DList.Clear();
+        addonAltimeterList.Clear();
+        addonEarBasicList.Clear();
+        addonGravitySensorList.Clear();
+
+        addonJointMotorList.Clear();
+        addonThrusterEffector1DList.Clear();
+        addonThrusterEffector3DList.Clear();
+        addonTorqueEffector1DList.Clear();
+        addonTorqueEffector3DList.Clear();
+        addonMouthBasicList.Clear();
+        addonNoiseMakerBasicList.Clear();
+        addonStickyList.Clear();
+        addonWeaponBasicList.Clear();
+
+        addonOscillatorInputList.Clear();
+        addonValueInputList.Clear();
+        addonTimerInputList.Clear();
     }
 
     public void AddNewNode(CritterNode parentNode) {
@@ -96,7 +132,7 @@ public class CritterGenome {
         //Debug.Log("AddNewNode(CritterNode parentNode, CritterJointLink jointLink)");
 
     }
-    public void AddNewNode(CritterNode parentNode, Vector3 attachDir, int id) {        
+    /*public void AddNewNode(CritterNode parentNode, Vector3 attachDir, int id) {        
         CritterNode newCritterNode = new CritterNode(id);
         newCritterNode.jointLink.parentNodeID = parentNode.ID;
         newCritterNode.jointLink.thisNodeID = newCritterNode.ID;
@@ -107,9 +143,9 @@ public class CritterGenome {
         newCritterNode.jointLink.attachDir = attachDir.normalized;        
         CritterNodeList.Add(newCritterNode);
         //Debug.Log("AddNewNode(CritterNode parentNode = " + parentNode.ID.ToString() + ", Vector3 attachDir = " + newCritterNode.jointLink.attachDir.ToString() + ")");
-    }
-    public void AddNewNode(CritterNode parentNode, Vector3 attachDir, Vector3 restAngleDir, int id) {
-        CritterNode newCritterNode = new CritterNode(id);
+    }*/
+    public void AddNewNode(CritterNode parentNode, Vector3 attachDir, Vector3 restAngleDir, int id, int inno) {
+        CritterNode newCritterNode = new CritterNode(id, inno);
         newCritterNode.jointLink.parentNodeID = parentNode.ID;
         newCritterNode.jointLink.thisNodeID = newCritterNode.ID;
         newCritterNode.jointLink.numberOfRecursions = 0;
@@ -122,8 +158,170 @@ public class CritterGenome {
         Debug.Log("AddNewNode(CritterNodeID: " + newCritterNode.ID.ToString() + ", parentNode = " + parentNode.ID.ToString() + ", attachDir = " + newCritterNode.jointLink.attachDir.ToString() + ")" + " restAngleDir: " + restAngleDir.ToString());
     }
 
-    public void DeleteNode(CritterNode node) {  // Removes the specified node from the genome -- its orphan nodes are attached to the ParentNode of the deleted node.
+    public void DeleteNode(int nodeID) {  // Removes the specified node from the genome -- its orphan nodes are attached to the ParentNode of the deleted node.
+        CritterNode node = CritterNodeList[nodeID];  // readability
+        CritterNode parentNode = CritterNodeList[node.jointLink.parentNodeID];  // get parent of node being deleted
+        int childIndex = -1;
+        // evalute parent of deleted node, go through its childList to find deleted Node ....        
+        for (int i = 0; i < parentNode.attachedChildNodesIdList.Count; i++) {
+            // go through parent node's children list and remove this node from it before deleting it from master list:
+            if (parentNode.attachedChildNodesIdList[i] == nodeID) { // if the child in parent's List is the child being deleted:
+                childIndex = i;   // save index of node being deleted so it can be removed after loop             
+            }
+        }
+        // and remove it from childList
+        parentNode.attachedChildNodesIdList.RemoveAt(childIndex); // remove here to avoid shortening length of list while traversing it
 
+        // Attach children of deleted node to parentNode:
+        for (int j = 0; j < node.attachedChildNodesIdList.Count; j++) { // go through deleted node's children
+            // Set child of deleted-node's parentID  to the original parent of the deleted node:
+            CritterNodeList[node.attachedChildNodesIdList[j]].jointLink.parentNodeID = parentNode.ID;
+            // add the orphaned child ID's to the original parent of the deleted node:
+            parentNode.attachedChildNodesIdList.Add(node.attachedChildNodesIdList[j]);
+        }
+
+        // ############# Delete all Addons of the deleted segment Here, before deleting segmentNode:
+        DeleteAllAddonsOfNode(nodeID);
+        // Remove node from master List
+        CritterNodeList.RemoveAt(nodeID);
+    }
+
+    public void DeleteAllAddonsOfNode(int nodeID) {
+        for(int i = 0; i < addonPhysicalAttributesList.Count; i++) {
+            if(addonPhysicalAttributesList[i].critterNodeID == nodeID) {
+                addonPhysicalAttributesList.RemoveAt(i);
+            }
+        }
+        for (int i = 0; i < addonJointAngleSensorList.Count; i++) {
+            if (addonJointAngleSensorList[i].critterNodeID == nodeID) {
+                addonJointAngleSensorList.RemoveAt(i);
+            }
+        }
+        for (int i = 0; i < addonContactSensorList.Count; i++) {
+            if (addonContactSensorList[i].critterNodeID == nodeID) {
+                addonContactSensorList.RemoveAt(i);
+            }
+        }
+        for (int i = 0; i < addonRaycastSensorList.Count; i++) {
+            if (addonRaycastSensorList[i].critterNodeID == nodeID) {
+                addonRaycastSensorList.RemoveAt(i);
+            }
+        }
+        for (int i = 0; i < addonCompassSensor1DList.Count; i++) {
+            if (addonCompassSensor1DList[i].critterNodeID == nodeID) {
+                addonCompassSensor1DList.RemoveAt(i);
+            }
+        }
+        for (int i = 0; i < addonCompassSensor3DList.Count; i++) {
+            if (addonCompassSensor3DList[i].critterNodeID == nodeID) {
+                addonCompassSensor3DList.RemoveAt(i);
+            }
+        }
+        for (int i = 0; i < addonPositionSensor1DList.Count; i++) {
+            if (addonPositionSensor1DList[i].critterNodeID == nodeID) {
+                addonPositionSensor1DList.RemoveAt(i);
+            }
+        }
+        for (int i = 0; i < addonPositionSensor3DList.Count; i++) {
+            if (addonPositionSensor3DList[i].critterNodeID == nodeID) {
+                addonPositionSensor3DList.RemoveAt(i);
+            }
+        }
+        for (int i = 0; i < addonRotationSensor1DList.Count; i++) {
+            if (addonRotationSensor1DList[i].critterNodeID == nodeID) {
+                addonRotationSensor1DList.RemoveAt(i);
+            }
+        }
+        for (int i = 0; i < addonRotationSensor3DList.Count; i++) {
+            if (addonRotationSensor3DList[i].critterNodeID == nodeID) {
+                addonRotationSensor3DList.RemoveAt(i);
+            }
+        }
+        for (int i = 0; i < addonVelocitySensor1DList.Count; i++) {
+            if (addonVelocitySensor1DList[i].critterNodeID == nodeID) {
+                addonVelocitySensor1DList.RemoveAt(i);
+            }
+        }
+        for (int i = 0; i < addonVelocitySensor3DList.Count; i++) {
+            if (addonVelocitySensor3DList[i].critterNodeID == nodeID) {
+                addonVelocitySensor3DList.RemoveAt(i);
+            }
+        }
+        for (int i = 0; i < addonAltimeterList.Count; i++) {
+            if (addonAltimeterList[i].critterNodeID == nodeID) {
+                addonAltimeterList.RemoveAt(i);
+            }
+        }
+        for (int i = 0; i < addonEarBasicList.Count; i++) {
+            if (addonEarBasicList[i].critterNodeID == nodeID) {
+                addonEarBasicList.RemoveAt(i);
+            }
+        }
+        for (int i = 0; i < addonGravitySensorList.Count; i++) {
+            if (addonGravitySensorList[i].critterNodeID == nodeID) {
+                addonGravitySensorList.RemoveAt(i);
+            }
+        }
+        for (int i = 0; i < addonJointMotorList.Count; i++) {
+            if (addonJointMotorList[i].critterNodeID == nodeID) {
+                addonJointMotorList.RemoveAt(i);
+            }
+        }
+        for (int i = 0; i < addonThrusterEffector1DList.Count; i++) {
+            if (addonThrusterEffector1DList[i].critterNodeID == nodeID) {
+                addonThrusterEffector1DList.RemoveAt(i);
+            }
+        }
+        for (int i = 0; i < addonThrusterEffector3DList.Count; i++) {
+            if (addonThrusterEffector3DList[i].critterNodeID == nodeID) {
+                addonThrusterEffector3DList.RemoveAt(i);
+            }
+        }
+        for (int i = 0; i < addonTorqueEffector1DList.Count; i++) {
+            if (addonTorqueEffector1DList[i].critterNodeID == nodeID) {
+                addonTorqueEffector1DList.RemoveAt(i);
+            }
+        }
+        for (int i = 0; i < addonTorqueEffector3DList.Count; i++) {
+            if (addonTorqueEffector3DList[i].critterNodeID == nodeID) {
+                addonTorqueEffector3DList.RemoveAt(i);
+            }
+        }
+        for (int i = 0; i < addonMouthBasicList.Count; i++) {
+            if (addonMouthBasicList[i].critterNodeID == nodeID) {
+                addonMouthBasicList.RemoveAt(i);
+            }
+        }
+        for (int i = 0; i < addonNoiseMakerBasicList.Count; i++) {
+            if (addonNoiseMakerBasicList[i].critterNodeID == nodeID) {
+                addonNoiseMakerBasicList.RemoveAt(i);
+            }
+        }
+        for (int i = 0; i < addonStickyList.Count; i++) {
+            if (addonStickyList[i].critterNodeID == nodeID) {
+                addonStickyList.RemoveAt(i);
+            }
+        }
+        for (int i = 0; i < addonWeaponBasicList.Count; i++) {
+            if (addonWeaponBasicList[i].critterNodeID == nodeID) {
+                addonWeaponBasicList.RemoveAt(i);
+            }
+        }
+        for (int i = 0; i < addonOscillatorInputList.Count; i++) {
+            if (addonOscillatorInputList[i].critterNodeID == nodeID) {
+                addonOscillatorInputList.RemoveAt(i);
+            }
+        }
+        for (int i = 0; i < addonValueInputList.Count; i++) {
+            if (addonValueInputList[i].critterNodeID == nodeID) {
+                addonValueInputList.RemoveAt(i);
+            }
+        }
+        for (int i = 0; i < addonTimerInputList.Count; i++) {
+            if (addonTimerInputList[i].critterNodeID == nodeID) {
+                addonTimerInputList.RemoveAt(i);
+            }
+        }
     }
 
     public void DeleteBranch(CritterNode node) {  // Removes the specified nodes as well as all of its children / mirrors
@@ -131,7 +329,181 @@ public class CritterGenome {
     }
 
     public void RenumberNodes() {  // After deletion of a node, this cleans up the ID's of all critterNodes to ensure consecutive ID#s without any 'holes'
+                                   // traverse the main node List, if there is a gap in id's, iterate through all nodes/joints and adjust all ID's down by 1 until no gaps exist
+        int checkingID = 0;
+        int lastConsecutiveID = 0;
+        for (int i = 0; i < CritterNodeList.Count; i++) {
+            if (CritterNodeList[i].ID == checkingID) { // if node exists for each checkingID
+                lastConsecutiveID = checkingID;
+                // no need to renumber, node exists for this number
+            }
+            else {  //  nodeID didn't match checkingID - there is a gap!                 
+                    // Iterate through all nodes:
+                for (int j = 0; j < CritterNodeList.Count; j++) {  // make this less of a brute force algo later!!!                    
 
+                    // check parentNodeID to see if it is above the current Gap ID:
+                    if (CritterNodeList[j].jointLink.parentNodeID > checkingID) {
+                        // if so, subtract 1 to fill in gap
+                        CritterNodeList[j].jointLink.parentNodeID--;
+                    }
+                    if (CritterNodeList[j].jointLink.thisNodeID > checkingID) {    // check if this node's joint selfID > checkingID:                       
+                        CritterNodeList[j].jointLink.thisNodeID--; // if so, subtract 1 to fill in gap
+                    }
+                    // check all child indices of this node:
+                    for (int k = 0; k < CritterNodeList[j].attachedChildNodesIdList.Count; k++) {
+                        // if childID is greater than GapID, subtract 1 to bring it in line:
+                        if (CritterNodeList[j].attachedChildNodesIdList[k] > checkingID) {
+                            CritterNodeList[j].attachedChildNodesIdList[k]--;
+                        }
+                    }
+                    // if current Node's id is greater than gapID, subtract 1:
+                    if (CritterNodeList[j].ID > checkingID) {
+                        RenumberAllAddonsOfNode(CritterNodeList[j].ID);  // All add-ons with matching ID have their sourceNodeID decremented by 1 before the actual nodeId is decremented
+                        CritterNodeList[j].RenumberNodeID(CritterNodeList[j].ID - 1);                        
+                    }
+                }
+            }
+            checkingID++;
+        }
+        //Debug.Log("genome# nodes: " + masterCritterGenome.CritterNodeList.Count.ToString());
+    }
+
+    public void RenumberAllAddonsOfNode(int nodeID) {
+        for (int i = 0; i < addonPhysicalAttributesList.Count; i++) {
+            if (addonPhysicalAttributesList[i].critterNodeID == nodeID) {
+                addonPhysicalAttributesList[i].critterNodeID--;
+            }
+        }
+        for (int i = 0; i < addonJointAngleSensorList.Count; i++) {
+            if (addonJointAngleSensorList[i].critterNodeID == nodeID) {
+                addonJointAngleSensorList[i].critterNodeID--;
+            }
+        }
+        for (int i = 0; i < addonContactSensorList.Count; i++) {
+            if (addonContactSensorList[i].critterNodeID == nodeID) {
+                addonContactSensorList[i].critterNodeID--;
+            }
+        }
+        for (int i = 0; i < addonRaycastSensorList.Count; i++) {
+            if (addonRaycastSensorList[i].critterNodeID == nodeID) {
+                addonRaycastSensorList[i].critterNodeID--;
+            }
+        }
+        for (int i = 0; i < addonCompassSensor1DList.Count; i++) {
+            if (addonCompassSensor1DList[i].critterNodeID == nodeID) {
+                addonCompassSensor1DList[i].critterNodeID--;
+            }
+        }
+        for (int i = 0; i < addonCompassSensor3DList.Count; i++) {
+            if (addonCompassSensor3DList[i].critterNodeID == nodeID) {
+                addonCompassSensor3DList[i].critterNodeID--;
+            }
+        }
+        for (int i = 0; i < addonPositionSensor1DList.Count; i++) {
+            if (addonPositionSensor1DList[i].critterNodeID == nodeID) {
+                addonPositionSensor1DList[i].critterNodeID--;
+            }
+        }
+        for (int i = 0; i < addonPositionSensor3DList.Count; i++) {
+            if (addonPositionSensor3DList[i].critterNodeID == nodeID) {
+                addonPositionSensor3DList[i].critterNodeID--;
+            }
+        }
+        for (int i = 0; i < addonRotationSensor1DList.Count; i++) {
+            if (addonRotationSensor1DList[i].critterNodeID == nodeID) {
+                addonRotationSensor1DList[i].critterNodeID--;
+            }
+        }
+        for (int i = 0; i < addonRotationSensor3DList.Count; i++) {
+            if (addonRotationSensor3DList[i].critterNodeID == nodeID) {
+                addonRotationSensor3DList[i].critterNodeID--;
+            }
+        }
+        for (int i = 0; i < addonVelocitySensor1DList.Count; i++) {
+            if (addonVelocitySensor1DList[i].critterNodeID == nodeID) {
+                addonVelocitySensor1DList[i].critterNodeID--;
+            }
+        }
+        for (int i = 0; i < addonVelocitySensor3DList.Count; i++) {
+            if (addonVelocitySensor3DList[i].critterNodeID == nodeID) {
+                addonVelocitySensor3DList[i].critterNodeID--;
+            }
+        }
+        for (int i = 0; i < addonAltimeterList.Count; i++) {
+            if (addonAltimeterList[i].critterNodeID == nodeID) {
+                addonAltimeterList[i].critterNodeID--;
+            }
+        }
+        for (int i = 0; i < addonEarBasicList.Count; i++) {
+            if (addonEarBasicList[i].critterNodeID == nodeID) {
+                addonEarBasicList[i].critterNodeID--;
+            }
+        }
+        for (int i = 0; i < addonGravitySensorList.Count; i++) {
+            if (addonGravitySensorList[i].critterNodeID == nodeID) {
+                addonGravitySensorList[i].critterNodeID--;
+            }
+        }
+        for (int i = 0; i < addonJointMotorList.Count; i++) {
+            if (addonJointMotorList[i].critterNodeID == nodeID) {
+                addonJointMotorList[i].critterNodeID--;
+            }
+        }
+        for (int i = 0; i < addonThrusterEffector1DList.Count; i++) {
+            if (addonThrusterEffector1DList[i].critterNodeID == nodeID) {
+                addonThrusterEffector1DList[i].critterNodeID--;
+            }
+        }
+        for (int i = 0; i < addonThrusterEffector3DList.Count; i++) {
+            if (addonThrusterEffector3DList[i].critterNodeID == nodeID) {
+                addonThrusterEffector3DList[i].critterNodeID--;
+            }
+        }
+        for (int i = 0; i < addonTorqueEffector1DList.Count; i++) {
+            if (addonTorqueEffector1DList[i].critterNodeID == nodeID) {
+                addonTorqueEffector1DList[i].critterNodeID--;
+            }
+        }
+        for (int i = 0; i < addonTorqueEffector3DList.Count; i++) {
+            if (addonTorqueEffector3DList[i].critterNodeID == nodeID) {
+                addonTorqueEffector3DList[i].critterNodeID--;
+            }
+        }
+        for (int i = 0; i < addonMouthBasicList.Count; i++) {
+            if (addonMouthBasicList[i].critterNodeID == nodeID) {
+                addonMouthBasicList[i].critterNodeID--;
+            }
+        }
+        for (int i = 0; i < addonNoiseMakerBasicList.Count; i++) {
+            if (addonNoiseMakerBasicList[i].critterNodeID == nodeID) {
+                addonNoiseMakerBasicList[i].critterNodeID--;
+            }
+        }
+        for (int i = 0; i < addonStickyList.Count; i++) {
+            if (addonStickyList[i].critterNodeID == nodeID) {
+                addonStickyList[i].critterNodeID--;
+            }
+        }
+        for (int i = 0; i < addonWeaponBasicList.Count; i++) {
+            if (addonWeaponBasicList[i].critterNodeID == nodeID) {
+                addonWeaponBasicList[i].critterNodeID--;
+            }
+        }
+        for (int i = 0; i < addonOscillatorInputList.Count; i++) {
+            if (addonOscillatorInputList[i].critterNodeID == nodeID) {
+                addonOscillatorInputList[i].critterNodeID--;
+            }
+        }
+        for (int i = 0; i < addonValueInputList.Count; i++) {
+            if (addonValueInputList[i].critterNodeID == nodeID) {
+                addonValueInputList[i].critterNodeID--;
+            }
+        }
+        for (int i = 0; i < addonTimerInputList.Count; i++) {
+            if (addonTimerInputList[i].critterNodeID == nodeID) {
+                addonTimerInputList[i].critterNodeID--;
+            }
+        }
     }
 
     public void ReconstructGenomeFromLoad() {
@@ -291,16 +663,36 @@ public class CritterGenome {
                     int jointAngleSensorIndex = CheckForAddonJointAngleSensor(currentBuildSegmentList[i].sourceNode.ID);
                     if(jointAngleSensorIndex != -1) {
                         if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeX) {
-                            numInputs = numInputs + 2;
+                            if(addonJointAngleSensorList[jointAngleSensorIndex].measureVel[0]) {
+                                numInputs = numInputs + 2;
+                            }
+                            else {
+                                numInputs++;
+                            }                            
                         }
                         else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeY) {
-                            numInputs++;
+                            if (addonJointAngleSensorList[jointAngleSensorIndex].measureVel[0]) {
+                                numInputs = numInputs + 2;
+                            }
+                            else {
+                                numInputs++;
+                            }
                         }
                         else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeZ) {
-                            numInputs++;
+                            if (addonJointAngleSensorList[jointAngleSensorIndex].measureVel[0]) {
+                                numInputs = numInputs + 2;
+                            }
+                            else {
+                                numInputs++;
+                            }
                         }
                         else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.DualXY) {
-                            numInputs = numInputs + 2;
+                            if (addonJointAngleSensorList[jointAngleSensorIndex].measureVel[0]) {
+                                numInputs = numInputs + 4;
+                            }
+                            else {
+                                numInputs = numInputs + 2;
+                            }
                         }
                     }                    
 

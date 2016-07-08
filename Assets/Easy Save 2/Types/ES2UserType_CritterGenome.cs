@@ -14,6 +14,8 @@ public class ES2UserType_CritterGenome : ES2Type
         // Make sure to edit Read() function to properly handle version control!
         // VERSION 0:
         writer.Write(data.CritterNodeList);
+        writer.Write(data.savedNextNodeInno);
+        writer.Write(data.savedNextAddonInno);
 
         writer.Write(data.addonPhysicalAttributesList);
                 
@@ -64,6 +66,8 @@ public class ES2UserType_CritterGenome : ES2Type
         // VERSION 0:
         if (fileVersion >= 0) {
             data.CritterNodeList = reader.ReadList<CritterNode>();
+            data.savedNextNodeInno = reader.Read<int>();
+            data.savedNextAddonInno = reader.Read<int>();
 
             data.addonPhysicalAttributesList = reader.ReadList<AddonPhysicalAttributes>();
 

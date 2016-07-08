@@ -4,6 +4,7 @@ using System.Collections;
 public class AddonRotationSensor1D {
 
     public int critterNodeID;
+    public int innov;
     public Vector3[] localAxis;
     public float[] sensitivity;
 
@@ -15,9 +16,10 @@ public class AddonRotationSensor1D {
         sensitivity[0] = 1f;
     }
 
-    public AddonRotationSensor1D(int id) {
+    public AddonRotationSensor1D(int id, int inno) {
         Debug.Log("Constructor AddonRotationSensor1D(" + id.ToString() + ")");
         critterNodeID = id;
+        innov = inno;
         localAxis = new Vector3[1];
         localAxis[0] = new Vector3(0f, 0f, 1f);
         sensitivity = new float[1];

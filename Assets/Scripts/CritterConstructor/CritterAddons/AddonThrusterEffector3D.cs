@@ -4,6 +4,7 @@ using System.Collections;
 public class AddonThrusterEffector3D {
 
     public int critterNodeID;
+    public int innov;
     //public Vector3[] directionVector;
     public float[] maxForce;
 
@@ -15,9 +16,10 @@ public class AddonThrusterEffector3D {
         maxForce[0] = 10f;
     }
 
-    public AddonThrusterEffector3D(int id) {
+    public AddonThrusterEffector3D(int id, int inno) {
         Debug.Log("Constructor AddonThrusterEffector3D(" + id.ToString() + ")");
         critterNodeID = id;
+        innov = inno;
         //directionVector = new Vector3[1];
         //directionVector[0] = new Vector3(0f, 0f, 1f);
         maxForce = new float[1];

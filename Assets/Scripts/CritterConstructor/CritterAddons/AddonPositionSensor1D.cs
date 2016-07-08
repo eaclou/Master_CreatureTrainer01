@@ -4,6 +4,7 @@ using System.Collections;
 public class AddonPositionSensor1D {
 
     public int critterNodeID;
+    public int innov;
     public bool[] relative;
     public Vector3[] forwardVector;
     public float[] sensitivity;
@@ -18,10 +19,11 @@ public class AddonPositionSensor1D {
         sensitivity[0] = 1f;
     }
 
-    public AddonPositionSensor1D(int id) {
+    public AddonPositionSensor1D(int id, int inno) {
         Debug.Log("Constructor AddonPositionSensor1D(" + id.ToString() + ")");
         // Defaults:
         critterNodeID = id;
+        innov = inno;
         relative = new bool[1];
         relative[0] = true;
         forwardVector = new Vector3[1];
