@@ -15,4 +15,9 @@ public class AddonGravitySensor {
         critterNodeID = id;
         innov = inno;
     }
+
+    public AddonGravitySensor CloneThisAddon() {
+        AddonGravitySensor clonedAddon = new AddonGravitySensor(this.critterNodeID, this.innov);
+        return clonedAddon;
+    }
 }

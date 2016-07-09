@@ -25,4 +25,11 @@ public class AddonPositionSensor3D {
         sensitivity = new float[1];
         sensitivity[0] = 1f;
     }
+
+    public AddonPositionSensor3D CloneThisAddon() {
+        AddonPositionSensor3D clonedAddon = new AddonPositionSensor3D(this.critterNodeID, this.innov);
+        clonedAddon.relative[0] = this.relative[0];
+        clonedAddon.sensitivity[0] = this.sensitivity[0];
+        return clonedAddon;
+    }
 }

@@ -105,7 +105,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         preWarm = true;
 
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        agentBodyBeingTested = templateBodyGenome;
+        //agentBodyBeingTested = templateBodyGenome;
         if (critterBeingTestedGO == null) {
             critterBeingTestedGO = new GameObject("critterGO");
             critterBeingTestedGO.transform.SetParent(ArenaGroup.arenaGroupStatic.gameObject.transform);
@@ -243,7 +243,10 @@ public class MiniGameCritterWalkBasic : MiniGameBase
     {
         // Delete Critter Segments
         // Build Critter
+        critterBeingTested.masterCritterGenome = agentBodyGenomeBeingTested;        
         ResetCritter();
+        numberOfSegments = critterBeingTested.critterSegmentList.Count;
+        InitializeGameDataArrays();
         // Update channel Lists:
         SetupInputOutputChannelLists();
 

@@ -15,4 +15,9 @@ public class AddonSticky {
         critterNodeID = id;
         innov = inno;
     }
+
+    public AddonSticky CloneThisAddon() {
+        AddonSticky clonedAddon = new AddonSticky(this.critterNodeID, this.innov);
+        return clonedAddon;
+    }
 }

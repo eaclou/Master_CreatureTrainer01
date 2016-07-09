@@ -222,12 +222,9 @@ public class TheGraphKing {
 
 	public void BuildTexturesHistoryAgentGenomes(Player player) {
 		int texWidth = player.masterPopulation.masterAgentArray.Length;
-		int biasLength = player.masterPopulation.masterAgentArray[0].genome.genomeBiases.Length;
-		int weightLength = player.masterPopulation.masterAgentArray[0].genome.genomeWeights.Length;
-		int texHeight = biasLength + weightLength;
-		//Debug.Log ("Texture Size - X: " + texWidth.ToString() + ", Y: " + texHeight.ToString());
+		int texHeight = player.masterPopulation.masterAgentArray.Length;
 		texHistoryAgentGenomes.Resize(texWidth, texHeight);
-		for(int x = 0; x < texWidth; x++) { 		
+		/*for(int x = 0; x < texWidth; x++) { 		
 			for(int b = 0; b < biasLength; b++) {
 				float pixValueRaw = player.masterPopulation.masterAgentArray[x].genome.genomeBiases[b];
 				//Debug.Log ("pixValueRaw: " + pixValueRaw.ToString());
@@ -239,7 +236,7 @@ public class TheGraphKing {
 				pixValueRaw = (pixValueRaw + 5f) / 10f; // get in 0-1 range
 				texHistoryAgentGenomes.SetPixel(x, w+biasLength, new Color(pixValueRaw, 0f, 0f));
 			}
-		}
+		}*/
 		texHistoryAgentGenomes.Apply();
 
 	}
@@ -247,7 +244,8 @@ public class TheGraphKing {
 
 	#region Current Agent Graph Methods:
 	public void BuildTexturesCurAgentBrainDiagramTick(Player player, MiniGameManager miniGameManager, int agentIndex) {
-		int[] layerSizes = player.masterPopulation.masterAgentArray[agentIndex].genome.layerSizes;
+        /*
+        int[] layerSizes = player.masterPopulation.masterAgentArray[agentIndex].genome.layerSizes;
 		int totalNodes = 0;
 		for(int i = 0; i < layerSizes.Length; i++) { // for each layer:
 			for(int j = 0; j < layerSizes[i]; j++) { // For each node in that layer:
@@ -281,10 +279,11 @@ public class TheGraphKing {
 			}
 		}
 		texCurAgentBrainDiagramTick.Apply ();
+        */
 	}
 
 	public void BuildTexturesCurAgentBrainDiagramAgent(Player player, int agentIndex) {
-
+        /*
 		int biasLength = player.masterPopulation.masterAgentArray[0].genome.genomeBiases.Length;
 		int weightLength = player.masterPopulation.masterAgentArray[0].genome.genomeWeights.Length;
 		curAgentBrainDiagramNumBiases = biasLength;
@@ -310,7 +309,7 @@ public class TheGraphKing {
 			index++;
 		}
 		texCurAgentBrainDiagramAgent.Apply();
-
+        */
 	}
 	#endregion
 }

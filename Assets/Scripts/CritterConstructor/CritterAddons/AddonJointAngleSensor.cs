@@ -25,4 +25,11 @@ public class AddonJointAngleSensor {
         measureVel = new bool[1];
         measureVel[0] = false;
     }
+
+    public AddonJointAngleSensor CloneThisAddon() {
+        AddonJointAngleSensor clonedAddon = new AddonJointAngleSensor(this.critterNodeID, this.innov);
+        clonedAddon.sensitivity[0] = this.sensitivity[0];
+        clonedAddon.measureVel[0] = this.measureVel[0];
+        return clonedAddon;
+    }
 }

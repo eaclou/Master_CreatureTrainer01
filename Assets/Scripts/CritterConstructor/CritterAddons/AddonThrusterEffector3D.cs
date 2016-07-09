@@ -25,4 +25,10 @@ public class AddonThrusterEffector3D {
         maxForce = new float[1];
         maxForce[0] = 10f;
     }
+
+    public AddonThrusterEffector3D CloneThisAddon() {
+        AddonThrusterEffector3D clonedAddon = new AddonThrusterEffector3D(this.critterNodeID, this.innov);
+        clonedAddon.maxForce[0] = this.maxForce[0];
+        return clonedAddon;
+    }
 }

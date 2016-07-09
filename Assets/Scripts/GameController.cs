@@ -9,8 +9,7 @@ public class GameController : MonoBehaviour {
 	public MainMenu mainMenu;  // This is the main menu panel script
 	public TrainerModuleUI trainerUI;  // This is the script that handles all of the Trainer module UI
 	public Trainer masterTrainer;  // This is the Trainer object that handles all of the data for the Trainer Module
-
-
+    
 	// Module States:
 	public bool mainMenuOn = true;
 	public bool trainerModuleOn = false;
@@ -32,27 +31,26 @@ public class GameController : MonoBehaviour {
 	}
 	
 	// Update is called once per frame
-	void FixedUpdate () {
-		//CheckForPendingChangesAllowed();
-		if(fixedUpdateCalls > 0) {
+	void FixedUpdate () {        
+        if (masterTrainer != null) {
+            if (masterTrainer.IsPlaying) {
+                masterTrainer.CalculateOneStep();
+            }
+        }
+
+        /*
+        if (fixedUpdateCalls > 0) {
             //Debug.Log("GameControllerFixedUpdate ()() Trainer: " + masterTrainer.PlayerList[0].masterTrialsList[0].miniGameManager.miniGameInstance.agentBodyBeingTested.creatureBodySegmentGenomeList[0].addOn1.ToString());
             masterTrainer.CalculateOneStep();
 		}
 		if(masterTrainer != null) {
 			if(masterTrainer.IsPlaying) {
 
-				/*if(masterTrainer.FastModeOn) {  // playing ON and fastmode ON
-					//play FastMode
-					masterTrainer.PlayFastModeChunk(8000);
-				}
-				else {   // playing ON and fastmode OFF
-
-					masterTrainer.PlayRealTimeStep();
-				}*/
 			}
 		}
 		fixedUpdateCalls++;
-	}
+        */
+    }
 
 	void Update () {
 		//updateCalls++;

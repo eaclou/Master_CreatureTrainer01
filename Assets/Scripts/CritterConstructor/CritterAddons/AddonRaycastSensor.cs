@@ -25,4 +25,11 @@ public class AddonRaycastSensor {
         maxDistance = new float[1];
         maxDistance[0] = 10f;
     }
+
+    public AddonRaycastSensor CloneThisAddon() {
+        AddonRaycastSensor clonedAddon = new AddonRaycastSensor(this.critterNodeID, this.innov);
+        clonedAddon.forwardVector[0] = this.forwardVector[0];
+        clonedAddon.maxDistance[0] = this.maxDistance[0];
+        return clonedAddon;
+    }
 }

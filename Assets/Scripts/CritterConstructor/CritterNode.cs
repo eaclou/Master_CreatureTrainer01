@@ -49,4 +49,26 @@ public class CritterNode {
     public void RenumberNodeID(int newID) {
         iD = newID;
     }
+
+    public CritterNode CloneThisCritterNode() {
+        CritterNode clonedCritterNode = new CritterNode(this.ID, this.innov);
+        clonedCritterNode.dimensions = this.dimensions;
+        clonedCritterNode.jointLink.CopySettingsFromJointLink(this.jointLink);
+        for(int i = 0; i < this.attachedChildNodesIdList.Count; i++) {
+            // populate clonedNode's attachedChild list based on this Node
+            clonedCritterNode.attachedChildNodesIdList.Add(this.attachedChildNodesIdList[i]);
+        }
+        return clonedCritterNode;
+    }
+
+    public void CopySettingsFromNode(CritterNode sourceNode) {
+        this.iD = sourceNode.ID;
+        this.innov = sourceNode.innov;
+        this.dimensions = sourceNode.dimensions;
+        this.jointLink.CopySettingsFromJointLink(sourceNode.jointLink);
+        for (int i = 0; i < sourceNode.attachedChildNodesIdList.Count; i++) {
+            // populate clonedNode's attachedChild list based on this Node
+            this.attachedChildNodesIdList.Add(sourceNode.attachedChildNodesIdList[i]);
+        }
+    }
 }

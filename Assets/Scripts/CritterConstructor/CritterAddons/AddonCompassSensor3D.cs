@@ -20,4 +20,9 @@ public class AddonCompassSensor3D {
         //forwardVector = new Vector3[1];
         //forwardVector[0] = new Vector3(0f, 0f, 1f);
     }
+
+    public AddonCompassSensor3D CloneThisAddon() {
+        AddonCompassSensor3D clonedAddon = new AddonCompassSensor3D(this.critterNodeID, this.innov);
+        return clonedAddon;
+    }
 }

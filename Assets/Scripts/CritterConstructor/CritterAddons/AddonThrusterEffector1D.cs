@@ -26,4 +26,11 @@ public class AddonThrusterEffector1D {
         maxForce[0] = 10f;
     }
 
+    public AddonThrusterEffector1D CloneThisAddon() {
+        AddonThrusterEffector1D clonedAddon = new AddonThrusterEffector1D(this.critterNodeID, this.innov);
+        clonedAddon.forwardVector[0] = this.forwardVector[0];
+        clonedAddon.maxForce[0] = this.maxForce[0];
+        return clonedAddon;
+    }
+
 }

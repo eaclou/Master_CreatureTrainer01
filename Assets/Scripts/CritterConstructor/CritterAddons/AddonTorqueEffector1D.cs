@@ -25,4 +25,11 @@ public class AddonTorqueEffector1D {
         maxTorque = new float[1];
         maxTorque[0] = 10f;
     }
+
+    public AddonTorqueEffector1D CloneThisAddon() {
+        AddonTorqueEffector1D clonedAddon = new AddonTorqueEffector1D(this.critterNodeID, this.innov);
+        clonedAddon.axis[0] = this.axis[0];
+        clonedAddon.maxTorque[0] = this.maxTorque[0];
+        return clonedAddon;
+    }
 }

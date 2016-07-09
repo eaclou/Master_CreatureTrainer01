@@ -25,4 +25,11 @@ public class AddonJointMotor {
         motorSpeed = new float[1];
         motorSpeed[0] = 100f;
     }
+
+    public AddonJointMotor CloneThisAddon() {
+        AddonJointMotor clonedAddon = new AddonJointMotor(this.critterNodeID, this.innov);
+        clonedAddon.motorForce[0] = this.motorForce[0];
+        clonedAddon.motorSpeed[0] = this.motorSpeed[0];
+        return clonedAddon;
+    }
 }

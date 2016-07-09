@@ -59,4 +59,19 @@ public class CritterJointLink {
     public void MoveAttachCoords(Vector3 newAttachCoords) { // sets the position where this joint attaches to its parent
 
     }
+
+    public void CopySettingsFromJointLink(CritterJointLink sourceJointLink) {
+
+        this.parentNodeID = sourceJointLink.parentNodeID;
+        this.attachDir = sourceJointLink.attachDir;
+        this.restAngleDir = sourceJointLink.restAngleDir;
+        this.jointLimitPrimary = sourceJointLink.jointLimitPrimary;
+        this.jointLimitSecondary = sourceJointLink.jointLimitSecondary;
+        this.numberOfRecursions = sourceJointLink.numberOfRecursions;
+        this.recursionScalingFactor = sourceJointLink.recursionScalingFactor;
+        this.recursionForward = sourceJointLink.recursionForward;
+        this.onlyAttachToTailNode = sourceJointLink.onlyAttachToTailNode;
+        this.jointType = sourceJointLink.jointType;
+        this.symmetryType = sourceJointLink.symmetryType;
+    }
 }

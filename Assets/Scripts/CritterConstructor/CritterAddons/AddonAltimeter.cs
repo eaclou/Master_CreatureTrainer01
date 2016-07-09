@@ -15,4 +15,9 @@ public class AddonAltimeter {
         critterNodeID = id;
         innov = inno;
     }
+
+    public AddonAltimeter CloneThisAddon() {
+        AddonAltimeter clonedAddon = new AddonAltimeter(this.critterNodeID, this.innov);
+        return clonedAddon;
+    }
 }

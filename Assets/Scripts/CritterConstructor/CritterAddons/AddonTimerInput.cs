@@ -20,4 +20,9 @@ public class AddonTimerInput {
         //value = new float[1];
         //value[0] = 1f;
     }
+
+    public AddonTimerInput CloneThisAddon() {
+        AddonTimerInput clonedAddon = new AddonTimerInput(this.critterNodeID, this.innov);
+        return clonedAddon;
+    }
 }

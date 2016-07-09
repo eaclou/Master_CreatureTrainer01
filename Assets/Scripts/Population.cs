@@ -351,11 +351,6 @@ public class Population {
 				} else {
 					agentListLog += ", brain: null";
 				}
-				if(masterAgentArray[i].genome != null) {
-					agentListLog += ", genome: " + masterAgentArray[i].genome.genomeWeights[0].ToString();
-				} else {
-					agentListLog += ", genome: null";
-				}
 			}
 
 		} else {

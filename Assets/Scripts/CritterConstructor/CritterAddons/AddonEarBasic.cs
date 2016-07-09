@@ -20,4 +20,10 @@ public class AddonEarBasic {
         sensitivity = new float[1];
         sensitivity[0] = 1f;
     }
+
+    public AddonEarBasic CloneThisAddon() {
+        AddonEarBasic clonedAddon = new AddonEarBasic(this.critterNodeID, this.innov);
+        clonedAddon.sensitivity[0] = this.sensitivity[0];
+        return clonedAddon;
+    }
 }

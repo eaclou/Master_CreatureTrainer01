@@ -11,6 +11,9 @@ public class CrossoverManager {
     public bool useCrossover = true;
     public bool useSpeciation = false;
 
+    public static int nextNodeInnov;
+    public static int nextAddonInnov;
+
     // Body OLD:
     //public float mutationBodyChance = 0.5f;
     //public float maxBodyMutationFactor = 1.25f;
@@ -71,7 +74,15 @@ public class CrossoverManager {
 
 	}
 
-	public void CopyFromSourceCrossoverManager(CrossoverManager sourceManager) {
+    public int GetNextNodeInnov() {
+        nextNodeInnov++;
+        return nextNodeInnov;
+    }
+    public int GetNextAddonInnov() {
+        return nextAddonInnov++;
+    }
+
+    public void CopyFromSourceCrossoverManager(CrossoverManager sourceManager) {
 
 		tempName = sourceManager.tempName;
 
@@ -372,22 +383,436 @@ public class CrossoverManager {
         }
         return newParentAgent;
     }
-  
+
+    public void BreedCritterAddons(ref CritterGenome childBodyGenome, ref CritterGenome sourceBodyGenomeMoreFit, ref CritterGenome sourceBodyGenomeLessFit) {
+
+        // Iterate over the Addons of the more fit parent:
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonAltimeterList.Count; i++) {
+            AddonAltimeter clonedAddon = sourceBodyGenomeMoreFit.addonAltimeterList[i].CloneThisAddon();
+            childBodyGenome.addonAltimeterList.Add(clonedAddon);
+
+            if(useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonAltimeterList.Count; a++) {
+                    if(sourceBodyGenomeLessFit.addonAltimeterList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonCompassSensor1DList.Count; i++) {
+            AddonCompassSensor1D clonedAddon = sourceBodyGenomeMoreFit.addonCompassSensor1DList[i].CloneThisAddon();
+            childBodyGenome.addonCompassSensor1DList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonCompassSensor1DList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonCompassSensor1DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonCompassSensor3DList.Count; i++) {
+            AddonCompassSensor3D clonedAddon = sourceBodyGenomeMoreFit.addonCompassSensor3DList[i].CloneThisAddon();
+            childBodyGenome.addonCompassSensor3DList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonCompassSensor3DList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonCompassSensor3DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonContactSensorList.Count; i++) {
+            AddonContactSensor clonedAddon = sourceBodyGenomeMoreFit.addonContactSensorList[i].CloneThisAddon();
+            childBodyGenome.addonContactSensorList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonContactSensorList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonContactSensorList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonEarBasicList.Count; i++) {
+            AddonEarBasic clonedAddon = sourceBodyGenomeMoreFit.addonEarBasicList[i].CloneThisAddon();
+            childBodyGenome.addonEarBasicList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonEarBasicList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonEarBasicList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonGravitySensorList.Count; i++) {
+            AddonGravitySensor clonedAddon = sourceBodyGenomeMoreFit.addonGravitySensorList[i].CloneThisAddon();
+            childBodyGenome.addonGravitySensorList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonGravitySensorList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonGravitySensorList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonJointAngleSensorList.Count; i++) {
+            AddonJointAngleSensor clonedAddon = sourceBodyGenomeMoreFit.addonJointAngleSensorList[i].CloneThisAddon();
+            childBodyGenome.addonJointAngleSensorList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonJointAngleSensorList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonJointAngleSensorList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonJointMotorList.Count; i++) {
+            AddonJointMotor clonedAddon = sourceBodyGenomeMoreFit.addonJointMotorList[i].CloneThisAddon();
+            childBodyGenome.addonJointMotorList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonJointMotorList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonJointMotorList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonMouthBasicList.Count; i++) {
+            AddonMouthBasic clonedAddon = sourceBodyGenomeMoreFit.addonMouthBasicList[i].CloneThisAddon();
+            childBodyGenome.addonMouthBasicList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonMouthBasicList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonMouthBasicList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonNoiseMakerBasicList.Count; i++) {
+            AddonNoiseMakerBasic clonedAddon = sourceBodyGenomeMoreFit.addonNoiseMakerBasicList[i].CloneThisAddon();
+            childBodyGenome.addonNoiseMakerBasicList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonNoiseMakerBasicList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonNoiseMakerBasicList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonOscillatorInputList.Count; i++) {
+            AddonOscillatorInput clonedAddon = sourceBodyGenomeMoreFit.addonOscillatorInputList[i].CloneThisAddon();
+            childBodyGenome.addonOscillatorInputList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonOscillatorInputList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonOscillatorInputList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonPhysicalAttributesList.Count; i++) {
+            AddonPhysicalAttributes clonedAddon = sourceBodyGenomeMoreFit.addonPhysicalAttributesList[i].CloneThisAddon();
+            childBodyGenome.addonPhysicalAttributesList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonPhysicalAttributesList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonPhysicalAttributesList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonPositionSensor1DList.Count; i++) {
+            AddonPositionSensor1D clonedAddon = sourceBodyGenomeMoreFit.addonPositionSensor1DList[i].CloneThisAddon();
+            childBodyGenome.addonPositionSensor1DList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonPositionSensor1DList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonPositionSensor1DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonPositionSensor3DList.Count; i++) {
+            AddonPositionSensor3D clonedAddon = sourceBodyGenomeMoreFit.addonPositionSensor3DList[i].CloneThisAddon();
+            childBodyGenome.addonPositionSensor3DList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonPositionSensor3DList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonPositionSensor3DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonRaycastSensorList.Count; i++) {
+            AddonRaycastSensor clonedAddon = sourceBodyGenomeMoreFit.addonRaycastSensorList[i].CloneThisAddon();
+            childBodyGenome.addonRaycastSensorList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonRaycastSensorList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonRaycastSensorList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonRotationSensor1DList.Count; i++) {
+            AddonRotationSensor1D clonedAddon = sourceBodyGenomeMoreFit.addonRotationSensor1DList[i].CloneThisAddon();
+            childBodyGenome.addonRotationSensor1DList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonRotationSensor1DList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonRotationSensor1DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonRotationSensor3DList.Count; i++) {
+            AddonRotationSensor3D clonedAddon = sourceBodyGenomeMoreFit.addonRotationSensor3DList[i].CloneThisAddon();
+            childBodyGenome.addonRotationSensor3DList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonRotationSensor3DList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonRotationSensor3DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonStickyList.Count; i++) {
+            AddonSticky clonedAddon = sourceBodyGenomeMoreFit.addonStickyList[i].CloneThisAddon();
+            childBodyGenome.addonStickyList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonStickyList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonStickyList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonThrusterEffector1DList.Count; i++) {
+            AddonThrusterEffector1D clonedAddon = sourceBodyGenomeMoreFit.addonThrusterEffector1DList[i].CloneThisAddon();
+            childBodyGenome.addonThrusterEffector1DList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonThrusterEffector1DList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonThrusterEffector1DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonThrusterEffector3DList.Count; i++) {
+            AddonThrusterEffector3D clonedAddon = sourceBodyGenomeMoreFit.addonThrusterEffector3DList[i].CloneThisAddon();
+            childBodyGenome.addonThrusterEffector3DList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonThrusterEffector3DList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonThrusterEffector3DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonTimerInputList.Count; i++) {
+            AddonTimerInput clonedAddon = sourceBodyGenomeMoreFit.addonTimerInputList[i].CloneThisAddon();
+            childBodyGenome.addonTimerInputList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonTimerInputList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonTimerInputList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonTorqueEffector1DList.Count; i++) {
+            AddonTorqueEffector1D clonedAddon = sourceBodyGenomeMoreFit.addonTorqueEffector1DList[i].CloneThisAddon();
+            childBodyGenome.addonTorqueEffector1DList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonTorqueEffector1DList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonTorqueEffector1DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonTorqueEffector3DList.Count; i++) {
+            AddonTorqueEffector3D clonedAddon = sourceBodyGenomeMoreFit.addonTorqueEffector3DList[i].CloneThisAddon();
+            childBodyGenome.addonTorqueEffector3DList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonTorqueEffector3DList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonTorqueEffector3DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonValueInputList.Count; i++) {
+            AddonValueInput clonedAddon = sourceBodyGenomeMoreFit.addonValueInputList[i].CloneThisAddon();
+            childBodyGenome.addonValueInputList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonValueInputList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonValueInputList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonVelocitySensor1DList.Count; i++) {
+            AddonVelocitySensor1D clonedAddon = sourceBodyGenomeMoreFit.addonVelocitySensor1DList[i].CloneThisAddon();
+            childBodyGenome.addonVelocitySensor1DList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonVelocitySensor1DList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonVelocitySensor1DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonVelocitySensor3DList.Count; i++) {
+            AddonVelocitySensor3D clonedAddon = sourceBodyGenomeMoreFit.addonVelocitySensor3DList[i].CloneThisAddon();
+            childBodyGenome.addonVelocitySensor3DList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonVelocitySensor3DList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonVelocitySensor3DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonWeaponBasicList.Count; i++) {
+            AddonWeaponBasic clonedAddon = sourceBodyGenomeMoreFit.addonWeaponBasicList[i].CloneThisAddon();
+            childBodyGenome.addonWeaponBasicList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonWeaponBasicList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonWeaponBasicList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+    }
+
+    public void PerformBodyMutation(ref CritterGenome bodyGenome) {
+        int numBodyMutations = 0;
+        for (int i = 0; i < bodyGenome.CritterNodeList.Count; i++) {
+            // Segment Proportions:
+            if(CheckForMutation(segmentProportionChance)) {  // X
+                bodyGenome.CritterNodeList[i].dimensions.x *= UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
+                numBodyMutations++;
+            }
+            if (CheckForMutation(segmentProportionChance)) {  // Y
+                bodyGenome.CritterNodeList[i].dimensions.y *= UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
+                numBodyMutations++;
+            }
+            if (CheckForMutation(segmentProportionChance)) {  // Z
+                bodyGenome.CritterNodeList[i].dimensions.z *= UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
+                numBodyMutations++;
+            }
+            if(i > 0) {   // NOT THE ROOT SEGMENT!:
+                // Segment Attach Settings:
+                if (CheckForMutation(segmentAttachSettingsChance)) {  // Position X
+                    bodyGenome.CritterNodeList[i].jointLink.attachDir.x *= UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
+                    numBodyMutations++;
+                }
+                if (CheckForMutation(segmentAttachSettingsChance)) {  // Position Y
+                    bodyGenome.CritterNodeList[i].jointLink.attachDir.y *= UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
+                    numBodyMutations++;
+                }
+                if (CheckForMutation(segmentAttachSettingsChance)) {  // Position Z
+                    bodyGenome.CritterNodeList[i].jointLink.attachDir.z *= UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
+                    numBodyMutations++;
+                }
+                if (CheckForMutation(segmentAttachSettingsChance)) {  // Orientation X
+                    bodyGenome.CritterNodeList[i].jointLink.restAngleDir.x *= UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
+                    numBodyMutations++;
+                }
+                if (CheckForMutation(segmentAttachSettingsChance)) {  // Orientation Y
+                    bodyGenome.CritterNodeList[i].jointLink.restAngleDir.y *= UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
+                    numBodyMutations++;
+                }
+                if (CheckForMutation(segmentAttachSettingsChance)) {  // Orientation Z
+                    bodyGenome.CritterNodeList[i].jointLink.restAngleDir.z *= UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
+                    numBodyMutations++;
+                }
+
+                // RECURSION:
+                if (CheckForMutation(recursionChance)) {
+                    int addRemove = Mathf.RoundToInt(UnityEngine.Random.Range(0f, 1f)) * 2 - 1;  // either -1 or 1
+                    bodyGenome.CritterNodeList[i].jointLink.numberOfRecursions += addRemove;
+                    if (bodyGenome.CritterNodeList[i].jointLink.numberOfRecursions < 0)
+                        bodyGenome.CritterNodeList[i].jointLink.numberOfRecursions = 0;
+                    if (bodyGenome.CritterNodeList[i].jointLink.numberOfRecursions > 8)
+                        bodyGenome.CritterNodeList[i].jointLink.numberOfRecursions = 8;
+                    numBodyMutations++;
+                    // NEED TO FIX BRAIN!!! -- how to preserve existing wiring while adding new neurons that may re-order?
+                    // Do I need to save a reference to segment/nodes within each input/output neuron?
+                }
+            }            
+        }
+        //Debug.Log("NumBodyMutations: " + numBodyMutations.ToString());
+    }
+
     public Population BreedPopulation(ref Population sourcePopulation, int currentGeneration) {
 
+        #region Pre-Crossover, Figuring out how many agents to breed etc.
         int LifetimeGeneration = currentGeneration + sourcePopulation.trainingGenerations;
         int totalNumWeightMutations = 0;
-        float totalWeightChangeValue = 0f;
+        //float totalWeightChangeValue = 0f;
         // go through species list and adjust fitness
         List<SpeciesBreedingPool> childSpeciesPoolsList = new List<SpeciesBreedingPool>(); // will hold agents in an internal list to facilitate crossover
-        //List<Species> childSpeciesList = new List<Species>();  // the new species of the next generation
-        //Debug.Log("BreedPopulation -- SpeciesCount: " + sourcePopulation.speciesBreedingPoolList.Count.ToString());
+        
         for (int s = 0; s < sourcePopulation.speciesBreedingPoolList.Count; s++) {            
             SpeciesBreedingPool newChildSpeciesPool = new SpeciesBreedingPool(sourcePopulation.speciesBreedingPoolList[s].templateGenome, sourcePopulation.speciesBreedingPoolList[s].speciesID);  // create Breeding Pools
             // copies the existing breeding pools but leaves their agentLists empty for future children
-            childSpeciesPoolsList.Add(newChildSpeciesPool);            // Add to list of pools
-            //Debug.Log("BreedPopulation -- newChildSpeciesPool# " + s.ToString() + ", id: " + newChildSpeciesPool.speciesID.ToString());
-            //            
+            childSpeciesPoolsList.Add(newChildSpeciesPool);            // Add to list of pools          
         }
 
         sourcePopulation.RankAgentArray(); // based on modified species fitness score, so compensated for species sizes
@@ -487,6 +912,7 @@ public class CrossoverManager {
                 totalScoreBreeders += sourcePopulation.masterAgentArray[a].fitnessScoreSpecies;
             }
         }
+        #endregion
 
         // Iterate over numAgentsToCreate :
         int newChildrenCreated = 0;
@@ -505,10 +931,12 @@ public class CrossoverManager {
 
             Agent firstParentAgent = SelectAgentFromPopForBreeding(sourcePopulation, numEligibleBreederAgents, ref currentRankIndex);
             parentAgentsArray[0] = firstParentAgent;
-            List<GeneNodeNEAT> firstParentNodeList = new List<GeneNodeNEAT>();
-            List<GeneLinkNEAT> firstParentLinkList = new List<GeneLinkNEAT>();
-            firstParentNodeList = firstParentAgent.brainGenome.nodeNEATList;
-            firstParentLinkList = firstParentAgent.brainGenome.linkNEATList;
+            List<GeneNodeNEAT> firstParentNodeList = firstParentAgent.brainGenome.nodeNEATList;
+            List<GeneLinkNEAT> firstParentLinkList = firstParentAgent.brainGenome.linkNEATList;
+            //List<GeneNodeNEAT> firstParentNodeList = new List<GeneNodeNEAT>();
+            //List<GeneLinkNEAT> firstParentLinkList = new List<GeneLinkNEAT>();
+            //firstParentNodeList = firstParentAgent.brainGenome.nodeNEATList;
+            //firstParentLinkList = firstParentAgent.brainGenome.linkNEATList;
             parentNodeListArray[0] = firstParentNodeList;
             parentLinkListArray[0] = firstParentLinkList;
 
@@ -531,48 +959,44 @@ public class CrossoverManager {
             }           
             
             parentAgentsArray[1] = secondParentAgent;
-            List<GeneNodeNEAT> secondParentNodeList = new List<GeneNodeNEAT>();
-            List<GeneLinkNEAT> secondParentLinkList = new List<GeneLinkNEAT>();
-            secondParentNodeList = secondParentAgent.brainGenome.nodeNEATList;
-            secondParentLinkList = secondParentAgent.brainGenome.linkNEATList;
+            List<GeneNodeNEAT> secondParentNodeList = secondParentAgent.brainGenome.nodeNEATList;
+            List<GeneLinkNEAT> secondParentLinkList = secondParentAgent.brainGenome.linkNEATList;
+            //List<GeneNodeNEAT> secondParentNodeList = new List<GeneNodeNEAT>();
+            //List<GeneLinkNEAT> secondParentLinkList = new List<GeneLinkNEAT>();
+            //secondParentNodeList = secondParentAgent.brainGenome.nodeNEATList;
+            //secondParentLinkList = secondParentAgent.brainGenome.linkNEATList;
             parentNodeListArray[1] = secondParentNodeList;
             parentLinkListArray[1] = secondParentLinkList;
-
-            //Debug.Log("NewParentPair--Species: " + firstParentAgent.speciesID.ToString() + ", parent1: " + firstParentAgent.fitnessRank.ToString() + ", parent2: " + secondParentAgent.fitnessRank.ToString());
-                        
+           
             //		Iterate over ChildArray.Length :  // how many newAgents created
             for (int c = 0; c < numChildAgents; c++) { // for number of child Agents in floatArray[][]:
                 Agent newChildAgent = new Agent();
                 
                 List<GeneNodeNEAT> childNodeList = new List<GeneNodeNEAT>();
                 List<GeneLinkNEAT> childLinkList = new List<GeneLinkNEAT>();
-                //Debug.Log("newChildIndex: " + newChildIndex.ToString() + " parentAgentsArray[0].brainGenome.ReadMaxInno(): " + parentAgentsArray[0].brainGenome.ReadMaxInno().ToString());
-
-                GenomeNEAT childGenome = new GenomeNEAT();
-                childGenome.nodeNEATList = childNodeList;
-                childGenome.linkNEATList = childLinkList;
+                
+                GenomeNEAT childBrainGenome = new GenomeNEAT();
+                childBrainGenome.nodeNEATList = childNodeList;
+                childBrainGenome.linkNEATList = childLinkList;
 
                 int numEnabledLinkGenes = 0;
 
-                if (useCrossover) {
-                    //float dist = GenomeNEAT.MeasureGeneticDistance(parentAgentsArray[0].brainGenome, parentAgentsArray[1].brainGenome);
-                    //Debug.Log("Parent Distance: " + dist.ToString());
-
+                if (useCrossover) {                    
                     int nextLinkInnoA = 0;
                     int nextLinkInnoB = 0;
+                    //int nextBodyNodeInno = 0;
+                    //int nextBodyAddonInno = 0;
 
-                    int failsafeMax = 500; // parentAgentsArray[0].brainGenome.ReadMaxInno();
+                    int failsafeMax = 500;
                     int failsafe = 0;
-                    //int currentInno = 0;
                     int parentListIndexA = 0;
                     int parentListIndexB = 0;
+                    //int parentBodyNodeIndex = 0;
                     bool parentDoneA = false;
                     bool parentDoneB = false;
                     bool endReached = false;
 
                     int moreFitParent = 0;  // which parent is more Fit
-                    //float fitSliceA = 0.01f * parentAgentsArray[0].fitnessScoreSpecies / (parentAgentsArray[0].fitnessScoreSpecies + parentAgentsArray[1].fitnessScoreSpecies);
-                    //float fitSliceB = 0.01f * parentAgentsArray[1].fitnessScoreSpecies / (parentAgentsArray[0].fitnessScoreSpecies + parentAgentsArray[1].fitnessScoreSpecies);
                     if (parentAgentsArray[0].fitnessScoreSpecies < parentAgentsArray[1].fitnessScoreSpecies) {
                         moreFitParent = 1;
                     }
@@ -580,13 +1004,44 @@ public class CrossoverManager {
                         moreFitParent = Mathf.RoundToInt(UnityEngine.Random.Range(0f, 1f));
                     }
 
-                    if (moreFitParent < 0.5f)
-                        newChildAgent.bodyGenome = parentAgentsArray[0].bodyGenome;
-                    else
-                        newChildAgent.bodyGenome = parentAgentsArray[1].bodyGenome;
+                    CritterGenome childBodyGenome = new CritterGenome();  // create new body genome for Child
+                    // This creates the ROOT NODE!!!!
+                    // Clone Nodes & Addons from more fit parent to create new child body genome
+                    // crossover is on, so check for matching Nodes and Add-ons (based on Inno#'s) to determine when to mix Settings/Attributes:                    
+                    // Iterate over the nodes of the more fit parent:
+                    for (int i = 0; i < parentAgentsArray[moreFitParent].bodyGenome.CritterNodeList.Count; i++) {
+                        int currentNodeInno = parentAgentsArray[moreFitParent].bodyGenome.CritterNodeList[i].innov;
+                        if(i == 0) {  // if this is the ROOT NODE:
+                            childBodyGenome.CritterNodeList[0].CopySettingsFromNode(parentAgentsArray[moreFitParent].bodyGenome.CritterNodeList[0]);
+                            // The root node was already created during the Constructor method of the CritterGenome,
+                            // ... so instead of creating a new one, just copy the settings
+                        }
+                        else {  // NOT the root node, proceed normally:
+                                // Create new cloned node defaulted to the settings of the source( more-fit parent's) Node:
+                            CritterNode clonedCritterNode = parentAgentsArray[moreFitParent].bodyGenome.CritterNodeList[i].CloneThisCritterNode();
+                            childBodyGenome.CritterNodeList.Add(clonedCritterNode);
+                        }
 
+                        // Check other parent for same node:
+                        for (int j = 0; j < parentAgentsArray[1 - moreFitParent].bodyGenome.CritterNodeList.Count; j++) {
+                            if (parentAgentsArray[1 - moreFitParent].bodyGenome.CritterNodeList[j].innov == currentNodeInno) {
+                                // CROSSOVER NODE SETTINGS HERE!!!  ---- If random dice roll > 0.5, use less fit parent's settings, otherwise leave as default
+                                // Node dimensions
+                                // Joint Settings - placement, orientation
+                                // Recursion
+                                // Symmetry
+                                // Scale Factors, forward Bias, Attach only to Last, etc.
+                            }
+                        }
+                    }
+                    // ADD-ONS!!!!!!!!!!!!!!!!!!!!!!
+                    BreedCritterAddons(ref childBodyGenome, ref parentAgentsArray[moreFitParent].bodyGenome, ref parentAgentsArray[1 - moreFitParent].bodyGenome);
+                    newChildAgent.bodyGenome = childBodyGenome;  // ?????
+                    // ##################  ^ ^ ^  this method will clone the Add-Ons of the more-fit parent, then, if the less-fit parent ALSO has that add-on,
+                    // ... its settings will be mixed up between the two parents ( IF Crossover=true )
+
+                    //  MATCH UP Links between both agents, if they have a gene with matching Inno#, then mixing can occur                    
                     while (!endReached) {
-                    //for(int i = 0; i < parentAgentsArray[0].brainGenome.ReadMaxInno(); i++) { 
                         failsafe++;
                         if(failsafe > failsafeMax) {
                             Debug.Log("failsafe reached!");
@@ -617,7 +1072,6 @@ public class CrossoverManager {
                             endReached = true;
                             break;
                         }
-
 
                         if (innoDelta < 0) {  // Parent A has an earlier link mutation
                             //Debug.Log("newChildIndex: " + newChildIndex.ToString() + ", IndexA: " + parentListIndexA.ToString() + ", IndexB: " + parentListIndexB.ToString() + ", innoDelta < 0 (" + innoDelta.ToString() + ") --  moreFitP: " + moreFitParent.ToString() + ", nextLinkInnoA: " + nextLinkInnoA.ToString() + ", nextLinkInnoB: " + nextLinkInnoB.ToString());
@@ -680,6 +1134,11 @@ public class CrossoverManager {
                     }
 
                     if (useMutation) {
+                        // BODY MUTATION:
+                        PerformBodyMutation(ref childBodyGenome);
+                        // NEED TO ADJUST BRAINS IF MUTATION CHANGES #NODES!!!!
+
+                        // BRAIN MUTATION:
                         if (numEnabledLinkGenes < 1)
                             numEnabledLinkGenes = 1;
                         for (int k = 0; k < childLinkList.Count; k++) {
@@ -697,19 +1156,19 @@ public class CrossoverManager {
                         }
                         if (CheckForMutation(mutationBlastModifier * mutationRemoveLinkChance)) {
                             //Debug.Log("Remove Link Mutation Agent[" + newChildIndex.ToString() + "]");
-                            childGenome.RemoveRandomLink();
+                            childBrainGenome.RemoveRandomLink();
                         }
                         if (CheckForMutation(mutationBlastModifier * mutationAddNodeChance)) {   // Adds a new node
                             //Debug.Log("Add Node Mutation Agent[" + newChildIndex.ToString() + "]");
-                            childGenome.AddNewRandomNode(LifetimeGeneration);
+                            childBrainGenome.AddNewRandomNode(LifetimeGeneration);
                         }
                         if (CheckForMutation(mutationBlastModifier * mutationAddLinkChance)) { // Adds new connection
                             //Debug.Log("Add Link Mutation Agent[" + newChildIndex.ToString() + "]");
                             if (CheckForMutation(existingNetworkBias)) {
-                                childGenome.AddNewExtraLink(existingFromNodeBias, LifetimeGeneration);
+                                childBrainGenome.AddNewExtraLink(existingFromNodeBias, LifetimeGeneration);
                             }
                             else {
-                                childGenome.AddNewRandomLink(LifetimeGeneration);
+                                childBrainGenome.AddNewRandomLink(LifetimeGeneration);
                             }
                         }
                         if (CheckForMutation(mutationBlastModifier * mutationActivationFunctionChance)) {
@@ -772,7 +1231,28 @@ public class CrossoverManager {
                     }
                 }
                 else { // no crossover:                    
-                    newChildAgent.bodyGenome = parentAgentsArray[0].bodyGenome;
+                    // OLD! //newChildAgent.bodyGenome = parentAgentsArray[0].bodyGenome; // Do I need to use the 'new' keyword to prevent dual-referencing?
+                    CritterGenome childBodyGenome = new CritterGenome();  // create new body genome for Child
+                    // This creates the ROOT NODE!!!!
+                    // Clone Nodes & Addons from more fit parent to create new child body genome                   
+                    // Iterate over the nodes of the more fit parent:
+                    for (int i = 0; i < parentAgentsArray[0].bodyGenome.CritterNodeList.Count; i++) {
+                        int currentNodeInno = parentAgentsArray[0].bodyGenome.CritterNodeList[i].innov;
+                        if (i == 0) {  // if this is the ROOT NODE:
+                            childBodyGenome.CritterNodeList[0].CopySettingsFromNode(parentAgentsArray[0].bodyGenome.CritterNodeList[0]);
+                            // The root node was already created during the Constructor method of the CritterGenome,
+                            // ... so instead of creating a new one, just copy the settings
+                        }
+                        else {  // NOT the root node, proceed normally:
+                                // Create new cloned node defaulted to the settings of the source( more-fit parent's) Node:
+                            CritterNode clonedCritterNode = parentAgentsArray[0].bodyGenome.CritterNodeList[i].CloneThisCritterNode();
+                            childBodyGenome.CritterNodeList.Add(clonedCritterNode);
+                        }                        
+                    }
+                    // ADD-ONS!!!!!!!!!!!!!!!!!!!!!!
+                    BreedCritterAddons(ref childBodyGenome, ref parentAgentsArray[0].bodyGenome, ref parentAgentsArray[0].bodyGenome);
+                    newChildAgent.bodyGenome = childBodyGenome;
+                    //===============================================================================================
 
                     for (int i = 0; i < parentNodeListArray[0].Count; i++) {
                         // iterate through all nodes in the parent List and copy them into fresh new geneNodes:
@@ -788,6 +1268,10 @@ public class CrossoverManager {
                     }
                     // MUTATION:
                     if (useMutation) {
+                        // BODY MUTATION:
+                        PerformBodyMutation(ref childBodyGenome);
+
+                        // BRAIN MUTATION:
                         if (numEnabledLinkGenes < 1)
                             numEnabledLinkGenes = 1;
                         for (int k = 0; k < childLinkList.Count; k++) {
@@ -805,19 +1289,19 @@ public class CrossoverManager {
                         }
                         if (CheckForMutation(mutationBlastModifier * mutationRemoveLinkChance)) {
                             //Debug.Log("Remove Link Mutation Agent[" + newChildIndex.ToString() + "]");
-                            childGenome.RemoveRandomLink();
+                            childBrainGenome.RemoveRandomLink();
                         }
                         if (CheckForMutation(mutationBlastModifier * mutationAddNodeChance)) {   // Adds a new node
                             //Debug.Log("Add Node Mutation Agent[" + newChildIndex.ToString() + "]");
-                            childGenome.AddNewRandomNode(LifetimeGeneration);
+                            childBrainGenome.AddNewRandomNode(LifetimeGeneration);
                         }
                         if (CheckForMutation(mutationBlastModifier * mutationAddLinkChance)) { // Adds new connection
                             //Debug.Log("Add Link Mutation Agent[" + newChildIndex.ToString() + "]");
                             if(CheckForMutation(existingNetworkBias)) {
-                                childGenome.AddNewExtraLink(existingFromNodeBias, LifetimeGeneration);
+                                childBrainGenome.AddNewExtraLink(existingFromNodeBias, LifetimeGeneration);
                             }
                             else {
-                                childGenome.AddNewRandomLink(LifetimeGeneration);
+                                childBrainGenome.AddNewRandomLink(LifetimeGeneration);
                             }
                         }
                         if (CheckForMutation(mutationBlastModifier * mutationActivationFunctionChance)) {
@@ -883,10 +1367,10 @@ public class CrossoverManager {
                     }
                 }
                 
-                newChildAgent.brainGenome = childGenome;
+                newChildAgent.brainGenome = childBrainGenome;
                 newChildAgent.brainGenome.nodeNEATList = childNodeList;
                 newChildAgent.brainGenome.linkNEATList = childLinkList;
-                BrainNEAT childBrain = new BrainNEAT(childGenome);
+                BrainNEAT childBrain = new BrainNEAT(childBrainGenome);
                 childBrain.BuildBrainNetwork();
                 newChildAgent.brain = childBrain;
                 

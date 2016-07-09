@@ -116,9 +116,7 @@ public class Trainer {
     public BrainNetworkVisualizer networkVisualizer;
     Material brainNetworkMat = new Material(Shader.Find("Custom/SimpleBrainNetworkShader"));
     #endregion
-
-
-
+    
     // Constructor Method
     public Trainer() {
 		DebugBot.DebugFunctionCall("Trainer; Trainer() Constructor!; ", debugFunctionCalls);
@@ -182,10 +180,10 @@ public class Trainer {
 		crossoverOn = !crossoverOn;
 	}
 
-	public void ToggleFastMode() {
+    #region OLD CODE:
+    public void ToggleFastMode() {
 		fastModeOn = !fastModeOn;
 	}
-
 	public void PlayRealTimeStep() {
 		//DebugBot.DebugFunctionCall("Trainer; PlayRealTimeStep; " + playingCurGeneration + ", " + playingCurTrialIndex + "/" + playingNumTrials + ", " + playingCurPlayer + "/" + playingNumPlayers + ", " + playingCurTrialRound + "/" + playingNumTrialRounds + ", " + playingCurAgent + "/" + playingNumAgents + ", " + playingCurMiniGameTimeStep + "/" + playingNumMiniGameTimeSteps, debugFunctionCalls);
 		Debug.Log ("PlayRealTimeStep(): Before CalculateOneStep() & UpdatePlayingState()! game TimeStep: " + playingCurMiniGameTimeStep.ToString());
@@ -203,7 +201,6 @@ public class Trainer {
 		// Update playing State
 		UpdatePlayingState();
 	}
-
 	public void PlayFastModeChunk(int numSteps) {
 		int counter = 0;
 		while(counter < numSteps) {
@@ -213,9 +210,10 @@ public class Trainer {
 			UpdatePlayingState();
 		}
 	}
+    #endregion
 
-	#region Fitness Stuff
-	private void ProcessFitnessScoresEndRound() {
+    #region Fitness Stuff
+    private void ProcessFitnessScoresEndRound() {
 		// Agent X just finished a round of a game -- Figure out its score.
 		// Find playingCurMiniGameTimeStep (i.e. how many timesteps the game was played
 		int numTimeSteps = playingCurMiniGameTimeStep;
@@ -449,28 +447,15 @@ public class Trainer {
     }
         
 	private void UpdatePlayingState() {  // increments current state variables, keeping track of when each should roll-over into the next round
-		//Debug.Log ("UpdatePlayingState() playingCurGameStep: " + playingCurMiniGameTimeStep.ToString());
-
+		
 		MiniGameManager currentGameManager = PlayerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].miniGameManager;  // <-- to help readability
 		betweenGenerations = false;
-		//Debug.Log ("UpdatePlayingState - curGameTimeSteps: " + playingCurMiniGameTimeStep.ToString());
 		if(playingCurMiniGameTimeStep >= playingNumMiniGameTimeSteps || currentGameManager.miniGameInstance.gameEndStateReached) {  // hit time limit of minigame or the game reported a finish State:
 			ProcessFitnessScoresEndRound();  // divides accumulated fitness score by time-steps, to keep it in 0-1 range and stores it in AgentScoresArray
-			//playerList[0].masterPopulation.masterAgentArray[playingCurAgent].fitnessScore = currentGameManager.miniGameInstance.fitnessScore;
 			playingCurMiniGameTimeStep = 0;
 			playingCurTrialRound++;  // Same agent, next round playthrough
-
-            // v v v THIS might cause problems!
-            // .. See if necessary to update minigame's agentBeingTested somewhere her, or only inside CalculateOneStep() as it is...
-            //currentGameManager.miniGameInstance.DisablePhysicsGamePieceComponents();
-            //Debug.Log("Trainer: " + playerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].miniGameManager.miniGameInstance.agentBodyBeingTested.creatureBodySegmentGenomeList[0].addOn1.ToString());
-
-
-            //currentGameManager.miniGameInstance.Reset();  // OLD
+            
             currentGameManager.miniGameInstance.ClearGame();
-
-            //currentGameManager.miniGameInstance.SetPhysicsGamePieceTransformsFromData();  // set the PhysX gamePieces based on gameData
-            //currentGameManager.miniGameInstance.EnablePhysicsGamePieceComponents(); // create RigidBody and HingeJoint etc. components on the empty GameObjects
 
             if (playingCurTrialRound >= playingNumTrialRounds) {   // finished all rounds of current Trial for current Agent
 				ProcessFitnessScoresEndAgent(playingCurAgent);  // combines the raw scores from all game rounds to get the agent's Fitness score for that TrialIndex
@@ -480,10 +465,8 @@ public class Trainer {
                 if (playingCurAgent >= playingNumAgents) {
 					playingCurAgent = 0;
 					playingCurPlayer++;  // Now that the current player has changed, update how many trial rounds for new player
-					//DebugBot.DebugFunctionCall("Trainer; UpdatePlayingState; PLAYERS!!: " + playingNumPlayers.ToString(), true);
 
 					if(playingCurPlayer >= playingNumPlayers) {  // finished all active Players for this Trial Index
-						//DebugBot.DebugFunctionCall("Trainer; UpdatePlayingState; PLAYERS!! playingCurPlayer >= playingNumPlayers: " + playingNumPlayers.ToString(), true);
 						playingCurPlayer = 0;
 						playingCurTrialIndex++;  // Move on to next Trial Index
 
@@ -502,26 +485,16 @@ public class Trainer {
                                 playerList[p].dataManager.InitializeNewGenerationDataArrays(playingCurGeneration);
                             }
                             // TrainingModifiers!!!
-                            trainingModifierManager.ApplyTrainingModifierEffects(this);
-
-                            // Figure out numTrialRounds based on modifiers, and set target positions / round durations:                            
+                            trainingModifierManager.ApplyTrainingModifierEffects(this);                           
                             for (int p = 0; p < numPlayers; p++) {  // iterate through playerList
                                 trainingModifierManager.ApplyTrainingModifierEffectsTarget(this, PlayerList[p].masterTrialsList[0].miniGameManager.miniGameInstance);
-                                // Randomly generates the target positions in each minigame once now, and use those positions for all agents:
-                                //for (int t = 0; t < PlayerList[p].masterTrialsList.Count - 1; t++) {
-                                    //Debug.Log("TEST@@" + PlayerList[p].masterTrialsList[t].miniGameManager.miniGameInstance.ToString());
-                                //    PlayerList[p].masterTrialsList[t].miniGameManager.miniGameInstance.ResetTargetPositions(PlayerList[p].masterTrialsList[t].numberOfPlays, PlayerList[p].masterTrialsList[t].minEvaluationTimeSteps, PlayerList[p].masterTrialsList[t].maxEvaluationTimeSteps);
-                                //}
                             }
 
                             UpdatePlayingNumTimeSteps();
 							UpdatePlayingNumTrialRounds();
 							UpdatePlayingNumAgents();
 							UpdatePlayingNumPlayers();
-							UpdatePlayingNumTrials();
-							
-                            //gameControllerRef.trainerUI.SetAllPanelsFromTrainerData();
-                            //DebugBot.DebugFunctionCall("Trainer; UpdatePlayingState; " + playingCurGeneration + ", " + playingCurTrialIndex + "/" + playingNumTrials + ", " + playingCurPlayer + "/" + playingNumPlayers + ", " + playingCurTrialRound + "/" + playingNumTrialRounds + ", " + playingCurAgent + "/" + playingNumAgents + ", " + playingCurMiniGameTimeStep + "/" + playingNumMiniGameTimeSteps, debugFunctionCalls);
+							UpdatePlayingNumTrials();							
                         }
 						else{ // reset player back to 0, incremented Trial
 							UpdatePlayingNumTrialRounds();  // new player means potentially different number of trial rounds
@@ -535,6 +508,10 @@ public class Trainer {
 					}
 				}
 				else { // current Agent is incremented: 
+
+                    // ##########################################################
+                    // Might need to do something here to handle new Agent and thus new AgentBody
+
 					if(!fastModeOn) {
 						// UPDATE texture for current agent brain diagram with genome for new agent
 						playerList[playingCurPlayer].graphKing.BuildTexturesCurAgentPerAgent(playerList[playingCurPlayer], playingCurAgent);
@@ -546,25 +523,20 @@ public class Trainer {
 		}
 	}
 
-	public void UpdatePlayingNumTimeSteps() {
+    #region UpdatePlayingStates
+    public void UpdatePlayingNumTimeSteps() {
 		playingNumMiniGameTimeSteps = PlayerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].maxEvaluationTimeSteps;
 	}
-
 	public void UpdatePlayingNumTrialRounds() {
 		playingNumTrialRounds = PlayerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].numberOfPlays;
 	}
-
 	public void UpdatePlayingNumPlayers() {
-		//DebugBot.DebugFunctionCall("Trainer; UpdatePlayingNumPlayers; " + playingNumPlayers.ToString(), true);
 		playingNumPlayers = playerList.Count;
-		//DebugBot.DebugFunctionCall("Trainer; UpdatePlayingNumPlayers; " + playingNumPlayers.ToString(), true);
 		// Might keep the number of players static and just use a check to see if there is an active Trial at the specified Index for the cur Player
 	}
-
 	public void UpdatePlayingNumAgents() {  // Check how many agents in the current population
 		playingNumAgents = playerList[playingCurPlayer].masterPopulation.populationMaxSize;
 	}
-
 	public void UpdatePlayingNumTrials() { // highest numbered Trial Index for any player
 
 		int highestNumTrials = 0;
@@ -575,12 +547,11 @@ public class Trainer {
 				}
 			}
 		}
-		//highestNumTrials -= 1;  // To account for the empty NONE Trial at end of each TrialsList
-		//DebugBot.DebugFunctionCall("Trainer; UpdatePlayingNumTrials; " + playingNumTrials.ToString(), true);
 		playingNumTrials = highestNumTrials; // set number of Trials to iterate through
 	}
+    #endregion
 
-	public void CalculateOneStep() {  // This is where the magic happens -- feeds game data to current Brain and Tick's the current mini-game
+    public void CalculateOneStep() {  // This is where the magic happens -- feeds game data to current Brain and Tick's the current mini-game
                                       // Based on current playingState data, looks up current Trial Index,
                                       // Look up current Player being evaluated, and see what Mini-game type is selected for that player.
                                       // If the mini-game is a multi-player game, evaluate all players for that trial simultaneously (SPLIT CODE PATH)
@@ -592,7 +563,7 @@ public class Trainer {
 		MiniGameManager currentGameManager = PlayerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].miniGameManager;  // <-- to help readability
 		Agent curAgent = PlayerList[playingCurPlayer].masterPopulation.masterAgentArray[playingCurAgent];
         // DIG INTO THIS -- see where it is lost on the Agent
-		currentGameManager.miniGameInstance.agentBodyBeingTested = curAgent.bodyGenome; // !!! RE_EVALUATE!!
+		currentGameManager.miniGameInstance.agentBodyGenomeBeingTested = curAgent.bodyGenome; // !!! RE_EVALUATE!!
 		// ^ ^ ^ ^ PhysX Simulation step from last CalculateOneStep() happens before the following code in this Function:
 
 		if(!currentGameManager.miniGameInstance.gameInitialized) { // If the miniGame exists but has not been Initialized -- very first timeStep of whole training session
@@ -648,7 +619,6 @@ public class Trainer {
         }
         else {
             if (currentGameManager.miniGameInstance.gameCleared) {
-                //Debug.Log("CalculateOneStep() gameCleared");
                 currentGameManager.miniGameInstance.waitingForReset = true;
             }
             else {
@@ -657,46 +627,20 @@ public class Trainer {
                              // Check how many agents to be tested (how many mini-Game instance -- agent pairs)
                              // For ( agents to be tested ) 
                     for (int i = 0; i < 1; i++) {
-                        // Get current agent instance being tested
-                        //BrainBase currentBrain = PlayerList[playingCurPlayer].masterPopulation.masterAgentArray[playingCurAgent].brain;
-                        // Get current miniGame instance:
-
-                        // Check if miniGame has all pieces built: Or do this somewhere else???
-                        //if(!currentGameManager.miniGameInstance.piecesBuilt) {
-                        //currentGameManager.miniGameInstance.BuildGamePieces();
-                        //}
-
-                        // Check if miniGame/agent has finished the game round early, before max time
-                        //if(playingCurMiniGameTimeStep == (playingNumMiniGameTimeSteps - 1)) { // if game has ended check for miniGameInstance.finished or equivalent
-                        // Take care of it, fitness + any needed cleanup
-                        //currentGameManager.miniGameInstance.DeleteGamePieces();
-                        // Delete physics Components to prevent any physX simulations between this and the next (Reset) Frames
-                        //}
-                        //else { // Game is still going on:
-                        // Set position & velocity variables from the physX objects in the game from between Frames, since the physics sim runs directly after FixedUpdate():
-                        //if(playingCurMiniGameTimeStep != 0) {  // if it is the very first timeStep of the game, don't grab PhysX simulation info
-                        //currentGameManager.miniGameInstance.UpdateGameStateFromPhysX();
-                        //}					
-
-                        //Debug.Log (currentGameManager.ToString());
-                        //Debug.Log (currentGameManager.brainInput[0].ToString());
-                        //Debug.Log (currentGameManager.brainOutput[0][0].ToString());
-                        //Debug.Log (currentGameManager.miniGameInstance.outputChannelsList[0].channelValue[0].ToString());
-
+                        
                         // Now with the updated values for position/velocity etc., pass input values into brains
                         currentBrain.BrainMasterFunction(ref currentGameManager.brainInput, ref currentGameManager.brainOutput);
                         // Run the game for one timeStep: (Note that this will only modify non-physX variables -- the actual movement and physX sim happens just afterward -- so keep that in mind)
                         currentGameManager.miniGameInstance.Tick();
 
-                        if(playbackSpeed < 6f) {
-                            
+                        // Luxuries at Low Speeds: Visualizations & Data read-outs
+                        if(playbackSpeed < 6f) {                            
                             // Update Data text view:
                             gameControllerRef.trainerUI.panelDataViewScript.populationRef = playerList[playingCurPlayer].masterPopulation;
                             gameControllerRef.trainerUI.panelDataViewScript.minigameRef = currentGameManager.miniGameInstance;
                             gameControllerRef.trainerUI.panelDataViewScript.dataManagerRef = playerList[playingCurPlayer].dataManager;
                             gameControllerRef.trainerUI.panelDataViewScript.SetCurrentAgentID(playingCurAgent);
                             gameControllerRef.trainerUI.panelDataViewScript.UpdateDataText();
-
                             //MiniGameCritterWalkBasic minigame = (MiniGameCritterWalkBasic)currentGameManager.miniGameInstance as MiniGameCritterWalkBasic;
                             //networkVisualizer.InitShaderTexture(brain);
                             //minigame.SetShaderTextures(networkVisualizer);

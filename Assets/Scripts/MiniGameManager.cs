@@ -54,11 +54,11 @@ public class MiniGameManager {
         brainInput = new List<float[]>(); // playerRef.masterPopulation.numInputNodes][];
         brainOutput = new List<float[]>(); // playerRef.masterPopulation.numOutputNodes][];
 		// Find length of Channel Lists
-		int numInputChannels = playerRef.masterPopulation.numInputNodes;
-		int numOutputChannels = playerRef.masterPopulation.numOutputNodes;
-		//DebugBot.DebugFunctionCall("MiniGameManager; SetInputOutputArrays(); inputCount: " + miniGameInstance.inputChannelsList.Count.ToString() + ", outputCount: " + miniGameInstance.outputChannelsList.Count.ToString(), debugFunctionCalls);
-		// Loop through original Channel Lists, and if a channel is selected, pass a ref of its value to the next Index in the brainDataArrays
-		int currentInputArrayIndex = 0;
+		int numInputChannels = miniGameInstance.inputChannelsList.Count; // playerRef.masterPopulation.numOutputNodes;
+        int numOutputChannels = miniGameInstance.outputChannelsList.Count;
+        //DebugBot.DebugFunctionCall("MiniGameManager; SetInputOutputArrays(); inputCount: " + miniGameInstance.inputChannelsList.Count.ToString() + ", outputCount: " + miniGameInstance.outputChannelsList.Count.ToString(), debugFunctionCalls);
+        // Loop through original Channel Lists, and if a channel is selected, pass a ref of its value to the next Index in the brainDataArrays
+        int currentInputArrayIndex = 0;
 		int currentOutputArrayIndex = 0;
 		for(int i = 0; i < numInputChannels; i++) {
             //Debug.Log("SetInputOutputArrays... i: " + i.ToString() + ", numInputChannels: " + numInputChannels.ToString() + ", inputChannelsListCount: " + miniGameInstance.inputChannelsList.Count.ToString() + ", " + miniGameInstance.inputChannelsList[i].ToString() + ", " + miniGameInstance.inputChannelsList[i].channelName.ToString());
@@ -75,30 +75,6 @@ public class MiniGameManager {
 				currentOutputArrayIndex++; // increment current brainOutput Index
 			}
 		}
-		// Fill any remaining indices with value of zero ( this will happen if the brain has more nodes than the number of selected Channels )
-		/*while(currentInputArrayIndex < brainInput.Length) {
-			float[] zeroArray = new float[1];
-			zeroArray[0] = 0f;
-			brainInput[currentInputArrayIndex] = zeroArray; // zero out extra indices
-			currentInputArrayIndex++; // increment current brainInput Index
-		}
-		while(currentOutputArrayIndex < brainOutput.Length) {
-			float[] zeroArray = new float[1];
-			zeroArray[0] = 0f;
-			brainOutput[currentOutputArrayIndex] = zeroArray; // zero out extra indices
-			currentOutputArrayIndex++; // increment current brainOutput Index
-		}*/
-
-		/*string debugMessage = "BrainInput: ";
-		for(int x = 0; x < brainInput.Length; x++) {
-			debugMessage += brainInput[x][0].ToString() + ", ";
-		}
-		debugMessage += "BrainOutput: ";
-		for(int y = 0; y < brainOutput.Length; y++) {
-			debugMessage += brainOutput[y][0].ToString() + ", ";
-		}*/
-		//DebugBot.DebugFunctionCall("MiniGameManager; SetInputOutputArrays(); brainInput: " + debugMessage, debugFunctionCalls);
-		// END NEW APPROACH !! ++++++++++++++++++++++++++++++++++++++++++++++++++++
 	}
 
 	public void SetMiniGameType(MiniGameManager.MiniGameType newGameType, MiniGameSettingsBase gameSettings) {  // Change game type and re-instantiate miniGameInstance

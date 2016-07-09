@@ -302,7 +302,10 @@ public class TrainerNewPopulationUI : MonoBehaviour {
                 populationRef.initConnectedness = pendingConnectedness;
 
                 // CREATE AGENT ARRAY!!!!!!! :                
-                CritterGenome genomeToLoad = ES2.Load<CritterGenome>(pendingBodyTemplateFilename);                
+                CritterGenome genomeToLoad = ES2.Load<CritterGenome>(pendingBodyTemplateFilename);
+                CrossoverManager.nextNodeInnov = genomeToLoad.savedNextNodeInno;
+                CrossoverManager.nextAddonInnov = genomeToLoad.savedNextAddonInno;
+
                 populationRef.InitializeMasterAgentArray(genomeToLoad, trainer.PlayerList[curPlayer - 1].masterCupid.useSpeciation);
                 trainer.PlayerList[curPlayer-1].hasValidPopulation = true;
             }

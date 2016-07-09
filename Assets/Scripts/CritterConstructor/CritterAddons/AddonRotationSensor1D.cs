@@ -25,4 +25,11 @@ public class AddonRotationSensor1D {
         sensitivity = new float[1];
         sensitivity[0] = 1f;
     }
+
+    public AddonRotationSensor1D CloneThisAddon() {
+        AddonRotationSensor1D clonedAddon = new AddonRotationSensor1D(this.critterNodeID, this.innov);
+        clonedAddon.localAxis[0] = this.localAxis[0];
+        clonedAddon.sensitivity[0] = this.sensitivity[0];
+        return clonedAddon;
+    }
 }

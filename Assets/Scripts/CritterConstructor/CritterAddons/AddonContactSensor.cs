@@ -20,4 +20,10 @@ public class AddonContactSensor {
         contactSensitivity = new float[1];
         contactSensitivity[0] = 1f;
     }
+
+    public AddonContactSensor CloneThisAddon() {
+        AddonContactSensor clonedAddon = new AddonContactSensor(this.critterNodeID, this.innov);
+        clonedAddon.contactSensitivity[0] = this.contactSensitivity[0];
+        return clonedAddon;
+    }
 }

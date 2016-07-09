@@ -29,4 +29,10 @@ public class AddonTorqueEffector3D {
         //throttle = new float[1];
         //throttle[0] = 0f;
     }
+
+    public AddonTorqueEffector3D CloneThisAddon() {
+        AddonTorqueEffector3D clonedAddon = new AddonTorqueEffector3D(this.critterNodeID, this.innov);
+        clonedAddon.maxTorque[0] = this.maxTorque[0];
+        return clonedAddon;
+    }
 }

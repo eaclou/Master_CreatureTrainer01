@@ -20,4 +20,10 @@ public class AddonWeaponBasic {
         strength = new float[1];
         strength[0] = 1f;
     }
+
+    public AddonWeaponBasic CloneThisAddon() {
+        AddonWeaponBasic clonedAddon = new AddonWeaponBasic(this.critterNodeID, this.innov);
+        clonedAddon.strength[0] = this.strength[0];
+        return clonedAddon;
+    }
 }

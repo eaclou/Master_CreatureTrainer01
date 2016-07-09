@@ -61,4 +61,18 @@ public class AddonPhysicalAttributes {
         freezeRotationZ = new bool[1];
         freezeRotationZ[0] = false;
     }
+
+    public AddonPhysicalAttributes CloneThisAddon() {
+        AddonPhysicalAttributes clonedAddon = new AddonPhysicalAttributes(this.critterNodeID, this.innov);
+        clonedAddon.dynamicFriction[0] = this.dynamicFriction[0];
+        clonedAddon.staticFriction[0] = this.staticFriction[0];
+        clonedAddon.bounciness[0] = this.bounciness[0];
+        clonedAddon.freezePositionX[0] = this.freezePositionX[0];
+        clonedAddon.freezePositionY[0] = this.freezePositionY[0];
+        clonedAddon.freezePositionZ[0] = this.freezePositionZ[0];
+        clonedAddon.freezeRotationX[0] = this.freezeRotationX[0];
+        clonedAddon.freezeRotationY[0] = this.freezeRotationY[0];
+        clonedAddon.freezeRotationZ[0] = this.freezeRotationZ[0];
+        return clonedAddon;
+    }
 }

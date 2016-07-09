@@ -20,4 +20,10 @@ public class AddonValueInput {
         value = new float[1];
         value[0] = 1f;
     }
+
+    public AddonValueInput CloneThisAddon() {
+        AddonValueInput clonedAddon = new AddonValueInput(this.critterNodeID, this.innov);
+        clonedAddon.value[0] = this.value[0];
+        return clonedAddon;
+    }
 }

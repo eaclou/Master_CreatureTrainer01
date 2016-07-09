@@ -30,4 +30,12 @@ public class AddonOscillatorInput {
         offset = new float[1];
         offset[0] = 0f;
     }
+
+    public AddonOscillatorInput CloneThisAddon() {
+        AddonOscillatorInput clonedAddon = new AddonOscillatorInput(this.critterNodeID, this.innov);
+        clonedAddon.frequency[0] = this.frequency[0];
+        clonedAddon.amplitude[0] = this.amplitude[0];
+        clonedAddon.offset[0] = this.offset[0];
+        return clonedAddon;
+    }
 }

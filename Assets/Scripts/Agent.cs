@@ -10,7 +10,7 @@ public class Agent {
     public float fitnessScoreSpecies;
 
 	public BrainNEAT brain; // This is where the magic happens
-	public Genome genome; // encodes the brain network in long single-dimension arrays
+	//public Genome genome; // encodes the brain network in long single-dimension arrays
     public GenomeNEAT brainGenome;
 	public CritterGenome bodyGenome;  // encodes the body shape of the creature in a list of SegmentGenomes
 
