@@ -11,6 +11,9 @@ public class GeneNodeNEAT {
     }
     public int id;
     public TransferFunctions.TransferFunction activationFunction = TransferFunctions.TransferFunction.RationalSigmoid;
+    public int sourceAddonInno;
+    public int sourceAddonRecursionNum;
+    public int sourceAddonChannelNum;  // if an addon has multiple Channels (i.e. compass3D -- keeps track of which is which)
 
 	public GeneNodeNEAT() {
 
@@ -20,5 +23,14 @@ public class GeneNodeNEAT {
         this.id = id;
         this.nodeType = nodeType;
         this.activationFunction = function;
+    }
+
+    public GeneNodeNEAT(int id, GeneNodeType nodeType, TransferFunctions.TransferFunction function, int inno, int recurse, int channelNum) {
+        this.id = id;
+        this.nodeType = nodeType;
+        this.activationFunction = function;
+        sourceAddonInno = inno;
+        sourceAddonRecursionNum = recurse;
+        sourceAddonChannelNum = channelNum;
     }
 }

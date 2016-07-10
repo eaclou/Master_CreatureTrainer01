@@ -44,11 +44,13 @@ public class Population {
 		DebugBot.DebugFunctionCall("Population; InitializeMasterAgentArray(CritterGenome); ", debugFunctionCalls);
 		templateGenome = bodyGenome;
         
+        // $$$$$$$$$$$$ TRY TO REMOVE THIS SOON!!!!!!!!!!!!!!!!  $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
         int[] critterData = templateGenome.CalculateNumberOfSegmentsInputsOutputs(); // just to check number of segments, inputs, and outputs
         int numSegments = critterData[0];
         numInputNodes = critterData[1];
         numOutputNodes = critterData[2];
         Debug.Log("Critter Stats [0]: " + numSegments.ToString() + ", [1]: " + numInputNodes.ToString() + ", [2]: " + numOutputNodes.ToString());
+        // $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
                 
         masterAgentArray = new Agent[populationMaxSize];
 		for(int i = 0; i < populationMaxSize; i++) {
@@ -175,7 +177,8 @@ public class Population {
 		
         GenomeNEAT brainGenome;
         Debug.Log("InitializeAgentBrainAndBody numInputNodes: " + numInputNodes.ToString() + ", NumHiddenNodes: " + initNumHiddenNodes.ToString() + ", numOutputNodes: " + numOutputNodes.ToString() + ", initConnectedness: " + initConnectedness.ToString() + ", initRandom: " + initRandom.ToString());
-        brainGenome = newAgent.brain.InitializeNewBrain(numInputNodes, initNumHiddenNodes, numOutputNodes, initConnectedness, initRandom);
+        // OLD // brainGenome = newAgent.brain.InitializeNewBrain(numInputNodes, initNumHiddenNodes, numOutputNodes, initConnectedness, initRandom);
+        brainGenome = newAgent.brain.InitializeNewBrain(bodyGenome, initNumHiddenNodes, initConnectedness, initRandom);
         /*if(initRandom) {  // OLD
             brainGenome = newAgent.brain.InitializeRandomBrain(numInputNodes, numOutputNodes); // 'builds' the brain and spits out a Genome
 		}

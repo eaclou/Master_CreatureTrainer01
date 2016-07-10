@@ -80,28 +80,7 @@ public class TrainerNewPopulationUI : MonoBehaviour {
 
 		Player currentPlayer = trainerModuleScript.gameController.masterTrainer.PlayerList[trainerModuleScript.gameController.masterTrainer.CurPlayer-1];
 		populationRef = currentPlayer.masterPopulation;
-		/*if(populationRef.templateBrain == null) {
-			populationRef.templateBrain = new BrainBase();
-			
-			//InitializePanelInputList();
-			//InitializePanelOutputList();
-		}*/
-
-		/*if(!dropDownPopulated) {  // So it only creates buttons on startup
-			foreach (string type in System.Enum.GetNames(typeof(Population.BrainType))) {
-				//DebugBot.DebugFunctionCall("TMiniGameUI; " + type, debugFunctionCalls);
-				GameObject button = (GameObject)Instantiate (buttonBrainTypeDropDownPrefab);
-				button.GetComponentInChildren<Text>().text = type;
-				string enumType = "";
-				enumType = type;
-				button.GetComponent<Button>().onClick.AddListener (
-					() => {ChooseBrainType(enumType);}
-				);
-				button.transform.SetParent(dropDownChooseBrainTypePanel);
-			}
-			dropDownPopulated = true;
-		}*/
-		
+				
 		DebugBot.DebugFunctionCall("TNewPopUI; InitializePanelWithTrainerData(); ", debugFunctionCalls);
 		sliderPopulationSize.minValue = minMaxPopulationSize;
 		sliderPopulationSize.maxValue = maxMaxPopulationSize;
@@ -109,8 +88,7 @@ public class TrainerNewPopulationUI : MonoBehaviour {
 		UpdateUIWithCurrentData();
 	}
 
-	private void UpdateUIWithCurrentData() {
-		//int dataCurPlayer = trainerModuleScript.gameController.masterTrainer.CurPlayer;
+	private void UpdateUIWithCurrentData() {		
 		DebugBot.DebugFunctionCall("TNewPopUI; UpdateUIWithCurrentData(); " + pendingPopulationSize.ToString(), debugFunctionCalls);
 		sliderPopulationSize.value = pendingPopulationSize;
 		sliderNumInputs.value = pendingNumInputs;
@@ -139,65 +117,21 @@ public class TrainerNewPopulationUI : MonoBehaviour {
 			buttonTransferFunctionOptionsPanel.interactable = true;
 			panelBrainTypeOptionsVisible.SetActive (true);
 			panelTransferFunctionsVisible.SetActive (false);
-			//SetupPanelInputList();
 		}
 		else {
 			buttonBrainTypeOptionsPanel.interactable = true;
 			buttonTransferFunctionOptionsPanel.interactable = false;
 			panelBrainTypeOptionsVisible.SetActive (false);
 			panelTransferFunctionsVisible.SetActive (true);
-			//SetupPanelOutputList();
-		}		
-		// Choose Brain-Type Drop-down:
-		//if(populationRef.brainType == Population.BrainType.None) {
-		//	textButtonBrainTypeDropDown.text = "Choose Brain Type (Drop-Down)";
-		//}
-		//else {
-		//	textButtonBrainTypeDropDown.text = populationRef.brainType.ToString();
-		//}
+		}
 		bgImage.color = trainerModuleScript.defaultBGColor;
 	}
 
 	#region OnClick & UIElement changed Functions:
-
-	//public void ClickChooseBrainType() {  // Is this needed?
-	//	DebugBot.DebugFunctionCall("TNewPopUI; ClickChooseBrainType(); ", debugFunctionCalls);
-	//}
-	
-	/*public void ChooseBrainType(string brainType) {  // clicked on a drop-down sub-button:
-		DebugBot.DebugFunctionCall("TNewPopUI; ChooseBrainType(" + brainType + "); ", debugFunctionCalls);
-		Player currentPlayer = trainerModuleScript.gameController.masterTrainer.PlayerList[trainerModuleScript.gameController.masterTrainer.CurPlayer-1];
-
-		Population.BrainType parsed_enum = (Population.BrainType)System.Enum.Parse( typeof( Population.BrainType ), brainType );  // convert string to enum
-		populationRef.ChangeTemplateBrainType(parsed_enum);  // change braintype of Population's templateBrain
-
-		Trial dataMiniGameTrial = currentPlayer.masterTrialsList[currentPlayer.currentTrialForEdit];
-		//if(pendingMiniGameManager.gameType != dataMiniGameTrial.miniGameManager.gameType) { // if the values are different:
-		//	valuesChanged = true;
-		//	pendingMiniGameManager.SetMiniGameType(pendingMiniGameManager.gameType); 
-			// Inputs / Outputs button toggles
-
-		//	InitializePanelInputList();  // Set up brainTypeOptions Panel
-		//	InitializePanelOutputList();  // and possibly Transfer Functions panel also
-
-		UpdateUIWithCurrentData();
-	}*/
-
+    
 	public void ClickLoadBodyTemplate() {
 		DebugBot.DebugFunctionCall("TNewPopUI; ClickLoadBodyTemplate(); EDITOR TURNED OFF!!!", true);
-        UniFileBrowser.use.OpenFileWindow(LoadBodyTemplate);
-        /*  // OLD:
-		// Open file explorer window to choose asset filename:
-		string absPath = EditorUtility.OpenFilePanel ("Select Creature", "Assets/Resources", "");
-		if(absPath.StartsWith (Application.dataPath)) {
-			pendingBodyTemplateName = absPath.Substring (Application.dataPath.Length - "Assets".Length);
-		}
-		pendingBodyTemplateName = pendingBodyTemplateName.Substring("Assets/Resources/".Length); // clips off folders
-		pendingBodyTemplateName = pendingBodyTemplateName.Substring(0, pendingBodyTemplateName.Length - ".asset".Length); // clips extension
-
-		DebugBot.DebugFunctionCall("TNewPopUI; ClickLoadBodyTemplate(); " + pendingBodyTemplateName.ToString(), true);
-		UpdateUIWithCurrentData();
-        */
+        UniFileBrowser.use.OpenFileWindow(LoadBodyTemplate);        
     }
     public void LoadBodyTemplate(string filename) {
         Debug.Log("LoadBodyTemplate; filename: " + filename);
@@ -245,19 +179,6 @@ public class TrainerNewPopulationUI : MonoBehaviour {
         pendingConnectedness = sliderValue;
         UpdateUIWithCurrentData();
     }
-
-    /*public void SliderNumInputs(float sliderValue) { // On Slider Value Changed
-		DebugBot.DebugFunctionCall("TNewPopUI; SliderNumInputs(); ", debugFunctionCalls);
-		pendingNumInputs = (int)sliderValue;
-		UpdateUIWithCurrentData();
-	}
-
-	public void SliderNumOutputs(float sliderValue) { // On Slider Value Changed
-		DebugBot.DebugFunctionCall("TNewPopUI; SliderNumOutputs(); ", debugFunctionCalls);
-		pendingNumOutputs = (int)sliderValue;
-		UpdateUIWithCurrentData();
-	}*/
-
     public void ToggleRandomWeights(bool value) {
 		DebugBot.DebugFunctionCall("TNewPopUI; ToggleRandomWeights(); ", debugFunctionCalls);
 		//Debug.Log ("ToggleRandomWeights(), NewPopPanelUI, " + value.ToString());

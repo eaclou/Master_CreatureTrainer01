@@ -1221,6 +1221,8 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             BrainInputChannel BIC_SegmentTimerInput = new BrainInputChannel(ref timerInput.value, true, inputChannelName);
             inputChannelsList.Add(BIC_SegmentTimerInput);
         }
+
+        Debug.Log("Minigame SetupInputOutputChannelLists: #Inputs= " + inputChannelsList.Count.ToString() + ", #Outputs= " + outputChannelsList.Count.ToString());
     }
 
     private void SetupFitnessComponentList()

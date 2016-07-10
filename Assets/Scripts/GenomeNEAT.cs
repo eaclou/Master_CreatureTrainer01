@@ -12,7 +12,6 @@ public class GenomeNEAT {
 	public GenomeNEAT() {
         // Constructor
     }
-
     public GenomeNEAT(int numInputs, int numOutputs) {
         // Constructor
         if(numInputs < 1 || numOutputs < 1) {
@@ -36,7 +35,6 @@ public class GenomeNEAT {
             // Empty for now
         }        
     }
-
     public GenomeNEAT(int numInputs, int numHidden, int numOutputs) {
         // Constructor
         if (numInputs < 1 || numOutputs < 1) {
@@ -64,6 +62,120 @@ public class GenomeNEAT {
             linkNEATList = new List<GeneLinkNEAT>();
             // Empty for now
         }
+    }
+    public GenomeNEAT(CritterGenome critterBodyGenome, int numHidden) {
+        // Constructor
+        nodeNEATList = critterBodyGenome.GetBlankBrainNodesFromBody();  // returns a list of nodeNEAT's based on bodyGenome
+        int currentID = nodeNEATList.Count;
+        // Add in hidden nodes:
+        for (int h = 0; h < numHidden; h++) {
+            GeneNodeNEAT newHiddenNode = new GeneNodeNEAT(currentID, GeneNodeNEAT.GeneNodeType.Hid, TransferFunctions.TransferFunction.RationalSigmoid, -1, 0, -1);
+            nodeNEATList.Add(newHiddenNode);
+            currentID++;
+        }
+        // do I need to save body-part&add-on information on the Brain NODES? or only on Neurons?
+        linkNEATList = new List<GeneLinkNEAT>();
+
+        Debug.Log("NEW GenomeNEAT! #nodes: " + nodeNEATList.Count.ToString());
+
+        /*if (numInputs < 1 || numOutputs < 1) {
+            Debug.LogError("New NEAT Genome requires at least 1 input and output node!! [" + numInputs.ToString() + "," + numOutputs.ToString() + "]");
+        }
+        else {
+            nodeNEATList = new List<GeneNodeNEAT>();
+            int currentID = 0;
+            for (int i = 0; i < numInputs; i++) {
+                GeneNodeNEAT newInputNode = new GeneNodeNEAT(currentID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear);
+                nodeNEATList.Add(newInputNode);
+                currentID++;
+            }
+            for (int h = 0; h < numHidden; h++) {
+                GeneNodeNEAT newHiddenNode = new GeneNodeNEAT(currentID, GeneNodeNEAT.GeneNodeType.Hid, TransferFunctions.TransferFunction.RationalSigmoid);
+                nodeNEATList.Add(newHiddenNode);
+                currentID++;
+            }
+            for (int o = 0; o < numOutputs; o++) {
+                GeneNodeNEAT newOutputNode = new GeneNodeNEAT(currentID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid);
+                nodeNEATList.Add(newOutputNode);
+                currentID++;
+            }
+
+            linkNEATList = new List<GeneLinkNEAT>();
+            // Empty for now
+        }*/
+    }
+
+    public void AdjustBrainAddedRecursion(CritterGenome bodyGenome, int bodyNodeID, int recursionNum) {
+        // Try to do it assuming this function only took a CritterNode as input, rather than full bodyGenome:
+        //CritterNode sourceNode = bodyGenome.CritterNodeList[bodyNodeID];
+
+        List<GeneNodeNEAT> newBrainNodeList = bodyGenome.GetBlankBrainNodesFromBody();
+        List<GeneLinkNEAT> newBrainLinkList = new List<GeneLinkNEAT>();  // need to make a new copy so that the old link-list stays static while searching for matching from/toID's
+        // Find number of Input+Output nodes in the old list:
+        int numOriginalInOutNodes = 0;
+        for (int i = 0; i < nodeNEATList.Count; i++) {
+            if(nodeNEATList[i].nodeType != GeneNodeNEAT.GeneNodeType.Hid) {
+                numOriginalInOutNodes++;
+            }
+        }
+        // Compare this to the number of nodes in the new list (which doesn't contain any hidden nodes)
+        int netNewNodes = newBrainNodeList.Count - numOriginalInOutNodes;
+
+        Debug.Log("AdjustBrainAddedRecursion! numOriginalInOutNodes: " + numOriginalInOutNodes.ToString() + ", netNewNodes: " + netNewNodes.ToString() + ", bodyNodeID: " + bodyNodeID.ToString() + ", recursionNum: " + recursionNum.ToString());
+
+        if (netNewNodes > 0) {  // if the node that was recursed had any Add-ons/Brain channels on it:
+            // Copy all the hidden nodes into the newNodeList, adjust their id's based on the numNewNodes found in previous comment
+            for (int i = 0; i < nodeNEATList.Count; i++) {
+                if (nodeNEATList[i].nodeType == GeneNodeNEAT.GeneNodeType.Hid) {
+                    GeneNodeNEAT clonedNode = new GeneNodeNEAT(nodeNEATList[i].id, nodeNEATList[i].nodeType, nodeNEATList[i].activationFunction, nodeNEATList[i].sourceAddonInno, nodeNEATList[i].sourceAddonRecursionNum, nodeNEATList[i].sourceAddonChannelNum);
+                    newBrainNodeList.Add(clonedNode);
+                }
+            }
+            // Go through all links and if a connectionID is greater than the cutoff-point (was a link to hidden node) then adjust its id by the Offset to match the new listIndex/ID
+            for(int j = 0; j < linkNEATList.Count; j++) {
+                GeneLinkNEAT clonedLink = new GeneLinkNEAT(linkNEATList[j].fromNodeID, linkNEATList[j].toNodeID, linkNEATList[j].weight, linkNEATList[j].enabled, linkNEATList[j].innov, linkNEATList[j].birthGen);
+                newBrainLinkList.Add(clonedLink);
+                if (linkNEATList[j].fromNodeID > numOriginalInOutNodes) {
+                    clonedLink.fromNodeID += netNewNodes;
+                    Debug.Log("HIDLink [" + j.ToString() + "] FromNode Re-Number! fromNodeID: " + linkNEATList[j].fromNodeID.ToString());
+                }
+                if (linkNEATList[j].toNodeID > numOriginalInOutNodes) {
+                    clonedLink.toNodeID += netNewNodes;
+                    Debug.Log("HIDLink [" + j.ToString() + "] ToNode Re-Number! toNodeID: " + linkNEATList[j].toNodeID.ToString());
+                }
+            }
+
+            // Go through existing nodeList, searching for matches, based on sourceInno#, recursion#, and channel#        
+            for (int i = 0; i < nodeNEATList.Count; i++) {
+                for (int k = 0; k < newBrainNodeList.Count; k++) {
+                    // If so, copy attributes from old node to new node  
+                    if (nodeNEATList[i].sourceAddonInno == newBrainNodeList[k].sourceAddonInno) {
+                        if (nodeNEATList[i].sourceAddonRecursionNum == newBrainNodeList[k].sourceAddonRecursionNum) {
+                            if (nodeNEATList[i].sourceAddonChannelNum == newBrainNodeList[k].sourceAddonChannelNum) {
+                                int origID = i;  // or nodeNEATList[i].id???
+                                int newID = k;
+                                //Debug.Log("NEURON MATCH! i: " + i.ToString() + ", id: " + nodeNEATList[i].id.ToString() + ", orig: " + origID.ToString() + ", new: " + newID.ToString() + " sourceAddonInno: " + nodeNEATList[i].sourceAddonInno.ToString() + " sourceAddonRecursionNum: " + nodeNEATList[i].sourceAddonRecursionNum.ToString() + ", sourceAddonChannelNum: " + nodeNEATList[i].sourceAddonChannelNum.ToString());
+                                // Keep track of originalID<=>newID so it can be changed on all existing links:
+                                // and re-wire and links that referenced that old node
+                                for (int l = 0; l < linkNEATList.Count; l++) {
+                                    if (linkNEATList[l].fromNodeID == origID) {
+                                        newBrainLinkList[l].fromNodeID = newID;
+                                        //Debug.Log("Link [" + l.ToString() + "] FromNode Re-Number! orig: " + origID.ToString() + ", new: " + newID.ToString());
+                                    }
+                                    if (linkNEATList[l].toNodeID == origID) {
+                                        newBrainLinkList[l].toNodeID = newID;
+                                        //Debug.Log("Link [" + l.ToString() + "] ToNode Re-Number! orig: " + origID.ToString() + ", new: " + newID.ToString());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // Once complete, replace oldNodeList with the new one:
+        nodeNEATList = newBrainNodeList;
+        linkNEATList = newBrainLinkList;
     }
 
     public void CreateInitialConnections(float connectedness, bool randomWeights) {
@@ -323,7 +435,7 @@ public class GenomeNEAT {
         if(linkNEATList.Count > 0) {
             int linkID = (int)UnityEngine.Random.Range(0f, (float)linkNEATList.Count);
             linkNEATList[linkID].enabled = false;  // disable old connection
-            GeneNodeNEAT newHiddenNode = new GeneNodeNEAT(nodeNEATList.Count, GeneNodeNEAT.GeneNodeType.Hid, TransferFunctions.TransferFunction.RationalSigmoid);
+            GeneNodeNEAT newHiddenNode = new GeneNodeNEAT(nodeNEATList.Count, GeneNodeNEAT.GeneNodeType.Hid, TransferFunctions.TransferFunction.RationalSigmoid, -1, 0, -1);
             nodeNEATList.Add(newHiddenNode);
             // add new node between old connection
             // create two new connections

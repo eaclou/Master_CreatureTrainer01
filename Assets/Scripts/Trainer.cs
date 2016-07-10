@@ -579,7 +579,7 @@ public class Trainer {
             currentGameManager.miniGameInstance.Reset(); // <-- OLD PLACEMENT
             currentGameManager.SetInputOutputArrays();
                        
-            BuildBrainMesh(playerList[playingCurPlayer].masterPopulation.masterAgentArray[playingCurAgent].brain);
+            //BuildBrainMesh(playerList[playingCurPlayer].masterPopulation.masterAgentArray[playingCurAgent].brain);
             //currentGameManager.miniGameInstance.SetPhysicsGamePieceTransformsFromData();  // set the PhysX gamePieces based on gameData
             //currentGameManager.miniGameInstance.EnablePhysicsGamePieceComponents(); // create RigidBody and HingeJoint etc. components on the empty GameObjects
             //Debug.Log("CalculateOneStep()Trainer AFTER: " + playerList[playingCurPlayer].masterTrialsList[playingCurTrialIndex].miniGameManager.miniGameInstance.agentBodyBeingTested.creatureBodySegmentGenomeList[0].addOn1.ToString());
@@ -608,13 +608,13 @@ public class Trainer {
         if(currentGameManager.miniGameInstance.waitingForReset) {
             //Debug.Log("CalculateOneStep() waitingForReset");
             currentGameManager.miniGameInstance.gameCurrentRound = playingCurTrialRound;
-            currentGameManager.miniGameInstance.Reset();            
+            currentGameManager.miniGameInstance.Reset();
+            currentGameManager.SetInputOutputArrays();
             if (currentGameManager.miniGameInstance.critterBeingTested != null) {
-                networkVisualizer.sourceCritter = currentGameManager.miniGameInstance.critterBeingTested;
+                //networkVisualizer.sourceCritter = currentGameManager.miniGameInstance.critterBeingTested;
                 playerList[playingCurPlayer].masterPopulation.masterAgentArray[playingCurAgent].brain.ClearBrainState();  // zeroes out all values
             }
-            currentGameManager.SetInputOutputArrays();
-            BuildBrainMesh(playerList[playingCurPlayer].masterPopulation.masterAgentArray[playingCurAgent].brain);
+            //BuildBrainMesh(playerList[playingCurPlayer].masterPopulation.masterAgentArray[playingCurAgent].brain);
             
         }
         else {
@@ -629,6 +629,9 @@ public class Trainer {
                     for (int i = 0; i < 1; i++) {
                         
                         // Now with the updated values for position/velocity etc., pass input values into brains
+                        if(playingCurMiniGameTimeStep == 1) {
+                            Debug.Log("playingCurMiniGameTimeStep currentGameManager.brainInput: " + currentGameManager.brainInput.Count.ToString() + " currentGameManager.brainOutput: " + currentGameManager.brainOutput.Count.ToString());
+                        }
                         currentBrain.BrainMasterFunction(ref currentGameManager.brainInput, ref currentGameManager.brainOutput);
                         // Run the game for one timeStep: (Note that this will only modify non-physX variables -- the actual movement and physX sim happens just afterward -- so keep that in mind)
                         currentGameManager.miniGameInstance.Tick();
@@ -645,7 +648,7 @@ public class Trainer {
                             //networkVisualizer.InitShaderTexture(brain);
                             //minigame.SetShaderTextures(networkVisualizer);
                             if(playbackSpeed < 3f) {
-                                if (currentGameManager.miniGameInstance.critterBeingTested != null) {
+                                /*if (currentGameManager.miniGameInstance.critterBeingTested != null) {
                                     networkVisualizer.sourceCritter = currentGameManager.miniGameInstance.critterBeingTested;
                                     networkVisualizer.SetNeuronSegmentPositions(currentBrain);
                                 }
@@ -653,6 +656,7 @@ public class Trainer {
                                 networkVisualizer.MoveNeurons(currentBrain, 1);
                                 networkVisualizer.UpdateNodeVertexPositionsSphere(currentBrain);
                                 networkVisualizer.UpdateConnectionVertexPositionsBezier(currentBrain);
+                                */
                             }
                         }                        
                     }

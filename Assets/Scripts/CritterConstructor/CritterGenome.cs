@@ -532,6 +532,517 @@ public class CritterGenome {
         }
     }
 
+    public List<GeneNodeNEAT> GetBlankBrainNodesFromBody() {
+        List<GeneNodeNEAT> newNodeList = new List<GeneNodeNEAT>();
+
+        int numSegments = 0;
+        int numInputs = 0;
+        int numOutputs = 0;
+
+        bool isPendingChildren = true;
+        int currentDepth = 0; // start with RootNode
+        int maxDepth = 20;  // safeguard to prevent while loop lock
+        int nextSegmentID = 0;
+
+        int currentBrainNodeID = 0;
+
+        List<BuildSegmentInfo> currentBuildSegmentList = new List<BuildSegmentInfo>();  // keeps track of all current-depth segment build-requests, and holds important metadata
+        List<BuildSegmentInfo> nextBuildSegmentList = new List<BuildSegmentInfo>();  // used to keep track of next childSegments that need to be built
+
+        // ***********  Will attempt to traverse the Segments to be created, keeping track of where on each graph (nodes# & segment#) the current build is on.
+        BuildSegmentInfo rootSegmentBuildInfo = new BuildSegmentInfo();
+        rootSegmentBuildInfo.sourceNode = CritterNodeList[0];
+        currentBuildSegmentList.Add(rootSegmentBuildInfo);  // ROOT NODE IS SPECIAL!
+
+        // Do a Breadth-first traversal??
+        while (isPendingChildren) {
+            for (int i = 0; i < currentBuildSegmentList.Count; i++) {
+                numSegments++;
+                nextSegmentID++;
+
+                #region INPUTS
+                List<AddonContactSensor> contactSensorList = CheckForAddonContactSensor(currentBuildSegmentList[i].sourceNode.ID);
+                for(int j = 0; j < contactSensorList.Count; j++) {
+                    numInputs++;
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, contactSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    newNodeList.Add(newNodeNEAT);
+                    currentBrainNodeID++;
+                }                
+                List<AddonRaycastSensor> raycastSensorList = CheckForAddonRaycastSensor(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < raycastSensorList.Count; j++) {
+                    numInputs++;
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, raycastSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    newNodeList.Add(newNodeNEAT);
+                    currentBrainNodeID++;
+                }
+                List<AddonCompassSensor1D> compassSensor1DList = CheckForAddonCompassSensor1D(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < compassSensor1DList.Count; j++) {
+                    numInputs++;
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, compassSensor1DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    newNodeList.Add(newNodeNEAT);
+                    currentBrainNodeID++;
+                }
+                List<AddonCompassSensor3D> compassSensor3DList = CheckForAddonCompassSensor3D(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < compassSensor3DList.Count; j++) {
+                    numInputs++;
+                    GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, compassSensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    newNodeList.Add(newNodeNEAT1);
+                    currentBrainNodeID++;
+
+                    numInputs++;
+                    GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, compassSensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
+                    newNodeList.Add(newNodeNEAT2);
+                    currentBrainNodeID++;
+
+                    numInputs++;
+                    GeneNodeNEAT newNodeNEAT3 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, compassSensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 2);
+                    newNodeList.Add(newNodeNEAT3);
+                    currentBrainNodeID++;
+                }
+                List<AddonPositionSensor1D> positionSensor1DList = CheckForAddonPositionSensor1D(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < positionSensor1DList.Count; j++) {
+                    numInputs++;
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, positionSensor1DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    newNodeList.Add(newNodeNEAT);
+                    currentBrainNodeID++;
+                }
+                List<AddonPositionSensor3D> positionSensor3DList = CheckForAddonPositionSensor3D(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < positionSensor3DList.Count; j++) {
+                    numInputs++;
+                    GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, positionSensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    newNodeList.Add(newNodeNEAT1);
+                    currentBrainNodeID++;
+
+                    numInputs++;
+                    GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, positionSensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
+                    newNodeList.Add(newNodeNEAT2);
+                    currentBrainNodeID++;
+
+                    numInputs++;
+                    GeneNodeNEAT newNodeNEAT3 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, positionSensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 2);
+                    newNodeList.Add(newNodeNEAT3);
+                    currentBrainNodeID++;
+                }
+                List<AddonRotationSensor1D> rotationSensor1DList = CheckForAddonRotationSensor1D(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < rotationSensor1DList.Count; j++) {
+                    numInputs++;
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, rotationSensor1DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    newNodeList.Add(newNodeNEAT);
+                    currentBrainNodeID++;
+                }
+                List<AddonRotationSensor3D> rotationSensor3DList = CheckForAddonRotationSensor3D(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < rotationSensor3DList.Count; j++) {
+                    numInputs++;
+                    GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, rotationSensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    newNodeList.Add(newNodeNEAT1);
+                    currentBrainNodeID++;
+
+                    numInputs++;
+                    GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, rotationSensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
+                    newNodeList.Add(newNodeNEAT2);
+                    currentBrainNodeID++;
+
+                    numInputs++;
+                    GeneNodeNEAT newNodeNEAT3 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, rotationSensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 2);
+                    newNodeList.Add(newNodeNEAT3);
+                    currentBrainNodeID++;
+                }
+                List<AddonVelocitySensor1D> velocitySensor1DList = CheckForAddonVelocitySensor1D(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < velocitySensor1DList.Count; j++) {
+                    numInputs++;
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, velocitySensor1DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    newNodeList.Add(newNodeNEAT);
+                    currentBrainNodeID++;
+                }
+                List<AddonVelocitySensor3D> velocitySensor3DList = CheckForAddonVelocitySensor3D(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < velocitySensor3DList.Count; j++) {
+                    numInputs++;
+                    GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, velocitySensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    newNodeList.Add(newNodeNEAT1);
+                    currentBrainNodeID++;
+
+                    numInputs++;
+                    GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, velocitySensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
+                    newNodeList.Add(newNodeNEAT2);
+                    currentBrainNodeID++;
+
+                    numInputs++;
+                    GeneNodeNEAT newNodeNEAT3 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, velocitySensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 2);
+                    newNodeList.Add(newNodeNEAT3);
+                    currentBrainNodeID++;
+                }
+                List<AddonAltimeter> altimeterList = CheckForAddonAltimeter(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < altimeterList.Count; j++) {
+                    numInputs++;
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, altimeterList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    newNodeList.Add(newNodeNEAT);
+                    currentBrainNodeID++;
+                }
+                List<AddonEarBasic> earBasicList = CheckForAddonEarBasic(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < earBasicList.Count; j++) {
+                    numInputs++;
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, earBasicList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    newNodeList.Add(newNodeNEAT);
+                    currentBrainNodeID++;
+                }
+                List<AddonGravitySensor> gravitySensorList = CheckForAddonGravitySensor(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < gravitySensorList.Count; j++) {
+                    numInputs++;
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, gravitySensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    newNodeList.Add(newNodeNEAT);
+                    currentBrainNodeID++;
+                }
+                List<AddonOscillatorInput> oscillatorInputList = CheckForAddonOscillatorInput(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < oscillatorInputList.Count; j++) {
+                    numInputs++;
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, oscillatorInputList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    newNodeList.Add(newNodeNEAT);
+                    currentBrainNodeID++;
+                }
+                List<AddonValueInput> valueInputList = CheckForAddonValueInput(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < valueInputList.Count; j++) {
+                    numInputs++;
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, valueInputList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    newNodeList.Add(newNodeNEAT);
+                    currentBrainNodeID++;
+                }
+                List<AddonTimerInput> timerInputList = CheckForAddonTimerInput(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < timerInputList.Count; j++) {
+                    numInputs++;
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, timerInputList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    newNodeList.Add(newNodeNEAT);
+                    currentBrainNodeID++;
+                }
+                #endregion
+
+                #region OUTPUTS:
+                List<AddonThrusterEffector1D> thrusterEffector1DList = CheckForAddonThrusterEffector1D(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < thrusterEffector1DList.Count; j++) {
+                    numOutputs++;
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, thrusterEffector1DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    newNodeList.Add(newNodeNEAT);
+                    currentBrainNodeID++;
+                }
+                List<AddonThrusterEffector3D> thrusterEffector3DList = CheckForAddonThrusterEffector3D(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < thrusterEffector3DList.Count; j++) {
+                    numOutputs++;
+                    GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, thrusterEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    newNodeList.Add(newNodeNEAT1);
+                    currentBrainNodeID++;
+
+                    numOutputs++;
+                    GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, thrusterEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
+                    newNodeList.Add(newNodeNEAT2);
+                    currentBrainNodeID++;
+
+                    numOutputs++;
+                    GeneNodeNEAT newNodeNEAT3 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, thrusterEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 2);
+                    newNodeList.Add(newNodeNEAT3);
+                    currentBrainNodeID++;
+                }
+                List<AddonTorqueEffector1D> torqueEffector1DList = CheckForAddonTorqueEffector1D(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < torqueEffector1DList.Count; j++) {
+                    numOutputs++;
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, torqueEffector1DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    newNodeList.Add(newNodeNEAT);
+                    currentBrainNodeID++;
+                }
+                List<AddonTorqueEffector3D> torqueEffector3DList = CheckForAddonTorqueEffector3D(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < torqueEffector3DList.Count; j++) {
+                    numOutputs++;
+                    GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, torqueEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    newNodeList.Add(newNodeNEAT1);
+                    currentBrainNodeID++;
+
+                    numOutputs++;
+                    GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, torqueEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
+                    newNodeList.Add(newNodeNEAT2);
+                    currentBrainNodeID++;
+
+                    numOutputs++;
+                    GeneNodeNEAT newNodeNEAT3 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, torqueEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 2);
+                    newNodeList.Add(newNodeNEAT3);
+                    currentBrainNodeID++;
+                }
+                List<AddonNoiseMakerBasic> noiseMakerBasicList = CheckForAddonNoiseMakerBasic(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < noiseMakerBasicList.Count; j++) {
+                    numOutputs++;
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, noiseMakerBasicList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    newNodeList.Add(newNodeNEAT);
+                    currentBrainNodeID++;
+                }
+                List<AddonSticky> stickyList = CheckForAddonSticky(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < stickyList.Count; j++) {
+                    numOutputs++;
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, stickyList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    newNodeList.Add(newNodeNEAT);
+                    currentBrainNodeID++;
+                }
+                List<AddonWeaponBasic> weaponBasicList = CheckForAddonWeaponBasic(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < weaponBasicList.Count; j++) {
+                    numOutputs++;
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, weaponBasicList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    newNodeList.Add(newNodeNEAT);
+                    currentBrainNodeID++;
+                }
+                #endregion
+
+                List<AddonMouthBasic> mouthBasicList = CheckForAddonMouthBasic(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < mouthBasicList.Count; j++) {
+                    // BLANK FOR NOW!!!
+                }
+                #region JOINTS:
+                if (currentBuildSegmentList[i].sourceNode.ID != 0) {  // is NOT ROOT segment  -- Look into doing Root build BEFORE for loop to avoid the need to do this check                                                                      
+                    List<AddonJointAngleSensor> jointAngleSensorList = CheckForAddonJointAngleSensor(currentBuildSegmentList[i].sourceNode.ID);
+                    for (int j = 0; j < jointAngleSensorList.Count; j++) {
+                        // HINGE X X X X X
+                        if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeX) {
+                            if (jointAngleSensorList[j].measureVel[0]) {  // ALSO MEASURES ANGULAR VELOCITY:
+                                numInputs++;
+                                GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                                newNodeList.Add(newNodeNEAT1);
+                                currentBrainNodeID++;
+
+                                numInputs++;
+                                GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
+                                newNodeList.Add(newNodeNEAT2);
+                                currentBrainNodeID++;
+                            }
+                            else {  // Only Angle, no velocity:
+                                numInputs++;
+                                GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                                newNodeList.Add(newNodeNEAT);
+                                currentBrainNodeID++;
+                            }
+                        }
+                        else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeY) {
+                            if (jointAngleSensorList[j].measureVel[0]) {
+                                numInputs++;
+                                GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                                newNodeList.Add(newNodeNEAT1);
+                                currentBrainNodeID++;
+
+                                numInputs++;
+                                GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
+                                newNodeList.Add(newNodeNEAT2);
+                                currentBrainNodeID++;
+                            }
+                            else {
+                                numInputs++;
+                                GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                                newNodeList.Add(newNodeNEAT);
+                                currentBrainNodeID++;
+                            }
+                        }
+                        else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeZ) {
+                            if (jointAngleSensorList[j].measureVel[0]) {
+                                numInputs++;
+                                GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                                newNodeList.Add(newNodeNEAT1);
+                                currentBrainNodeID++;
+
+                                numInputs++;
+                                GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
+                                newNodeList.Add(newNodeNEAT2);
+                                currentBrainNodeID++;
+                            }
+                            else {
+                                numInputs++;
+                                GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                                newNodeList.Add(newNodeNEAT);
+                                currentBrainNodeID++;
+                            }
+                        }
+                        else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.DualXY) {
+                            if (jointAngleSensorList[j].measureVel[0]) {
+                                numInputs++;
+                                GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                                newNodeList.Add(newNodeNEAT1);
+                                currentBrainNodeID++;
+
+                                numInputs++;
+                                GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
+                                newNodeList.Add(newNodeNEAT2);
+                                currentBrainNodeID++;
+
+                                numInputs++;
+                                GeneNodeNEAT newNodeNEAT3 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 2);
+                                newNodeList.Add(newNodeNEAT3);
+                                currentBrainNodeID++;
+
+                                numInputs++;
+                                GeneNodeNEAT newNodeNEAT4 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 3);
+                                newNodeList.Add(newNodeNEAT4);
+                                currentBrainNodeID++;
+                            }
+                            else {
+                                numInputs++;
+                                GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                                newNodeList.Add(newNodeNEAT1);
+                                currentBrainNodeID++;
+
+                                numInputs++;
+                                GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
+                                newNodeList.Add(newNodeNEAT2);
+                                currentBrainNodeID++;
+                            }
+                        }
+                    }                    
+                    List<AddonJointMotor> jointMotorList = CheckForAddonJointMotor(currentBuildSegmentList[i].sourceNode.ID);
+                    for (int j = 0; j < jointMotorList.Count; j++) {
+                        if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeX) {
+                            numOutputs++;
+                            GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, jointMotorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                            newNodeList.Add(newNodeNEAT);
+                            currentBrainNodeID++;
+                        }
+                        else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeY) {
+                            numOutputs++;
+                            GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, jointMotorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                            newNodeList.Add(newNodeNEAT);
+                            currentBrainNodeID++;
+                        }
+                        else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeZ) {
+                            numOutputs++;
+                            GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, jointMotorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                            newNodeList.Add(newNodeNEAT);
+                            currentBrainNodeID++;
+                        }
+                        else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.DualXY) {
+                            numOutputs++;
+                            GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, jointMotorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                            newNodeList.Add(newNodeNEAT1);
+                            currentBrainNodeID++;
+
+                            numOutputs++;
+                            GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, jointMotorList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
+                            newNodeList.Add(newNodeNEAT2);
+                            currentBrainNodeID++;
+                        }
+                    }                    
+
+                    // Check for if the segment currently being built is a Mirror COPY:
+                    if (currentBuildSegmentList[i].isMirror) {
+                        //Debug.Log("This is a MIRROR COPY segment - Wow!");
+                        if (currentBuildSegmentList[i].sourceNode.jointLink.symmetryType == CritterJointLink.SymmetryType.MirrorX) {
+                            // Invert the X-axis  (this will propagate down to all this segment's children
+                            //newSegment.mirrorX = !newSegment.mirrorX;
+                        }
+                        else if (currentBuildSegmentList[i].sourceNode.jointLink.symmetryType == CritterJointLink.SymmetryType.MirrorY) {
+                            //newSegment.mirrorY = !newSegment.mirrorY;
+                        }
+                        else if (currentBuildSegmentList[i].sourceNode.jointLink.symmetryType == CritterJointLink.SymmetryType.MirrorZ) {
+                            //newSegment.mirrorZ = !newSegment.mirrorZ;
+                        }
+                    }
+                }
+                #endregion
+
+                // CHECK FOR RECURSION:
+                if (currentBuildSegmentList[i].sourceNode.jointLink.numberOfRecursions > 0) { // if the node being considered has recursions:
+                    if (currentBuildSegmentList[i].recursionNumber < currentBuildSegmentList[i].sourceNode.jointLink.numberOfRecursions) {
+                        // if the current buildOrder's recursion number is less than the numRecursions there should be:
+                        BuildSegmentInfo newSegmentInfo = new BuildSegmentInfo();
+                        newSegmentInfo.sourceNode = currentBuildSegmentList[i].sourceNode;  // request a segment to be built again based on the current sourceNode
+                        newSegmentInfo.recursionNumber = currentBuildSegmentList[i].recursionNumber + 1;  // increment num recursions
+                        nextBuildSegmentList.Add(newSegmentInfo);
+                        //Debug.Log("newSegmentInfo recursion# " + newSegmentInfo.recursionNumber.ToString() + ", currentBuildList[i].recNum: " + currentBuildSegmentList[i].recursionNumber.ToString());
+                        // If the node also has Symmetry:
+                        if (newSegmentInfo.sourceNode.jointLink.symmetryType != CritterJointLink.SymmetryType.None) {
+                            // the child node has some type of symmetry, so add a buildOrder for a mirrored Segment:
+                            BuildSegmentInfo newSegmentInfoMirror = new BuildSegmentInfo();
+                            newSegmentInfoMirror.sourceNode = currentBuildSegmentList[i].sourceNode;  // uses same sourceNode, but tags as Mirror:
+                            newSegmentInfoMirror.isMirror = true;  // This segment is the COPY, not the original
+                            newSegmentInfoMirror.recursionNumber = newSegmentInfo.recursionNumber; //  !!!!!!!!!!!!! HIGHLY SUSPECT!!!!
+
+                            nextBuildSegmentList.Add(newSegmentInfoMirror);
+                        }
+                    }
+                    else {  // at the end of a recursion chain, so do not add any other pendingChild builds
+
+                    }
+                }
+                // Figure out how many unique Child nodes this built node has:
+                int numberOfChildNodes = currentBuildSegmentList[i].sourceNode.attachedChildNodesIdList.Count;
+                //Debug.Log("numberOfChildNodes: " + numberOfChildNodes.ToString() + "currentBuildSegmentList[i].sourceNode: " + currentBuildSegmentList[i].sourceNode.ID.ToString() + ", i: " + i.ToString());
+                for (int c = 0; c < numberOfChildNodes; c++) {
+                    // if NO symmetry:
+                    // Check if Attaching to a recursion chain && if onlyattachToTail is active:
+                    int childID = currentBuildSegmentList[i].sourceNode.attachedChildNodesIdList[c];
+
+                    if (CritterNodeList[childID].jointLink.onlyAttachToTailNode) {
+                        if (currentBuildSegmentList[i].sourceNode.jointLink.numberOfRecursions > 0) {
+                            if (currentBuildSegmentList[i].recursionNumber >= currentBuildSegmentList[i].sourceNode.jointLink.numberOfRecursions) {
+                                // Only build segment if it is on the end of a recursion chain:
+                                BuildSegmentInfo newSegmentInfo = new BuildSegmentInfo();
+                                newSegmentInfo.sourceNode = CritterNodeList[childID];
+                                //newSegmentInfo.parentSegment = newSegment;
+                                nextBuildSegmentList.Add(newSegmentInfo);
+
+                                if (CritterNodeList[childID].jointLink.symmetryType != CritterJointLink.SymmetryType.None) {
+                                    // the child node has some type of symmetry, so add a buildOrder for a mirrored Segment:
+                                    BuildSegmentInfo newSegmentInfoMirror = new BuildSegmentInfo();
+                                    newSegmentInfoMirror.sourceNode = CritterNodeList[childID];
+                                    newSegmentInfoMirror.isMirror = true;  // This segment is the COPY, not the original
+                                    //newSegmentInfoMirror.parentSegment = newSegment;  // 
+                                    nextBuildSegmentList.Add(newSegmentInfoMirror);
+                                }
+                            }
+                        }
+                        else {
+                            // It only attaches to End nodes, but is parented to a Non-recursive segment, so proceed normally!!!
+                            BuildSegmentInfo newSegmentInfo = new BuildSegmentInfo();
+                            newSegmentInfo.sourceNode = CritterNodeList[childID];
+                            //newSegmentInfo.parentSegment = newSegment;
+                            nextBuildSegmentList.Add(newSegmentInfo);
+
+                            if (CritterNodeList[childID].jointLink.symmetryType != CritterJointLink.SymmetryType.None) {
+                                // the child node has some type of symmetry, so add a buildOrder for a mirrored Segment:
+                                BuildSegmentInfo newSegmentInfoMirror = new BuildSegmentInfo();
+                                newSegmentInfoMirror.sourceNode = CritterNodeList[childID];
+                                newSegmentInfoMirror.isMirror = true;  // This segment is the COPY, not the original
+                                //newSegmentInfoMirror.parentSegment = newSegment;  // 
+                                nextBuildSegmentList.Add(newSegmentInfoMirror);
+                            }
+                        }
+                    }
+                    else {  // proceed normally:
+                        BuildSegmentInfo newSegmentInfo = new BuildSegmentInfo();
+                        newSegmentInfo.sourceNode = CritterNodeList[childID];
+                        //newSegmentInfo.parentSegment = newSegment;
+                        nextBuildSegmentList.Add(newSegmentInfo);
+
+                        if (CritterNodeList[childID].jointLink.symmetryType != CritterJointLink.SymmetryType.None) {
+                            // the child node has some type of symmetry, so add a buildOrder for a mirrored Segment:
+                            BuildSegmentInfo newSegmentInfoMirror = new BuildSegmentInfo();
+                            newSegmentInfoMirror.sourceNode = CritterNodeList[childID];
+                            newSegmentInfoMirror.isMirror = true;  // This segment is the COPY, not the original
+                            //newSegmentInfoMirror.parentSegment = newSegment;  // 
+                            nextBuildSegmentList.Add(newSegmentInfoMirror);
+                        }
+                    }
+                }
+            }
+            // After all buildNodes have been built, and their subsequent childNodes Enqueued, copy pendingChildQueue into buildNodesQueue
+            currentBuildSegmentList.Clear();
+            // SWAP LISTS:
+            if (nextBuildSegmentList.Count > 0) {
+                for (int j = 0; j < nextBuildSegmentList.Count; j++) {
+                    currentBuildSegmentList.Add(nextBuildSegmentList[j]);
+                }
+                nextBuildSegmentList.Clear();  // empty this list for next depth-round
+            }
+            else {
+                isPendingChildren = false;
+            }
+            if (currentDepth >= maxDepth) { // SAFEGUARD!! prevents infinite loop in case I mess something up
+                isPendingChildren = false;
+            }
+            currentDepth++;
+        }
+
+        return newNodeList;
+    }
     public int[] CalculateNumberOfSegmentsInputsOutputs() {
         int numSegments = 0;
         int numInputs = 0;
@@ -557,147 +1068,167 @@ public class CritterGenome {
                 numSegments++;
                 nextSegmentID++;
 
-                int contactSensorIndex = CheckForAddonContactSensor(currentBuildSegmentList[i].sourceNode.ID);
-                if (contactSensorIndex != -1) {
+                #region INPUTS
+                List<AddonContactSensor> contactSensorList = CheckForAddonContactSensor(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < contactSensorList.Count; j++) {
                     numInputs++;
                 }
-                int raycastSensorIndex = CheckForAddonRaycastSensor(currentBuildSegmentList[i].sourceNode.ID);
-                if (raycastSensorIndex != -1) {
+                List<AddonRaycastSensor> raycastSensorList = CheckForAddonRaycastSensor(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < raycastSensorList.Count; j++) {
                     numInputs++;
                 }
-                int compassSensor1DIndex = CheckForAddonCompassSensor1D(currentBuildSegmentList[i].sourceNode.ID);
-                if (compassSensor1DIndex != -1) {
+                List<AddonCompassSensor1D> compassSensor1DList = CheckForAddonCompassSensor1D(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < compassSensor1DList.Count; j++) {
                     numInputs++;
                 }
-                int compassSensor3DIndex = CheckForAddonCompassSensor3D(currentBuildSegmentList[i].sourceNode.ID);
-                if (compassSensor3DIndex != -1) {
-                    numInputs = numInputs + 3;
-                }
-                int positionSensor1DIndex = CheckForAddonPositionSensor1D(currentBuildSegmentList[i].sourceNode.ID);
-                if (positionSensor1DIndex != -1) {
+                List<AddonCompassSensor3D> compassSensor3DList = CheckForAddonCompassSensor3D(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < compassSensor3DList.Count; j++) {
+                    numInputs++;
+                    numInputs++;
                     numInputs++;
                 }
-                int positionSensor3DIndex = CheckForAddonPositionSensor3D(currentBuildSegmentList[i].sourceNode.ID);
-                if (positionSensor3DIndex != -1) {
-                    numInputs = numInputs + 4;
-                }
-                int rotationSensor1DIndex = CheckForAddonRotationSensor1D(currentBuildSegmentList[i].sourceNode.ID);
-                if (rotationSensor1DIndex != -1) {
+                List<AddonPositionSensor1D> positionSensor1DList = CheckForAddonPositionSensor1D(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < positionSensor1DList.Count; j++) {
                     numInputs++;
                 }
-                int rotationSensor3DIndex = CheckForAddonRotationSensor3D(currentBuildSegmentList[i].sourceNode.ID);
-                if (rotationSensor3DIndex != -1) {
-                    numInputs = numInputs + 3;
-                }
-                int velocitySensor1DIndex = CheckForAddonVelocitySensor1D(currentBuildSegmentList[i].sourceNode.ID);
-                if (velocitySensor1DIndex != -1) {
+                List<AddonPositionSensor3D> positionSensor3DList = CheckForAddonPositionSensor3D(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < positionSensor3DList.Count; j++) {
+                    numInputs++;
+                    numInputs++;
                     numInputs++;
                 }
-                int velocitySensor3DIndex = CheckForAddonVelocitySensor3D(currentBuildSegmentList[i].sourceNode.ID);
-                if (velocitySensor3DIndex != -1) {
-                    numInputs = numInputs + 0;
-                }
-                int altimeterIndex = CheckForAddonAltimeter(currentBuildSegmentList[i].sourceNode.ID);
-                if (altimeterIndex != -1) {
+                List<AddonRotationSensor1D> rotationSensor1DList = CheckForAddonRotationSensor1D(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < rotationSensor1DList.Count; j++) {
                     numInputs++;
                 }
-                int earBasicIndex = CheckForAddonEarBasic(currentBuildSegmentList[i].sourceNode.ID);
-                if (earBasicIndex != -1) {
+                List<AddonRotationSensor3D> rotationSensor3DList = CheckForAddonRotationSensor3D(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < rotationSensor3DList.Count; j++) {
+                    numInputs++;
+                    numInputs++;
                     numInputs++;
                 }
-                int gravitySensorIndex = CheckForAddonGravitySensor(currentBuildSegmentList[i].sourceNode.ID);
-                if (gravitySensorIndex != -1) {
+                List<AddonVelocitySensor1D> velocitySensor1DList = CheckForAddonVelocitySensor1D(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < velocitySensor1DList.Count; j++) {
                     numInputs++;
                 }
+                List<AddonVelocitySensor3D> velocitySensor3DList = CheckForAddonVelocitySensor3D(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < velocitySensor3DList.Count; j++) {
+                    numInputs++;
+                    numInputs++;
+                    numInputs++;
+                }
+                List<AddonAltimeter> altimeterList = CheckForAddonAltimeter(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < altimeterList.Count; j++) {
+                    numInputs++;
+                }
+                List<AddonEarBasic> earBasicList = CheckForAddonEarBasic(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < earBasicList.Count; j++) {
+                    numInputs++;
+                }
+                List<AddonGravitySensor> gravitySensorList = CheckForAddonGravitySensor(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < gravitySensorList.Count; j++) {
+                    numInputs++;
+                }
+                List<AddonOscillatorInput> oscillatorInputList = CheckForAddonOscillatorInput(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < oscillatorInputList.Count; j++) {
+                    numInputs++;
+                }
+                List<AddonValueInput> valueInputList = CheckForAddonValueInput(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < valueInputList.Count; j++) {
+                    numInputs++;
+                }
+                List<AddonTimerInput> timerInputList = CheckForAddonTimerInput(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < timerInputList.Count; j++) {
+                    numInputs++;
+                }
+                #endregion
 
-                int thrusterEffector1DIndex = CheckForAddonThrusterEffector1D(currentBuildSegmentList[i].sourceNode.ID);
-                if (thrusterEffector1DIndex != -1) {
+                #region OUTPUTS:
+                List<AddonThrusterEffector1D> thrusterEffector1DList = CheckForAddonThrusterEffector1D(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < thrusterEffector1DList.Count; j++) {
                     numOutputs++;
                 }
-                int thrusterEffector3DIndex = CheckForAddonThrusterEffector3D(currentBuildSegmentList[i].sourceNode.ID);
-                if (thrusterEffector3DIndex != -1) {
-                    numOutputs = numOutputs + 3;
-                }
-                int torqueEffector1DIndex = CheckForAddonTorqueEffector1D(currentBuildSegmentList[i].sourceNode.ID);
-                if (torqueEffector1DIndex != -1) {
+                List<AddonThrusterEffector3D> thrusterEffector3DList = CheckForAddonThrusterEffector3D(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < thrusterEffector3DList.Count; j++) {
+                    numOutputs++;
+                    numOutputs++;
                     numOutputs++;
                 }
-                int torqueEffector3DIndex = CheckForAddonTorqueEffector3D(currentBuildSegmentList[i].sourceNode.ID);
-                if (torqueEffector3DIndex != -1) {
-                    numOutputs = numOutputs + 3;
-                }
-                
-                int noiseMakerBasicIndex = CheckForAddonNoiseMakerBasic(currentBuildSegmentList[i].sourceNode.ID);
-                if (noiseMakerBasicIndex != -1) {
+                List<AddonTorqueEffector1D> torqueEffector1DList = CheckForAddonTorqueEffector1D(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < torqueEffector1DList.Count; j++) {
                     numOutputs++;
                 }
-                int stickyIndex = CheckForAddonSticky(currentBuildSegmentList[i].sourceNode.ID);
-                if (stickyIndex != -1) {
+                List<AddonTorqueEffector3D> torqueEffector3DList = CheckForAddonTorqueEffector3D(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < torqueEffector3DList.Count; j++) {
+                    numOutputs++;
+                    numOutputs++;
                     numOutputs++;
                 }
-                int weaponBasicIndex = CheckForAddonWeaponBasic(currentBuildSegmentList[i].sourceNode.ID);
-                if (weaponBasicIndex != -1) {
+                List<AddonNoiseMakerBasic> noiseMakerBasicList = CheckForAddonNoiseMakerBasic(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < noiseMakerBasicList.Count; j++) {
                     numOutputs++;
                 }
+                List<AddonSticky> stickyList = CheckForAddonSticky(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < stickyList.Count; j++) {
+                    numOutputs++;
+                }
+                List<AddonWeaponBasic> weaponBasicList = CheckForAddonWeaponBasic(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < weaponBasicList.Count; j++) {
+                    numOutputs++;
+                }
+                #endregion
 
-                int oscillatorInputIndex = CheckForAddonOscillatorInput(currentBuildSegmentList[i].sourceNode.ID);
-                if (oscillatorInputIndex != -1) {
-                    numInputs++;
-                }
-                int valueInputIndex = CheckForAddonValueInput(currentBuildSegmentList[i].sourceNode.ID);
-                if (valueInputIndex != -1) {
-                    numInputs++;
-                }
-                int timerInputIndex = CheckForAddonTimerInput(currentBuildSegmentList[i].sourceNode.ID);
-                if (timerInputIndex != -1) {
-                    numInputs++;
-                }
-
-                int mouthBasicIndex = CheckForAddonMouthBasic(currentBuildSegmentList[i].sourceNode.ID);
-                if (mouthBasicIndex != -1) {
-                    //numInputs++;
-                    //numOutputs++;
+                List<AddonMouthBasic> mouthBasicList = CheckForAddonMouthBasic(currentBuildSegmentList[i].sourceNode.ID);
+                for (int j = 0; j < mouthBasicList.Count; j++) {
+                    // BLANK FOR NOW!!!
                 }
 
                 if (currentBuildSegmentList[i].sourceNode.ID != 0) {  // is NOT ROOT segment  -- Look into doing Root build BEFORE for loop to avoid the need to do this check                                                                      
-                    int jointAngleSensorIndex = CheckForAddonJointAngleSensor(currentBuildSegmentList[i].sourceNode.ID);
-                    if(jointAngleSensorIndex != -1) {
+                    List<AddonJointAngleSensor> jointAngleSensorList = CheckForAddonJointAngleSensor(currentBuildSegmentList[i].sourceNode.ID);
+                    for (int j = 0; j < jointAngleSensorList.Count; j++) {
+                        // HINGE X X X X X
                         if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeX) {
-                            if(addonJointAngleSensorList[jointAngleSensorIndex].measureVel[0]) {
-                                numInputs = numInputs + 2;
-                            }
-                            else {
+                            if (jointAngleSensorList[j].measureVel[0]) {  // ALSO MEASURES ANGULAR VELOCITY:
                                 numInputs++;
-                            }                            
+                                numInputs++;
+                            }
+                            else {  // Only Angle, no velocity:
+                                numInputs++;
+                            }
                         }
                         else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeY) {
-                            if (addonJointAngleSensorList[jointAngleSensorIndex].measureVel[0]) {
-                                numInputs = numInputs + 2;
+                            if (jointAngleSensorList[j].measureVel[0]) {
+                                numInputs++;
+                                numInputs++;
                             }
                             else {
                                 numInputs++;
                             }
                         }
                         else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeZ) {
-                            if (addonJointAngleSensorList[jointAngleSensorIndex].measureVel[0]) {
-                                numInputs = numInputs + 2;
+                            if (jointAngleSensorList[j].measureVel[0]) {
+                                numInputs++;
+                                numInputs++;
                             }
                             else {
                                 numInputs++;
                             }
                         }
                         else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.DualXY) {
-                            if (addonJointAngleSensorList[jointAngleSensorIndex].measureVel[0]) {
-                                numInputs = numInputs + 4;
+                            if (jointAngleSensorList[j].measureVel[0]) {
+                                numInputs++;
+                                numInputs++;
+                                numInputs++;
+                                numInputs++;
                             }
                             else {
-                                numInputs = numInputs + 2;
+                                numInputs++;
+                                numInputs++;
                             }
                         }
-                    }                    
-
-                    int jointMotorIndex = CheckForAddonJointMotor(currentBuildSegmentList[i].sourceNode.ID);
-                    if (jointMotorIndex != -1) { // if there is a jointMotor definition on this sourceNode
+                    }
+                    List<AddonJointMotor> jointMotorList = CheckForAddonJointMotor(currentBuildSegmentList[i].sourceNode.ID);
+                    for (int j = 0; j < jointMotorList.Count; j++) {
                         if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeX) {
                             numOutputs++;
                         }
@@ -708,10 +1239,10 @@ public class CritterGenome {
                             numOutputs++;
                         }
                         else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.DualXY) {
-                            numOutputs = numOutputs + 2;
+                            numOutputs++;
+                            numOutputs++;
                         }
-                    }                    
-
+                    }
                     // Check for if the segment currently being built is a Mirror COPY:
                     if (currentBuildSegmentList[i].isMirror) {
                         //Debug.Log("This is a MIRROR COPY segment - Wow!");
@@ -837,255 +1368,247 @@ public class CritterGenome {
     }
 
 
-    public int CheckForAddonPhysicalAttributes(int nodeID) {
-        int addonIndex = -1;
+    public List<AddonPhysicalAttributes> CheckForAddonPhysicalAttributes(int nodeID) {
+        List<AddonPhysicalAttributes> addonList = new List<AddonPhysicalAttributes>();
         for (int physicalAttributesIndex = 0; physicalAttributesIndex < addonPhysicalAttributesList.Count; physicalAttributesIndex++) {
             if (addonPhysicalAttributesList[physicalAttributesIndex].critterNodeID == nodeID) {
-                addonIndex = physicalAttributesIndex;
+                addonList.Add(addonPhysicalAttributesList[physicalAttributesIndex]);
             }
         }
-        return addonIndex;
+        return addonList;
     }
-    public int CheckForAddonJointAngleSensor(int nodeID) {
-        int addonIndex = -1;  // -1 means this node does not contain a AngleSensor
-        // JointAngleSensor:
-        for (int jointAngleSensorIndex = 0; jointAngleSensorIndex < addonJointAngleSensorList.Count; jointAngleSensorIndex++) {
-            //Debug.Log("AngleSensor Addon# " + jointAngleSensorIndex.ToString() + ", ");
-            // Check if this node contains a AngleSensor Add-on:
-            if (addonJointAngleSensorList[jointAngleSensorIndex].critterNodeID == nodeID) {
-                addonIndex = jointAngleSensorIndex;
-                //Debug.Log("FOUND AngleSensor! " + jointMotorIndex.ToString() + ", nodeID: " + nodeID.ToString());
+    public List<AddonJointAngleSensor> CheckForAddonJointAngleSensor(int nodeID) {
+        List<AddonJointAngleSensor> addonList = new List<AddonJointAngleSensor>();
+        for (int i = 0; i < addonJointAngleSensorList.Count; i++) {
+            if (addonJointAngleSensorList[i].critterNodeID == nodeID) {
+                addonList.Add(addonJointAngleSensorList[i]);
             }
         }
-        return addonIndex;
+        return addonList;
     }
-    public int CheckForAddonContactSensor(int nodeID) {
-        int addonIndex = -1;
+    public List<AddonContactSensor> CheckForAddonContactSensor(int nodeID) {
+        List<AddonContactSensor> addonList = new List<AddonContactSensor>();
         for (int contactSensorIndex = 0; contactSensorIndex < addonContactSensorList.Count; contactSensorIndex++) {
             if (addonContactSensorList[contactSensorIndex].critterNodeID == nodeID) {
-                addonIndex = contactSensorIndex;
+                addonList.Add(addonContactSensorList[contactSensorIndex]);
             }
         }
-        return addonIndex;
+        return addonList;
     }
-    public int CheckForAddonRaycastSensor(int nodeID) {
-        int addonIndex = -1;
-        for (int raycastSensorIndex = 0; raycastSensorIndex < addonRaycastSensorList.Count; raycastSensorIndex++) {
-            if (addonRaycastSensorList[raycastSensorIndex].critterNodeID == nodeID) {
-                addonIndex = raycastSensorIndex;
+    public List<AddonRaycastSensor> CheckForAddonRaycastSensor(int nodeID) {
+        List<AddonRaycastSensor> addonList = new List<AddonRaycastSensor>();
+        for (int i = 0; i < addonRaycastSensorList.Count; i++) {
+            if (addonRaycastSensorList[i].critterNodeID == nodeID) {
+                addonList.Add(addonRaycastSensorList[i]);
             }
         }
-        return addonIndex;
+        return addonList;
     }
-    public int CheckForAddonCompassSensor1D(int nodeID) {
-        int addonIndex = -1;
+    public List<AddonCompassSensor1D> CheckForAddonCompassSensor1D(int nodeID) {
+        List<AddonCompassSensor1D> addonList = new List<AddonCompassSensor1D>();
         for (int i = 0; i < addonCompassSensor1DList.Count; i++) {
             if (addonCompassSensor1DList[i].critterNodeID == nodeID) {
-                addonIndex = i;
+                addonList.Add(addonCompassSensor1DList[i]);
             }
         }
-        return addonIndex;
+        return addonList;
     }
-    public int CheckForAddonCompassSensor3D(int nodeID) {
-        int addonIndex = -1;
+    public List<AddonCompassSensor3D> CheckForAddonCompassSensor3D(int nodeID) {
+        List<AddonCompassSensor3D> addonList = new List<AddonCompassSensor3D>();
         for (int i = 0; i < addonCompassSensor3DList.Count; i++) {
             if (addonCompassSensor3DList[i].critterNodeID == nodeID) {
-                addonIndex = i;
+                addonList.Add(addonCompassSensor3DList[i]);
             }
         }
-        return addonIndex;
+        return addonList;
     }
-    public int CheckForAddonPositionSensor1D(int nodeID) {
-        int addonIndex = -1;
+    public List<AddonPositionSensor1D> CheckForAddonPositionSensor1D(int nodeID) {
+        List<AddonPositionSensor1D> addonList = new List<AddonPositionSensor1D>();
         for (int i = 0; i < addonPositionSensor1DList.Count; i++) {
             if (addonPositionSensor1DList[i].critterNodeID == nodeID) {
-                addonIndex = i;
+                addonList.Add(addonPositionSensor1DList[i]);
             }
         }
-        return addonIndex;
+        return addonList;
     }
-    public int CheckForAddonPositionSensor3D(int nodeID) {
-        int addonIndex = -1;
+    public List<AddonPositionSensor3D> CheckForAddonPositionSensor3D(int nodeID) {
+        List<AddonPositionSensor3D> addonList = new List<AddonPositionSensor3D>();
         for (int i = 0; i < addonPositionSensor3DList.Count; i++) {
             if (addonPositionSensor3DList[i].critterNodeID == nodeID) {
-                addonIndex = i;
+                addonList.Add(addonPositionSensor3DList[i]);
             }
         }
-        return addonIndex;
+        return addonList;
     }
-    public int CheckForAddonRotationSensor1D(int nodeID) {
-        int addonIndex = -1;
+    public List<AddonRotationSensor1D> CheckForAddonRotationSensor1D(int nodeID) {
+        List<AddonRotationSensor1D> addonList = new List<AddonRotationSensor1D>();
         for (int i = 0; i < addonRotationSensor1DList.Count; i++) {
             if (addonRotationSensor1DList[i].critterNodeID == nodeID) {
-                addonIndex = i;
+                addonList.Add(addonRotationSensor1DList[i]);
             }
         }
-        return addonIndex;
+        return addonList;
     }
-    public int CheckForAddonRotationSensor3D(int nodeID) {
-        int addonIndex = -1;
+    public List<AddonRotationSensor3D> CheckForAddonRotationSensor3D(int nodeID) {
+        List<AddonRotationSensor3D> addonList = new List<AddonRotationSensor3D>();
         for (int i = 0; i < addonRotationSensor3DList.Count; i++) {
             if (addonRotationSensor3DList[i].critterNodeID == nodeID) {
-                addonIndex = i;
+                addonList.Add(addonRotationSensor3DList[i]);
             }
         }
-        return addonIndex;
+        return addonList;
     }
-    public int CheckForAddonVelocitySensor1D(int nodeID) {
-        int addonIndex = -1;
+    public List<AddonVelocitySensor1D> CheckForAddonVelocitySensor1D(int nodeID) {
+        List<AddonVelocitySensor1D> addonList = new List<AddonVelocitySensor1D>();
         for (int i = 0; i < addonVelocitySensor1DList.Count; i++) {
             if (addonVelocitySensor1DList[i].critterNodeID == nodeID) {
-                addonIndex = i;
+                addonList.Add(addonVelocitySensor1DList[i]);
             }
         }
-        return addonIndex;
+        return addonList;
     }
-    public int CheckForAddonVelocitySensor3D(int nodeID) {
-        int addonIndex = -1;
+    public List<AddonVelocitySensor3D> CheckForAddonVelocitySensor3D(int nodeID) {
+        List<AddonVelocitySensor3D> addonList = new List<AddonVelocitySensor3D>();
         for (int i = 0; i < addonVelocitySensor3DList.Count; i++) {
             if (addonVelocitySensor3DList[i].critterNodeID == nodeID) {
-                addonIndex = i;
+                addonList.Add(addonVelocitySensor3DList[i]);
             }
         }
-        return addonIndex;
+        return addonList;
     }
-    public int CheckForAddonAltimeter(int nodeID) {
-        int addonIndex = -1;
-        for (int altimeterIndex = 0; altimeterIndex < addonAltimeterList.Count; altimeterIndex++) {
-            if (addonAltimeterList[altimeterIndex].critterNodeID == nodeID) {
-                addonIndex = altimeterIndex;
+    public List<AddonAltimeter> CheckForAddonAltimeter(int nodeID) {
+        List<AddonAltimeter> addonList = new List<AddonAltimeter>();
+        for (int i = 0; i < addonAltimeterList.Count; i++) {
+            if (addonAltimeterList[i].critterNodeID == nodeID) {
+                addonList.Add(addonAltimeterList[i]);
             }
         }
-        return addonIndex;
+        return addonList;
     }
-    public int CheckForAddonEarBasic(int nodeID) {
-        int addonIndex = -1;
-        for (int earBasicIndex = 0; earBasicIndex < addonEarBasicList.Count; earBasicIndex++) {
-            if (addonEarBasicList[earBasicIndex].critterNodeID == nodeID) {
-                addonIndex = earBasicIndex;
+    public List<AddonEarBasic> CheckForAddonEarBasic(int nodeID) {
+        List<AddonEarBasic> addonList = new List<AddonEarBasic>();
+        for (int i = 0; i < addonEarBasicList.Count; i++) {
+            if (addonEarBasicList[i].critterNodeID == nodeID) {
+                addonList.Add(addonEarBasicList[i]);
             }
         }
-        return addonIndex;
+        return addonList;
     }
-    public int CheckForAddonGravitySensor(int nodeID) {
-        int addonIndex = -1;
-        for (int gravitySensorIndex = 0; gravitySensorIndex < addonGravitySensorList.Count; gravitySensorIndex++) {
-            if (addonGravitySensorList[gravitySensorIndex].critterNodeID == nodeID) {
-                addonIndex = gravitySensorIndex;
+    public List<AddonGravitySensor> CheckForAddonGravitySensor(int nodeID) {
+        List<AddonGravitySensor> addonList = new List<AddonGravitySensor>();
+        for (int i = 0; i < addonGravitySensorList.Count; i++) {
+            if (addonGravitySensorList[i].critterNodeID == nodeID) {
+                addonList.Add(addonGravitySensorList[i]);
             }
         }
-        return addonIndex;
+        return addonList;
     }
-    public int CheckForAddonJointMotor(int nodeID) {
-        int addonIndex = -1;  // -1 means this node does not contain a jointMotor
-        // Joint Motors:
-        for (int jointMotorIndex = 0; jointMotorIndex < addonJointMotorList.Count; jointMotorIndex++) {
-            //Debug.Log("jointMotor Addon# " + jointMotorIndex.ToString() + ", ");
-            // Check if this node contains a jointMotor Add-on:
-            if (addonJointMotorList[jointMotorIndex].critterNodeID == nodeID) {
-                addonIndex = jointMotorIndex;
-                //Debug.Log("FOUND JOINTMOTOR! " + jointMotorIndex.ToString() + ", nodeID: " + nodeID.ToString());
+    public List<AddonJointMotor> CheckForAddonJointMotor(int nodeID) {
+        List<AddonJointMotor> addonList = new List<AddonJointMotor>();
+        for (int i = 0; i < addonJointMotorList.Count; i++) {
+            if (addonJointMotorList[i].critterNodeID == nodeID) {
+                addonList.Add(addonJointMotorList[i]);
             }
         }
-        return addonIndex;
+        return addonList;
     }
-    public int CheckForAddonThrusterEffector1D(int nodeID) {
-        int addonIndex = -1;
-        for (int thrusterEffector1DIndex = 0; thrusterEffector1DIndex < addonThrusterEffector1DList.Count; thrusterEffector1DIndex++) {
-            if (addonThrusterEffector1DList[thrusterEffector1DIndex].critterNodeID == nodeID) {
-                addonIndex = thrusterEffector1DIndex;
+    public List<AddonThrusterEffector1D> CheckForAddonThrusterEffector1D(int nodeID) {
+        List<AddonThrusterEffector1D> addonList = new List<AddonThrusterEffector1D>();
+        for (int i = 0; i < addonThrusterEffector1DList.Count; i++) {
+            if (addonThrusterEffector1DList[i].critterNodeID == nodeID) {
+                addonList.Add(addonThrusterEffector1DList[i]);
             }
         }
-        return addonIndex;
+        return addonList;
     }
-    public int CheckForAddonThrusterEffector3D(int nodeID) {
-        int addonIndex = -1;
-        for (int thrusterEffector3DIndex = 0; thrusterEffector3DIndex < addonThrusterEffector3DList.Count; thrusterEffector3DIndex++) {
-            if (addonThrusterEffector3DList[thrusterEffector3DIndex].critterNodeID == nodeID) {
-                addonIndex = thrusterEffector3DIndex;
+    public List<AddonThrusterEffector3D> CheckForAddonThrusterEffector3D(int nodeID) {
+        List<AddonThrusterEffector3D> addonList = new List<AddonThrusterEffector3D>();
+        for (int i = 0; i < addonThrusterEffector3DList.Count; i++) {
+            if (addonThrusterEffector3DList[i].critterNodeID == nodeID) {
+                addonList.Add(addonThrusterEffector3DList[i]);
             }
         }
-        return addonIndex;
+        return addonList;
     }
-    public int CheckForAddonTorqueEffector1D(int nodeID) {
-        int addonIndex = -1;
-        for (int torqueEffector1DIndex = 0; torqueEffector1DIndex < addonTorqueEffector1DList.Count; torqueEffector1DIndex++) {
-            if (addonTorqueEffector1DList[torqueEffector1DIndex].critterNodeID == nodeID) {
-                addonIndex = torqueEffector1DIndex;
+    public List<AddonTorqueEffector1D> CheckForAddonTorqueEffector1D(int nodeID) {
+        List<AddonTorqueEffector1D> addonList = new List<AddonTorqueEffector1D>();
+        for (int i = 0; i < addonTorqueEffector1DList.Count; i++) {
+            if (addonTorqueEffector1DList[i].critterNodeID == nodeID) {
+                addonList.Add(addonTorqueEffector1DList[i]);
             }
         }
-        return addonIndex;
+        return addonList;
     }
-    public int CheckForAddonTorqueEffector3D(int nodeID) {
-        int addonIndex = -1;
-        for (int torqueEffector3DIndex = 0; torqueEffector3DIndex < addonTorqueEffector3DList.Count; torqueEffector3DIndex++) {
-            if (addonTorqueEffector3DList[torqueEffector3DIndex].critterNodeID == nodeID) {
-                addonIndex = torqueEffector3DIndex;
+    public List<AddonTorqueEffector3D> CheckForAddonTorqueEffector3D(int nodeID) {
+        List<AddonTorqueEffector3D> addonList = new List<AddonTorqueEffector3D>();
+        for (int i = 0; i < addonTorqueEffector3DList.Count; i++) {
+            if (addonTorqueEffector3DList[i].critterNodeID == nodeID) {
+                addonList.Add(addonTorqueEffector3DList[i]);
             }
         }
-        return addonIndex;
+        return addonList;
     }
-    public int CheckForAddonMouthBasic(int nodeID) {
-        int addonIndex = -1;
-        for (int mouthBasicIndex = 0; mouthBasicIndex < addonMouthBasicList.Count; mouthBasicIndex++) {
-            if (addonMouthBasicList[mouthBasicIndex].critterNodeID == nodeID) {
-                addonIndex = mouthBasicIndex;
+    public List<AddonMouthBasic> CheckForAddonMouthBasic(int nodeID) {
+        List<AddonMouthBasic> addonList = new List<AddonMouthBasic>();
+        for (int i = 0; i < addonMouthBasicList.Count; i++) {
+            if (addonMouthBasicList[i].critterNodeID == nodeID) {
+                addonList.Add(addonMouthBasicList[i]);
             }
         }
-        return addonIndex;
+        return addonList;
     }
-    public int CheckForAddonNoiseMakerBasic(int nodeID) {
-        int addonIndex = -1;
-        for (int noiseMakerBasicIndex = 0; noiseMakerBasicIndex < addonNoiseMakerBasicList.Count; noiseMakerBasicIndex++) {
-            if (addonNoiseMakerBasicList[noiseMakerBasicIndex].critterNodeID == nodeID) {
-                addonIndex = noiseMakerBasicIndex;
+    public List<AddonNoiseMakerBasic> CheckForAddonNoiseMakerBasic(int nodeID) {
+        List<AddonNoiseMakerBasic> addonList = new List<AddonNoiseMakerBasic>();
+        for (int i = 0; i < addonNoiseMakerBasicList.Count; i++) {
+            if (addonNoiseMakerBasicList[i].critterNodeID == nodeID) {
+                addonList.Add(addonNoiseMakerBasicList[i]);
             }
         }
-        return addonIndex;
+        return addonList;
     }
-    public int CheckForAddonSticky(int nodeID) {
-        int addonIndex = -1;
-        for (int stickyIndex = 0; stickyIndex < addonStickyList.Count; stickyIndex++) {
-            if (addonStickyList[stickyIndex].critterNodeID == nodeID) {
-                addonIndex = stickyIndex;
+    public List<AddonSticky> CheckForAddonSticky(int nodeID) {
+        List<AddonSticky> addonList = new List<AddonSticky>();
+        for (int i = 0; i < addonStickyList.Count; i++) {
+            if (addonStickyList[i].critterNodeID == nodeID) {
+                addonList.Add(addonStickyList[i]);
             }
         }
-        return addonIndex;
+        return addonList;
     }
-    public int CheckForAddonWeaponBasic(int nodeID) {
-        int addonIndex = -1;
-        for (int weaponBasicIndex = 0; weaponBasicIndex < addonWeaponBasicList.Count; weaponBasicIndex++) {
-            if (addonWeaponBasicList[weaponBasicIndex].critterNodeID == nodeID) {
-                addonIndex = weaponBasicIndex;
+    public List<AddonWeaponBasic> CheckForAddonWeaponBasic(int nodeID) {
+        List<AddonWeaponBasic> addonList = new List<AddonWeaponBasic>();
+        for (int i = 0; i < addonWeaponBasicList.Count; i++) {
+            if (addonWeaponBasicList[i].critterNodeID == nodeID) {
+                addonList.Add(addonWeaponBasicList[i]);
             }
         }
-        return addonIndex;
+        return addonList;
     }
-    public int CheckForAddonOscillatorInput(int nodeID) {
-        int addonIndex = -1;
+    public List<AddonOscillatorInput> CheckForAddonOscillatorInput(int nodeID) {
+        List<AddonOscillatorInput> addonList = new List<AddonOscillatorInput>();
         for (int i = 0; i < addonOscillatorInputList.Count; i++) {
             if (addonOscillatorInputList[i].critterNodeID == nodeID) {
-                addonIndex = i;
+                addonList.Add(addonOscillatorInputList[i]);
             }
         }
-        return addonIndex;
+        return addonList;
     }
-    public int CheckForAddonValueInput(int nodeID) {
-        int addonIndex = -1;
+    public List<AddonValueInput> CheckForAddonValueInput(int nodeID) {
+        List<AddonValueInput> addonList = new List<AddonValueInput>();
         for (int i = 0; i < addonValueInputList.Count; i++) {
             if (addonValueInputList[i].critterNodeID == nodeID) {
-                addonIndex = i;
+                addonList.Add(addonValueInputList[i]);
             }
         }
-        return addonIndex;
+        return addonList;
     }
-    public int CheckForAddonTimerInput(int nodeID) {
-        int addonIndex = -1;
+    public List<AddonTimerInput> CheckForAddonTimerInput(int nodeID) {
+        List<AddonTimerInput> addonList = new List<AddonTimerInput>();
         for (int i = 0; i < addonTimerInputList.Count; i++) {
             if (addonTimerInputList[i].critterNodeID == nodeID) {
-                addonIndex = i;
+                addonList.Add(addonTimerInputList[i]);
             }
         }
-        return addonIndex;
+        return addonList;
     }
 }

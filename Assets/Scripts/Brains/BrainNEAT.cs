@@ -229,6 +229,16 @@ public class BrainNEAT {
 
         return sourceGenome;
     }
+    public GenomeNEAT InitializeNewBrain(CritterGenome critterBodyGenome, int numHiddenNodes, float connectedness, bool randomWeights) {
+
+        // OLD //sourceGenome = new GenomeNEAT(numInputNodes, numHiddenNodes, numOutputNodes); // create blank genome with no connections
+        sourceGenome = new GenomeNEAT(critterBodyGenome, numHiddenNodes); // create blank genome with no connections
+        sourceGenome.CreateInitialConnections(connectedness, randomWeights);
+
+        //Debug.Log("InitializeBlankBrain #nodes: " + sourceGenome.nodeNEATList.Count.ToString() + ", #links: " + sourceGenome.linkNEATList.Count.ToString());
+
+        return sourceGenome;
+    }
 
     public void BuildBrainNetwork() {
         if(neuronList == null) {
@@ -259,6 +269,7 @@ public class BrainNEAT {
         int numActiveLinks = 0;
         // Create nodes:
         string nodesString = "BuildBrainNetwork() nodes: ";
+        Debug.Log("BuildBrainNetwork sourceGenome.nodeNEATList: " + sourceGenome.nodeNEATList.Count.ToString() + ", #sourceGenome.linkNEATList: " + sourceGenome.linkNEATList.Count.ToString());
         for (int i = 0; i < sourceGenome.nodeNEATList.Count; i++) {
             NeuronNEAT newNeuron = new NeuronNEAT(sourceGenome.nodeNEATList[i].id, sourceGenome.nodeNEATList[i].nodeType, sourceGenome.nodeNEATList[i].activationFunction);
             neuronList.Add(newNeuron);

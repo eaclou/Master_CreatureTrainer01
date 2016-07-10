@@ -18,18 +18,18 @@ public class CrossoverManager {
     //public float mutationBodyChance = 0.5f;
     //public float maxBodyMutationFactor = 1.25f;
     // MUTATION:
-    public float masterMutationRate = 0.5f;
-	public float maximumWeightMagnitude = 5f;
-	public float mutationDriftScale = 0.8f;
-	public float mutationRemoveLinkChance = 0.1f;
-	public float mutationAddLinkChance = 0.24f;	
+    public float masterMutationRate = 0.05f;
+	public float maximumWeightMagnitude = 4f;
+	public float mutationDriftScale = 0.75f;
+	public float mutationRemoveLinkChance = 0.05f;
+	public float mutationAddLinkChance = 0.2f;	
     public float mutationRemoveNodeChance = 0.0f;
-    public float mutationAddNodeChance = 0.08f;
+    public float mutationAddNodeChance = 0f;
     public float mutationActivationFunctionChance = 0.0f;
-    public float largeBrainPenalty = 0.04f;
+    public float largeBrainPenalty = 0f;
     public float newLinkMutateBonus = 1.3f;  // 1 = does nothing 
     public int newLinkBonusDuration = 25;
-    public float existingNetworkBias = 0.01f;
+    public float existingNetworkBias = 0f;
     public float existingFromNodeBias = 0.5f;
     // CROSSOVER!!:
     public float crossoverRandomLinkChance = 0f;
@@ -62,7 +62,7 @@ public class CrossoverManager {
 	public bool survivalStochastic = false;
 	public bool survivalByRaffle = false;
 
-	public float breedingRate = 0.6f;   // percentage of population that performed well enough to breed
+	public float breedingRate = 0.8f;   // percentage of population that performed well enough to breed
 	public bool breedingByRank = false;
 	public bool breedingStochastic = false;
 	public bool breedingByRaffle = true;
@@ -287,7 +287,7 @@ public class CrossoverManager {
 		return newFloat;
 	}
 
-	public float MutateBodyFloat(float sourceFloat) {
+	public float MutateBodyFloatAdd(float sourceFloat) {
         float newFloat = 0f;
 		if(sourceFloat != 0f) {
 			//newFloat = sourceFloat * UnityEngine.Random.Range(1f/maxBodyMutationFactor, maxBodyMutationFactor);
@@ -298,6 +298,23 @@ public class CrossoverManager {
 
 		return newFloat;
 	}
+    public float MutateBodyFloatMult(float sourceFloat) {
+
+        return sourceFloat;
+    }
+    public bool MutateBodyBool(bool sourceBool) {
+
+        return sourceBool;
+    }
+
+    public Vector3 MutateBodyVector3(Vector3 sourceVector) {
+
+        return sourceVector;
+    }
+    public Vector3 MutateBodyVector3Normalized(Vector3 sourceVector) {
+
+        return sourceVector.normalized;
+    }
 
     public Agent SelectAgentFromPopForBreeding(Population breedingPop, int numEligibleBreederAgents, ref int currentRankIndex) {
         //		Iterate over numberOfParents :
@@ -395,7 +412,7 @@ public class CrossoverManager {
                 int sourceInno = clonedAddon.innov;
                 for (int a = 0; a < sourceBodyGenomeLessFit.addonAltimeterList.Count; a++) {
                     if(sourceBodyGenomeLessFit.addonAltimeterList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
-                        // MIX SETTINGS HERE!!!
+                        // MIX SETTINGS HERE!!!                        
                     }
                 }
             }
@@ -409,6 +426,9 @@ public class CrossoverManager {
                 for (int a = 0; a < sourceBodyGenomeLessFit.addonCompassSensor1DList.Count; a++) {
                     if (sourceBodyGenomeLessFit.addonCompassSensor1DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
                         // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.forwardVector[0] = sourceBodyGenomeLessFit.addonCompassSensor1DList[a].forwardVector[0];
+                        }
                     }
                 }
             }
@@ -435,6 +455,9 @@ public class CrossoverManager {
                 for (int a = 0; a < sourceBodyGenomeLessFit.addonContactSensorList.Count; a++) {
                     if (sourceBodyGenomeLessFit.addonContactSensorList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
                         // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.contactSensitivity[0] = sourceBodyGenomeLessFit.addonContactSensorList[a].contactSensitivity[0];
+                        }
                     }
                 }
             }
@@ -448,6 +471,9 @@ public class CrossoverManager {
                 for (int a = 0; a < sourceBodyGenomeLessFit.addonEarBasicList.Count; a++) {
                     if (sourceBodyGenomeLessFit.addonEarBasicList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
                         // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.sensitivity[0] = sourceBodyGenomeLessFit.addonEarBasicList[a].sensitivity[0];
+                        }
                     }
                 }
             }
@@ -474,6 +500,11 @@ public class CrossoverManager {
                 for (int a = 0; a < sourceBodyGenomeLessFit.addonJointAngleSensorList.Count; a++) {
                     if (sourceBodyGenomeLessFit.addonJointAngleSensorList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
                         // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.sensitivity[0] = sourceBodyGenomeLessFit.addonJointAngleSensorList[a].sensitivity[0];                            
+                        }
+                        // #################  How to handle MEasureVel Checkbox?? It adds a Neuron!!!!!!!!!
+                        // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     }
                 }
             }
@@ -487,6 +518,12 @@ public class CrossoverManager {
                 for (int a = 0; a < sourceBodyGenomeLessFit.addonJointMotorList.Count; a++) {
                     if (sourceBodyGenomeLessFit.addonJointMotorList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
                         // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.motorForce[0] = sourceBodyGenomeLessFit.addonJointMotorList[a].motorForce[0];
+                        }
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.motorSpeed[0] = sourceBodyGenomeLessFit.addonJointMotorList[a].motorSpeed[0];
+                        }
                     }
                 }
             }
@@ -513,6 +550,9 @@ public class CrossoverManager {
                 for (int a = 0; a < sourceBodyGenomeLessFit.addonNoiseMakerBasicList.Count; a++) {
                     if (sourceBodyGenomeLessFit.addonNoiseMakerBasicList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
                         // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.amplitude[0] = sourceBodyGenomeLessFit.addonNoiseMakerBasicList[a].amplitude[0];
+                        }
                     }
                 }
             }
@@ -526,6 +566,15 @@ public class CrossoverManager {
                 for (int a = 0; a < sourceBodyGenomeLessFit.addonOscillatorInputList.Count; a++) {
                     if (sourceBodyGenomeLessFit.addonOscillatorInputList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
                         // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.amplitude[0] = sourceBodyGenomeLessFit.addonOscillatorInputList[a].amplitude[0];
+                        }
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.frequency[0] = sourceBodyGenomeLessFit.addonOscillatorInputList[a].frequency[0];
+                        }
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.offset[0] = sourceBodyGenomeLessFit.addonOscillatorInputList[a].offset[0];
+                        }
                     }
                 }
             }
@@ -539,6 +588,33 @@ public class CrossoverManager {
                 for (int a = 0; a < sourceBodyGenomeLessFit.addonPhysicalAttributesList.Count; a++) {
                     if (sourceBodyGenomeLessFit.addonPhysicalAttributesList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
                         // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.bounciness[0] = sourceBodyGenomeLessFit.addonPhysicalAttributesList[a].bounciness[0];
+                        }
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.dynamicFriction[0] = sourceBodyGenomeLessFit.addonPhysicalAttributesList[a].dynamicFriction[0];
+                        }
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.staticFriction[0] = sourceBodyGenomeLessFit.addonPhysicalAttributesList[a].staticFriction[0];
+                        }
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.freezePositionX[0] = sourceBodyGenomeLessFit.addonPhysicalAttributesList[a].freezePositionX[0];
+                        }
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.freezePositionY[0] = sourceBodyGenomeLessFit.addonPhysicalAttributesList[a].freezePositionY[0];
+                        }
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.freezePositionZ[0] = sourceBodyGenomeLessFit.addonPhysicalAttributesList[a].freezePositionZ[0];
+                        }
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.freezeRotationX[0] = sourceBodyGenomeLessFit.addonPhysicalAttributesList[a].freezeRotationX[0];
+                        }
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.freezeRotationY[0] = sourceBodyGenomeLessFit.addonPhysicalAttributesList[a].freezeRotationY[0];
+                        }
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.freezeRotationZ[0] = sourceBodyGenomeLessFit.addonPhysicalAttributesList[a].freezeRotationZ[0];
+                        }
                     }
                 }
             }
@@ -552,6 +628,15 @@ public class CrossoverManager {
                 for (int a = 0; a < sourceBodyGenomeLessFit.addonPositionSensor1DList.Count; a++) {
                     if (sourceBodyGenomeLessFit.addonPositionSensor1DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
                         // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.forwardVector[0] = sourceBodyGenomeLessFit.addonPositionSensor1DList[a].forwardVector[0];
+                        }
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.relative[0] = sourceBodyGenomeLessFit.addonPositionSensor1DList[a].relative[0];
+                        }
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.sensitivity[0] = sourceBodyGenomeLessFit.addonPositionSensor1DList[a].sensitivity[0];
+                        }
                     }
                 }
             }
@@ -565,6 +650,12 @@ public class CrossoverManager {
                 for (int a = 0; a < sourceBodyGenomeLessFit.addonPositionSensor3DList.Count; a++) {
                     if (sourceBodyGenomeLessFit.addonPositionSensor3DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
                         // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.sensitivity[0] = sourceBodyGenomeLessFit.addonPositionSensor3DList[a].sensitivity[0];
+                        }
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.relative[0] = sourceBodyGenomeLessFit.addonPositionSensor3DList[a].relative[0];
+                        }
                     }
                 }
             }
@@ -578,6 +669,12 @@ public class CrossoverManager {
                 for (int a = 0; a < sourceBodyGenomeLessFit.addonRaycastSensorList.Count; a++) {
                     if (sourceBodyGenomeLessFit.addonRaycastSensorList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
                         // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.forwardVector[0] = sourceBodyGenomeLessFit.addonRaycastSensorList[a].forwardVector[0];
+                        }
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.maxDistance[0] = sourceBodyGenomeLessFit.addonRaycastSensorList[a].maxDistance[0];
+                        }
                     }
                 }
             }
@@ -591,6 +688,12 @@ public class CrossoverManager {
                 for (int a = 0; a < sourceBodyGenomeLessFit.addonRotationSensor1DList.Count; a++) {
                     if (sourceBodyGenomeLessFit.addonRotationSensor1DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
                         // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.localAxis[0] = sourceBodyGenomeLessFit.addonRotationSensor1DList[a].localAxis[0];
+                        }
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.sensitivity[0] = sourceBodyGenomeLessFit.addonRotationSensor1DList[a].sensitivity[0];
+                        }
                     }
                 }
             }
@@ -604,6 +707,9 @@ public class CrossoverManager {
                 for (int a = 0; a < sourceBodyGenomeLessFit.addonRotationSensor3DList.Count; a++) {
                     if (sourceBodyGenomeLessFit.addonRotationSensor3DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
                         // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.sensitivity[0] = sourceBodyGenomeLessFit.addonRotationSensor3DList[a].sensitivity[0];
+                        }
                     }
                 }
             }
@@ -630,6 +736,12 @@ public class CrossoverManager {
                 for (int a = 0; a < sourceBodyGenomeLessFit.addonThrusterEffector1DList.Count; a++) {
                     if (sourceBodyGenomeLessFit.addonThrusterEffector1DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
                         // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.forwardVector[0] = sourceBodyGenomeLessFit.addonThrusterEffector1DList[a].forwardVector[0];
+                        }
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.maxForce[0] = sourceBodyGenomeLessFit.addonThrusterEffector1DList[a].maxForce[0];
+                        }
                     }
                 }
             }
@@ -643,6 +755,9 @@ public class CrossoverManager {
                 for (int a = 0; a < sourceBodyGenomeLessFit.addonThrusterEffector3DList.Count; a++) {
                     if (sourceBodyGenomeLessFit.addonThrusterEffector3DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
                         // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.maxForce[0] = sourceBodyGenomeLessFit.addonThrusterEffector3DList[a].maxForce[0];
+                        }
                     }
                 }
             }
@@ -669,6 +784,12 @@ public class CrossoverManager {
                 for (int a = 0; a < sourceBodyGenomeLessFit.addonTorqueEffector1DList.Count; a++) {
                     if (sourceBodyGenomeLessFit.addonTorqueEffector1DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
                         // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.maxTorque[0] = sourceBodyGenomeLessFit.addonTorqueEffector1DList[a].maxTorque[0];
+                        }
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.axis[0] = sourceBodyGenomeLessFit.addonTorqueEffector1DList[a].axis[0];
+                        }
                     }
                 }
             }
@@ -682,6 +803,9 @@ public class CrossoverManager {
                 for (int a = 0; a < sourceBodyGenomeLessFit.addonTorqueEffector3DList.Count; a++) {
                     if (sourceBodyGenomeLessFit.addonTorqueEffector3DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
                         // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.maxTorque[0] = sourceBodyGenomeLessFit.addonTorqueEffector3DList[a].maxTorque[0];
+                        }
                     }
                 }
             }
@@ -695,6 +819,9 @@ public class CrossoverManager {
                 for (int a = 0; a < sourceBodyGenomeLessFit.addonValueInputList.Count; a++) {
                     if (sourceBodyGenomeLessFit.addonValueInputList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
                         // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.value[0] = sourceBodyGenomeLessFit.addonValueInputList[a].value[0];
+                        }
                     }
                 }
             }
@@ -708,6 +835,15 @@ public class CrossoverManager {
                 for (int a = 0; a < sourceBodyGenomeLessFit.addonVelocitySensor1DList.Count; a++) {
                     if (sourceBodyGenomeLessFit.addonVelocitySensor1DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
                         // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.sensitivity[0] = sourceBodyGenomeLessFit.addonVelocitySensor1DList[a].sensitivity[0];
+                        }
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.forwardVector[0] = sourceBodyGenomeLessFit.addonVelocitySensor1DList[a].forwardVector[0];
+                        }
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.relative[0] = sourceBodyGenomeLessFit.addonVelocitySensor1DList[a].relative[0];
+                        }
                     }
                 }
             }
@@ -721,6 +857,12 @@ public class CrossoverManager {
                 for (int a = 0; a < sourceBodyGenomeLessFit.addonVelocitySensor3DList.Count; a++) {
                     if (sourceBodyGenomeLessFit.addonVelocitySensor3DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
                         // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.sensitivity[0] = sourceBodyGenomeLessFit.addonVelocitySensor3DList[a].sensitivity[0];
+                        }
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.relative[0] = sourceBodyGenomeLessFit.addonVelocitySensor3DList[a].relative[0];
+                        }
                     }
                 }
             }
@@ -734,14 +876,19 @@ public class CrossoverManager {
                 for (int a = 0; a < sourceBodyGenomeLessFit.addonWeaponBasicList.Count; a++) {
                     if (sourceBodyGenomeLessFit.addonWeaponBasicList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
                         // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.strength[0] = sourceBodyGenomeLessFit.addonWeaponBasicList[a].strength[0];
+                        }
                     }
                 }
             }
         }
     }
 
-    public void PerformBodyMutation(ref CritterGenome bodyGenome) {
+    public void PerformBodyMutation(ref CritterGenome bodyGenome, ref GenomeNEAT brainGenome) {
         int numBodyMutations = 0;
+        float attachDirMutationMultiplier = 0.1f;
+        float restAngleDirMutationMultiplier = 0.1f;
         for (int i = 0; i < bodyGenome.CritterNodeList.Count; i++) {
             // Segment Proportions:
             if(CheckForMutation(segmentProportionChance)) {  // X
@@ -759,45 +906,258 @@ public class CrossoverManager {
             if(i > 0) {   // NOT THE ROOT SEGMENT!:
                 // Segment Attach Settings:
                 if (CheckForMutation(segmentAttachSettingsChance)) {  // Position X
-                    bodyGenome.CritterNodeList[i].jointLink.attachDir.x *= UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
+                    bodyGenome.CritterNodeList[i].jointLink.attachDir.x += attachDirMutationMultiplier * UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
                     numBodyMutations++;
                 }
                 if (CheckForMutation(segmentAttachSettingsChance)) {  // Position Y
-                    bodyGenome.CritterNodeList[i].jointLink.attachDir.y *= UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
+                    bodyGenome.CritterNodeList[i].jointLink.attachDir.y += attachDirMutationMultiplier * UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
                     numBodyMutations++;
                 }
                 if (CheckForMutation(segmentAttachSettingsChance)) {  // Position Z
-                    bodyGenome.CritterNodeList[i].jointLink.attachDir.z *= UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
+                    bodyGenome.CritterNodeList[i].jointLink.attachDir.z += attachDirMutationMultiplier * UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
                     numBodyMutations++;
                 }
                 if (CheckForMutation(segmentAttachSettingsChance)) {  // Orientation X
-                    bodyGenome.CritterNodeList[i].jointLink.restAngleDir.x *= UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
+                    bodyGenome.CritterNodeList[i].jointLink.restAngleDir.x += restAngleDirMutationMultiplier * UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
                     numBodyMutations++;
                 }
                 if (CheckForMutation(segmentAttachSettingsChance)) {  // Orientation Y
-                    bodyGenome.CritterNodeList[i].jointLink.restAngleDir.y *= UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
+                    bodyGenome.CritterNodeList[i].jointLink.restAngleDir.y += restAngleDirMutationMultiplier * UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
                     numBodyMutations++;
                 }
                 if (CheckForMutation(segmentAttachSettingsChance)) {  // Orientation Z
-                    bodyGenome.CritterNodeList[i].jointLink.restAngleDir.z *= UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
+                    bodyGenome.CritterNodeList[i].jointLink.restAngleDir.z += restAngleDirMutationMultiplier * UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
                     numBodyMutations++;
                 }
 
                 // RECURSION:
                 if (CheckForMutation(recursionChance)) {
                     int addRemove = Mathf.RoundToInt(UnityEngine.Random.Range(0f, 1f)) * 2 - 1;  // either -1 or 1
-                    bodyGenome.CritterNodeList[i].jointLink.numberOfRecursions += addRemove;
-                    if (bodyGenome.CritterNodeList[i].jointLink.numberOfRecursions < 0)
-                        bodyGenome.CritterNodeList[i].jointLink.numberOfRecursions = 0;
-                    if (bodyGenome.CritterNodeList[i].jointLink.numberOfRecursions > 8)
-                        bodyGenome.CritterNodeList[i].jointLink.numberOfRecursions = 8;
-                    numBodyMutations++;
+                    addRemove = 1; // TEMPORARY!!! testing add recursion
+                    if (bodyGenome.CritterNodeList[i].jointLink.numberOfRecursions + addRemove < 0 || bodyGenome.CritterNodeList[i].jointLink.numberOfRecursions + addRemove > 8) {
+                        // Do Nothing, tried to change numRecursions beyond the CAP
+                    }
+                    else {  // It's all good -- PROCEED:
+                        bodyGenome.CritterNodeList[i].jointLink.numberOfRecursions += addRemove;
+                        numBodyMutations++;
+
+                        if(addRemove > 0) {  // Created an additional Recursion -- Need to ADD new BrainNodes:
+                            int numNodesBefore = brainGenome.nodeNEATList.Count;
+                            brainGenome.AdjustBrainAddedRecursion(bodyGenome, i, bodyGenome.CritterNodeList[i].jointLink.numberOfRecursions);
+                            int numNodesAfter = brainGenome.nodeNEATList.Count;
+                            Debug.Log("MUTATION RECURSION! b4#: " + numNodesBefore.ToString() + ", after#: " + numNodesAfter.ToString());
+                        }
+                        else {  // REMOVED a Recursion -- Need to REMOVE BrainNodes:
+                            //brainGenome.AdjustBrainRemovedRecursion(bodyGenome, i);
+                        }
+                    }
+
+                    
                     // NEED TO FIX BRAIN!!! -- how to preserve existing wiring while adding new neurons that may re-order?
                     // Do I need to save a reference to segment/nodes within each input/output neuron?
                 }
             }            
         }
+
+        // Addon Mutation:
+        PerformAddonMutation(ref bodyGenome, ref brainGenome);
         //Debug.Log("NumBodyMutations: " + numBodyMutations.ToString());
+    }
+
+    public void PerformAddonMutation(ref CritterGenome bodyGenome, ref GenomeNEAT brainGenome) {
+        // Chance to Add a new Add-On:
+
+
+        // Chance to Remove an existing Add-on:
+        // Chance to Mutate Add-On Settings:
+        for (int i = 0; i < bodyGenome.addonAltimeterList.Count; i++) {
+            
+        }
+        for (int i = 0; i < bodyGenome.addonCompassSensor1DList.Count; i++) {            
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonCompassSensor1DList[i].forwardVector[0] = MutateBodyVector3(bodyGenome.addonCompassSensor1DList[i].forwardVector[0]);
+            }                    
+        }
+        for (int i = 0; i < bodyGenome.addonCompassSensor3DList.Count; i++) {
+            
+        }
+        for (int i = 0; i < bodyGenome.addonContactSensorList.Count; i++) {            
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonContactSensorList[i].contactSensitivity[0] = MutateBodyFloatMult(bodyGenome.addonContactSensorList[i].contactSensitivity[0]);
+            }                    
+        }
+        for (int i = 0; i < bodyGenome.addonEarBasicList.Count; i++) {            
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonEarBasicList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonEarBasicList[i].sensitivity[0]);
+            }                   
+        }
+        for (int i = 0; i < bodyGenome.addonGravitySensorList.Count; i++) {
+           
+        }
+        for (int i = 0; i < bodyGenome.addonJointAngleSensorList.Count; i++) {            
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonJointAngleSensorList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonJointAngleSensorList[i].sensitivity[0]);
+            }
+                        // #################  How to handle MEasureVel Checkbox?? It adds a Neuron!!!!!!!!!
+                        // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                    
+        }
+        for (int i = 0; i < bodyGenome.addonJointMotorList.Count; i++) {            
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonJointMotorList[i].motorForce[0] = MutateBodyFloatMult(bodyGenome.addonJointMotorList[i].motorForce[0]);
+            }
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonJointMotorList[i].motorSpeed[0] = MutateBodyFloatMult(bodyGenome.addonJointMotorList[i].motorSpeed[0]);
+            }                   
+        }
+        for (int i = 0; i < bodyGenome.addonMouthBasicList.Count; i++) {
+            
+        }
+        for (int i = 0; i < bodyGenome.addonNoiseMakerBasicList.Count; i++) {            
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonNoiseMakerBasicList[i].amplitude[0] = MutateBodyFloatMult(bodyGenome.addonNoiseMakerBasicList[i].amplitude[0]);
+            }
+        }
+        for (int i = 0; i < bodyGenome.addonOscillatorInputList.Count; i++) {            
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonOscillatorInputList[i].amplitude[0] = MutateBodyFloatMult(bodyGenome.addonOscillatorInputList[i].amplitude[0]);
+            }
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonOscillatorInputList[i].frequency[0] = MutateBodyFloatMult(bodyGenome.addonOscillatorInputList[i].frequency[0]);
+            }
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonOscillatorInputList[i].offset[0] = MutateBodyFloatMult(bodyGenome.addonOscillatorInputList[i].offset[0]);
+            }
+        }
+        for (int i = 0; i < bodyGenome.addonPhysicalAttributesList.Count; i++) {            
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonPhysicalAttributesList[i].bounciness[0] = MutateBodyFloatMult(bodyGenome.addonPhysicalAttributesList[i].bounciness[0]);
+            }
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonPhysicalAttributesList[i].dynamicFriction[0] = MutateBodyFloatMult(bodyGenome.addonPhysicalAttributesList[i].dynamicFriction[0]);
+            }
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonPhysicalAttributesList[i].staticFriction[0] = MutateBodyFloatMult(bodyGenome.addonPhysicalAttributesList[i].staticFriction[0]);
+            }
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonPhysicalAttributesList[i].freezePositionX[0] = MutateBodyBool(bodyGenome.addonPhysicalAttributesList[i].freezePositionX[0]);
+            }
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonPhysicalAttributesList[i].freezePositionY[0] = MutateBodyBool(bodyGenome.addonPhysicalAttributesList[i].freezePositionY[0]);
+            }
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonPhysicalAttributesList[i].freezePositionZ[0] = MutateBodyBool(bodyGenome.addonPhysicalAttributesList[i].freezePositionZ[0]);
+            }
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonPhysicalAttributesList[i].freezeRotationX[0] = MutateBodyBool(bodyGenome.addonPhysicalAttributesList[i].freezeRotationX[0]);
+            }
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonPhysicalAttributesList[i].freezeRotationY[0] = MutateBodyBool(bodyGenome.addonPhysicalAttributesList[i].freezeRotationY[0]);
+            }
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonPhysicalAttributesList[i].freezeRotationZ[0] = MutateBodyBool(bodyGenome.addonPhysicalAttributesList[i].freezeRotationZ[0]);
+            }
+        }
+        for (int i = 0; i < bodyGenome.addonPositionSensor1DList.Count; i++) {            
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonPositionSensor1DList[i].forwardVector[0] = MutateBodyVector3Normalized(bodyGenome.addonPositionSensor1DList[i].forwardVector[0]);
+            }
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonPositionSensor1DList[i].relative[0] = MutateBodyBool(bodyGenome.addonPositionSensor1DList[i].relative[0]);
+            }
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonPositionSensor1DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonPositionSensor1DList[i].sensitivity[0]);
+            }
+        }
+        for (int i = 0; i < bodyGenome.addonPositionSensor3DList.Count; i++) {            
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonPositionSensor3DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonPositionSensor3DList[i].sensitivity[0]);
+            }
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonPositionSensor3DList[i].relative[0] = MutateBodyBool(bodyGenome.addonPositionSensor3DList[i].relative[0]);
+            }
+        }
+        for (int i = 0; i < bodyGenome.addonRaycastSensorList.Count; i++) {            
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonRaycastSensorList[i].forwardVector[0] = MutateBodyVector3Normalized(bodyGenome.addonRaycastSensorList[i].forwardVector[0]);
+            }
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonRaycastSensorList[i].maxDistance[0] = MutateBodyFloatMult(bodyGenome.addonRaycastSensorList[i].maxDistance[0]);
+            }
+        }
+        for (int i = 0; i < bodyGenome.addonRotationSensor1DList.Count; i++) {            
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonRotationSensor1DList[i].localAxis[0] = MutateBodyVector3Normalized(bodyGenome.addonRotationSensor1DList[i].localAxis[0]);
+            }
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonRotationSensor1DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonRotationSensor1DList[i].sensitivity[0]);
+            }
+        }
+        for (int i = 0; i < bodyGenome.addonRotationSensor3DList.Count; i++) {            
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonRotationSensor3DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonRotationSensor3DList[i].sensitivity[0]);
+            }
+        }
+        for (int i = 0; i < bodyGenome.addonStickyList.Count; i++) {
+            
+        }
+        for (int i = 0; i < bodyGenome.addonThrusterEffector1DList.Count; i++) {            
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonThrusterEffector1DList[i].forwardVector[0] = MutateBodyVector3Normalized(bodyGenome.addonThrusterEffector1DList[i].forwardVector[0]);
+            }
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonThrusterEffector1DList[i].maxForce[0] = MutateBodyFloatMult(bodyGenome.addonThrusterEffector1DList[i].maxForce[0]);
+            }
+        }
+        for (int i = 0; i < bodyGenome.addonThrusterEffector3DList.Count; i++) {            
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonThrusterEffector3DList[i].maxForce[0] = MutateBodyFloatMult(bodyGenome.addonThrusterEffector3DList[i].maxForce[0]);
+            }
+        }
+        for (int i = 0; i < bodyGenome.addonTimerInputList.Count; i++) {
+            
+        }
+        for (int i = 0; i < bodyGenome.addonTorqueEffector1DList.Count; i++) {            
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonTorqueEffector1DList[i].maxTorque[0] = MutateBodyFloatMult(bodyGenome.addonTorqueEffector1DList[i].maxTorque[0]);
+            }
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonTorqueEffector1DList[i].axis[0] = MutateBodyVector3Normalized(bodyGenome.addonTorqueEffector1DList[i].axis[0]);
+            }
+        }
+        for (int i = 0; i < bodyGenome.addonTorqueEffector3DList.Count; i++) {            
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonTorqueEffector3DList[i].maxTorque[0] = MutateBodyFloatMult(bodyGenome.addonTorqueEffector3DList[i].maxTorque[0]);
+            }
+        }
+        for (int i = 0; i < bodyGenome.addonValueInputList.Count; i++) {            
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonValueInputList[i].value[0] = MutateBodyFloatMult(bodyGenome.addonValueInputList[i].value[0]);
+            }
+        }
+        for (int i = 0; i < bodyGenome.addonVelocitySensor1DList.Count; i++) {            
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonVelocitySensor1DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonVelocitySensor1DList[i].sensitivity[0]);
+            }
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonVelocitySensor1DList[i].forwardVector[0] = MutateBodyVector3Normalized(bodyGenome.addonVelocitySensor1DList[i].forwardVector[0]);
+            }
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonVelocitySensor1DList[i].relative[0] = MutateBodyBool(bodyGenome.addonVelocitySensor1DList[i].relative[0]);
+            }
+        }
+        for (int i = 0; i < bodyGenome.addonVelocitySensor3DList.Count; i++) {            
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonVelocitySensor3DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonVelocitySensor3DList[i].sensitivity[0]);
+            }
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonVelocitySensor3DList[i].relative[0] = MutateBodyBool(bodyGenome.addonVelocitySensor3DList[i].relative[0]);
+            }
+        }
+        for (int i = 0; i < bodyGenome.addonWeaponBasicList.Count; i++) {            
+            if (CheckForMutation(addonSettingsChance)) {
+                bodyGenome.addonWeaponBasicList[i].strength[0] = MutateBodyFloatMult(bodyGenome.addonWeaponBasicList[i].strength[0]);
+            }
+        }
     }
 
     public Population BreedPopulation(ref Population sourcePopulation, int currentGeneration) {
@@ -1129,13 +1489,13 @@ public class CrossoverManager {
                     // once childLinkList is built -- use nodes of the moreFit parent:
                     for (int i = 0; i < parentNodeListArray[moreFitParent].Count; i++) { 
                         // iterate through all nodes in the parent List and copy them into fresh new geneNodes:
-                        GeneNodeNEAT clonedNode = new GeneNodeNEAT(parentNodeListArray[moreFitParent][i].id, parentNodeListArray[moreFitParent][i].nodeType, parentNodeListArray[moreFitParent][i].activationFunction);
+                        GeneNodeNEAT clonedNode = new GeneNodeNEAT(parentNodeListArray[moreFitParent][i].id, parentNodeListArray[moreFitParent][i].nodeType, parentNodeListArray[moreFitParent][i].activationFunction, parentNodeListArray[moreFitParent][i].sourceAddonInno, parentNodeListArray[moreFitParent][i].sourceAddonRecursionNum, parentNodeListArray[moreFitParent][i].sourceAddonChannelNum);
                         childNodeList.Add(clonedNode);
                     }
 
                     if (useMutation) {
                         // BODY MUTATION:
-                        PerformBodyMutation(ref childBodyGenome);
+                        PerformBodyMutation(ref childBodyGenome, ref childBrainGenome);
                         // NEED TO ADJUST BRAINS IF MUTATION CHANGES #NODES!!!!
 
                         // BRAIN MUTATION:
@@ -1256,7 +1616,7 @@ public class CrossoverManager {
 
                     for (int i = 0; i < parentNodeListArray[0].Count; i++) {
                         // iterate through all nodes in the parent List and copy them into fresh new geneNodes:
-                        GeneNodeNEAT clonedNode = new GeneNodeNEAT(parentNodeListArray[0][i].id, parentNodeListArray[0][i].nodeType, parentNodeListArray[0][i].activationFunction);
+                        GeneNodeNEAT clonedNode = new GeneNodeNEAT(parentNodeListArray[0][i].id, parentNodeListArray[0][i].nodeType, parentNodeListArray[0][i].activationFunction, parentNodeListArray[0][i].sourceAddonInno, parentNodeListArray[0][i].sourceAddonRecursionNum, parentNodeListArray[0][i].sourceAddonChannelNum);
                         childNodeList.Add(clonedNode);
                     }
                     for (int j = 0; j < parentLinkListArray[0].Count; j++) {
@@ -1269,7 +1629,8 @@ public class CrossoverManager {
                     // MUTATION:
                     if (useMutation) {
                         // BODY MUTATION:
-                        PerformBodyMutation(ref childBodyGenome);
+                        //childBrainGenome.nodeNEATList = childNodeList
+                        PerformBodyMutation(ref childBodyGenome, ref childBrainGenome);
 
                         // BRAIN MUTATION:
                         if (numEnabledLinkGenes < 1)
@@ -1368,11 +1729,12 @@ public class CrossoverManager {
                 }
                 
                 newChildAgent.brainGenome = childBrainGenome;
-                newChildAgent.brainGenome.nodeNEATList = childNodeList;
-                newChildAgent.brainGenome.linkNEATList = childLinkList;
-                BrainNEAT childBrain = new BrainNEAT(childBrainGenome);
+                //newChildAgent.brainGenome.nodeNEATList = childNodeList;
+                //newChildAgent.brainGenome.linkNEATList = childLinkList;
+                BrainNEAT childBrain = new BrainNEAT(newChildAgent.brainGenome);
                 childBrain.BuildBrainNetwork();
                 newChildAgent.brain = childBrain;
+                Debug.Log("NEW CHILD numNodes: " + newChildAgent.brainGenome.nodeNEATList.Count.ToString() + ", #Neurons: " + newChildAgent.brain.neuronList.Count.ToString());
                 
                 // Species:
                 if(useSpeciation) {
