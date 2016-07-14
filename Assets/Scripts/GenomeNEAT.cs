@@ -66,6 +66,7 @@ public class GenomeNEAT {
     public GenomeNEAT(CritterGenome critterBodyGenome, int numHidden) {
         // Constructor
         nodeNEATList = critterBodyGenome.GetBlankBrainNodesFromBody();  // returns a list of nodeNEAT's based on bodyGenome
+        
         int currentID = nodeNEATList.Count;
         // Add in hidden nodes:
         for (int h = 0; h < numHidden; h++) {
@@ -76,7 +77,11 @@ public class GenomeNEAT {
         // do I need to save body-part&add-on information on the Brain NODES? or only on Neurons?
         linkNEATList = new List<GeneLinkNEAT>();
 
-        Debug.Log("NEW GenomeNEAT! #nodes: " + nodeNEATList.Count.ToString());
+        string newGenomeNEATDisplay = "NEW GenomeNEAT! #nodes: " + nodeNEATList.Count.ToString() + "\n";
+        for(int i = 0; i < nodeNEATList.Count; i++) {
+            newGenomeNEATDisplay += "Node[" + i.ToString() + "] (" + nodeNEATList[i].id.ToString() + ", " + nodeNEATList[i].sourceAddonInno.ToString() + ", " + nodeNEATList[i].sourceAddonRecursionNum.ToString() + ", " + nodeNEATList[i].sourceAddonChannelNum.ToString() + ")\n";
+        }
+        Debug.Log(newGenomeNEATDisplay);
 
         /*if (numInputs < 1 || numOutputs < 1) {
             Debug.LogError("New NEAT Genome requires at least 1 input and output node!! [" + numInputs.ToString() + "," + numOutputs.ToString() + "]");
@@ -105,34 +110,69 @@ public class GenomeNEAT {
         }*/
     }
 
-    public void AdjustBrainAddedRecursion(CritterGenome bodyGenome, int bodyNodeID, int recursionNum) {
+    public int GetNodeIndexFromInt3(Int3 identifierTag) {
+        int nodeIndex = -1;
+        string debugNodes = "GetNodeIndexFromVector3 ERROR!!!Can't Find Node " + identifierTag.ToString() + "\n";
+        for (int i = 0; i < nodeNEATList.Count; i++) {
+            debugNodes += i.ToString() + ", " + nodeNEATList[i].sourceAddonInno.ToString() + ", " + nodeNEATList[i].sourceAddonRecursionNum.ToString() + ", " + nodeNEATList[i].sourceAddonChannelNum.ToString() + "\n";
+            if (nodeNEATList[i].sourceAddonInno == identifierTag.x) {
+                if (nodeNEATList[i].sourceAddonRecursionNum == identifierTag.y) {
+                    if (nodeNEATList[i].sourceAddonChannelNum == identifierTag.z) {
+                        // MATCH!!
+                        nodeIndex = i;
+                        break;
+                    }
+                }
+            }
+        }
+        if(nodeIndex == -1) {
+            Debug.Log(debugNodes);
+        }
+
+        return nodeIndex;
+    }
+
+    public Int3 GetInt3FromNodeIndex(int nodeIndex) {
+        return new Int3(nodeNEATList[nodeIndex].sourceAddonInno, nodeNEATList[nodeIndex].sourceAddonRecursionNum, nodeNEATList[nodeIndex].sourceAddonChannelNum);
+    }
+
+    public void AdjustBrainAfterBodyChange(CritterGenome bodyGenome) {
         // Try to do it assuming this function only took a CritterNode as input, rather than full bodyGenome:
         //CritterNode sourceNode = bodyGenome.CritterNodeList[bodyNodeID];
+        string beforeBrain = "AdjustBrain Before: \n";
+        string afterBrain = "AdjustBrain After: \n";
 
         List<GeneNodeNEAT> newBrainNodeList = bodyGenome.GetBlankBrainNodesFromBody();
-        List<GeneLinkNEAT> newBrainLinkList = new List<GeneLinkNEAT>();  // need to make a new copy so that the old link-list stays static while searching for matching from/toID's
+        //List<GeneLinkNEAT> newBrainLinkList = new List<GeneLinkNEAT>();  // need to make a new copy so that the old link-list stays static while searching for matching from/toID's
         // Find number of Input+Output nodes in the old list:
         int numOriginalInOutNodes = 0;
         for (int i = 0; i < nodeNEATList.Count; i++) {
             if(nodeNEATList[i].nodeType != GeneNodeNEAT.GeneNodeType.Hid) {
                 numOriginalInOutNodes++;
-            }
+            }            
         }
         // Compare this to the number of nodes in the new list (which doesn't contain any hidden nodes)
         int netNewNodes = newBrainNodeList.Count - numOriginalInOutNodes;
 
-        Debug.Log("AdjustBrainAddedRecursion! numOriginalInOutNodes: " + numOriginalInOutNodes.ToString() + ", netNewNodes: " + netNewNodes.ToString() + ", bodyNodeID: " + bodyNodeID.ToString() + ", recursionNum: " + recursionNum.ToString());
+        //Debug.Log("AdjustBrainAddedRecursion! numOriginalInOutNodes: " + numOriginalInOutNodes.ToString() + ", netNewNodes: " + netNewNodes.ToString() + ", bodyNodeID: " + bodyNodeID.ToString() + ", recursionNum: " + recursionNum.ToString());
 
-        if (netNewNodes > 0) {  // if the node that was recursed had any Add-ons/Brain channels on it:
-            // Copy all the hidden nodes into the newNodeList, adjust their id's based on the numNewNodes found in previous comment
-            for (int i = 0; i < nodeNEATList.Count; i++) {
-                if (nodeNEATList[i].nodeType == GeneNodeNEAT.GeneNodeType.Hid) {
-                    GeneNodeNEAT clonedNode = new GeneNodeNEAT(nodeNEATList[i].id, nodeNEATList[i].nodeType, nodeNEATList[i].activationFunction, nodeNEATList[i].sourceAddonInno, nodeNEATList[i].sourceAddonRecursionNum, nodeNEATList[i].sourceAddonChannelNum);
-                    newBrainNodeList.Add(clonedNode);
-                }
+        for (int i = 0; i < nodeNEATList.Count; i++) {
+            beforeBrain += "Node " + nodeNEATList[i].id.ToString() + " (" + nodeNEATList[i].sourceAddonInno.ToString() + ", " + nodeNEATList[i].sourceAddonRecursionNum.ToString() + ", " + nodeNEATList[i].sourceAddonChannelNum.ToString() + ")\n";
+
+            if (nodeNEATList[i].nodeType == GeneNodeNEAT.GeneNodeType.Hid) {
+                GeneNodeNEAT clonedNode = new GeneNodeNEAT(nodeNEATList[i].id, nodeNEATList[i].nodeType, nodeNEATList[i].activationFunction, nodeNEATList[i].sourceAddonInno, nodeNEATList[i].sourceAddonRecursionNum, nodeNEATList[i].sourceAddonChannelNum);
+                newBrainNodeList.Add(clonedNode);
             }
+        }
+        
+        if (netNewNodes != 0) {  // if the node that was recursed had any Add-ons/Brain channels on it:
+            // Copy all the hidden nodes into the newNodeList, adjust their id's based on the numNewNodes found in previous comment
+            
             // Go through all links and if a connectionID is greater than the cutoff-point (was a link to hidden node) then adjust its id by the Offset to match the new listIndex/ID
-            for(int j = 0; j < linkNEATList.Count; j++) {
+            /*   // Links SHOULD be able to stay the same now that they use fully unique identifiers for their From-To connections:
+            for (int j = 0; j < linkNEATList.Count; j++) {
+                beforeBrain += "Link " + linkNEATList[j].innov.ToString() + " (" + linkNEATList[j].fromNodeID.ToString() + ", " + linkNEATList[j].toNodeID.ToString() + ") weight: " + linkNEATList[j].weight.ToString() + ")\n";
+
                 GeneLinkNEAT clonedLink = new GeneLinkNEAT(linkNEATList[j].fromNodeID, linkNEATList[j].toNodeID, linkNEATList[j].weight, linkNEATList[j].enabled, linkNEATList[j].innov, linkNEATList[j].birthGen);
                 newBrainLinkList.Add(clonedLink);
                 if (linkNEATList[j].fromNodeID > numOriginalInOutNodes) {
@@ -142,11 +182,11 @@ public class GenomeNEAT {
                 if (linkNEATList[j].toNodeID > numOriginalInOutNodes) {
                     clonedLink.toNodeID += netNewNodes;
                     Debug.Log("HIDLink [" + j.ToString() + "] ToNode Re-Number! toNodeID: " + linkNEATList[j].toNodeID.ToString());
-                }
-            }
+                }                
+            }*/
 
             // Go through existing nodeList, searching for matches, based on sourceInno#, recursion#, and channel#        
-            for (int i = 0; i < nodeNEATList.Count; i++) {
+            /*for (int i = 0; i < nodeNEATList.Count; i++) {
                 for (int k = 0; k < newBrainNodeList.Count; k++) {
                     // If so, copy attributes from old node to new node  
                     if (nodeNEATList[i].sourceAddonInno == newBrainNodeList[k].sourceAddonInno) {
@@ -171,13 +211,40 @@ public class GenomeNEAT {
                         }
                     }
                 }
-            }
+            }*/
+
+            
+            //for(int j = 0; j < newBrainLinkList.Count; j++) {
+            //    afterBrain += "Link " + newBrainLinkList[j].innov.ToString() + " (" + newBrainLinkList[j].fromNodeID.ToString() + ", " + newBrainLinkList[j].toNodeID.ToString() + ") weight: " + newBrainLinkList[j].weight.ToString() + ")\n";
+            //}
+        }
+        for (int i = 0; i < newBrainNodeList.Count; i++) {
+            afterBrain += "Node " + newBrainNodeList[i].id.ToString() + " (" + newBrainNodeList[i].sourceAddonInno.ToString() + ", " + newBrainNodeList[i].sourceAddonRecursionNum.ToString() + ", " + newBrainNodeList[i].sourceAddonChannelNum.ToString() + ")\n";
         }
         // Once complete, replace oldNodeList with the new one:
         nodeNEATList = newBrainNodeList;
-        linkNEATList = newBrainLinkList;
-    }
+        //linkNEATList = newBrainLinkList;
 
+        // Make sure that there aren't any links pointing to non-existent nodes:
+        for (int i = 0; i < linkNEATList.Count; i++) {
+            bool linkSevered = false;
+            if (GetNodeIndexFromInt3(linkNEATList[i].fromNodeID) == -1) {
+                linkSevered = true;
+            }
+            if (GetNodeIndexFromInt3(linkNEATList[i].toNodeID) == -1) {
+                linkSevered = true;
+            }
+
+            if (linkSevered) {
+                linkNEATList[i].enabled = false;
+                Debug.Log("LINK " + i.ToString() + " SEVERED!! " + linkNEATList[i].fromNodeID.ToString() + ", " + linkNEATList[i].toNodeID.ToString());
+            }
+        }
+
+        //Debug.Log(beforeBrain);
+        //Debug.Log(afterBrain);
+    }
+    
     public void CreateInitialConnections(float connectedness, bool randomWeights) {
         int numInputs = 0;
         int numHidden = 0;
@@ -210,7 +277,7 @@ public class GenomeNEAT {
                         if (randomWeights) {
                             initialWeight = Gaussian.GetRandomGaussian();
                         }
-                        GeneLinkNEAT newLink = new GeneLinkNEAT(inputNodeList[i].id, hiddenNodeList[h].id, initialWeight, true, GetNextInnovNumber(), 0);
+                        GeneLinkNEAT newLink = new GeneLinkNEAT(GetInt3FromNodeIndex(inputNodeList[i].id), GetInt3FromNodeIndex(hiddenNodeList[h].id), initialWeight, true, GetNextInnovNumber(), 0);
                         linkNEATList.Add(newLink);
                         accumulatedLinkChance -= 1f; 
                     }
@@ -224,7 +291,7 @@ public class GenomeNEAT {
                         if (randomWeights) {
                             initialWeight = Gaussian.GetRandomGaussian();
                         }
-                        GeneLinkNEAT newLink = new GeneLinkNEAT(hiddenNodeList[h].id, outputNodeList[o].id, initialWeight, true, GetNextInnovNumber(), 0);
+                        GeneLinkNEAT newLink = new GeneLinkNEAT(GetInt3FromNodeIndex(hiddenNodeList[h].id), GetInt3FromNodeIndex(outputNodeList[o].id), initialWeight, true, GetNextInnovNumber(), 0);
                         linkNEATList.Add(newLink);
                         accumulatedLinkChance -= 1f; 
                     }
@@ -242,7 +309,7 @@ public class GenomeNEAT {
                         if (randomWeights) {
                             initialWeight = Gaussian.GetRandomGaussian();
                         }
-                        GeneLinkNEAT newLink = new GeneLinkNEAT(inputNodeList[i].id, outputNodeList[o].id, initialWeight, true, GetNextInnovNumber(), 0);
+                        GeneLinkNEAT newLink = new GeneLinkNEAT(GetInt3FromNodeIndex(inputNodeList[i].id), GetInt3FromNodeIndex(outputNodeList[o].id), initialWeight, true, GetNextInnovNumber(), 0);
                         linkNEATList.Add(newLink);
 
                         accumulatedLinkChance -= 1f; 
@@ -273,7 +340,7 @@ public class GenomeNEAT {
         for(int o = 0; o < outputNodeList.Count; o++) {
             int inNodeID = (int)UnityEngine.Random.Range(0f, (float)inputNodeList.Count);
             float randomWeight = Gaussian.GetRandomGaussian();
-            GeneLinkNEAT newLink = new GeneLinkNEAT(inputNodeList[inNodeID].id, outputNodeList[o].id, randomWeight, true, GetNextInnovNumber(), 0);
+            GeneLinkNEAT newLink = new GeneLinkNEAT(GetInt3FromNodeIndex(inputNodeList[inNodeID].id), GetInt3FromNodeIndex(outputNodeList[o].id), randomWeight, true, GetNextInnovNumber(), 0);
             linkNEATList.Add(newLink);
         }
     }
@@ -281,9 +348,21 @@ public class GenomeNEAT {
     public void RemoveRandomLink() {
         if(linkNEATList.Count > 0) {
             int randomLinkID = (int)UnityEngine.Random.Range(0f, (float)linkNEATList.Count);
-            Debug.Log("Remove RandomLink #" + randomLinkID.ToString());
+            //Debug.Log("Remove RandomLink #" + randomLinkID.ToString());
             linkNEATList.RemoveAt(randomLinkID);
         }        
+    }
+
+    public bool AreEqual(Vector3 vec1, Vector3 vec2) {
+        bool isEqual = false;
+        if(vec1.x == vec2.x) {
+            if (vec1.y == vec2.y) {
+                if (vec1.z == vec2.z) {
+                    isEqual = true;
+                }
+            }
+        }
+        return isEqual;
     }
 
     public void AddNewRandomLink(int gen) {
@@ -308,7 +387,7 @@ public class GenomeNEAT {
             // Check if this link already exists:
             bool linkExists = false;
             for (int i = 0; i < linkNEATList.Count; i++) {
-                if (linkNEATList[i].toNodeID == eligibleToNodes[toNodeID].id && linkNEATList[i].fromNodeID == eligibleFromNodes[fromNodeID].id) {
+                if (GetNodeIndexFromInt3(linkNEATList[i].toNodeID) == eligibleToNodes[toNodeID].id && GetNodeIndexFromInt3(linkNEATList[i].fromNodeID) == eligibleFromNodes[fromNodeID].id) {
                     Debug.Log("Attempted to add link but it already exists!!! from: " + eligibleFromNodes[fromNodeID].id.ToString() + ", to: " + eligibleToNodes[toNodeID].id.ToString());
                     linkExists = true;
                 }
@@ -316,7 +395,7 @@ public class GenomeNEAT {
             if (!linkExists) {
                 Debug.Log("New Link TO ITSELF: " + eligibleFromNodes[fromNodeID].id.ToString() + " Doing it anyway!");
                 float randomWeight = Gaussian.GetRandomGaussian() * 0.2f; //0f; // start zeroed to give a chance to try both + and - //Gaussian.GetRandomGaussian();
-                GeneLinkNEAT newLink = new GeneLinkNEAT(eligibleFromNodes[fromNodeID].id, eligibleToNodes[toNodeID].id, randomWeight, true, GetNextInnovNumber(), gen);
+                GeneLinkNEAT newLink = new GeneLinkNEAT(GetInt3FromNodeIndex(eligibleFromNodes[fromNodeID].id), GetInt3FromNodeIndex(eligibleToNodes[toNodeID].id), randomWeight, true, GetNextInnovNumber(), gen);
                 linkNEATList.Add(newLink);
             }
             
@@ -325,14 +404,14 @@ public class GenomeNEAT {
             // Check if this link already exists:
             bool linkExists = false;
             for(int i = 0; i < linkNEATList.Count; i++) {
-                if(linkNEATList[i].toNodeID == eligibleToNodes[toNodeID].id && linkNEATList[i].fromNodeID == eligibleFromNodes[fromNodeID].id) {
-                    Debug.Log("Attempted to add link but it already exists!!! from: " + eligibleFromNodes[fromNodeID].id.ToString() + ", to: " + eligibleToNodes[toNodeID].id.ToString());
+                if(GetNodeIndexFromInt3(linkNEATList[i].toNodeID) == eligibleToNodes[toNodeID].id && GetNodeIndexFromInt3(linkNEATList[i].fromNodeID) == eligibleFromNodes[fromNodeID].id) {
+                    //Debug.Log("Attempted to add link but it already exists!!! from: " + eligibleFromNodes[fromNodeID].id.ToString() + ", to: " + eligibleToNodes[toNodeID].id.ToString());
                     linkExists = true;                    
                 }
             }
             if(!linkExists) {
                 float randomWeight = Gaussian.GetRandomGaussian() * 0.2f; //0f; // start zeroed to give a chance to try both + and - //Gaussian.GetRandomGaussian();
-                GeneLinkNEAT newLink = new GeneLinkNEAT(eligibleFromNodes[fromNodeID].id, eligibleToNodes[toNodeID].id, randomWeight, true, GetNextInnovNumber(), gen);
+                GeneLinkNEAT newLink = new GeneLinkNEAT(GetInt3FromNodeIndex(eligibleFromNodes[fromNodeID].id), GetInt3FromNodeIndex(eligibleToNodes[toNodeID].id), randomWeight, true, GetNextInnovNumber(), gen);
                 linkNEATList.Add(newLink);
             }            
         }        
@@ -355,19 +434,19 @@ public class GenomeNEAT {
             // Populate eligible node lists with those nodes that are already connected:
             if(linkNEATList[k].enabled) {
                 if(reuseFromNode) {  // reuse an exisiting fromNode
-                    if (eligibleFromNodes.Contains(nodeNEATList[linkNEATList[k].fromNodeID])) {
+                    if (eligibleFromNodes.Contains(nodeNEATList[GetNodeIndexFromInt3(linkNEATList[k].fromNodeID)])) {
                         //Debug.Log("AddNewExtraLink() EligibleFromNode Already Contains Node " + linkNEATList[k].fromNodeID.ToString());
                     }
                     else {
-                        eligibleFromNodes.Add(nodeNEATList[linkNEATList[k].fromNodeID]);
+                        eligibleFromNodes.Add(nodeNEATList[GetNodeIndexFromInt3(linkNEATList[k].fromNodeID)]);
                     }
                 }
                 else { // reuse an exisitng TO node
-                    if (eligibleToNodes.Contains(nodeNEATList[linkNEATList[k].toNodeID])) {
+                    if (eligibleToNodes.Contains(nodeNEATList[GetNodeIndexFromInt3(linkNEATList[k].toNodeID)])) {
                         //Debug.Log("AddNewExtraLink() EligibleToNode Already Contains Node " + linkNEATList[k].toNodeID.ToString());
                     }
                     else {
-                        eligibleToNodes.Add(nodeNEATList[linkNEATList[k].toNodeID]);
+                        eligibleToNodes.Add(nodeNEATList[GetNodeIndexFromInt3(linkNEATList[k].toNodeID)]);
                     }
                 }                
             }
@@ -399,7 +478,7 @@ public class GenomeNEAT {
                 // Check if this link already exists:
                 bool linkExists = false;
                 for (int i = 0; i < linkNEATList.Count; i++) {
-                    if (linkNEATList[i].toNodeID == eligibleToNodes[toNodeID].id && linkNEATList[i].fromNodeID == eligibleFromNodes[fromNodeID].id) {
+                    if (GetNodeIndexFromInt3(linkNEATList[i].toNodeID) == eligibleToNodes[toNodeID].id && GetNodeIndexFromInt3(linkNEATList[i].fromNodeID) == eligibleFromNodes[fromNodeID].id) {
                         Debug.Log("AddNewExtraLink() Attempted to add link but it already exists!!! from: " + eligibleFromNodes[fromNodeID].id.ToString() + ", to: " + eligibleToNodes[toNodeID].id.ToString());
                         linkExists = true;
                     }
@@ -407,7 +486,7 @@ public class GenomeNEAT {
                 if (!linkExists) {
                     Debug.Log("AddNewExtraLink() New Link TO ITSELF: " + eligibleFromNodes[fromNodeID].id.ToString() + " Doing it anyway!");
                     float randomWeight = Gaussian.GetRandomGaussian() * 0.2f; //0f; // start zeroed to give a chance to try both + and - //Gaussian.GetRandomGaussian();
-                    GeneLinkNEAT newLink = new GeneLinkNEAT(eligibleFromNodes[fromNodeID].id, eligibleToNodes[toNodeID].id, randomWeight, true, GetNextInnovNumber(), gen);
+                    GeneLinkNEAT newLink = new GeneLinkNEAT(GetInt3FromNodeIndex(eligibleFromNodes[fromNodeID].id), GetInt3FromNodeIndex(eligibleToNodes[toNodeID].id), randomWeight, true, GetNextInnovNumber(), gen);
                     linkNEATList.Add(newLink);
                 }                
             }
@@ -415,7 +494,7 @@ public class GenomeNEAT {
                 // Check if this link already exists:
                 bool linkExists = false;
                 for (int i = 0; i < linkNEATList.Count; i++) {
-                    if (linkNEATList[i].toNodeID == eligibleToNodes[toNodeID].id && linkNEATList[i].fromNodeID == eligibleFromNodes[fromNodeID].id) {
+                    if (GetNodeIndexFromInt3(linkNEATList[i].toNodeID) == eligibleToNodes[toNodeID].id && GetNodeIndexFromInt3(linkNEATList[i].fromNodeID) == eligibleFromNodes[fromNodeID].id) {
                         Debug.Log("AddNewExtraLink() Attempted to add link but it already exists!!! from: " + eligibleFromNodes[fromNodeID].id.ToString() + ", to: " + eligibleToNodes[toNodeID].id.ToString());
                         linkExists = true;
                     }
@@ -424,7 +503,7 @@ public class GenomeNEAT {
 
                     float randomWeight = Gaussian.GetRandomGaussian() * 0.2f; //0f; // start zeroed to give a chance to try both + and - //Gaussian.GetRandomGaussian();
                     Debug.Log("AddNewExtraLink() NEW LINK!!! from: " + eligibleFromNodes[fromNodeID].id.ToString() + ", to: " + eligibleToNodes[toNodeID].id.ToString());
-                    GeneLinkNEAT newLink = new GeneLinkNEAT(eligibleFromNodes[fromNodeID].id, eligibleToNodes[toNodeID].id, randomWeight, true, GetNextInnovNumber(), gen);
+                    GeneLinkNEAT newLink = new GeneLinkNEAT(GetInt3FromNodeIndex(eligibleFromNodes[fromNodeID].id), GetInt3FromNodeIndex(eligibleToNodes[toNodeID].id), randomWeight, true, GetNextInnovNumber(), gen);
                     linkNEATList.Add(newLink);
                 }
             }
@@ -439,8 +518,8 @@ public class GenomeNEAT {
             nodeNEATList.Add(newHiddenNode);
             // add new node between old connection
             // create two new connections
-            GeneLinkNEAT newLinkA = new GeneLinkNEAT(linkNEATList[linkID].fromNodeID, newHiddenNode.id, linkNEATList[linkID].weight, true, GetNextInnovNumber(), gen);
-            GeneLinkNEAT newLinkB = new GeneLinkNEAT(newHiddenNode.id, linkNEATList[linkID].toNodeID, 1f, true, GetNextInnovNumber(), gen);
+            GeneLinkNEAT newLinkA = new GeneLinkNEAT(linkNEATList[linkID].fromNodeID, GetInt3FromNodeIndex(newHiddenNode.id), linkNEATList[linkID].weight, true, GetNextInnovNumber(), gen);
+            GeneLinkNEAT newLinkB = new GeneLinkNEAT(GetInt3FromNodeIndex(newHiddenNode.id), linkNEATList[linkID].toNodeID, 1f, true, GetNextInnovNumber(), gen);
 
             linkNEATList.Add(newLinkA);
             linkNEATList.Add(newLinkB);

@@ -268,8 +268,8 @@ public class BrainNEAT {
         int numActiveNodes = 0;
         int numActiveLinks = 0;
         // Create nodes:
-        string nodesString = "BuildBrainNetwork() nodes: ";
-        Debug.Log("BuildBrainNetwork sourceGenome.nodeNEATList: " + sourceGenome.nodeNEATList.Count.ToString() + ", #sourceGenome.linkNEATList: " + sourceGenome.linkNEATList.Count.ToString());
+        string nodesString = "BuildBrainNetwork() nodes: \n";
+        //Debug.Log("BuildBrainNetwork sourceGenome.nodeNEATList: " + sourceGenome.nodeNEATList.Count.ToString() + ", #sourceGenome.linkNEATList: " + sourceGenome.linkNEATList.Count.ToString());
         for (int i = 0; i < sourceGenome.nodeNEATList.Count; i++) {
             NeuronNEAT newNeuron = new NeuronNEAT(sourceGenome.nodeNEATList[i].id, sourceGenome.nodeNEATList[i].nodeType, sourceGenome.nodeNEATList[i].activationFunction);
             neuronList.Add(newNeuron);
@@ -279,15 +279,16 @@ public class BrainNEAT {
             if (newNeuron.nodeType == GeneNodeNEAT.GeneNodeType.Out) {
                 outputNeuronList.Add(newNeuron);
             }
-            nodesString += "[" + i.ToString() + "]: " + newNeuron.nodeType.ToString() + ", ";
+            nodesString += "[" + i.ToString() + "]: " + newNeuron.nodeType.ToString() + ", (" + sourceGenome.nodeNEATList[i].id.ToString() + ", " + sourceGenome.nodeNEATList[i].sourceAddonInno.ToString() + ", " + sourceGenome.nodeNEATList[i].sourceAddonRecursionNum.ToString() + ", " + sourceGenome.nodeNEATList[i].sourceAddonChannelNum.ToString() + ")\n";
             numActiveNodes++;
         }
+        //Debug.Log(nodesString);
         // Create connections:
         string connectionsString = "BuildBrainNetwork() connections: ";
         for (int o = 0; o < sourceGenome.linkNEATList.Count; o++) {
             if(sourceGenome.linkNEATList[o].enabled) {
                 numActiveLinks++;
-                ConnectionNEAT newConnection = new ConnectionNEAT(sourceGenome.linkNEATList[o].fromNodeID, sourceGenome.linkNEATList[o].toNodeID, sourceGenome.linkNEATList[o].weight);
+                ConnectionNEAT newConnection = new ConnectionNEAT(sourceGenome.GetNodeIndexFromInt3(sourceGenome.linkNEATList[o].fromNodeID), sourceGenome.GetNodeIndexFromInt3(sourceGenome.linkNEATList[o].toNodeID), sourceGenome.linkNEATList[o].weight);
                 connectionList.Add(newConnection);
                 neuronList[newConnection.toNodeID].incomingConnectionsList.Add(newConnection); // add this connection to its destination neuron's list
                                                                                                //Debug.Log("linkNEATList[" + o.ToString() + "], from: " + newConnection.fromNodeID.ToString() + ", to: " + newConnection.toNodeID.ToString() + ", weight: " + newConnection.weight[0]);

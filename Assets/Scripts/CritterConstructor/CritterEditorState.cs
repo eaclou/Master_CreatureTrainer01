@@ -1897,6 +1897,19 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
             AddonGravitySensor newGravitySensor = new AddonGravitySensor(sourceNode.ID, GetNextAddonInnov());
             critterConstructorManager.masterCritter.masterCritterGenome.addonGravitySensorList.Add(newGravitySensor);
         }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.OscillatorInput) {
+            AddonOscillatorInput newOscillatorInput = new AddonOscillatorInput(sourceNode.ID, GetNextAddonInnov());
+            critterConstructorManager.masterCritter.masterCritterGenome.addonOscillatorInputList.Add(newOscillatorInput);
+            //critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(critterConstructorManager.masterCritter.masterCritterGenome, sourceNode.ID);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.ValueInput) {
+            AddonValueInput newValueInput = new AddonValueInput(sourceNode.ID, GetNextAddonInnov());
+            critterConstructorManager.masterCritter.masterCritterGenome.addonValueInputList.Add(newValueInput);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.TimerInput) {
+            AddonTimerInput newTimerInput = new AddonTimerInput(sourceNode.ID, GetNextAddonInnov());
+            critterConstructorManager.masterCritter.masterCritterGenome.addonTimerInputList.Add(newTimerInput);
+        }
 
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.JointMotor) {
             bool listContainsType = false;
@@ -1985,20 +1998,6 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
             }
         }
 
-        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.OscillatorInput) {
-            AddonOscillatorInput newOscillatorInput = new AddonOscillatorInput(sourceNode.ID, GetNextAddonInnov());
-            critterConstructorManager.masterCritter.masterCritterGenome.addonOscillatorInputList.Add(newOscillatorInput);
-            //critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(critterConstructorManager.masterCritter.masterCritterGenome, sourceNode.ID);
-        }
-        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.ValueInput) {
-            AddonValueInput newValueInput = new AddonValueInput(sourceNode.ID, GetNextAddonInnov());
-            critterConstructorManager.masterCritter.masterCritterGenome.addonValueInputList.Add(newValueInput);
-        }
-        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.TimerInput) {
-            AddonTimerInput newTimerInput = new AddonTimerInput(sourceNode.ID, GetNextAddonInnov());
-            critterConstructorManager.masterCritter.masterCritterGenome.addonTimerInputList.Add(newTimerInput);
-        }
-
         critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(critterConstructorManager.masterCritter.masterCritterGenome, sourceNode.ID);
     }
     
@@ -2053,6 +2052,15 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.Gravity) {
             critterConstructorManager.masterCritter.masterCritterGenome.addonGravitySensorList.RemoveAt(addonIndex);
         }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.OscillatorInput) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonOscillatorInputList.RemoveAt(addonIndex);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.ValueInput) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonValueInputList.RemoveAt(addonIndex);
+        }
+        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.TimerInput) {
+            critterConstructorManager.masterCritter.masterCritterGenome.addonTimerInputList.RemoveAt(addonIndex);
+        }
 
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.JointMotor) {
             critterConstructorManager.masterCritter.masterCritterGenome.addonJointMotorList.RemoveAt(addonIndex);
@@ -2080,16 +2088,6 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
         }
         else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.WeaponBasic) {
             critterConstructorManager.masterCritter.masterCritterGenome.addonWeaponBasicList.RemoveAt(addonIndex);
-        }
-
-        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.OscillatorInput) {
-            critterConstructorManager.masterCritter.masterCritterGenome.addonOscillatorInputList.RemoveAt(addonIndex);
-        }
-        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.ValueInput) {
-            critterConstructorManager.masterCritter.masterCritterGenome.addonValueInputList.RemoveAt(addonIndex);
-        }
-        else if (addonType == CritterNodeAddonBase.CritterNodeAddonTypes.TimerInput) {
-            critterConstructorManager.masterCritter.masterCritterGenome.addonTimerInputList.RemoveAt(addonIndex);
         }
         critterEditorUI.panelNodeAddons.panelAddonsList.GetComponent<PanelAddonsList>().RepopulateList(critterConstructorManager.masterCritter.masterCritterGenome, sourceNode.ID);
     }

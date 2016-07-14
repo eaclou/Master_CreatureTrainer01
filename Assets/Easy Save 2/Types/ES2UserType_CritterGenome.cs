@@ -33,6 +33,9 @@ public class ES2UserType_CritterGenome : ES2Type
         writer.Write(data.addonAltimeterList);
         writer.Write(data.addonEarBasicList);
         writer.Write(data.addonGravitySensorList);
+        writer.Write(data.addonOscillatorInputList);
+        writer.Write(data.addonValueInputList);
+        writer.Write(data.addonTimerInputList);
 
         writer.Write(data.addonJointMotorList);
         writer.Write(data.addonThrusterEffector1DList);
@@ -43,10 +46,6 @@ public class ES2UserType_CritterGenome : ES2Type
         writer.Write(data.addonNoiseMakerBasicList);
         writer.Write(data.addonStickyList);
         writer.Write(data.addonWeaponBasicList);
-
-        writer.Write(data.addonOscillatorInputList);
-        writer.Write(data.addonValueInputList);
-        writer.Write(data.addonTimerInputList);
     }
 	
 	public override object Read(ES2Reader reader)
@@ -85,6 +84,9 @@ public class ES2UserType_CritterGenome : ES2Type
             data.addonAltimeterList = reader.ReadList<AddonAltimeter>();
             data.addonEarBasicList = reader.ReadList<AddonEarBasic>();
             data.addonGravitySensorList = reader.ReadList<AddonGravitySensor>();
+            data.addonOscillatorInputList = reader.ReadList<AddonOscillatorInput>();
+            data.addonValueInputList = reader.ReadList<AddonValueInput>();
+            data.addonTimerInputList = reader.ReadList<AddonTimerInput>();
 
             data.addonJointMotorList = reader.ReadList<AddonJointMotor>();
             data.addonThrusterEffector1DList = reader.ReadList<AddonThrusterEffector1D>();
@@ -95,10 +97,6 @@ public class ES2UserType_CritterGenome : ES2Type
             data.addonNoiseMakerBasicList = reader.ReadList<AddonNoiseMakerBasic>();
             data.addonStickyList = reader.ReadList<AddonSticky>();
             data.addonWeaponBasicList = reader.ReadList<AddonWeaponBasic>();
-
-            data.addonOscillatorInputList = reader.ReadList<AddonOscillatorInput>();
-            data.addonValueInputList = reader.ReadList<AddonValueInput>();
-            data.addonTimerInputList = reader.ReadList<AddonTimerInput>();
         }
     }
 	

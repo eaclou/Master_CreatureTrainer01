@@ -68,6 +68,7 @@ public class CrossoverManager {
 	public bool breedingByRaffle = true;
 
     public float mutationBlastModifier = 1f;
+    public float bodyMutationBlastModifier = 1f;
 
     //empty constructor for easySave2
     public CrossoverManager() {
@@ -287,23 +288,16 @@ public class CrossoverManager {
 		return newFloat;
 	}
 
-	public float MutateBodyFloatAdd(float sourceFloat) {
-        float newFloat = 0f;
-		if(sourceFloat != 0f) {
-			//newFloat = sourceFloat * UnityEngine.Random.Range(1f/maxBodyMutationFactor, maxBodyMutationFactor);
-		}
-		else {
-			newFloat = sourceFloat + UnityEngine.Random.Range(-0.1f, 0.1f);
-		}
-
-		return newFloat;
+	public float MutateBodyFloatAdd(float sourceFloat, float maxAmount) {        
+		return sourceFloat + UnityEngine.Random.Range(-maxAmount, maxAmount);
 	}
     public float MutateBodyFloatMult(float sourceFloat) {
-
-        return sourceFloat;
+        return sourceFloat * UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
     }
-    public bool MutateBodyBool(bool sourceBool) {
-
+    public bool MutateBodyBool(bool sourceBool) {        
+        if(UnityEngine.Random.Range(0f, 1f) < 0.5f) {
+            sourceBool = !sourceBool;
+        }
         return sourceBool;
     }
 
@@ -311,9 +305,8 @@ public class CrossoverManager {
 
         return sourceVector;
     }
-    public Vector3 MutateBodyVector3Normalized(Vector3 sourceVector) {
-
-        return sourceVector.normalized;
+    public Vector3 MutateBodyVector3Normalized(Vector3 sourceVector) {        
+        return Vector3.Slerp(sourceVector, UnityEngine.Random.onUnitSphere, maxAttributeValueChange - 1f).normalized;
     }
 
     public Agent SelectAgentFromPopForBreeding(Population breedingPop, int numEligibleBreederAgents, ref int currentRankIndex) {
@@ -404,181 +397,6 @@ public class CrossoverManager {
     public void BreedCritterAddons(ref CritterGenome childBodyGenome, ref CritterGenome sourceBodyGenomeMoreFit, ref CritterGenome sourceBodyGenomeLessFit) {
 
         // Iterate over the Addons of the more fit parent:
-        for (int i = 0; i < sourceBodyGenomeMoreFit.addonAltimeterList.Count; i++) {
-            AddonAltimeter clonedAddon = sourceBodyGenomeMoreFit.addonAltimeterList[i].CloneThisAddon();
-            childBodyGenome.addonAltimeterList.Add(clonedAddon);
-
-            if(useCrossover) {
-                int sourceInno = clonedAddon.innov;
-                for (int a = 0; a < sourceBodyGenomeLessFit.addonAltimeterList.Count; a++) {
-                    if(sourceBodyGenomeLessFit.addonAltimeterList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
-                        // MIX SETTINGS HERE!!!                        
-                    }
-                }
-            }
-        }
-        for (int i = 0; i < sourceBodyGenomeMoreFit.addonCompassSensor1DList.Count; i++) {
-            AddonCompassSensor1D clonedAddon = sourceBodyGenomeMoreFit.addonCompassSensor1DList[i].CloneThisAddon();
-            childBodyGenome.addonCompassSensor1DList.Add(clonedAddon);
-
-            if (useCrossover) {
-                int sourceInno = clonedAddon.innov;
-                for (int a = 0; a < sourceBodyGenomeLessFit.addonCompassSensor1DList.Count; a++) {
-                    if (sourceBodyGenomeLessFit.addonCompassSensor1DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
-                        // MIX SETTINGS HERE!!!
-                        if (CheckForMutation(0.5f)) {
-                            clonedAddon.forwardVector[0] = sourceBodyGenomeLessFit.addonCompassSensor1DList[a].forwardVector[0];
-                        }
-                    }
-                }
-            }
-        }
-        for (int i = 0; i < sourceBodyGenomeMoreFit.addonCompassSensor3DList.Count; i++) {
-            AddonCompassSensor3D clonedAddon = sourceBodyGenomeMoreFit.addonCompassSensor3DList[i].CloneThisAddon();
-            childBodyGenome.addonCompassSensor3DList.Add(clonedAddon);
-
-            if (useCrossover) {
-                int sourceInno = clonedAddon.innov;
-                for (int a = 0; a < sourceBodyGenomeLessFit.addonCompassSensor3DList.Count; a++) {
-                    if (sourceBodyGenomeLessFit.addonCompassSensor3DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
-                        // MIX SETTINGS HERE!!!
-                    }
-                }
-            }
-        }
-        for (int i = 0; i < sourceBodyGenomeMoreFit.addonContactSensorList.Count; i++) {
-            AddonContactSensor clonedAddon = sourceBodyGenomeMoreFit.addonContactSensorList[i].CloneThisAddon();
-            childBodyGenome.addonContactSensorList.Add(clonedAddon);
-
-            if (useCrossover) {
-                int sourceInno = clonedAddon.innov;
-                for (int a = 0; a < sourceBodyGenomeLessFit.addonContactSensorList.Count; a++) {
-                    if (sourceBodyGenomeLessFit.addonContactSensorList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
-                        // MIX SETTINGS HERE!!!
-                        if (CheckForMutation(0.5f)) {
-                            clonedAddon.contactSensitivity[0] = sourceBodyGenomeLessFit.addonContactSensorList[a].contactSensitivity[0];
-                        }
-                    }
-                }
-            }
-        }
-        for (int i = 0; i < sourceBodyGenomeMoreFit.addonEarBasicList.Count; i++) {
-            AddonEarBasic clonedAddon = sourceBodyGenomeMoreFit.addonEarBasicList[i].CloneThisAddon();
-            childBodyGenome.addonEarBasicList.Add(clonedAddon);
-
-            if (useCrossover) {
-                int sourceInno = clonedAddon.innov;
-                for (int a = 0; a < sourceBodyGenomeLessFit.addonEarBasicList.Count; a++) {
-                    if (sourceBodyGenomeLessFit.addonEarBasicList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
-                        // MIX SETTINGS HERE!!!
-                        if (CheckForMutation(0.5f)) {
-                            clonedAddon.sensitivity[0] = sourceBodyGenomeLessFit.addonEarBasicList[a].sensitivity[0];
-                        }
-                    }
-                }
-            }
-        }
-        for (int i = 0; i < sourceBodyGenomeMoreFit.addonGravitySensorList.Count; i++) {
-            AddonGravitySensor clonedAddon = sourceBodyGenomeMoreFit.addonGravitySensorList[i].CloneThisAddon();
-            childBodyGenome.addonGravitySensorList.Add(clonedAddon);
-
-            if (useCrossover) {
-                int sourceInno = clonedAddon.innov;
-                for (int a = 0; a < sourceBodyGenomeLessFit.addonGravitySensorList.Count; a++) {
-                    if (sourceBodyGenomeLessFit.addonGravitySensorList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
-                        // MIX SETTINGS HERE!!!
-                    }
-                }
-            }
-        }
-        for (int i = 0; i < sourceBodyGenomeMoreFit.addonJointAngleSensorList.Count; i++) {
-            AddonJointAngleSensor clonedAddon = sourceBodyGenomeMoreFit.addonJointAngleSensorList[i].CloneThisAddon();
-            childBodyGenome.addonJointAngleSensorList.Add(clonedAddon);
-
-            if (useCrossover) {
-                int sourceInno = clonedAddon.innov;
-                for (int a = 0; a < sourceBodyGenomeLessFit.addonJointAngleSensorList.Count; a++) {
-                    if (sourceBodyGenomeLessFit.addonJointAngleSensorList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
-                        // MIX SETTINGS HERE!!!
-                        if (CheckForMutation(0.5f)) {
-                            clonedAddon.sensitivity[0] = sourceBodyGenomeLessFit.addonJointAngleSensorList[a].sensitivity[0];                            
-                        }
-                        // #################  How to handle MEasureVel Checkbox?? It adds a Neuron!!!!!!!!!
-                        // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                    }
-                }
-            }
-        }
-        for (int i = 0; i < sourceBodyGenomeMoreFit.addonJointMotorList.Count; i++) {
-            AddonJointMotor clonedAddon = sourceBodyGenomeMoreFit.addonJointMotorList[i].CloneThisAddon();
-            childBodyGenome.addonJointMotorList.Add(clonedAddon);
-
-            if (useCrossover) {
-                int sourceInno = clonedAddon.innov;
-                for (int a = 0; a < sourceBodyGenomeLessFit.addonJointMotorList.Count; a++) {
-                    if (sourceBodyGenomeLessFit.addonJointMotorList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
-                        // MIX SETTINGS HERE!!!
-                        if (CheckForMutation(0.5f)) {
-                            clonedAddon.motorForce[0] = sourceBodyGenomeLessFit.addonJointMotorList[a].motorForce[0];
-                        }
-                        if (CheckForMutation(0.5f)) {
-                            clonedAddon.motorSpeed[0] = sourceBodyGenomeLessFit.addonJointMotorList[a].motorSpeed[0];
-                        }
-                    }
-                }
-            }
-        }
-        for (int i = 0; i < sourceBodyGenomeMoreFit.addonMouthBasicList.Count; i++) {
-            AddonMouthBasic clonedAddon = sourceBodyGenomeMoreFit.addonMouthBasicList[i].CloneThisAddon();
-            childBodyGenome.addonMouthBasicList.Add(clonedAddon);
-
-            if (useCrossover) {
-                int sourceInno = clonedAddon.innov;
-                for (int a = 0; a < sourceBodyGenomeLessFit.addonMouthBasicList.Count; a++) {
-                    if (sourceBodyGenomeLessFit.addonMouthBasicList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
-                        // MIX SETTINGS HERE!!!
-                    }
-                }
-            }
-        }
-        for (int i = 0; i < sourceBodyGenomeMoreFit.addonNoiseMakerBasicList.Count; i++) {
-            AddonNoiseMakerBasic clonedAddon = sourceBodyGenomeMoreFit.addonNoiseMakerBasicList[i].CloneThisAddon();
-            childBodyGenome.addonNoiseMakerBasicList.Add(clonedAddon);
-
-            if (useCrossover) {
-                int sourceInno = clonedAddon.innov;
-                for (int a = 0; a < sourceBodyGenomeLessFit.addonNoiseMakerBasicList.Count; a++) {
-                    if (sourceBodyGenomeLessFit.addonNoiseMakerBasicList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
-                        // MIX SETTINGS HERE!!!
-                        if (CheckForMutation(0.5f)) {
-                            clonedAddon.amplitude[0] = sourceBodyGenomeLessFit.addonNoiseMakerBasicList[a].amplitude[0];
-                        }
-                    }
-                }
-            }
-        }
-        for (int i = 0; i < sourceBodyGenomeMoreFit.addonOscillatorInputList.Count; i++) {
-            AddonOscillatorInput clonedAddon = sourceBodyGenomeMoreFit.addonOscillatorInputList[i].CloneThisAddon();
-            childBodyGenome.addonOscillatorInputList.Add(clonedAddon);
-
-            if (useCrossover) {
-                int sourceInno = clonedAddon.innov;
-                for (int a = 0; a < sourceBodyGenomeLessFit.addonOscillatorInputList.Count; a++) {
-                    if (sourceBodyGenomeLessFit.addonOscillatorInputList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
-                        // MIX SETTINGS HERE!!!
-                        if (CheckForMutation(0.5f)) {
-                            clonedAddon.amplitude[0] = sourceBodyGenomeLessFit.addonOscillatorInputList[a].amplitude[0];
-                        }
-                        if (CheckForMutation(0.5f)) {
-                            clonedAddon.frequency[0] = sourceBodyGenomeLessFit.addonOscillatorInputList[a].frequency[0];
-                        }
-                        if (CheckForMutation(0.5f)) {
-                            clonedAddon.offset[0] = sourceBodyGenomeLessFit.addonOscillatorInputList[a].offset[0];
-                        }
-                    }
-                }
-            }
-        }
         for (int i = 0; i < sourceBodyGenomeMoreFit.addonPhysicalAttributesList.Count; i++) {
             AddonPhysicalAttributes clonedAddon = sourceBodyGenomeMoreFit.addonPhysicalAttributesList[i].CloneThisAddon();
             childBodyGenome.addonPhysicalAttributesList.Add(clonedAddon);
@@ -615,6 +433,88 @@ public class CrossoverManager {
                         if (CheckForMutation(0.5f)) {
                             clonedAddon.freezeRotationZ[0] = sourceBodyGenomeLessFit.addonPhysicalAttributesList[a].freezeRotationZ[0];
                         }
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonJointAngleSensorList.Count; i++) {
+            AddonJointAngleSensor clonedAddon = sourceBodyGenomeMoreFit.addonJointAngleSensorList[i].CloneThisAddon();
+            childBodyGenome.addonJointAngleSensorList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonJointAngleSensorList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonJointAngleSensorList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.sensitivity[0] = sourceBodyGenomeLessFit.addonJointAngleSensorList[a].sensitivity[0];
+                        }
+                        // #################  How to handle MEasureVel Checkbox?? It adds a Neuron!!!!!!!!!
+                        // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonContactSensorList.Count; i++) {
+            AddonContactSensor clonedAddon = sourceBodyGenomeMoreFit.addonContactSensorList[i].CloneThisAddon();
+            childBodyGenome.addonContactSensorList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonContactSensorList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonContactSensorList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.contactSensitivity[0] = sourceBodyGenomeLessFit.addonContactSensorList[a].contactSensitivity[0];
+                        }
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonRaycastSensorList.Count; i++) {
+            AddonRaycastSensor clonedAddon = sourceBodyGenomeMoreFit.addonRaycastSensorList[i].CloneThisAddon();
+            childBodyGenome.addonRaycastSensorList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonRaycastSensorList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonRaycastSensorList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.forwardVector[0] = sourceBodyGenomeLessFit.addonRaycastSensorList[a].forwardVector[0];
+                        }
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.maxDistance[0] = sourceBodyGenomeLessFit.addonRaycastSensorList[a].maxDistance[0];
+                        }
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonCompassSensor1DList.Count; i++) {
+            AddonCompassSensor1D clonedAddon = sourceBodyGenomeMoreFit.addonCompassSensor1DList[i].CloneThisAddon();
+            childBodyGenome.addonCompassSensor1DList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonCompassSensor1DList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonCompassSensor1DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.forwardVector[0] = sourceBodyGenomeLessFit.addonCompassSensor1DList[a].forwardVector[0];
+                        }
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonCompassSensor3DList.Count; i++) {
+            AddonCompassSensor3D clonedAddon = sourceBodyGenomeMoreFit.addonCompassSensor3DList[i].CloneThisAddon();
+            childBodyGenome.addonCompassSensor3DList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonCompassSensor3DList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonCompassSensor3DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
                     }
                 }
             }
@@ -660,25 +560,6 @@ public class CrossoverManager {
                 }
             }
         }
-        for (int i = 0; i < sourceBodyGenomeMoreFit.addonRaycastSensorList.Count; i++) {
-            AddonRaycastSensor clonedAddon = sourceBodyGenomeMoreFit.addonRaycastSensorList[i].CloneThisAddon();
-            childBodyGenome.addonRaycastSensorList.Add(clonedAddon);
-
-            if (useCrossover) {
-                int sourceInno = clonedAddon.innov;
-                for (int a = 0; a < sourceBodyGenomeLessFit.addonRaycastSensorList.Count; a++) {
-                    if (sourceBodyGenomeLessFit.addonRaycastSensorList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
-                        // MIX SETTINGS HERE!!!
-                        if (CheckForMutation(0.5f)) {
-                            clonedAddon.forwardVector[0] = sourceBodyGenomeLessFit.addonRaycastSensorList[a].forwardVector[0];
-                        }
-                        if (CheckForMutation(0.5f)) {
-                            clonedAddon.maxDistance[0] = sourceBodyGenomeLessFit.addonRaycastSensorList[a].maxDistance[0];
-                        }
-                    }
-                }
-            }
-        }
         for (int i = 0; i < sourceBodyGenomeMoreFit.addonRotationSensor1DList.Count; i++) {
             AddonRotationSensor1D clonedAddon = sourceBodyGenomeMoreFit.addonRotationSensor1DList[i].CloneThisAddon();
             childBodyGenome.addonRotationSensor1DList.Add(clonedAddon);
@@ -709,118 +590,6 @@ public class CrossoverManager {
                         // MIX SETTINGS HERE!!!
                         if (CheckForMutation(0.5f)) {
                             clonedAddon.sensitivity[0] = sourceBodyGenomeLessFit.addonRotationSensor3DList[a].sensitivity[0];
-                        }
-                    }
-                }
-            }
-        }
-        for (int i = 0; i < sourceBodyGenomeMoreFit.addonStickyList.Count; i++) {
-            AddonSticky clonedAddon = sourceBodyGenomeMoreFit.addonStickyList[i].CloneThisAddon();
-            childBodyGenome.addonStickyList.Add(clonedAddon);
-
-            if (useCrossover) {
-                int sourceInno = clonedAddon.innov;
-                for (int a = 0; a < sourceBodyGenomeLessFit.addonStickyList.Count; a++) {
-                    if (sourceBodyGenomeLessFit.addonStickyList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
-                        // MIX SETTINGS HERE!!!
-                    }
-                }
-            }
-        }
-        for (int i = 0; i < sourceBodyGenomeMoreFit.addonThrusterEffector1DList.Count; i++) {
-            AddonThrusterEffector1D clonedAddon = sourceBodyGenomeMoreFit.addonThrusterEffector1DList[i].CloneThisAddon();
-            childBodyGenome.addonThrusterEffector1DList.Add(clonedAddon);
-
-            if (useCrossover) {
-                int sourceInno = clonedAddon.innov;
-                for (int a = 0; a < sourceBodyGenomeLessFit.addonThrusterEffector1DList.Count; a++) {
-                    if (sourceBodyGenomeLessFit.addonThrusterEffector1DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
-                        // MIX SETTINGS HERE!!!
-                        if (CheckForMutation(0.5f)) {
-                            clonedAddon.forwardVector[0] = sourceBodyGenomeLessFit.addonThrusterEffector1DList[a].forwardVector[0];
-                        }
-                        if (CheckForMutation(0.5f)) {
-                            clonedAddon.maxForce[0] = sourceBodyGenomeLessFit.addonThrusterEffector1DList[a].maxForce[0];
-                        }
-                    }
-                }
-            }
-        }
-        for (int i = 0; i < sourceBodyGenomeMoreFit.addonThrusterEffector3DList.Count; i++) {
-            AddonThrusterEffector3D clonedAddon = sourceBodyGenomeMoreFit.addonThrusterEffector3DList[i].CloneThisAddon();
-            childBodyGenome.addonThrusterEffector3DList.Add(clonedAddon);
-
-            if (useCrossover) {
-                int sourceInno = clonedAddon.innov;
-                for (int a = 0; a < sourceBodyGenomeLessFit.addonThrusterEffector3DList.Count; a++) {
-                    if (sourceBodyGenomeLessFit.addonThrusterEffector3DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
-                        // MIX SETTINGS HERE!!!
-                        if (CheckForMutation(0.5f)) {
-                            clonedAddon.maxForce[0] = sourceBodyGenomeLessFit.addonThrusterEffector3DList[a].maxForce[0];
-                        }
-                    }
-                }
-            }
-        }
-        for (int i = 0; i < sourceBodyGenomeMoreFit.addonTimerInputList.Count; i++) {
-            AddonTimerInput clonedAddon = sourceBodyGenomeMoreFit.addonTimerInputList[i].CloneThisAddon();
-            childBodyGenome.addonTimerInputList.Add(clonedAddon);
-
-            if (useCrossover) {
-                int sourceInno = clonedAddon.innov;
-                for (int a = 0; a < sourceBodyGenomeLessFit.addonTimerInputList.Count; a++) {
-                    if (sourceBodyGenomeLessFit.addonTimerInputList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
-                        // MIX SETTINGS HERE!!!
-                    }
-                }
-            }
-        }
-        for (int i = 0; i < sourceBodyGenomeMoreFit.addonTorqueEffector1DList.Count; i++) {
-            AddonTorqueEffector1D clonedAddon = sourceBodyGenomeMoreFit.addonTorqueEffector1DList[i].CloneThisAddon();
-            childBodyGenome.addonTorqueEffector1DList.Add(clonedAddon);
-
-            if (useCrossover) {
-                int sourceInno = clonedAddon.innov;
-                for (int a = 0; a < sourceBodyGenomeLessFit.addonTorqueEffector1DList.Count; a++) {
-                    if (sourceBodyGenomeLessFit.addonTorqueEffector1DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
-                        // MIX SETTINGS HERE!!!
-                        if (CheckForMutation(0.5f)) {
-                            clonedAddon.maxTorque[0] = sourceBodyGenomeLessFit.addonTorqueEffector1DList[a].maxTorque[0];
-                        }
-                        if (CheckForMutation(0.5f)) {
-                            clonedAddon.axis[0] = sourceBodyGenomeLessFit.addonTorqueEffector1DList[a].axis[0];
-                        }
-                    }
-                }
-            }
-        }
-        for (int i = 0; i < sourceBodyGenomeMoreFit.addonTorqueEffector3DList.Count; i++) {
-            AddonTorqueEffector3D clonedAddon = sourceBodyGenomeMoreFit.addonTorqueEffector3DList[i].CloneThisAddon();
-            childBodyGenome.addonTorqueEffector3DList.Add(clonedAddon);
-
-            if (useCrossover) {
-                int sourceInno = clonedAddon.innov;
-                for (int a = 0; a < sourceBodyGenomeLessFit.addonTorqueEffector3DList.Count; a++) {
-                    if (sourceBodyGenomeLessFit.addonTorqueEffector3DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
-                        // MIX SETTINGS HERE!!!
-                        if (CheckForMutation(0.5f)) {
-                            clonedAddon.maxTorque[0] = sourceBodyGenomeLessFit.addonTorqueEffector3DList[a].maxTorque[0];
-                        }
-                    }
-                }
-            }
-        }
-        for (int i = 0; i < sourceBodyGenomeMoreFit.addonValueInputList.Count; i++) {
-            AddonValueInput clonedAddon = sourceBodyGenomeMoreFit.addonValueInputList[i].CloneThisAddon();
-            childBodyGenome.addonValueInputList.Add(clonedAddon);
-
-            if (useCrossover) {
-                int sourceInno = clonedAddon.innov;
-                for (int a = 0; a < sourceBodyGenomeLessFit.addonValueInputList.Count; a++) {
-                    if (sourceBodyGenomeLessFit.addonValueInputList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
-                        // MIX SETTINGS HERE!!!
-                        if (CheckForMutation(0.5f)) {
-                            clonedAddon.value[0] = sourceBodyGenomeLessFit.addonValueInputList[a].value[0];
                         }
                     }
                 }
@@ -867,6 +636,231 @@ public class CrossoverManager {
                 }
             }
         }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonAltimeterList.Count; i++) {
+            AddonAltimeter clonedAddon = sourceBodyGenomeMoreFit.addonAltimeterList[i].CloneThisAddon();
+            childBodyGenome.addonAltimeterList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonAltimeterList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonAltimeterList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!                        
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonEarBasicList.Count; i++) {
+            AddonEarBasic clonedAddon = sourceBodyGenomeMoreFit.addonEarBasicList[i].CloneThisAddon();
+            childBodyGenome.addonEarBasicList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonEarBasicList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonEarBasicList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.sensitivity[0] = sourceBodyGenomeLessFit.addonEarBasicList[a].sensitivity[0];
+                        }
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonGravitySensorList.Count; i++) {
+            AddonGravitySensor clonedAddon = sourceBodyGenomeMoreFit.addonGravitySensorList[i].CloneThisAddon();
+            childBodyGenome.addonGravitySensorList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonGravitySensorList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonGravitySensorList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonOscillatorInputList.Count; i++) {
+            AddonOscillatorInput clonedAddon = sourceBodyGenomeMoreFit.addonOscillatorInputList[i].CloneThisAddon();
+            childBodyGenome.addonOscillatorInputList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonOscillatorInputList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonOscillatorInputList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.amplitude[0] = sourceBodyGenomeLessFit.addonOscillatorInputList[a].amplitude[0];
+                        }
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.frequency[0] = sourceBodyGenomeLessFit.addonOscillatorInputList[a].frequency[0];
+                        }
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.offset[0] = sourceBodyGenomeLessFit.addonOscillatorInputList[a].offset[0];
+                        }
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonValueInputList.Count; i++) {
+            AddonValueInput clonedAddon = sourceBodyGenomeMoreFit.addonValueInputList[i].CloneThisAddon();
+            childBodyGenome.addonValueInputList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonValueInputList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonValueInputList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.value[0] = sourceBodyGenomeLessFit.addonValueInputList[a].value[0];
+                        }
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonTimerInputList.Count; i++) {
+            AddonTimerInput clonedAddon = sourceBodyGenomeMoreFit.addonTimerInputList[i].CloneThisAddon();
+            childBodyGenome.addonTimerInputList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonTimerInputList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonTimerInputList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonJointMotorList.Count; i++) {
+            AddonJointMotor clonedAddon = sourceBodyGenomeMoreFit.addonJointMotorList[i].CloneThisAddon();
+            childBodyGenome.addonJointMotorList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonJointMotorList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonJointMotorList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.motorForce[0] = sourceBodyGenomeLessFit.addonJointMotorList[a].motorForce[0];
+                        }
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.motorSpeed[0] = sourceBodyGenomeLessFit.addonJointMotorList[a].motorSpeed[0];
+                        }
+                    }
+                }
+            }
+        }        
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonThrusterEffector1DList.Count; i++) {
+            AddonThrusterEffector1D clonedAddon = sourceBodyGenomeMoreFit.addonThrusterEffector1DList[i].CloneThisAddon();
+            childBodyGenome.addonThrusterEffector1DList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonThrusterEffector1DList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonThrusterEffector1DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.forwardVector[0] = sourceBodyGenomeLessFit.addonThrusterEffector1DList[a].forwardVector[0];
+                        }
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.maxForce[0] = sourceBodyGenomeLessFit.addonThrusterEffector1DList[a].maxForce[0];
+                        }
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonThrusterEffector3DList.Count; i++) {
+            AddonThrusterEffector3D clonedAddon = sourceBodyGenomeMoreFit.addonThrusterEffector3DList[i].CloneThisAddon();
+            childBodyGenome.addonThrusterEffector3DList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonThrusterEffector3DList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonThrusterEffector3DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.maxForce[0] = sourceBodyGenomeLessFit.addonThrusterEffector3DList[a].maxForce[0];
+                        }
+                    }
+                }
+            }
+        }        
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonTorqueEffector1DList.Count; i++) {
+            AddonTorqueEffector1D clonedAddon = sourceBodyGenomeMoreFit.addonTorqueEffector1DList[i].CloneThisAddon();
+            childBodyGenome.addonTorqueEffector1DList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonTorqueEffector1DList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonTorqueEffector1DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.maxTorque[0] = sourceBodyGenomeLessFit.addonTorqueEffector1DList[a].maxTorque[0];
+                        }
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.axis[0] = sourceBodyGenomeLessFit.addonTorqueEffector1DList[a].axis[0];
+                        }
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonTorqueEffector3DList.Count; i++) {
+            AddonTorqueEffector3D clonedAddon = sourceBodyGenomeMoreFit.addonTorqueEffector3DList[i].CloneThisAddon();
+            childBodyGenome.addonTorqueEffector3DList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonTorqueEffector3DList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonTorqueEffector3DList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.maxTorque[0] = sourceBodyGenomeLessFit.addonTorqueEffector3DList[a].maxTorque[0];
+                        }
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonMouthBasicList.Count; i++) {
+            AddonMouthBasic clonedAddon = sourceBodyGenomeMoreFit.addonMouthBasicList[i].CloneThisAddon();
+            childBodyGenome.addonMouthBasicList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonMouthBasicList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonMouthBasicList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonNoiseMakerBasicList.Count; i++) {
+            AddonNoiseMakerBasic clonedAddon = sourceBodyGenomeMoreFit.addonNoiseMakerBasicList[i].CloneThisAddon();
+            childBodyGenome.addonNoiseMakerBasicList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonNoiseMakerBasicList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonNoiseMakerBasicList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                        if (CheckForMutation(0.5f)) {
+                            clonedAddon.amplitude[0] = sourceBodyGenomeLessFit.addonNoiseMakerBasicList[a].amplitude[0];
+                        }
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < sourceBodyGenomeMoreFit.addonStickyList.Count; i++) {
+            AddonSticky clonedAddon = sourceBodyGenomeMoreFit.addonStickyList[i].CloneThisAddon();
+            childBodyGenome.addonStickyList.Add(clonedAddon);
+
+            if (useCrossover) {
+                int sourceInno = clonedAddon.innov;
+                for (int a = 0; a < sourceBodyGenomeLessFit.addonStickyList.Count; a++) {
+                    if (sourceBodyGenomeLessFit.addonStickyList[a].innov == sourceInno) {  // if the LESS-fit parent also has this Add-On:
+                        // MIX SETTINGS HERE!!!
+                    }
+                }
+            }
+        }
         for (int i = 0; i < sourceBodyGenomeMoreFit.addonWeaponBasicList.Count; i++) {
             AddonWeaponBasic clonedAddon = sourceBodyGenomeMoreFit.addonWeaponBasicList[i].CloneThisAddon();
             childBodyGenome.addonWeaponBasicList.Add(clonedAddon);
@@ -887,77 +881,137 @@ public class CrossoverManager {
 
     public void PerformBodyMutation(ref CritterGenome bodyGenome, ref GenomeNEAT brainGenome) {
         int numBodyMutations = 0;
-        float attachDirMutationMultiplier = 0.1f;
-        float restAngleDirMutationMultiplier = 0.1f;
+        //float attachDirMutationMultiplier = 0.1f;
+        //float restAngleDirMutationMultiplier = 0.1f;
+        float jointAngleTypeMultiplier = 0.1f;
+        List<int> nodesToDelete = new List<int>();        
         for (int i = 0; i < bodyGenome.CritterNodeList.Count; i++) {
+            
             // Segment Proportions:
-            if(CheckForMutation(segmentProportionChance)) {  // X
-                bodyGenome.CritterNodeList[i].dimensions.x *= UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
+            if(CheckForMutation(segmentProportionChance * bodyMutationBlastModifier)) {  // X
+                bodyGenome.CritterNodeList[i].dimensions.x = MutateBodyFloatMult(bodyGenome.CritterNodeList[i].dimensions.x);
                 numBodyMutations++;
             }
-            if (CheckForMutation(segmentProportionChance)) {  // Y
-                bodyGenome.CritterNodeList[i].dimensions.y *= UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
+            if (CheckForMutation(segmentProportionChance * bodyMutationBlastModifier)) {  // Y
+                bodyGenome.CritterNodeList[i].dimensions.y = MutateBodyFloatMult(bodyGenome.CritterNodeList[i].dimensions.y);
                 numBodyMutations++;
             }
-            if (CheckForMutation(segmentProportionChance)) {  // Z
-                bodyGenome.CritterNodeList[i].dimensions.z *= UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
+            if (CheckForMutation(segmentProportionChance * bodyMutationBlastModifier)) {  // Z
+                bodyGenome.CritterNodeList[i].dimensions.z = MutateBodyFloatMult(bodyGenome.CritterNodeList[i].dimensions.z);
                 numBodyMutations++;
             }
             if(i > 0) {   // NOT THE ROOT SEGMENT!:
-                // Segment Attach Settings:
-                if (CheckForMutation(segmentAttachSettingsChance)) {  // Position X
-                    bodyGenome.CritterNodeList[i].jointLink.attachDir.x += attachDirMutationMultiplier * UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
-                    numBodyMutations++;
+                // REMOVE SEGMENT!!!!
+                if(CheckForMutation(removeSegmentChance * bodyMutationBlastModifier)) {  // Can't delete Root Segment
+                    // Add this nodeID into queue for deletion at the end of mutation, to avoid shortening NodeList while traversing it:
+                    nodesToDelete.Add(i);                    
                 }
-                if (CheckForMutation(segmentAttachSettingsChance)) {  // Position Y
-                    bodyGenome.CritterNodeList[i].jointLink.attachDir.y += attachDirMutationMultiplier * UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
-                    numBodyMutations++;
-                }
-                if (CheckForMutation(segmentAttachSettingsChance)) {  // Position Z
-                    bodyGenome.CritterNodeList[i].jointLink.attachDir.z += attachDirMutationMultiplier * UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
-                    numBodyMutations++;
-                }
-                if (CheckForMutation(segmentAttachSettingsChance)) {  // Orientation X
-                    bodyGenome.CritterNodeList[i].jointLink.restAngleDir.x += restAngleDirMutationMultiplier * UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
-                    numBodyMutations++;
-                }
-                if (CheckForMutation(segmentAttachSettingsChance)) {  // Orientation Y
-                    bodyGenome.CritterNodeList[i].jointLink.restAngleDir.y += restAngleDirMutationMultiplier * UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
-                    numBodyMutations++;
-                }
-                if (CheckForMutation(segmentAttachSettingsChance)) {  // Orientation Z
-                    bodyGenome.CritterNodeList[i].jointLink.restAngleDir.z += restAngleDirMutationMultiplier * UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
-                    numBodyMutations++;
-                }
-
-                // RECURSION:
-                if (CheckForMutation(recursionChance)) {
-                    int addRemove = Mathf.RoundToInt(UnityEngine.Random.Range(0f, 1f)) * 2 - 1;  // either -1 or 1
-                    addRemove = 1; // TEMPORARY!!! testing add recursion
-                    if (bodyGenome.CritterNodeList[i].jointLink.numberOfRecursions + addRemove < 0 || bodyGenome.CritterNodeList[i].jointLink.numberOfRecursions + addRemove > 8) {
-                        // Do Nothing, tried to change numRecursions beyond the CAP
-                    }
-                    else {  // It's all good -- PROCEED:
-                        bodyGenome.CritterNodeList[i].jointLink.numberOfRecursions += addRemove;
+                else {
+                    // Segment Attach Settings:
+                    if (CheckForMutation(segmentAttachSettingsChance * bodyMutationBlastModifier)) {  // Position X
+                        bodyGenome.CritterNodeList[i].jointLink.attachDir = MutateBodyVector3Normalized(bodyGenome.CritterNodeList[i].jointLink.attachDir);
                         numBodyMutations++;
-
-                        if(addRemove > 0) {  // Created an additional Recursion -- Need to ADD new BrainNodes:
-                            int numNodesBefore = brainGenome.nodeNEATList.Count;
-                            brainGenome.AdjustBrainAddedRecursion(bodyGenome, i, bodyGenome.CritterNodeList[i].jointLink.numberOfRecursions);
-                            int numNodesAfter = brainGenome.nodeNEATList.Count;
-                            Debug.Log("MUTATION RECURSION! b4#: " + numNodesBefore.ToString() + ", after#: " + numNodesAfter.ToString());
-                        }
-                        else {  // REMOVED a Recursion -- Need to REMOVE BrainNodes:
-                            //brainGenome.AdjustBrainRemovedRecursion(bodyGenome, i);
-                        }
+                    }
+                    if (CheckForMutation(segmentAttachSettingsChance * bodyMutationBlastModifier)) {  // Orientation X
+                        bodyGenome.CritterNodeList[i].jointLink.restAngleDir = MutateBodyVector3Normalized(bodyGenome.CritterNodeList[i].jointLink.restAngleDir);
+                        numBodyMutations++;
                     }
 
+                    // Joint Settings:
+                    if (CheckForMutation(jointSettingsChance * bodyMutationBlastModifier)) {
+                        bodyGenome.CritterNodeList[i].jointLink.jointLimitPrimary = MutateBodyFloatMult(bodyGenome.CritterNodeList[i].jointLink.jointLimitPrimary);
+                    }
+                    if (CheckForMutation(jointSettingsChance * bodyMutationBlastModifier)) {
+                        bodyGenome.CritterNodeList[i].jointLink.jointLimitSecondary = MutateBodyFloatMult(bodyGenome.CritterNodeList[i].jointLink.jointLimitSecondary);
+                    }
+                    if (CheckForMutation(jointSettingsChance * bodyMutationBlastModifier)) {
+                        bodyGenome.CritterNodeList[i].jointLink.recursionScalingFactor = MutateBodyFloatMult(bodyGenome.CritterNodeList[i].jointLink.recursionScalingFactor);
+                    }
+                    // Joint Hinge TYPE!!!!  --- how to handle this???
+                    if (CheckForMutation(jointSettingsChance * jointAngleTypeMultiplier * bodyMutationBlastModifier)) {
+                        int jointTypeInt = Mathf.RoundToInt(UnityEngine.Random.Range(0f, 3f));
+                        bodyGenome.CritterNodeList[i].jointLink.jointType = (CritterJointLink.JointType)jointTypeInt;
+                        Debug.Log(i.ToString() + " Mutated to JointType: " + bodyGenome.CritterNodeList[i].jointLink.jointType);
+                    }
+
+                    // RECURSION:
+                    if (CheckForMutation(recursionChance * bodyMutationBlastModifier)) {
+                        int addRemove = Mathf.RoundToInt(UnityEngine.Random.Range(0f, 1f)) * 2 - 1;  // either -1 or 1
+                                                                                                     //addRemove = 1; // TEMPORARY!!! testing add recursion
+                        if (bodyGenome.CritterNodeList[i].jointLink.numberOfRecursions + addRemove < 0 || bodyGenome.CritterNodeList[i].jointLink.numberOfRecursions + addRemove > 3) {
+                            // Do Nothing, tried to change numRecursions beyond the CAP
+                        }
+                        else {  // It's all good -- PROCEED:
+                            bodyGenome.CritterNodeList[i].jointLink.numberOfRecursions += addRemove;
+                            numBodyMutations++;
+
+                            if (addRemove > 0) {  // Created an additional Recursion -- Need to ADD new BrainNodes:
+                                                  //int numNodesBefore = brainGenome.nodeNEATList.Count;                            
+                                                  //brainGenome.AdjustBrainAfterBodyChange(bodyGenome);
+                                                  //int numNodesAfter = brainGenome.nodeNEATList.Count;
+                                                  //Debug.Log("MUTATION RECURSION! b4#: " + numNodesBefore.ToString() + ", after#: " + numNodesAfter.ToString());
+                            }
+                            else {  // REMOVED a Recursion -- Need to REMOVE BrainNodes:
+                                    //brainGenome.AdjustBrainRemovedRecursion(bodyGenome, i);
+                            }
+                            
+                        }
+                        // NEED TO FIX BRAIN!!! -- how to preserve existing wiring while adding new neurons that may re-order?
+                        // Do I need to save a reference to segment/nodes within each input/output neuron?
+                    }
+
+                    // SYMMETRY
+
+                    // EXTRA -- recursion forward, only attach to tail
                     
-                    // NEED TO FIX BRAIN!!! -- how to preserve existing wiring while adding new neurons that may re-order?
-                    // Do I need to save a reference to segment/nodes within each input/output neuron?
+                }
+
+                // CREATE NEW ADD-ON!!  On this segment
+                if (CheckForMutation(newAddonChance * bodyMutationBlastModifier)) {
+                    // Which types can be created automatically??
+                    // 
+                    int randomAddon = Mathf.RoundToInt(UnityEngine.Random.Range(0f, 1f));
+                    switch (randomAddon) {
+                        case 0:
+                            AddonOscillatorInput newOscillatorInput = new AddonOscillatorInput(i, GetNextAddonInnov());
+                            bodyGenome.addonOscillatorInputList.Add(newOscillatorInput);
+                            break;
+                        case 1:
+                            AddonValueInput newValueInput = new AddonValueInput(i, GetNextAddonInnov());
+                            bodyGenome.addonValueInputList.Add(newValueInput);
+                            break;
+                        default:
+                            break;
+                    }
+                    Debug.Log("NEW ADDON! " + randomAddon.ToString() + ", segmentNode: " + i.ToString());
                 }
             }            
         }
+
+        for(int i = 0; i < nodesToDelete.Count; i++) {
+            Debug.Log("DELETE SEGMENT NODE! " + i.ToString());
+            bodyGenome.DeleteNode(nodesToDelete[i]);
+            bodyGenome.RenumberNodes();
+        }
+        List<int> nodesToAddTo = new List<int>(); // After Deleting nodes, check all remaining nodes for a chance to have a child segment added:
+        for (int i = 0; i < bodyGenome.CritterNodeList.Count; i++) {
+            if (CheckForMutation(newSegmentChance * bodyMutationBlastModifier)) {
+                nodesToAddTo.Add(i);
+            }
+        }
+        for (int i = 0; i < nodesToAddTo.Count; i++) {
+            Vector3 attachDir = Vector3.Slerp(new Vector3(0f, 0f, 1f), UnityEngine.Random.onUnitSphere, UnityEngine.Random.Range(0f, 1f)); //ConvertWorldSpaceToAttachDir(selectedSegment, rightClickWorldPosition);
+            int nextID = bodyGenome.CritterNodeList.Count;
+            bodyGenome.AddNewNode(bodyGenome.CritterNodeList[nodesToAddTo[i]], attachDir, new Vector3(0f, 0f, 0f), nextID, GetNextNodeInnov());
+
+
+            // Auto-Add-ons: -- New Segment starts with a joint angle sensor and joint Motor by default:
+            AddonJointAngleSensor newJointAngleSensor = new AddonJointAngleSensor(nextID, GetNextAddonInnov());
+            bodyGenome.addonJointAngleSensorList.Add(newJointAngleSensor);
+            // Motor:
+            AddonJointMotor newJointMotor = new AddonJointMotor(nextID, GetNextAddonInnov());
+            bodyGenome.addonJointMotorList.Add(newJointMotor);
+        }        
 
         // Addon Mutation:
         PerformAddonMutation(ref bodyGenome, ref brainGenome);
@@ -965,198 +1019,370 @@ public class CrossoverManager {
     }
 
     public void PerformAddonMutation(ref CritterGenome bodyGenome, ref GenomeNEAT brainGenome) {
-        // Chance to Add a new Add-On:
-
-
+             
         // Chance to Remove an existing Add-on:
         // Chance to Mutate Add-On Settings:
-        for (int i = 0; i < bodyGenome.addonAltimeterList.Count; i++) {
-            
+        for (int i = bodyGenome.addonPhysicalAttributesList.Count - 1; i >= 0; i--) {
+            if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
+                // DELETE THIS ADD-ON!!!
+                bodyGenome.addonPhysicalAttributesList.RemoveAt(i);
+            }
+            else {
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonPhysicalAttributesList[i].bounciness[0] = MutateBodyFloatMult(bodyGenome.addonPhysicalAttributesList[i].bounciness[0]);
+                }
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonPhysicalAttributesList[i].dynamicFriction[0] = MutateBodyFloatMult(bodyGenome.addonPhysicalAttributesList[i].dynamicFriction[0]);
+                }
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonPhysicalAttributesList[i].staticFriction[0] = MutateBodyFloatMult(bodyGenome.addonPhysicalAttributesList[i].staticFriction[0]);
+                }
+                /*if (CheckForMutation(addonSettingsChance)) {
+                    bodyGenome.addonPhysicalAttributesList[i].freezePositionX[0] = MutateBodyBool(bodyGenome.addonPhysicalAttributesList[i].freezePositionX[0]);
+                }
+                if (CheckForMutation(addonSettingsChance)) {
+                    bodyGenome.addonPhysicalAttributesList[i].freezePositionY[0] = MutateBodyBool(bodyGenome.addonPhysicalAttributesList[i].freezePositionY[0]);
+                }
+                if (CheckForMutation(addonSettingsChance)) {
+                    bodyGenome.addonPhysicalAttributesList[i].freezePositionZ[0] = MutateBodyBool(bodyGenome.addonPhysicalAttributesList[i].freezePositionZ[0]);
+                }
+                if (CheckForMutation(addonSettingsChance)) {
+                    bodyGenome.addonPhysicalAttributesList[i].freezeRotationX[0] = MutateBodyBool(bodyGenome.addonPhysicalAttributesList[i].freezeRotationX[0]);
+                }
+                if (CheckForMutation(addonSettingsChance)) {
+                    bodyGenome.addonPhysicalAttributesList[i].freezeRotationY[0] = MutateBodyBool(bodyGenome.addonPhysicalAttributesList[i].freezeRotationY[0]);
+                }
+                if (CheckForMutation(addonSettingsChance)) {
+                    bodyGenome.addonPhysicalAttributesList[i].freezeRotationZ[0] = MutateBodyBool(bodyGenome.addonPhysicalAttributesList[i].freezeRotationZ[0]);
+                }*/
+            }
         }
-        for (int i = 0; i < bodyGenome.addonCompassSensor1DList.Count; i++) {            
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonCompassSensor1DList[i].forwardVector[0] = MutateBodyVector3(bodyGenome.addonCompassSensor1DList[i].forwardVector[0]);
-            }                    
+        for (int i = 0; i < bodyGenome.addonJointAngleSensorList.Count; i++) {
+            if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
+                // DELETE THIS ADD-ON!!!
+            }
+            else {
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonJointAngleSensorList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonJointAngleSensorList[i].sensitivity[0]);
+                }
+                // #################  How to handle MEasureVel Checkbox?? It adds a Neuron!!!!!!!!!
+                // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   
+            }
+        }
+        for (int i = 0; i < bodyGenome.addonContactSensorList.Count; i++) {
+            if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
+                // DELETE THIS ADD-ON!!!
+            }
+            else {
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonContactSensorList[i].contactSensitivity[0] = MutateBodyFloatMult(bodyGenome.addonContactSensorList[i].contactSensitivity[0]);
+                }
+            }            
+        }
+        for (int i = 0; i < bodyGenome.addonRaycastSensorList.Count; i++) {
+            if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
+                // DELETE THIS ADD-ON!!!
+            }
+            else {
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonRaycastSensorList[i].forwardVector[0] = MutateBodyVector3Normalized(bodyGenome.addonRaycastSensorList[i].forwardVector[0]);
+                }
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonRaycastSensorList[i].maxDistance[0] = MutateBodyFloatMult(bodyGenome.addonRaycastSensorList[i].maxDistance[0]);
+                }
+            }            
+        }
+        for (int i = 0; i < bodyGenome.addonCompassSensor1DList.Count; i++) {
+            if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
+                // DELETE THIS ADD-ON!!!
+            }
+            else {
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonCompassSensor1DList[i].forwardVector[0] = MutateBodyVector3Normalized(bodyGenome.addonCompassSensor1DList[i].forwardVector[0]);
+                }
+            }                               
         }
         for (int i = 0; i < bodyGenome.addonCompassSensor3DList.Count; i++) {
-            
+            if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
+                // DELETE THIS ADD-ON!!!
+            }
+            else {
+
+            }
+
         }
-        for (int i = 0; i < bodyGenome.addonContactSensorList.Count; i++) {            
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonContactSensorList[i].contactSensitivity[0] = MutateBodyFloatMult(bodyGenome.addonContactSensorList[i].contactSensitivity[0]);
-            }                    
+        for (int i = 0; i < bodyGenome.addonPositionSensor1DList.Count; i++) {
+            if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
+                // DELETE THIS ADD-ON!!!
+            }
+            else {
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonPositionSensor1DList[i].forwardVector[0] = MutateBodyVector3Normalized(bodyGenome.addonPositionSensor1DList[i].forwardVector[0]);
+                }
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonPositionSensor1DList[i].relative[0] = MutateBodyBool(bodyGenome.addonPositionSensor1DList[i].relative[0]);
+                }
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonPositionSensor1DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonPositionSensor1DList[i].sensitivity[0]);
+                }
+            }            
         }
-        for (int i = 0; i < bodyGenome.addonEarBasicList.Count; i++) {            
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonEarBasicList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonEarBasicList[i].sensitivity[0]);
-            }                   
+        for (int i = 0; i < bodyGenome.addonPositionSensor3DList.Count; i++) {
+            if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
+                // DELETE THIS ADD-ON!!!
+            }
+            else {
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonPositionSensor3DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonPositionSensor3DList[i].sensitivity[0]);
+                }
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonPositionSensor3DList[i].relative[0] = MutateBodyBool(bodyGenome.addonPositionSensor3DList[i].relative[0]);
+                }
+            }            
+        }
+        for (int i = 0; i < bodyGenome.addonRotationSensor1DList.Count; i++) {
+            if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
+                // DELETE THIS ADD-ON!!!
+            }
+            else {
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonRotationSensor1DList[i].localAxis[0] = MutateBodyVector3Normalized(bodyGenome.addonRotationSensor1DList[i].localAxis[0]);
+                }
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonRotationSensor1DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonRotationSensor1DList[i].sensitivity[0]);
+                }
+            }            
+        }
+        for (int i = 0; i < bodyGenome.addonRotationSensor3DList.Count; i++) {
+            if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
+                // DELETE THIS ADD-ON!!!
+            }
+            else {
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonRotationSensor3DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonRotationSensor3DList[i].sensitivity[0]);
+                }
+            }            
+        }
+        for (int i = 0; i < bodyGenome.addonVelocitySensor1DList.Count; i++) {
+            if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
+                // DELETE THIS ADD-ON!!!
+            }
+            else {
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonVelocitySensor1DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonVelocitySensor1DList[i].sensitivity[0]);
+                }
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonVelocitySensor1DList[i].forwardVector[0] = MutateBodyVector3Normalized(bodyGenome.addonVelocitySensor1DList[i].forwardVector[0]);
+                }
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonVelocitySensor1DList[i].relative[0] = MutateBodyBool(bodyGenome.addonVelocitySensor1DList[i].relative[0]);
+                }
+            }            
+        }
+        for (int i = 0; i < bodyGenome.addonVelocitySensor3DList.Count; i++) {
+            if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
+                // DELETE THIS ADD-ON!!!
+            }
+            else {
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonVelocitySensor3DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonVelocitySensor3DList[i].sensitivity[0]);
+                }
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonVelocitySensor3DList[i].relative[0] = MutateBodyBool(bodyGenome.addonVelocitySensor3DList[i].relative[0]);
+                }
+            }            
+        }
+        for (int i = 0; i < bodyGenome.addonAltimeterList.Count; i++) {
+            if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
+                // DELETE THIS ADD-ON!!!
+            }
+            else {
+
+            }
+        }
+        for (int i = 0; i < bodyGenome.addonEarBasicList.Count; i++) {
+            if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
+                // DELETE THIS ADD-ON!!!
+            }
+            else {
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonEarBasicList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonEarBasicList[i].sensitivity[0]);
+                }
+            }                              
         }
         for (int i = 0; i < bodyGenome.addonGravitySensorList.Count; i++) {
-           
-        }
-        for (int i = 0; i < bodyGenome.addonJointAngleSensorList.Count; i++) {            
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonJointAngleSensorList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonJointAngleSensorList[i].sensitivity[0]);
+            if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
+                // DELETE THIS ADD-ON!!!
             }
-                        // #################  How to handle MEasureVel Checkbox?? It adds a Neuron!!!!!!!!!
-                        // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                    
-        }
-        for (int i = 0; i < bodyGenome.addonJointMotorList.Count; i++) {            
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonJointMotorList[i].motorForce[0] = MutateBodyFloatMult(bodyGenome.addonJointMotorList[i].motorForce[0]);
-            }
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonJointMotorList[i].motorSpeed[0] = MutateBodyFloatMult(bodyGenome.addonJointMotorList[i].motorSpeed[0]);
-            }                   
-        }
-        for (int i = 0; i < bodyGenome.addonMouthBasicList.Count; i++) {
-            
-        }
-        for (int i = 0; i < bodyGenome.addonNoiseMakerBasicList.Count; i++) {            
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonNoiseMakerBasicList[i].amplitude[0] = MutateBodyFloatMult(bodyGenome.addonNoiseMakerBasicList[i].amplitude[0]);
+            else {
+
             }
         }
-        for (int i = 0; i < bodyGenome.addonOscillatorInputList.Count; i++) {            
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonOscillatorInputList[i].amplitude[0] = MutateBodyFloatMult(bodyGenome.addonOscillatorInputList[i].amplitude[0]);
+        for (int i = 0; i < bodyGenome.addonOscillatorInputList.Count; i++) {
+            if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
+                // DELETE THIS ADD-ON!!!
             }
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonOscillatorInputList[i].frequency[0] = MutateBodyFloatMult(bodyGenome.addonOscillatorInputList[i].frequency[0]);
-            }
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonOscillatorInputList[i].offset[0] = MutateBodyFloatMult(bodyGenome.addonOscillatorInputList[i].offset[0]);
-            }
+            else {
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonOscillatorInputList[i].amplitude[0] = MutateBodyFloatMult(bodyGenome.addonOscillatorInputList[i].amplitude[0]);
+                }
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonOscillatorInputList[i].frequency[0] = MutateBodyFloatMult(bodyGenome.addonOscillatorInputList[i].frequency[0]);
+                }
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonOscillatorInputList[i].offset[0] = MutateBodyFloatMult(bodyGenome.addonOscillatorInputList[i].offset[0]);
+                }
+            }            
         }
-        for (int i = 0; i < bodyGenome.addonPhysicalAttributesList.Count; i++) {            
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonPhysicalAttributesList[i].bounciness[0] = MutateBodyFloatMult(bodyGenome.addonPhysicalAttributesList[i].bounciness[0]);
+        for (int i = 0; i < bodyGenome.addonValueInputList.Count; i++) {
+            if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
+                // DELETE THIS ADD-ON!!!
             }
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonPhysicalAttributesList[i].dynamicFriction[0] = MutateBodyFloatMult(bodyGenome.addonPhysicalAttributesList[i].dynamicFriction[0]);
-            }
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonPhysicalAttributesList[i].staticFriction[0] = MutateBodyFloatMult(bodyGenome.addonPhysicalAttributesList[i].staticFriction[0]);
-            }
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonPhysicalAttributesList[i].freezePositionX[0] = MutateBodyBool(bodyGenome.addonPhysicalAttributesList[i].freezePositionX[0]);
-            }
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonPhysicalAttributesList[i].freezePositionY[0] = MutateBodyBool(bodyGenome.addonPhysicalAttributesList[i].freezePositionY[0]);
-            }
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonPhysicalAttributesList[i].freezePositionZ[0] = MutateBodyBool(bodyGenome.addonPhysicalAttributesList[i].freezePositionZ[0]);
-            }
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonPhysicalAttributesList[i].freezeRotationX[0] = MutateBodyBool(bodyGenome.addonPhysicalAttributesList[i].freezeRotationX[0]);
-            }
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonPhysicalAttributesList[i].freezeRotationY[0] = MutateBodyBool(bodyGenome.addonPhysicalAttributesList[i].freezeRotationY[0]);
-            }
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonPhysicalAttributesList[i].freezeRotationZ[0] = MutateBodyBool(bodyGenome.addonPhysicalAttributesList[i].freezeRotationZ[0]);
-            }
-        }
-        for (int i = 0; i < bodyGenome.addonPositionSensor1DList.Count; i++) {            
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonPositionSensor1DList[i].forwardVector[0] = MutateBodyVector3Normalized(bodyGenome.addonPositionSensor1DList[i].forwardVector[0]);
-            }
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonPositionSensor1DList[i].relative[0] = MutateBodyBool(bodyGenome.addonPositionSensor1DList[i].relative[0]);
-            }
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonPositionSensor1DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonPositionSensor1DList[i].sensitivity[0]);
-            }
-        }
-        for (int i = 0; i < bodyGenome.addonPositionSensor3DList.Count; i++) {            
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonPositionSensor3DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonPositionSensor3DList[i].sensitivity[0]);
-            }
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonPositionSensor3DList[i].relative[0] = MutateBodyBool(bodyGenome.addonPositionSensor3DList[i].relative[0]);
-            }
-        }
-        for (int i = 0; i < bodyGenome.addonRaycastSensorList.Count; i++) {            
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonRaycastSensorList[i].forwardVector[0] = MutateBodyVector3Normalized(bodyGenome.addonRaycastSensorList[i].forwardVector[0]);
-            }
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonRaycastSensorList[i].maxDistance[0] = MutateBodyFloatMult(bodyGenome.addonRaycastSensorList[i].maxDistance[0]);
-            }
-        }
-        for (int i = 0; i < bodyGenome.addonRotationSensor1DList.Count; i++) {            
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonRotationSensor1DList[i].localAxis[0] = MutateBodyVector3Normalized(bodyGenome.addonRotationSensor1DList[i].localAxis[0]);
-            }
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonRotationSensor1DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonRotationSensor1DList[i].sensitivity[0]);
-            }
-        }
-        for (int i = 0; i < bodyGenome.addonRotationSensor3DList.Count; i++) {            
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonRotationSensor3DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonRotationSensor3DList[i].sensitivity[0]);
-            }
-        }
-        for (int i = 0; i < bodyGenome.addonStickyList.Count; i++) {
-            
-        }
-        for (int i = 0; i < bodyGenome.addonThrusterEffector1DList.Count; i++) {            
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonThrusterEffector1DList[i].forwardVector[0] = MutateBodyVector3Normalized(bodyGenome.addonThrusterEffector1DList[i].forwardVector[0]);
-            }
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonThrusterEffector1DList[i].maxForce[0] = MutateBodyFloatMult(bodyGenome.addonThrusterEffector1DList[i].maxForce[0]);
-            }
-        }
-        for (int i = 0; i < bodyGenome.addonThrusterEffector3DList.Count; i++) {            
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonThrusterEffector3DList[i].maxForce[0] = MutateBodyFloatMult(bodyGenome.addonThrusterEffector3DList[i].maxForce[0]);
-            }
+            else {
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonValueInputList[i].value[0] = MutateBodyFloatMult(bodyGenome.addonValueInputList[i].value[0]);
+                }
+            }            
         }
         for (int i = 0; i < bodyGenome.addonTimerInputList.Count; i++) {
-            
-        }
-        for (int i = 0; i < bodyGenome.addonTorqueEffector1DList.Count; i++) {            
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonTorqueEffector1DList[i].maxTorque[0] = MutateBodyFloatMult(bodyGenome.addonTorqueEffector1DList[i].maxTorque[0]);
+            if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
+                // DELETE THIS ADD-ON!!!
             }
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonTorqueEffector1DList[i].axis[0] = MutateBodyVector3Normalized(bodyGenome.addonTorqueEffector1DList[i].axis[0]);
+            else {
+
             }
         }
-        for (int i = 0; i < bodyGenome.addonTorqueEffector3DList.Count; i++) {            
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonTorqueEffector3DList[i].maxTorque[0] = MutateBodyFloatMult(bodyGenome.addonTorqueEffector3DList[i].maxTorque[0]);
+        //=======================  OUTPUTS ===================== OUTPUTS ======================= OUTPUTS =====================================================
+        for (int i = 0; i < bodyGenome.addonJointMotorList.Count; i++) {
+            if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
+                // DELETE THIS ADD-ON!!!
+            }
+            else {
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonJointMotorList[i].motorForce[0] = MutateBodyFloatMult(bodyGenome.addonJointMotorList[i].motorForce[0]);
+                }
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonJointMotorList[i].motorSpeed[0] = MutateBodyFloatMult(bodyGenome.addonJointMotorList[i].motorSpeed[0]);
+                }
+            }            
+        }
+        for (int i = 0; i < bodyGenome.addonThrusterEffector1DList.Count; i++) {
+            if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
+                // DELETE THIS ADD-ON!!!
+            }
+            else {
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonThrusterEffector1DList[i].forwardVector[0] = MutateBodyVector3Normalized(bodyGenome.addonThrusterEffector1DList[i].forwardVector[0]);
+                }
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonThrusterEffector1DList[i].maxForce[0] = MutateBodyFloatMult(bodyGenome.addonThrusterEffector1DList[i].maxForce[0]);
+                }
+            }            
+        }
+        for (int i = 0; i < bodyGenome.addonThrusterEffector3DList.Count; i++) {
+            if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
+                // DELETE THIS ADD-ON!!!
+            }
+            else {
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonThrusterEffector3DList[i].maxForce[0] = MutateBodyFloatMult(bodyGenome.addonThrusterEffector3DList[i].maxForce[0]);
+                }
+            }            
+        }        
+        for (int i = 0; i < bodyGenome.addonTorqueEffector1DList.Count; i++) {
+            if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
+                // DELETE THIS ADD-ON!!!
+            }
+            else {
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonTorqueEffector1DList[i].maxTorque[0] = MutateBodyFloatMult(bodyGenome.addonTorqueEffector1DList[i].maxTorque[0]);
+                }
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonTorqueEffector1DList[i].axis[0] = MutateBodyVector3Normalized(bodyGenome.addonTorqueEffector1DList[i].axis[0]);
+                }
+            }            
+        }
+        for (int i = 0; i < bodyGenome.addonTorqueEffector3DList.Count; i++) {
+            if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
+                // DELETE THIS ADD-ON!!!
+            }
+            else {
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonTorqueEffector3DList[i].maxTorque[0] = MutateBodyFloatMult(bodyGenome.addonTorqueEffector3DList[i].maxTorque[0]);
+                }
+            }            
+        }
+        for (int i = 0; i < bodyGenome.addonMouthBasicList.Count; i++) {
+            if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
+                // DELETE THIS ADD-ON!!!
+            }
+            else {
+
             }
         }
-        for (int i = 0; i < bodyGenome.addonValueInputList.Count; i++) {            
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonValueInputList[i].value[0] = MutateBodyFloatMult(bodyGenome.addonValueInputList[i].value[0]);
+        for (int i = 0; i < bodyGenome.addonNoiseMakerBasicList.Count; i++) {
+            if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
+                // DELETE THIS ADD-ON!!!
+            }
+            else {
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonNoiseMakerBasicList[i].amplitude[0] = MutateBodyFloatMult(bodyGenome.addonNoiseMakerBasicList[i].amplitude[0]);
+                }
+            }            
+        }
+        for (int i = 0; i < bodyGenome.addonStickyList.Count; i++) {
+            if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
+                // DELETE THIS ADD-ON!!!
+            }
+            else {
+
             }
         }
-        for (int i = 0; i < bodyGenome.addonVelocitySensor1DList.Count; i++) {            
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonVelocitySensor1DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonVelocitySensor1DList[i].sensitivity[0]);
+        for (int i = 0; i < bodyGenome.addonWeaponBasicList.Count; i++) {
+            if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
+                // DELETE THIS ADD-ON!!!
             }
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonVelocitySensor1DList[i].forwardVector[0] = MutateBodyVector3Normalized(bodyGenome.addonVelocitySensor1DList[i].forwardVector[0]);
-            }
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonVelocitySensor1DList[i].relative[0] = MutateBodyBool(bodyGenome.addonVelocitySensor1DList[i].relative[0]);
-            }
+            else {
+                if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
+                    bodyGenome.addonWeaponBasicList[i].strength[0] = MutateBodyFloatMult(bodyGenome.addonWeaponBasicList[i].strength[0]);
+                }
+            }            
         }
-        for (int i = 0; i < bodyGenome.addonVelocitySensor3DList.Count; i++) {            
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonVelocitySensor3DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonVelocitySensor3DList[i].sensitivity[0]);
-            }
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonVelocitySensor3DList[i].relative[0] = MutateBodyBool(bodyGenome.addonVelocitySensor3DList[i].relative[0]);
-            }
+
+        // UPDATE BRAIN/BODY:
+        brainGenome.AdjustBrainAfterBodyChange(bodyGenome);
+    }
+
+    public void BodyCrossover(ref CritterNode clonedCritterNode, CritterNode lessFitNode) {
+        // Node dimensions
+        if(CheckForMutation(0.5f)) {
+            clonedCritterNode.dimensions = lessFitNode.dimensions;
         }
-        for (int i = 0; i < bodyGenome.addonWeaponBasicList.Count; i++) {            
-            if (CheckForMutation(addonSettingsChance)) {
-                bodyGenome.addonWeaponBasicList[i].strength[0] = MutateBodyFloatMult(bodyGenome.addonWeaponBasicList[i].strength[0]);
-            }
+        // Joint Settings - placement, orientation
+        if (CheckForMutation(0.5f)) {
+            clonedCritterNode.jointLink.attachDir = lessFitNode.jointLink.attachDir;
+        }
+        if (CheckForMutation(0.5f)) {
+            clonedCritterNode.jointLink.restAngleDir = lessFitNode.jointLink.restAngleDir;
+        }
+        if (CheckForMutation(0.5f)) {
+            clonedCritterNode.jointLink.jointLimitPrimary = lessFitNode.jointLink.jointLimitPrimary;
+            clonedCritterNode.jointLink.jointLimitSecondary = lessFitNode.jointLink.jointLimitSecondary;
+            clonedCritterNode.jointLink.jointType = lessFitNode.jointLink.jointType;
+        }
+        // Recursion
+        if (CheckForMutation(0.5f)) {
+            clonedCritterNode.jointLink.numberOfRecursions = lessFitNode.jointLink.numberOfRecursions;
+        }
+        // Symmetry
+        if (CheckForMutation(0.5f)) {
+            clonedCritterNode.jointLink.symmetryType = lessFitNode.jointLink.symmetryType;
+        }
+        // Scale Factors, forward Bias, Attach only to Last, etc.
+        if (CheckForMutation(0.5f)) {
+            clonedCritterNode.jointLink.recursionScalingFactor = lessFitNode.jointLink.recursionScalingFactor;
+            clonedCritterNode.jointLink.recursionForward = lessFitNode.jointLink.recursionForward;
+            clonedCritterNode.jointLink.onlyAttachToTailNode = lessFitNode.jointLink.onlyAttachToTailNode;
         }
     }
 
@@ -1364,42 +1590,6 @@ public class CrossoverManager {
                         moreFitParent = Mathf.RoundToInt(UnityEngine.Random.Range(0f, 1f));
                     }
 
-                    CritterGenome childBodyGenome = new CritterGenome();  // create new body genome for Child
-                    // This creates the ROOT NODE!!!!
-                    // Clone Nodes & Addons from more fit parent to create new child body genome
-                    // crossover is on, so check for matching Nodes and Add-ons (based on Inno#'s) to determine when to mix Settings/Attributes:                    
-                    // Iterate over the nodes of the more fit parent:
-                    for (int i = 0; i < parentAgentsArray[moreFitParent].bodyGenome.CritterNodeList.Count; i++) {
-                        int currentNodeInno = parentAgentsArray[moreFitParent].bodyGenome.CritterNodeList[i].innov;
-                        if(i == 0) {  // if this is the ROOT NODE:
-                            childBodyGenome.CritterNodeList[0].CopySettingsFromNode(parentAgentsArray[moreFitParent].bodyGenome.CritterNodeList[0]);
-                            // The root node was already created during the Constructor method of the CritterGenome,
-                            // ... so instead of creating a new one, just copy the settings
-                        }
-                        else {  // NOT the root node, proceed normally:
-                                // Create new cloned node defaulted to the settings of the source( more-fit parent's) Node:
-                            CritterNode clonedCritterNode = parentAgentsArray[moreFitParent].bodyGenome.CritterNodeList[i].CloneThisCritterNode();
-                            childBodyGenome.CritterNodeList.Add(clonedCritterNode);
-                        }
-
-                        // Check other parent for same node:
-                        for (int j = 0; j < parentAgentsArray[1 - moreFitParent].bodyGenome.CritterNodeList.Count; j++) {
-                            if (parentAgentsArray[1 - moreFitParent].bodyGenome.CritterNodeList[j].innov == currentNodeInno) {
-                                // CROSSOVER NODE SETTINGS HERE!!!  ---- If random dice roll > 0.5, use less fit parent's settings, otherwise leave as default
-                                // Node dimensions
-                                // Joint Settings - placement, orientation
-                                // Recursion
-                                // Symmetry
-                                // Scale Factors, forward Bias, Attach only to Last, etc.
-                            }
-                        }
-                    }
-                    // ADD-ONS!!!!!!!!!!!!!!!!!!!!!!
-                    BreedCritterAddons(ref childBodyGenome, ref parentAgentsArray[moreFitParent].bodyGenome, ref parentAgentsArray[1 - moreFitParent].bodyGenome);
-                    newChildAgent.bodyGenome = childBodyGenome;  // ?????
-                    // ##################  ^ ^ ^  this method will clone the Add-Ons of the more-fit parent, then, if the less-fit parent ALSO has that add-on,
-                    // ... its settings will be mixed up between the two parents ( IF Crossover=true )
-
                     //  MATCH UP Links between both agents, if they have a gene with matching Inno#, then mixing can occur                    
                     while (!endReached) {
                         failsafe++;
@@ -1495,7 +1685,7 @@ public class CrossoverManager {
 
                     if (useMutation) {
                         // BODY MUTATION:
-                        PerformBodyMutation(ref childBodyGenome, ref childBrainGenome);
+                        //PerformBodyMutation(ref childBodyGenome, ref childBrainGenome);
                         // NEED TO ADJUST BRAINS IF MUTATION CHANGES #NODES!!!!
 
                         // BRAIN MUTATION:
@@ -1589,31 +1779,45 @@ public class CrossoverManager {
                     else {
                         Debug.Log("Mutation Disabled!");
                     }
-                }
-                else { // no crossover:                    
-                    // OLD! //newChildAgent.bodyGenome = parentAgentsArray[0].bodyGenome; // Do I need to use the 'new' keyword to prevent dual-referencing?
+
+                    // THE BODY   ==========!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!======================================================================================
                     CritterGenome childBodyGenome = new CritterGenome();  // create new body genome for Child
                     // This creates the ROOT NODE!!!!
-                    // Clone Nodes & Addons from more fit parent to create new child body genome                   
+                    // Clone Nodes & Addons from more fit parent to create new child body genome
+                    // crossover is on, so check for matching Nodes and Add-ons (based on Inno#'s) to determine when to mix Settings/Attributes:                    
                     // Iterate over the nodes of the more fit parent:
-                    for (int i = 0; i < parentAgentsArray[0].bodyGenome.CritterNodeList.Count; i++) {
-                        int currentNodeInno = parentAgentsArray[0].bodyGenome.CritterNodeList[i].innov;
+                    for (int i = 0; i < parentAgentsArray[moreFitParent].bodyGenome.CritterNodeList.Count; i++) {
+                        int currentNodeInno = parentAgentsArray[moreFitParent].bodyGenome.CritterNodeList[i].innov;
                         if (i == 0) {  // if this is the ROOT NODE:
-                            childBodyGenome.CritterNodeList[0].CopySettingsFromNode(parentAgentsArray[0].bodyGenome.CritterNodeList[0]);
+                            childBodyGenome.CritterNodeList[0].CopySettingsFromNode(parentAgentsArray[moreFitParent].bodyGenome.CritterNodeList[0]);
                             // The root node was already created during the Constructor method of the CritterGenome,
                             // ... so instead of creating a new one, just copy the settings
                         }
                         else {  // NOT the root node, proceed normally:
                                 // Create new cloned node defaulted to the settings of the source( more-fit parent's) Node:
-                            CritterNode clonedCritterNode = parentAgentsArray[0].bodyGenome.CritterNodeList[i].CloneThisCritterNode();
+                            CritterNode clonedCritterNode = parentAgentsArray[moreFitParent].bodyGenome.CritterNodeList[i].CloneThisCritterNode();
+                            
+                            // Check other parent for same node:
+                            for (int j = 0; j < parentAgentsArray[1 - moreFitParent].bodyGenome.CritterNodeList.Count; j++) {
+                                if (parentAgentsArray[1 - moreFitParent].bodyGenome.CritterNodeList[j].innov == currentNodeInno) {
+                                    // CROSSOVER NODE SETTINGS HERE!!!  ---- If random dice roll > 0.5, use less fit parent's settings, otherwise leave as default
+                                    BodyCrossover(ref clonedCritterNode, parentAgentsArray[1 - moreFitParent].bodyGenome.CritterNodeList[j]);                                    
+                                }
+                            }
                             childBodyGenome.CritterNodeList.Add(clonedCritterNode);
                         }                        
                     }
                     // ADD-ONS!!!!!!!!!!!!!!!!!!!!!!
-                    BreedCritterAddons(ref childBodyGenome, ref parentAgentsArray[0].bodyGenome, ref parentAgentsArray[0].bodyGenome);
-                    newChildAgent.bodyGenome = childBodyGenome;
+                    BreedCritterAddons(ref childBodyGenome, ref parentAgentsArray[moreFitParent].bodyGenome, ref parentAgentsArray[1 - moreFitParent].bodyGenome);
+                    newChildAgent.bodyGenome = childBodyGenome;  // ?????
+                    if (useMutation) {
+                        // BODY MUTATION:
+                        PerformBodyMutation(ref childBodyGenome, ref childBrainGenome);
+                    }
+                }
+                else { // no crossover:                    
+                    
                     //===============================================================================================
-
                     for (int i = 0; i < parentNodeListArray[0].Count; i++) {
                         // iterate through all nodes in the parent List and copy them into fresh new geneNodes:
                         GeneNodeNEAT clonedNode = new GeneNodeNEAT(parentNodeListArray[0][i].id, parentNodeListArray[0][i].nodeType, parentNodeListArray[0][i].activationFunction, parentNodeListArray[0][i].sourceAddonInno, parentNodeListArray[0][i].sourceAddonRecursionNum, parentNodeListArray[0][i].sourceAddonChannelNum);
@@ -1630,7 +1834,7 @@ public class CrossoverManager {
                     if (useMutation) {
                         // BODY MUTATION:
                         //childBrainGenome.nodeNEATList = childNodeList
-                        PerformBodyMutation(ref childBodyGenome, ref childBrainGenome);
+                        //PerformBodyMutation(ref childBodyGenome, ref childBrainGenome);
 
                         // BRAIN MUTATION:
                         if (numEnabledLinkGenes < 1)
@@ -1726,6 +1930,30 @@ public class CrossoverManager {
                     else {
                         Debug.Log("Mutation Disabled!");
                     }
+
+                    //   THE BODY!!!!! ++++++++++++++++++++++================+++++++++++++++++++===============+++++++++++++++++++===================+++++++++++++++++==============
+                    CritterGenome childBodyGenome = new CritterGenome();  // create new body genome for Child                 
+                    // Iterate over the nodes of the more fit parent:
+                    for (int i = 0; i < parentAgentsArray[0].bodyGenome.CritterNodeList.Count; i++) {
+                        int currentNodeInno = parentAgentsArray[0].bodyGenome.CritterNodeList[i].innov;
+                        if (i == 0) {  // if this is the ROOT NODE:
+                            childBodyGenome.CritterNodeList[0].CopySettingsFromNode(parentAgentsArray[0].bodyGenome.CritterNodeList[0]);
+                            // The root node was already created during the Constructor method of the CritterGenome,
+                            // ... so instead of creating a new one, just copy the settings
+                        }
+                        else {  // NOT the root node, proceed normally:
+                                // Create new cloned node defaulted to the settings of the source( more-fit parent's) Node:
+                            CritterNode clonedCritterNode = parentAgentsArray[0].bodyGenome.CritterNodeList[i].CloneThisCritterNode();
+                            childBodyGenome.CritterNodeList.Add(clonedCritterNode);
+                        }
+                    }
+                    // ADD-ONS!!!!!!!!!!!!!!!!!!!!!!
+                    BreedCritterAddons(ref childBodyGenome, ref parentAgentsArray[0].bodyGenome, ref parentAgentsArray[0].bodyGenome);
+                    newChildAgent.bodyGenome = childBodyGenome;
+                    if (useMutation) {
+                        // BODY MUTATION:
+                        PerformBodyMutation(ref childBodyGenome, ref childBrainGenome);
+                    }
                 }
                 
                 newChildAgent.brainGenome = childBrainGenome;
@@ -1734,7 +1962,7 @@ public class CrossoverManager {
                 BrainNEAT childBrain = new BrainNEAT(newChildAgent.brainGenome);
                 childBrain.BuildBrainNetwork();
                 newChildAgent.brain = childBrain;
-                Debug.Log("NEW CHILD numNodes: " + newChildAgent.brainGenome.nodeNEATList.Count.ToString() + ", #Neurons: " + newChildAgent.brain.neuronList.Count.ToString());
+                //Debug.Log("NEW CHILD numNodes: " + newChildAgent.brainGenome.nodeNEATList.Count.ToString() + ", #Neurons: " + newChildAgent.brain.neuronList.Count.ToString());
                 
                 // Species:
                 if(useSpeciation) {

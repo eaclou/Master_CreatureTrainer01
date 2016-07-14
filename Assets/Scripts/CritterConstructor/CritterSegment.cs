@@ -18,6 +18,8 @@ public class CritterSegment : MonoBehaviour {
 
     public bool meshBuilt = false;
 
+    public bool broken = false;
+
     //public virtual Mesh BuildMesh() {
     //    return new Mesh();
     //}
@@ -469,6 +471,11 @@ public class CritterSegment : MonoBehaviour {
     }
 
     #endregion mesh primitive functions
+
+    void OnJointBreak(float breakForce) {
+        Debug.Log(id.ToString() + " Segment joint has just been broken!, force: " + breakForce);
+        broken = true;
+    }
 
 }
 

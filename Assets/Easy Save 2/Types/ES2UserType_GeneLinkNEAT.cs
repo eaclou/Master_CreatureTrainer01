@@ -38,9 +38,9 @@ public class ES2UserType_GeneLinkNEAT : ES2Type
         // VERSION 0:
         if (fileVersion >= 0) {
             data.enabled = reader.Read<bool>();
-            data.fromNodeID = reader.Read<int>();
+            data.fromNodeID = reader.Read<Int3>();
             data.innov = reader.Read<int>();
-            data.toNodeID = reader.Read<int>();
+            data.toNodeID = reader.Read<Int3>();
             data.weight = reader.Read<float>();
             data.birthGen = reader.Read<int>();
         }

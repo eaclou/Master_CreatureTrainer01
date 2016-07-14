@@ -186,6 +186,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
 
     public void ResetCritter() {
         critterBeingTested.RebuildCritterFromGenomeRecursive(true); // builds critter     and segment addons   
+        //Debug.Log("ResetCritter() " + critterBeingTested.inputChannelsList.Count.ToString());
     }
     
     public override void ResetTargetPositions(int numRounds, int numTimeStepsMin, int numTimeStepsMax) {
@@ -248,7 +249,9 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         numberOfSegments = critterBeingTested.critterSegmentList.Count;
         InitializeGameDataArrays();
         // Update channel Lists:
+        //Debug.Log("Reset() pre: " + critterBeingTested.inputChannelsList.Count.ToString());
         SetupInputOutputChannelLists();
+        //Debug.Log("Reset() post: " + critterBeingTested.inputChannelsList.Count.ToString());
 
         //Debug.Log("Reset " + gameCurrentTimeStep.ToString() + ", angularVelocity: " + critterBeingTested.critterSegmentList[1].GetComponent<Rigidbody>().angularVelocity.ToString());
         Physics.gravity = new Vector3(0f, customSettings.gravityStrength[0], 0f);
@@ -620,6 +623,18 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             //fitnessAltimeterList[gravitySensorIndex][0] += gravitySensor.altitude[0];
             fitnessGravitySensorList[gravitySensorIndex][0] += gravitySensor.gravityDot[0];
         }
+        // Oscillator Input:
+        for (int oscillatorInputIndex = 0; oscillatorInputIndex < critterBeingTested.segaddonOscillatorInputList.Count; oscillatorInputIndex++) {
+            SegaddonOscillatorInput oscillatorInput = critterBeingTested.segaddonOscillatorInputList[oscillatorInputIndex];
+            oscillatorInput.value[0] = Mathf.Sin(Time.fixedTime * oscillatorInput.frequency[0] + oscillatorInput.offset[0]) * oscillatorInput.amplitude[0];
+        }
+        // Value input is constant
+        // Timer Input:
+        for (int timerInputIndex = 0; timerInputIndex < critterBeingTested.segaddonTimerInputList.Count; timerInputIndex++) {
+            SegaddonTimerInput timerInput = critterBeingTested.segaddonTimerInputList[timerInputIndex];
+            timerInput.value[0] = Time.fixedTime;  // This will eventually be useful when transfer function include trigonometric functions!
+            // Might want to make the timer start at the beginning of the minigame though?
+        }
 
         // Setup Joint MOTORS:  ..... was created within RebuildCritterFromGenomeRecursive...
         for (int motorIndex = 0; motorIndex < critterBeingTested.segaddonJointMotorList.Count; motorIndex++) {
@@ -782,22 +797,17 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         for (int weaponBasicIndex = 0; weaponBasicIndex < critterBeingTested.segaddonWeaponBasicList.Count; weaponBasicIndex++) {
             //SegaddonWeaponBasic weaponBasic = critterBeingTested.segaddonWeaponBasicList[weaponBasicIndex];
         }
-
-        // Oscillator Input:
-        for (int oscillatorInputIndex = 0; oscillatorInputIndex < critterBeingTested.segaddonOscillatorInputList.Count; oscillatorInputIndex++) {
-            SegaddonOscillatorInput oscillatorInput = critterBeingTested.segaddonOscillatorInputList[oscillatorInputIndex];
-            oscillatorInput.value[0] = Mathf.Sin(Time.fixedTime * oscillatorInput.frequency[0] + oscillatorInput.offset[0]) * oscillatorInput.amplitude[0];
-        }        
-        // Timer Input:
-        for (int timerInputIndex = 0; timerInputIndex < critterBeingTested.segaddonTimerInputList.Count; timerInputIndex++) {
-            SegaddonTimerInput timerInput = critterBeingTested.segaddonTimerInputList[timerInputIndex];
-            timerInput.value[0] = Time.fixedTime;  // This will eventually be useful when transfer function include trigonometric functions!
-            // Might want to make the timer start at the beginning of the minigame though?
-        }
+        
 
         for (int w = 0; w < numberOfSegments; w++)
         {
             // VISCOSITY!!!!!!!!!!! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            if(critterBeingTested.critterSegmentList[w].GetComponent<CritterSegment>().broken) {
+                fitMoveToTarget[0] = 0;
+                fitMoveSpeed[0] = 0;
+                fitDistFromOrigin[0] = 0;
+                gameEndStateReached = true;
+            }
             ApplyViscosityForces(critterBeingTested.critterSegmentList[w], w, customSettings.viscosityDrag[0]);          
         }
 
@@ -883,18 +893,23 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             inputChannelsList = new List<BrainInputChannel>();
         }
         else {
-            inputChannelsList.Clear();
+            //inputChannelsList.Clear();
         }
         // Brain Outputs!:		
         if (outputChannelsList == null) {
             outputChannelsList = new List<BrainOutputChannel>();
         }
         else {
-            outputChannelsList.Clear();
+            //outputChannelsList.Clear();
         }
-        
+
+        //critterBeingTested.SetInputOutputLists(ref inputChannelsList, ref outputChannelsList);
+        inputChannelsList = critterBeingTested.inputChannelsList;
+        outputChannelsList = critterBeingTested.outputChannelsList;
+
+        /*
         // Joint ANGLE SENSORS:
-        for(int angleSensorIndex = 0; angleSensorIndex < critterBeingTested.segaddonJointAngleSensorList.Count; angleSensorIndex++) {
+        for (int angleSensorIndex = 0; angleSensorIndex < critterBeingTested.segaddonJointAngleSensorList.Count; angleSensorIndex++) {
             SegaddonJointAngleSensor angleSensor = critterBeingTested.segaddonJointAngleSensorList[angleSensorIndex];
             //Debug.Log("angleSensorIndex " + angleSensorIndex.ToString() + ", angleSensor.angleX: " + angleSensor.angleX.ToString());
             if (critterBeingTested.critterSegmentList[angleSensor.segmentID].GetComponent<CritterSegment>().sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeX) {
@@ -1012,28 +1027,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             inputChannelName = "Segment " + positionSensor3D.segmentID.ToString() + " Position3D Forward";
             BrainInputChannel BIC_SegmentPosition3DForward = new BrainInputChannel(ref positionSensor3D.distanceForward, true, inputChannelName);
             inputChannelsList.Add(BIC_SegmentPosition3DForward);
-            // second copy
-            /*inputChannelName = "Segment " + positionSensor3D.segmentID.ToString() + " Position3D Right2";
-            BrainInputChannel BIC_SegmentPosition3DRight2 = new BrainInputChannel(ref positionSensor3D.distanceRightDouble, true, inputChannelName);
-            inputChannelsList.Add(BIC_SegmentPosition3DRight2);
-            inputChannelName = "Segment " + positionSensor3D.segmentID.ToString() + " Position3D Up2";
-            BrainInputChannel BIC_SegmentPosition3DUp2 = new BrainInputChannel(ref positionSensor3D.distanceUpDouble, true, inputChannelName);
-            inputChannelsList.Add(BIC_SegmentPosition3DUp2);
-            inputChannelName = "Segment " + positionSensor3D.segmentID.ToString() + " Position3D Forward2";
-            BrainInputChannel BIC_SegmentPosition3DForward2 = new BrainInputChannel(ref positionSensor3D.distanceForwardDouble, true, inputChannelName);
-            inputChannelsList.Add(BIC_SegmentPosition3DForward2);
             
-            //third copy
-            inputChannelName = "Segment " + positionSensor3D.segmentID.ToString() + " Position3D Right3";
-            BrainInputChannel BIC_SegmentPosition3DRight3 = new BrainInputChannel(ref positionSensor3D.distanceRightHalf, true, inputChannelName);
-            inputChannelsList.Add(BIC_SegmentPosition3DRight3);
-            inputChannelName = "Segment " + positionSensor3D.segmentID.ToString() + " Position3D Up3";
-            BrainInputChannel BIC_SegmentPosition3DUp3 = new BrainInputChannel(ref positionSensor3D.distanceUpHalf, true, inputChannelName);
-            inputChannelsList.Add(BIC_SegmentPosition3DUp3);
-            inputChannelName = "Segment " + positionSensor3D.segmentID.ToString() + " Position3D Forward3";
-            BrainInputChannel BIC_SegmentPosition3DForward3 = new BrainInputChannel(ref positionSensor3D.distanceForwardHalf, true, inputChannelName);
-            inputChannelsList.Add(BIC_SegmentPosition3DForward3);
-            */
         }        
         // Rotation Sensor 1D:
         for (int rotationSensor1DIndex = 0; rotationSensor1DIndex < critterBeingTested.segaddonRotationSensor1DList.Count; rotationSensor1DIndex++) {
@@ -1065,7 +1059,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         // Velocity Sensor 3D:
         for (int velocitySensor3DIndex = 0; velocitySensor3DIndex < critterBeingTested.segaddonVelocitySensor3DList.Count; velocitySensor3DIndex++) {
             SegaddonVelocitySensor3D velocitySensor3D = critterBeingTested.segaddonVelocitySensor3DList[velocitySensor3DIndex];
-            /*string inputChannelName = "Segment " + velocitySensor3D.segmentID.ToString() + " Velocity3D Right";
+            string inputChannelName = "Segment " + velocitySensor3D.segmentID.ToString() + " Velocity3D Right";
             BrainInputChannel BIC_SegmentVelocity3DRight = new BrainInputChannel(ref velocitySensor3D.velocityRight, true, inputChannelName);
             inputChannelsList.Add(BIC_SegmentVelocity3DRight);
             inputChannelName = "Segment " + velocitySensor3D.segmentID.ToString() + " Velocity3D Up";
@@ -1073,7 +1067,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             inputChannelsList.Add(BIC_SegmentVelocity3DUp);
             inputChannelName = "Segment " + velocitySensor3D.segmentID.ToString() + " Velocity3D Forward";
             BrainInputChannel BIC_SegmentVelocity3DForward = new BrainInputChannel(ref velocitySensor3D.velocityForward, true, inputChannelName);
-            inputChannelsList.Add(BIC_SegmentVelocity3DForward);*/
+            inputChannelsList.Add(BIC_SegmentVelocity3DForward);
         }
         // Altimeter:
         for (int altimeterIndex = 0; altimeterIndex < critterBeingTested.segaddonAltimeterList.Count; altimeterIndex++) {
@@ -1096,6 +1090,28 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             BrainInputChannel BIC_SegmentGravitySensor = new BrainInputChannel(ref gravitySensor.gravityDot, true, inputChannelName);
             inputChannelsList.Add(BIC_SegmentGravitySensor);
         }
+        // Oscillator Input:
+        for (int oscillatorInputIndex = 0; oscillatorInputIndex < critterBeingTested.segaddonOscillatorInputList.Count; oscillatorInputIndex++) {
+            SegaddonOscillatorInput oscillatorInput = critterBeingTested.segaddonOscillatorInputList[oscillatorInputIndex];
+            string inputChannelName = "Segment " + oscillatorInput.segmentID.ToString() + " Oscillator Input";
+            BrainInputChannel BIC_SegmentOscillatorInput = new BrainInputChannel(ref oscillatorInput.value, true, inputChannelName);
+            inputChannelsList.Add(BIC_SegmentOscillatorInput);
+        }
+        // Value Input:
+        for (int valueInputIndex = 0; valueInputIndex < critterBeingTested.segaddonValueInputList.Count; valueInputIndex++) {
+            SegaddonValueInput valueInput = critterBeingTested.segaddonValueInputList[valueInputIndex];
+            string inputChannelName = "Segment " + valueInput.segmentID.ToString() + " Value Input";
+            BrainInputChannel BIC_SegmentValueInput = new BrainInputChannel(ref valueInput.value, true, inputChannelName);
+            inputChannelsList.Add(BIC_SegmentValueInput);
+        }
+        // Timer Input:
+        for (int timerInputIndex = 0; timerInputIndex < critterBeingTested.segaddonTimerInputList.Count; timerInputIndex++) {
+            SegaddonTimerInput timerInput = critterBeingTested.segaddonTimerInputList[timerInputIndex];
+            string inputChannelName = "Segment " + timerInput.segmentID.ToString() + " Timer Input";
+            BrainInputChannel BIC_SegmentTimerInput = new BrainInputChannel(ref timerInput.value, true, inputChannelName);
+            inputChannelsList.Add(BIC_SegmentTimerInput);
+        }
+
 
         // JOINT MOTORS:
         for (int motorIndex = 0; motorIndex < critterBeingTested.segaddonJointMotorList.Count; motorIndex++) {
@@ -1169,14 +1185,14 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         for (int mouthBasicIndex = 0; mouthBasicIndex < critterBeingTested.segaddonMouthBasicList.Count; mouthBasicIndex++) {
             SegaddonMouthBasic mouthBasic = critterBeingTested.segaddonMouthBasicList[mouthBasicIndex];
 
-            /*string inputChannelName = "Segment " + mouthBasic.segmentID.ToString() + " MouthSensor";
-            BrainInputChannel BIC_SegmentMouthBasic = new BrainInputChannel(ref mouthBasic.contactStatus, true, inputChannelName);
-            inputChannelsList.Add(BIC_SegmentMouthBasic);
+            //string inputChannelName = "Segment " + mouthBasic.segmentID.ToString() + " MouthSensor";
+            //BrainInputChannel BIC_SegmentMouthBasic = new BrainInputChannel(ref mouthBasic.contactStatus, true, inputChannelName);
+            //inputChannelsList.Add(BIC_SegmentMouthBasic);
 
-            string outputChannelName = "Segment " + mouthBasic.segmentID.ToString() + " MouthBite";
-            BrainOutputChannel BOC_SegmentMouthBasic = new BrainOutputChannel(ref mouthBasic.biteStrength, true, outputChannelName);
-            outputChannelsList.Add(BOC_SegmentMouthBasic);
-            */
+            //string outputChannelName = "Segment " + mouthBasic.segmentID.ToString() + " MouthBite";
+            //BrainOutputChannel BOC_SegmentMouthBasic = new BrainOutputChannel(ref mouthBasic.biteStrength, true, outputChannelName);
+            //outputChannelsList.Add(BOC_SegmentMouthBasic);
+            
         }
         // NoiseMakerBasic:
         for (int noiseMakerBasicIndex = 0; noiseMakerBasicIndex < critterBeingTested.segaddonNoiseMakerBasicList.Count; noiseMakerBasicIndex++) {
@@ -1199,30 +1215,15 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             BrainOutputChannel BOC_SegmentWeaponBasic = new BrainOutputChannel(ref weaponBasic.strength, true, outputChannelName);
             outputChannelsList.Add(BOC_SegmentWeaponBasic);
         }
-
-        // Oscillator Input:
-        for (int oscillatorInputIndex = 0; oscillatorInputIndex < critterBeingTested.segaddonOscillatorInputList.Count; oscillatorInputIndex++) {
-            SegaddonOscillatorInput oscillatorInput = critterBeingTested.segaddonOscillatorInputList[oscillatorInputIndex];
-            string inputChannelName = "Segment " + oscillatorInput.segmentID.ToString() + " Oscillator Input";
-            BrainInputChannel BIC_SegmentOscillatorInput = new BrainInputChannel(ref oscillatorInput.value, true, inputChannelName);
-            inputChannelsList.Add(BIC_SegmentOscillatorInput);
+        */
+        string list = critterBeingTested.inputChannelsList.Count + "Minigame SetupInputOutputChannelLists:\n";
+        for(int i = 0; i < inputChannelsList.Count; i++) {
+            list += "in# " + i.ToString() + " " + inputChannelsList[i].channelName + "\n";
         }
-        // Value Input:
-        for (int valueInputIndex = 0; valueInputIndex < critterBeingTested.segaddonValueInputList.Count; valueInputIndex++) {
-            SegaddonValueInput valueInput = critterBeingTested.segaddonValueInputList[valueInputIndex];
-            string inputChannelName = "Segment " + valueInput.segmentID.ToString() + " Value Input";
-            BrainInputChannel BIC_SegmentValueInput = new BrainInputChannel(ref valueInput.value, true, inputChannelName);
-            inputChannelsList.Add(BIC_SegmentValueInput);
+        for (int i = 0; i < outputChannelsList.Count; i++) {
+            list += "out# " + i.ToString() + " " + outputChannelsList[i].channelName + "\n";
         }
-        // Timer Input:
-        for (int timerInputIndex = 0; timerInputIndex < critterBeingTested.segaddonTimerInputList.Count; timerInputIndex++) {
-            SegaddonTimerInput timerInput = critterBeingTested.segaddonTimerInputList[timerInputIndex];
-            string inputChannelName = "Segment " + timerInput.segmentID.ToString() + " Timer Input";
-            BrainInputChannel BIC_SegmentTimerInput = new BrainInputChannel(ref timerInput.value, true, inputChannelName);
-            inputChannelsList.Add(BIC_SegmentTimerInput);
-        }
-
-        Debug.Log("Minigame SetupInputOutputChannelLists: #Inputs= " + inputChannelsList.Count.ToString() + ", #Outputs= " + outputChannelsList.Count.ToString());
+        //Debug.Log(list);
     }
 
     private void SetupFitnessComponentList()

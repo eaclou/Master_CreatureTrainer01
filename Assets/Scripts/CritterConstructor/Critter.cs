@@ -9,8 +9,11 @@ public class Critter : MonoBehaviour {
     public PhysicMaterial segmentPhysicMaterial;
     // List of generated segments, based on critter's full Genome
     public List<GameObject> critterSegmentList;
-    // Should these 'live' on each segment themselves, or stay as separate global lists??  v v v
 
+    public List<BrainInputChannel> inputChannelsList;
+    public List<BrainOutputChannel> outputChannelsList;
+
+    // Should these 'live' on each segment themselves, or stay as separate global lists??  v v v
     public List<SegaddonPhysicalAttributes> segaddonPhysicalAttributesList;
 
     public List<SegaddonJointAngleSensor> segaddonJointAngleSensorList;
@@ -27,7 +30,10 @@ public class Critter : MonoBehaviour {
     public List<SegaddonAltimeter> segaddonAltimeterList;
     public List<SegaddonEarBasic> segaddonEarBasicList;
     public List<SegaddonGravitySensor> segaddonGravitySensorList;
-    
+    public List<SegaddonOscillatorInput> segaddonOscillatorInputList;
+    public List<SegaddonValueInput> segaddonValueInputList;
+    public List<SegaddonTimerInput> segaddonTimerInputList;
+
     public List<SegaddonJointMotor> segaddonJointMotorList;
     public List<SegaddonThrusterEffector1D> segaddonThrusterEffector1DList;
     public List<SegaddonThrusterEffector3D> segaddonThrusterEffector3DList;
@@ -37,10 +43,7 @@ public class Critter : MonoBehaviour {
     public List<SegaddonNoiseMakerBasic> segaddonNoiseMakerBasicList;
     public List<SegaddonSticky> segaddonStickyList;
     public List<SegaddonWeaponBasic> segaddonWeaponBasicList;
-
-    public List<SegaddonOscillatorInput> segaddonOscillatorInputList;
-    public List<SegaddonValueInput> segaddonValueInputList;
-    public List<SegaddonTimerInput> segaddonTimerInputList;
+    
 
     public List<PhysicMaterial> segmentPhysicMaterialList;
 
@@ -114,6 +117,15 @@ public class Critter : MonoBehaviour {
         if (segaddonGravitySensorList == null) {
             segaddonGravitySensorList = new List<SegaddonGravitySensor>();
         }
+        if (segaddonOscillatorInputList == null) {
+            segaddonOscillatorInputList = new List<SegaddonOscillatorInput>();
+        }
+        if (segaddonValueInputList == null) {
+            segaddonValueInputList = new List<SegaddonValueInput>();
+        }
+        if (segaddonTimerInputList == null) {
+            segaddonTimerInputList = new List<SegaddonTimerInput>();
+        }
 
         if (segaddonJointMotorList == null) {
             segaddonJointMotorList = new List<SegaddonJointMotor>(); 
@@ -141,17 +153,7 @@ public class Critter : MonoBehaviour {
         }
         if (segaddonWeaponBasicList == null) {
             segaddonWeaponBasicList = new List<SegaddonWeaponBasic>();
-        }
-
-        if (segaddonOscillatorInputList == null) {
-            segaddonOscillatorInputList = new List<SegaddonOscillatorInput>(); 
-        }
-        if (segaddonValueInputList == null) {
-            segaddonValueInputList = new List<SegaddonValueInput>(); 
-        }
-        if (segaddonTimerInputList == null) {
-            segaddonTimerInputList = new List<SegaddonTimerInput>();
-        }
+        }        
     }
 
     private void CreateBlankCritterGenome() {
@@ -416,6 +418,9 @@ public class Critter : MonoBehaviour {
         segaddonAltimeterList.Clear();
         segaddonEarBasicList.Clear();
         segaddonGravitySensorList.Clear();
+        segaddonOscillatorInputList.Clear();
+        segaddonValueInputList.Clear();
+        segaddonTimerInputList.Clear();
 
         segaddonJointMotorList.Clear();
         segaddonThrusterEffector1DList.Clear();
@@ -425,16 +430,24 @@ public class Critter : MonoBehaviour {
         segaddonMouthBasicList.Clear();
         segaddonNoiseMakerBasicList.Clear();
         segaddonStickyList.Clear();
-        segaddonWeaponBasicList.Clear();
-
-        segaddonOscillatorInputList.Clear();
-        segaddonValueInputList.Clear();
-        segaddonTimerInputList.Clear();
+        segaddonWeaponBasicList.Clear();        
 
         InitializeSegmentMaterial();
 
         if (critterSegmentList != null) {
             critterSegmentList.Clear();
+        }
+        if(inputChannelsList != null) {
+            inputChannelsList.Clear();
+        }
+        else {
+            inputChannelsList = new List<BrainInputChannel>();
+        }
+        if (outputChannelsList != null) {
+            outputChannelsList.Clear();
+        }
+        else {
+            outputChannelsList = new List<BrainOutputChannel>();
         }
         // interpret Genome and construct critter in its bind pose
         bool isPendingChildren = true;
@@ -571,7 +584,67 @@ public class Critter : MonoBehaviour {
                         newGO.GetComponent<Rigidbody>().constraints = rbConstraints;
                         newGO.GetComponent<BoxCollider>().material = segmentPhysicMaterial;
                     }
+
                     #region INPUTS
+                    List<AddonJointAngleSensor> jointAngleSensorList = masterCritterGenome.CheckForAddonJointAngleSensor(currentBuildSegmentList[i].sourceNode.ID);
+                    for (int j = 0; j < jointAngleSensorList.Count; j++) {
+                        SegaddonJointAngleSensor newJointAngleSensor = new SegaddonJointAngleSensor(jointAngleSensorList[j]);
+                        newJointAngleSensor.segmentID = newSegment.id;
+                        segaddonJointAngleSensorList.Add(newJointAngleSensor);
+                                                
+                        if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeX) {
+                            string inputChannelName = "Segment " + newJointAngleSensor.segmentID.ToString() + " AngleX";
+                            BrainInputChannel BIC_SegmentAngle = new BrainInputChannel(ref newJointAngleSensor.angleX, true, inputChannelName);
+                            inputChannelsList.Add(BIC_SegmentAngle);
+
+                            if (newJointAngleSensor.measureVel) {
+                                inputChannelName = "Segment " + newJointAngleSensor.segmentID.ToString() + " AngleVelX";
+                                BrainInputChannel BIC_SegmentAngleVel = new BrainInputChannel(ref newJointAngleSensor.angleVelX, true, inputChannelName);
+                                inputChannelsList.Add(BIC_SegmentAngleVel);
+                            }
+                        }
+                        else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeY) {
+                            string inputChannelName = "Segment " + newJointAngleSensor.segmentID.ToString() + " AngleY";
+                            BrainInputChannel BIC_SegmentAngle = new BrainInputChannel(ref newJointAngleSensor.angleY, true, inputChannelName);
+                            inputChannelsList.Add(BIC_SegmentAngle);
+
+                            if (newJointAngleSensor.measureVel) {
+                                inputChannelName = "Segment " + newJointAngleSensor.segmentID.ToString() + " AngleVelY";
+                                BrainInputChannel BIC_SegmentAngleVel = new BrainInputChannel(ref newJointAngleSensor.angleVelY, true, inputChannelName);
+                                inputChannelsList.Add(BIC_SegmentAngleVel);
+                            }
+                        }
+                        else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeZ) {
+                            string inputChannelName = "Segment " + newJointAngleSensor.segmentID.ToString() + " AngleZ";
+                            BrainInputChannel BIC_SegmentAngle = new BrainInputChannel(ref newJointAngleSensor.angleZ, true, inputChannelName);
+                            inputChannelsList.Add(BIC_SegmentAngle);
+
+                            if (newJointAngleSensor.measureVel) {
+                                inputChannelName = "Segment " + newJointAngleSensor.segmentID.ToString() + " AngleVelZ";
+                                BrainInputChannel BIC_SegmentAngleVel = new BrainInputChannel(ref newJointAngleSensor.angleVelZ, true, inputChannelName);
+                                inputChannelsList.Add(BIC_SegmentAngleVel);
+                            }
+                        }
+                        else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.DualXY) {
+                            string inputChannelName = "Segment " + newJointAngleSensor.segmentID.ToString() + " AngleX";
+                            BrainInputChannel BIC_SegmentAngleX = new BrainInputChannel(ref newJointAngleSensor.angleX, true, inputChannelName);
+                            inputChannelsList.Add(BIC_SegmentAngleX);
+
+                            inputChannelName = "Segment " + newJointAngleSensor.segmentID.ToString() + " AngleY";
+                            BrainInputChannel BIC_SegmentAngleY = new BrainInputChannel(ref newJointAngleSensor.angleY, true, inputChannelName);
+                            inputChannelsList.Add(BIC_SegmentAngleY);
+
+                            if (newJointAngleSensor.measureVel) {
+                                inputChannelName = "Segment " + newJointAngleSensor.segmentID.ToString() + " AngleVelX";
+                                BrainInputChannel BIC_SegmentAngleVelX = new BrainInputChannel(ref newJointAngleSensor.angleVelX, true, inputChannelName);
+                                inputChannelsList.Add(BIC_SegmentAngleVelX);
+
+                                inputChannelName = "Segment " + newJointAngleSensor.segmentID.ToString() + " AngleVelY";
+                                BrainInputChannel BIC_SegmentAngleVelY = new BrainInputChannel(ref newJointAngleSensor.angleVelY, true, inputChannelName);
+                                inputChannelsList.Add(BIC_SegmentAngleVelY);
+                            }
+                        }
+                    }
                     List<AddonContactSensor> contactSensorList = masterCritterGenome.CheckForAddonContactSensor(currentBuildSegmentList[i].sourceNode.ID);
                     for (int j = 0; j < contactSensorList.Count; j++) {
                         SegaddonContactSensor newContactSensor = new SegaddonContactSensor(contactSensorList[j]);
@@ -657,6 +730,11 @@ public class Critter : MonoBehaviour {
                         SegaddonOscillatorInput newOscillatorInput = new SegaddonOscillatorInput(oscillatorInputList[j]);
                         newOscillatorInput.segmentID = newSegment.id;
                         segaddonOscillatorInputList.Add(newOscillatorInput);
+
+                        //SegaddonOscillatorInput oscillatorInput = critterBeingTested.segaddonOscillatorInputList[oscillatorInputIndex];
+                        string inputChannelName = "Segment " + newOscillatorInput.segmentID.ToString() + " Oscillator Input";
+                        BrainInputChannel BIC_SegmentOscillatorInput = new BrainInputChannel(ref newOscillatorInput.value, true, inputChannelName);
+                        inputChannelsList.Add(BIC_SegmentOscillatorInput);
                     }
                     List<AddonValueInput> valueInputList = masterCritterGenome.CheckForAddonValueInput(currentBuildSegmentList[i].sourceNode.ID);
                     for (int j = 0; j < valueInputList.Count; j++) {
@@ -673,6 +751,38 @@ public class Critter : MonoBehaviour {
                     #endregion
 
                     #region OUTPUTS:
+                    List<AddonJointMotor> jointMotorList = masterCritterGenome.CheckForAddonJointMotor(currentBuildSegmentList[i].sourceNode.ID);
+                    for (int j = 0; j < jointMotorList.Count; j++) {
+                        SegaddonJointMotor newJointMotor = new SegaddonJointMotor(jointMotorList[j]);
+                        newJointMotor.segmentID = newSegment.id;
+                        segaddonJointMotorList.Add(newJointMotor);
+
+                        //SegaddonJointMotor motor = critterBeingTested.segaddonJointMotorList[motorIndex];
+                        if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeX) {
+                            string outputChannelName = "Segment " + newJointMotor.segmentID.ToString() + " Motor Target X";
+                            BrainOutputChannel BOC_SegmentAngleVel = new BrainOutputChannel(ref newJointMotor.targetAngularX, true, outputChannelName);
+                            outputChannelsList.Add(BOC_SegmentAngleVel);
+                        }
+                        else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeY) {
+                            string outputChannelName = "Segment " + newJointMotor.segmentID.ToString() + " Motor Target Y";
+                            BrainOutputChannel BOC_SegmentAngleVel = new BrainOutputChannel(ref newJointMotor.targetAngularY, true, outputChannelName);
+                            outputChannelsList.Add(BOC_SegmentAngleVel);
+                        }
+                        else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeZ) {
+                            string outputChannelName = "Segment " + newJointMotor.segmentID.ToString() + " Motor Target Z";
+                            BrainOutputChannel BOC_SegmentAngleVel = new BrainOutputChannel(ref newJointMotor.targetAngularZ, true, outputChannelName);
+                            outputChannelsList.Add(BOC_SegmentAngleVel);
+                        }
+                        else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.DualXY) {
+                            string outputChannelName = "Segment " + newJointMotor.segmentID.ToString() + " Motor Target X";
+                            BrainOutputChannel BOC_SegmentAngleVelX = new BrainOutputChannel(ref newJointMotor.targetAngularX, true, outputChannelName);
+                            outputChannelsList.Add(BOC_SegmentAngleVelX);
+
+                            outputChannelName = "Segment " + newJointMotor.segmentID.ToString() + " Motor Target Y";
+                            BrainOutputChannel BOC_SegmentAngleVelY = new BrainOutputChannel(ref newJointMotor.targetAngularY, true, outputChannelName);
+                            outputChannelsList.Add(BOC_SegmentAngleVelY);
+                        }
+                    }
                     List<AddonThrusterEffector1D> thrusterEffector1DList = masterCritterGenome.CheckForAddonThrusterEffector1D(currentBuildSegmentList[i].sourceNode.ID);
                     for (int j = 0; j < thrusterEffector1DList.Count; j++) {
                         SegaddonThrusterEffector1D newThrusterEffector1D = new SegaddonThrusterEffector1D(thrusterEffector1DList[j]);
@@ -697,6 +807,15 @@ public class Critter : MonoBehaviour {
                         newTorqueEffector3D.segmentID = newSegment.id;
                         segaddonTorqueEffector3DList.Add(newTorqueEffector3D);
                     }
+                    List<AddonMouthBasic> mouthBasicList = masterCritterGenome.CheckForAddonMouthBasic(currentBuildSegmentList[i].sourceNode.ID);
+                    for (int j = 0; j < mouthBasicList.Count; j++) {
+                        SegaddonMouthBasic newMouthBasic = new SegaddonMouthBasic(mouthBasicList[j]);
+                        newMouthBasic.segmentID = newSegment.id;
+                        segaddonMouthBasicList.Add(newMouthBasic);
+
+                        SegaddonTriggerDetector triggerDetector = newGO.AddComponent<SegaddonTriggerDetector>();
+                        triggerDetector.referencedMouth = newMouthBasic;
+                    }
                     List<AddonNoiseMakerBasic> noiseMakerBasicList = masterCritterGenome.CheckForAddonNoiseMakerBasic(currentBuildSegmentList[i].sourceNode.ID);
                     for (int j = 0; j < noiseMakerBasicList.Count; j++) {
                         SegaddonNoiseMakerBasic newNoiseMakerBasic = new SegaddonNoiseMakerBasic(noiseMakerBasicList[j]);
@@ -716,28 +835,8 @@ public class Critter : MonoBehaviour {
                         segaddonWeaponBasicList.Add(newWeaponBasic);
                     }                    
                     #endregion
-
-                    List<AddonMouthBasic> mouthBasicList = masterCritterGenome.CheckForAddonMouthBasic(currentBuildSegmentList[i].sourceNode.ID);
-                    for (int j = 0; j < mouthBasicList.Count; j++) {
-                        SegaddonMouthBasic newMouthBasic = new SegaddonMouthBasic(mouthBasicList[j]);
-                        newMouthBasic.segmentID = newSegment.id;
-                        segaddonMouthBasicList.Add(newMouthBasic);
-
-                        SegaddonTriggerDetector triggerDetector = newGO.AddComponent<SegaddonTriggerDetector>();
-                        triggerDetector.referencedMouth = newMouthBasic;
-                    }
-                    List<AddonJointAngleSensor> jointAngleSensorList = masterCritterGenome.CheckForAddonJointAngleSensor(currentBuildSegmentList[i].sourceNode.ID);
-                    for (int j = 0; j < jointAngleSensorList.Count; j++) {
-                        SegaddonJointAngleSensor newJointAngleSensor = new SegaddonJointAngleSensor(jointAngleSensorList[j]);
-                        newJointAngleSensor.segmentID = newSegment.id;
-                        segaddonJointAngleSensorList.Add(newJointAngleSensor);
-                    }
-                    List<AddonJointMotor> jointMotorList = masterCritterGenome.CheckForAddonJointMotor(currentBuildSegmentList[i].sourceNode.ID);
-                    for (int j = 0; j < jointMotorList.Count; j++) {
-                        SegaddonJointMotor newJointMotor = new SegaddonJointMotor(jointMotorList[j]);
-                        newJointMotor.segmentID = newSegment.id;
-                        segaddonJointMotorList.Add(newJointMotor);
-                    }
+                    
+                    
                 }
                 
                 // CHECK FOR RECURSION:
@@ -885,12 +984,15 @@ public class Critter : MonoBehaviour {
                 isPendingChildren = false;
             }
             currentDepth++;
-        }   
+        }
+
+        //Debug.Log("RebuildCritterFromGenomeRecursive " + inputChannelsList.Count.ToString() + ", " + outputChannelsList.Count.ToString());   
     }
 
     void ConfigureJointSettings(CritterSegment segment, ref ConfigurableJoint joint) {
         CritterNode node = segment.sourceNode;
-
+        joint.breakForce = 100000f;
+        joint.breakTorque = 100000f;
         if (node.jointLink.jointType == CritterJointLink.JointType.Fixed) { // Fixed Joint
                                                                                   // Lock mobility:
             joint.xMotion = ConfigurableJointMotion.Locked;
@@ -1128,11 +1230,7 @@ public class Critter : MonoBehaviour {
         //Debug.Log("ConvertAttachDirToLocalCoords: " + attachDirLocal.ToString());
         return attachDirLocal;
     }
-
-    private void EnqueueNodeForTranscription(CritterNode node) {
-
-    }
-
+    
     private void InitializeSegmentMaterial() {
         if (critterSegmentMaterial == null) {
             critterSegmentMaterial = new Material(Shader.Find("Custom/CritterSegmentBasic"));

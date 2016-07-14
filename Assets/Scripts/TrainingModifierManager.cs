@@ -210,7 +210,7 @@ public class TrainingModifierManager {
         if(trainer.loadedTrainingSave != null) {
             currentGen += trainer.loadedTrainingSave.endGeneration;
         }
-        Debug.Log("ApplyTrainingModifierEffects  currentGen: " + currentGen.ToString());
+        //Debug.Log("ApplyTrainingModifierEffects  currentGen: " + currentGen.ToString());
         CrossoverManager crossoverManager = trainer.PlayerList[0].masterCupid;
         int numModifiers = activeTrainingModifierList.Count;
         crossoverManager.mutationBlastModifier = 1f;

@@ -22,6 +22,9 @@ public class CritterNodeAddonBase {
         Altimeter,           
         EarBasic,
         Gravity,             // Sensors ^ ^ ^
+        OscillatorInput,     // Inputs v v v
+        ValueInput,          //
+        TimerInput,          // Inputs ^ ^ ^
 
         JointMotor,          // Effectors v v v
         ThrusterEffector1D,  //
@@ -31,11 +34,7 @@ public class CritterNodeAddonBase {
         MouthBasic,
         NoiseMakerBasic,
         Sticky,
-        WeaponBasic,         // Effectors ^ ^ ^
-
-        OscillatorInput,     // Inputs v v v
-        ValueInput,          //
-        TimerInput           // Inputs ^ ^ ^
+        WeaponBasic         // Effectors ^ ^ ^
     };
 
 	public CritterNodeAddonBase() {

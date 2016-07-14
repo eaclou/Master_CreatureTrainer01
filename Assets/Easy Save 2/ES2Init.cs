@@ -102,10 +102,11 @@ public class ES2Init : MonoBehaviour
 		ES2TypeManager.types[typeof(MiniGameSettingsSaves)] = new ES2UserType_MiniGameSettingsSaves();
 		ES2TypeManager.types[typeof(Population)] = new ES2UserType_Population();
 		ES2TypeManager.types[typeof(SpeciesBreedingPool)] = new ES2UserType_SpeciesBreedingPool();
+		ES2TypeManager.types[typeof(TrainingModifier)] = new ES2UserType_TrainingModifier();
 		ES2TypeManager.types[typeof(TrainingSave)] = new ES2UserType_TrainingSave();
 		ES2TypeManager.types[typeof(TrialData)] = new ES2UserType_TrialData();
 		ES2TypeManager.types[typeof(UnityEngine.AudioClip)] = new ES2_AudioClip();
-		ES2TypeManager.types[typeof(TrainingModifier)] = new ES2UserType_TrainingModifier();
+		ES2TypeManager.types[typeof(Int3)] = new ES2UserType_Int3();
 
 		ES2.initialised = true;
 	}

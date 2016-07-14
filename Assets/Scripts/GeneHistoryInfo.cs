@@ -7,8 +7,8 @@ public class GeneHistoryInfo {
     public int numCopies;
     public float totalWeight;
     public float avgWeight;
-    public int fromNode;
-    public int toNode;
+    public Int3 fromNode;
+    public Int3 toNode;
     public int gen;
 
     public GeneHistoryInfo() {

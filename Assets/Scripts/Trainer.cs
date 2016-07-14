@@ -630,7 +630,7 @@ public class Trainer {
                         
                         // Now with the updated values for position/velocity etc., pass input values into brains
                         if(playingCurMiniGameTimeStep == 1) {
-                            Debug.Log("playingCurMiniGameTimeStep currentGameManager.brainInput: " + currentGameManager.brainInput.Count.ToString() + " currentGameManager.brainOutput: " + currentGameManager.brainOutput.Count.ToString());
+                            //Debug.Log("playingCurMiniGameTimeStep currentGameManager.brainInput: " + currentGameManager.brainInput.Count.ToString() + " currentGameManager.brainOutput: " + currentGameManager.brainOutput.Count.ToString());
                         }
                         currentBrain.BrainMasterFunction(ref currentGameManager.brainInput, ref currentGameManager.brainOutput);
                         // Run the game for one timeStep: (Note that this will only modify non-physX variables -- the actual movement and physX sim happens just afterward -- so keep that in mind)

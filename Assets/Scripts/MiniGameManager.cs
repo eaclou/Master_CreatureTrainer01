@@ -109,7 +109,7 @@ public class MiniGameManager {
             newGameInstance.UseSettings((MiniGameCritterWalkBasicSettings)gameSettings);
             newGameInstance.InitializeGame();
 			miniGameInstance = newGameInstance;
-            Debug.Log("miniGameInstance.inputChannelsList.Count: " + miniGameInstance.inputChannelsList.Count.ToString());
+            Debug.Log("miniGameInstance.inputChannelsList.Count: " + miniGameInstance.inputChannelsList.Count.ToString() + "miniGameInstance.outputChannelsList.Count: " + miniGameInstance.outputChannelsList.Count.ToString());
 		}
 		/*else if(newGameType == MiniGameType.RobotArmSimple) {
 			MiniGameRobotArm newGameInstance = new MiniGameRobotArm();

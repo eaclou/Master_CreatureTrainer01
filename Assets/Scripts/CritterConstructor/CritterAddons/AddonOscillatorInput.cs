@@ -20,7 +20,7 @@ public class AddonOscillatorInput {
     }
 
     public AddonOscillatorInput(int id, int inno) {
-        Debug.Log("Constructor AddonOscillatorInput(" + id.ToString() + ")");
+        //Debug.Log("Constructor AddonOscillatorInput(" + id.ToString() + ")");
         critterNodeID = id;
         innov = inno;
         frequency = new float[1];
