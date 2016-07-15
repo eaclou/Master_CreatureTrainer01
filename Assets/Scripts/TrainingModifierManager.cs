@@ -57,6 +57,10 @@ public class TrainingModifierManager {
                         
                         break;
 
+                    case TrainingModifier.TrainingModifierType.BodyMutationBlast:
+
+                        break;
+
                     case TrainingModifier.TrainingModifierType.PruneBrain:
                         
                         break;
@@ -214,6 +218,7 @@ public class TrainingModifierManager {
         CrossoverManager crossoverManager = trainer.PlayerList[0].masterCupid;
         int numModifiers = activeTrainingModifierList.Count;
         crossoverManager.mutationBlastModifier = 1f;
+        crossoverManager.bodyMutationBlastModifier = 1f;
         if (numModifiers > 0) {
             for (int i = numModifiers - 1; i >= 0; i--) {
                 float t = 0f;
@@ -252,6 +257,23 @@ public class TrainingModifierManager {
                             }
                         }
                         crossoverManager.mutationBlastModifier = Mathf.Lerp(1f, activeTrainingModifierList[i].minMultiplier, t);
+                        break;
+
+                    case TrainingModifier.TrainingModifierType.BodyMutationBlast:
+                        t = ((float)currentGen - (float)activeTrainingModifierList[i].startGen) / (float)activeTrainingModifierList[i].duration;
+                        crossoverManager = trainer.PlayerList[0].masterCupid;
+                        if (t > 1f) {
+                            if (activeTrainingModifierList[i].liveForever) {
+                                t = 1f;
+                            }
+                            else {
+                                // Duration has expired, and the live forever flag if false, so remove this modifier
+                                crossoverManager.bodyMutationBlastModifier = 1f;
+                                activeTrainingModifierList.RemoveAt(i);
+                                break;
+                            }
+                        }
+                        crossoverManager.bodyMutationBlastModifier = Mathf.Lerp(1f, activeTrainingModifierList[i].minMultiplier, t);
                         break;
 
                     case TrainingModifier.TrainingModifierType.PruneBrain:

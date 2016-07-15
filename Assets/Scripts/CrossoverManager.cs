@@ -80,6 +80,7 @@ public class CrossoverManager {
         return nextNodeInnov;
     }
     public int GetNextAddonInnov() {
+        //nextAddonInnov++;
         return nextAddonInnov++;
     }
 
@@ -288,11 +289,17 @@ public class CrossoverManager {
 		return newFloat;
 	}
 
-	public float MutateBodyFloatAdd(float sourceFloat, float maxAmount) {        
-		return sourceFloat + UnityEngine.Random.Range(-maxAmount, maxAmount);
+	public float MutateBodyFloatAdd(float sourceFloat, float maxDrift) {        
+		return sourceFloat + UnityEngine.Random.Range(-maxDrift, maxDrift);
 	}
+    public float MutateBodyFloatAdd(float sourceFloat, float maxAmount, float min, float max) {
+        return sourceFloat + Mathf.Max(Mathf.Min(UnityEngine.Random.Range(-maxAmount, maxAmount), max), min);
+    }
     public float MutateBodyFloatMult(float sourceFloat) {
         return sourceFloat * UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
+    }
+    public float MutateBodyFloatMult(float sourceFloat, float min, float max) {
+        return sourceFloat * Mathf.Max(Mathf.Min(UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange), max), min);
     }
     public bool MutateBodyBool(bool sourceBool) {        
         if(UnityEngine.Random.Range(0f, 1f) < 0.5f) {
@@ -301,10 +308,9 @@ public class CrossoverManager {
         return sourceBool;
     }
 
-    public Vector3 MutateBodyVector3(Vector3 sourceVector) {
-
-        return sourceVector;
-    }
+    //public Vector3 MutateBodyVector3(Vector3 sourceVector) {
+        //return sourceVector;
+    //}
     public Vector3 MutateBodyVector3Normalized(Vector3 sourceVector) {        
         return Vector3.Slerp(sourceVector, UnityEngine.Random.onUnitSphere, maxAttributeValueChange - 1f).normalized;
     }
@@ -883,7 +889,7 @@ public class CrossoverManager {
         int numBodyMutations = 0;
         //float attachDirMutationMultiplier = 0.1f;
         //float restAngleDirMutationMultiplier = 0.1f;
-        float jointAngleTypeMultiplier = 0.1f;
+        float jointAngleTypeMultiplier = 0.5f;
         List<int> nodesToDelete = new List<int>();        
         for (int i = 0; i < bodyGenome.CritterNodeList.Count; i++) {
             
@@ -929,7 +935,7 @@ public class CrossoverManager {
                     }
                     // Joint Hinge TYPE!!!!  --- how to handle this???
                     if (CheckForMutation(jointSettingsChance * jointAngleTypeMultiplier * bodyMutationBlastModifier)) {
-                        int jointTypeInt = Mathf.RoundToInt(UnityEngine.Random.Range(0f, 3f));
+                        int jointTypeInt = Mathf.RoundToInt(UnityEngine.Random.Range(0f, 4f));
                         bodyGenome.CritterNodeList[i].jointLink.jointType = (CritterJointLink.JointType)jointTypeInt;
                         Debug.Log(i.ToString() + " Mutated to JointType: " + bodyGenome.CritterNodeList[i].jointLink.jointType);
                     }
@@ -1003,14 +1009,15 @@ public class CrossoverManager {
             Vector3 attachDir = Vector3.Slerp(new Vector3(0f, 0f, 1f), UnityEngine.Random.onUnitSphere, UnityEngine.Random.Range(0f, 1f)); //ConvertWorldSpaceToAttachDir(selectedSegment, rightClickWorldPosition);
             int nextID = bodyGenome.CritterNodeList.Count;
             bodyGenome.AddNewNode(bodyGenome.CritterNodeList[nodesToAddTo[i]], attachDir, new Vector3(0f, 0f, 0f), nextID, GetNextNodeInnov());
-
-
+            
             // Auto-Add-ons: -- New Segment starts with a joint angle sensor and joint Motor by default:
             AddonJointAngleSensor newJointAngleSensor = new AddonJointAngleSensor(nextID, GetNextAddonInnov());
             bodyGenome.addonJointAngleSensorList.Add(newJointAngleSensor);
             // Motor:
             AddonJointMotor newJointMotor = new AddonJointMotor(nextID, GetNextAddonInnov());
             bodyGenome.addonJointMotorList.Add(newJointMotor);
+
+            Debug.Log("New SEGMENT! : " + nodesToAddTo[i].ToString());
         }        
 
         // Addon Mutation:
@@ -1029,13 +1036,13 @@ public class CrossoverManager {
             }
             else {
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
-                    bodyGenome.addonPhysicalAttributesList[i].bounciness[0] = MutateBodyFloatMult(bodyGenome.addonPhysicalAttributesList[i].bounciness[0]);
+                    bodyGenome.addonPhysicalAttributesList[i].bounciness[0] = MutateBodyFloatMult(bodyGenome.addonPhysicalAttributesList[i].bounciness[0], 0f, 1f);
                 }
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
-                    bodyGenome.addonPhysicalAttributesList[i].dynamicFriction[0] = MutateBodyFloatMult(bodyGenome.addonPhysicalAttributesList[i].dynamicFriction[0]);
+                    bodyGenome.addonPhysicalAttributesList[i].dynamicFriction[0] = MutateBodyFloatMult(bodyGenome.addonPhysicalAttributesList[i].dynamicFriction[0], 0f, 1f);
                 }
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
-                    bodyGenome.addonPhysicalAttributesList[i].staticFriction[0] = MutateBodyFloatMult(bodyGenome.addonPhysicalAttributesList[i].staticFriction[0]);
+                    bodyGenome.addonPhysicalAttributesList[i].staticFriction[0] = MutateBodyFloatMult(bodyGenome.addonPhysicalAttributesList[i].staticFriction[0], 0f, 1f);
                 }
                 /*if (CheckForMutation(addonSettingsChance)) {
                     bodyGenome.addonPhysicalAttributesList[i].freezePositionX[0] = MutateBodyBool(bodyGenome.addonPhysicalAttributesList[i].freezePositionX[0]);
@@ -1057,44 +1064,48 @@ public class CrossoverManager {
                 }*/
             }
         }
-        for (int i = 0; i < bodyGenome.addonJointAngleSensorList.Count; i++) {
+        for (int i = bodyGenome.addonJointAngleSensorList.Count - 1; i >= 0; i--) {
             if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
                 // DELETE THIS ADD-ON!!!
+                bodyGenome.addonJointAngleSensorList.RemoveAt(i);
             }
             else {
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
-                    bodyGenome.addonJointAngleSensorList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonJointAngleSensorList[i].sensitivity[0]);
+                    bodyGenome.addonJointAngleSensorList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonJointAngleSensorList[i].sensitivity[0], 0.001f, 100f);
                 }
                 // #################  How to handle MEasureVel Checkbox?? It adds a Neuron!!!!!!!!!
                 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   
             }
         }
-        for (int i = 0; i < bodyGenome.addonContactSensorList.Count; i++) {
+        for (int i = bodyGenome.addonContactSensorList.Count - 1; i >= 0; i--) {
             if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
                 // DELETE THIS ADD-ON!!!
+                bodyGenome.addonContactSensorList.RemoveAt(i);
             }
             else {
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
-                    bodyGenome.addonContactSensorList[i].contactSensitivity[0] = MutateBodyFloatMult(bodyGenome.addonContactSensorList[i].contactSensitivity[0]);
+                    bodyGenome.addonContactSensorList[i].contactSensitivity[0] = MutateBodyFloatMult(bodyGenome.addonContactSensorList[i].contactSensitivity[0], 0.01f, 10f);
                 }
             }            
         }
-        for (int i = 0; i < bodyGenome.addonRaycastSensorList.Count; i++) {
+        for (int i = bodyGenome.addonRaycastSensorList.Count - 1; i >= 0; i--) {
             if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
                 // DELETE THIS ADD-ON!!!
+                bodyGenome.addonRaycastSensorList.RemoveAt(i);
             }
             else {
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
                     bodyGenome.addonRaycastSensorList[i].forwardVector[0] = MutateBodyVector3Normalized(bodyGenome.addonRaycastSensorList[i].forwardVector[0]);
                 }
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
-                    bodyGenome.addonRaycastSensorList[i].maxDistance[0] = MutateBodyFloatMult(bodyGenome.addonRaycastSensorList[i].maxDistance[0]);
+                    bodyGenome.addonRaycastSensorList[i].maxDistance[0] = MutateBodyFloatMult(bodyGenome.addonRaycastSensorList[i].maxDistance[0], 0.01f, 100f);
                 }
             }            
         }
-        for (int i = 0; i < bodyGenome.addonCompassSensor1DList.Count; i++) {
+        for (int i = bodyGenome.addonCompassSensor1DList.Count - 1; i >= 0; i--) {
             if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
                 // DELETE THIS ADD-ON!!!
+                bodyGenome.addonCompassSensor1DList.RemoveAt(i);
             }
             else {
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
@@ -1102,18 +1113,20 @@ public class CrossoverManager {
                 }
             }                               
         }
-        for (int i = 0; i < bodyGenome.addonCompassSensor3DList.Count; i++) {
+        for (int i = bodyGenome.addonCompassSensor3DList.Count - 1; i >= 0; i--) {
             if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
                 // DELETE THIS ADD-ON!!!
+                bodyGenome.addonCompassSensor3DList.RemoveAt(i);
             }
             else {
 
             }
 
         }
-        for (int i = 0; i < bodyGenome.addonPositionSensor1DList.Count; i++) {
+        for (int i = bodyGenome.addonPositionSensor1DList.Count - 1; i >= 0; i--) {
             if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
                 // DELETE THIS ADD-ON!!!
+                bodyGenome.addonPositionSensor1DList.RemoveAt(i);
             }
             else {
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
@@ -1123,53 +1136,57 @@ public class CrossoverManager {
                     bodyGenome.addonPositionSensor1DList[i].relative[0] = MutateBodyBool(bodyGenome.addonPositionSensor1DList[i].relative[0]);
                 }
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
-                    bodyGenome.addonPositionSensor1DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonPositionSensor1DList[i].sensitivity[0]);
+                    bodyGenome.addonPositionSensor1DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonPositionSensor1DList[i].sensitivity[0], 0.01f, 100f);
                 }
             }            
         }
-        for (int i = 0; i < bodyGenome.addonPositionSensor3DList.Count; i++) {
+        for (int i = bodyGenome.addonPositionSensor3DList.Count - 1; i >= 0; i--) {
             if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
                 // DELETE THIS ADD-ON!!!
+                bodyGenome.addonPositionSensor3DList.RemoveAt(i);
             }
             else {
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
-                    bodyGenome.addonPositionSensor3DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonPositionSensor3DList[i].sensitivity[0]);
+                    bodyGenome.addonPositionSensor3DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonPositionSensor3DList[i].sensitivity[0], 0.01f, 100f);
                 }
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
                     bodyGenome.addonPositionSensor3DList[i].relative[0] = MutateBodyBool(bodyGenome.addonPositionSensor3DList[i].relative[0]);
                 }
             }            
         }
-        for (int i = 0; i < bodyGenome.addonRotationSensor1DList.Count; i++) {
+        for (int i = bodyGenome.addonRotationSensor1DList.Count - 1; i >= 0; i--) {
             if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
                 // DELETE THIS ADD-ON!!!
+                bodyGenome.addonRotationSensor1DList.RemoveAt(i);
             }
             else {
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
                     bodyGenome.addonRotationSensor1DList[i].localAxis[0] = MutateBodyVector3Normalized(bodyGenome.addonRotationSensor1DList[i].localAxis[0]);
                 }
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
-                    bodyGenome.addonRotationSensor1DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonRotationSensor1DList[i].sensitivity[0]);
+                    bodyGenome.addonRotationSensor1DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonRotationSensor1DList[i].sensitivity[0], 0.01f, 100f);
                 }
             }            
         }
-        for (int i = 0; i < bodyGenome.addonRotationSensor3DList.Count; i++) {
+        for (int i = bodyGenome.addonRotationSensor3DList.Count - 1; i >= 0; i--) {
             if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
                 // DELETE THIS ADD-ON!!!
+                bodyGenome.addonRotationSensor3DList.RemoveAt(i);
             }
             else {
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
-                    bodyGenome.addonRotationSensor3DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonRotationSensor3DList[i].sensitivity[0]);
+                    bodyGenome.addonRotationSensor3DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonRotationSensor3DList[i].sensitivity[0], 0.01f, 100f);
                 }
             }            
         }
-        for (int i = 0; i < bodyGenome.addonVelocitySensor1DList.Count; i++) {
+        for (int i = bodyGenome.addonVelocitySensor1DList.Count - 1; i >= 0; i--) {
             if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
                 // DELETE THIS ADD-ON!!!
+                bodyGenome.addonVelocitySensor1DList.RemoveAt(i);
             }
             else {
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
-                    bodyGenome.addonVelocitySensor1DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonVelocitySensor1DList[i].sensitivity[0]);
+                    bodyGenome.addonVelocitySensor1DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonVelocitySensor1DList[i].sensitivity[0], 0.01f, 100f);
                 }
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
                     bodyGenome.addonVelocitySensor1DList[i].forwardVector[0] = MutateBodyVector3Normalized(bodyGenome.addonVelocitySensor1DList[i].forwardVector[0]);
@@ -1179,178 +1196,194 @@ public class CrossoverManager {
                 }
             }            
         }
-        for (int i = 0; i < bodyGenome.addonVelocitySensor3DList.Count; i++) {
+        for (int i = bodyGenome.addonVelocitySensor3DList.Count - 1; i >= 0; i--) {
             if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
                 // DELETE THIS ADD-ON!!!
+                bodyGenome.addonVelocitySensor3DList.RemoveAt(i);
             }
             else {
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
-                    bodyGenome.addonVelocitySensor3DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonVelocitySensor3DList[i].sensitivity[0]);
+                    bodyGenome.addonVelocitySensor3DList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonVelocitySensor3DList[i].sensitivity[0], 0.01f, 100f);
                 }
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
                     bodyGenome.addonVelocitySensor3DList[i].relative[0] = MutateBodyBool(bodyGenome.addonVelocitySensor3DList[i].relative[0]);
                 }
             }            
         }
-        for (int i = 0; i < bodyGenome.addonAltimeterList.Count; i++) {
+        for (int i = bodyGenome.addonAltimeterList.Count - 1; i >= 0; i--) {
             if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
                 // DELETE THIS ADD-ON!!!
+                bodyGenome.addonAltimeterList.RemoveAt(i);
             }
             else {
 
             }
         }
-        for (int i = 0; i < bodyGenome.addonEarBasicList.Count; i++) {
+        for (int i = bodyGenome.addonEarBasicList.Count - 1; i >= 0; i--) {
             if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
                 // DELETE THIS ADD-ON!!!
+                bodyGenome.addonEarBasicList.RemoveAt(i);
             }
             else {
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
-                    bodyGenome.addonEarBasicList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonEarBasicList[i].sensitivity[0]);
+                    bodyGenome.addonEarBasicList[i].sensitivity[0] = MutateBodyFloatMult(bodyGenome.addonEarBasicList[i].sensitivity[0], 0.01f, 100f);
                 }
             }                              
         }
-        for (int i = 0; i < bodyGenome.addonGravitySensorList.Count; i++) {
+        for (int i = bodyGenome.addonGravitySensorList.Count - 1; i >= 0; i--) {
             if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
                 // DELETE THIS ADD-ON!!!
+                bodyGenome.addonGravitySensorList.RemoveAt(i);
             }
             else {
 
             }
         }
-        for (int i = 0; i < bodyGenome.addonOscillatorInputList.Count; i++) {
+        for (int i = bodyGenome.addonOscillatorInputList.Count - 1; i >= 0; i--) {
             if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
                 // DELETE THIS ADD-ON!!!
+                bodyGenome.addonOscillatorInputList.RemoveAt(i);
             }
             else {
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
-                    bodyGenome.addonOscillatorInputList[i].amplitude[0] = MutateBodyFloatMult(bodyGenome.addonOscillatorInputList[i].amplitude[0]);
+                    bodyGenome.addonOscillatorInputList[i].amplitude[0] = MutateBodyFloatMult(bodyGenome.addonOscillatorInputList[i].amplitude[0], 0.01f, 100f);
                 }
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
-                    bodyGenome.addonOscillatorInputList[i].frequency[0] = MutateBodyFloatMult(bodyGenome.addonOscillatorInputList[i].frequency[0]);
+                    bodyGenome.addonOscillatorInputList[i].frequency[0] = MutateBodyFloatMult(bodyGenome.addonOscillatorInputList[i].frequency[0], 0.01f, 50f);
                 }
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
-                    bodyGenome.addonOscillatorInputList[i].offset[0] = MutateBodyFloatMult(bodyGenome.addonOscillatorInputList[i].offset[0]);
+                    bodyGenome.addonOscillatorInputList[i].offset[0] = MutateBodyFloatMult(bodyGenome.addonOscillatorInputList[i].offset[0], -50f, 50f);
                 }
             }            
         }
-        for (int i = 0; i < bodyGenome.addonValueInputList.Count; i++) {
+        for (int i = bodyGenome.addonValueInputList.Count - 1; i >= 0; i--) {
             if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
                 // DELETE THIS ADD-ON!!!
+                bodyGenome.addonValueInputList.RemoveAt(i);
             }
             else {
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
-                    bodyGenome.addonValueInputList[i].value[0] = MutateBodyFloatMult(bodyGenome.addonValueInputList[i].value[0]);
+                    bodyGenome.addonValueInputList[i].value[0] = MutateBodyFloatMult(bodyGenome.addonValueInputList[i].value[0], -100f, 100f);
                 }
             }            
         }
-        for (int i = 0; i < bodyGenome.addonTimerInputList.Count; i++) {
+        for (int i = bodyGenome.addonTimerInputList.Count - 1; i >= 0; i--) {
             if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
                 // DELETE THIS ADD-ON!!!
+                bodyGenome.addonTimerInputList.RemoveAt(i);
             }
             else {
 
             }
         }
         //=======================  OUTPUTS ===================== OUTPUTS ======================= OUTPUTS =====================================================
-        for (int i = 0; i < bodyGenome.addonJointMotorList.Count; i++) {
+        for (int i = bodyGenome.addonJointMotorList.Count - 1; i >= 0; i--) {
             if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
                 // DELETE THIS ADD-ON!!!
+                bodyGenome.addonJointMotorList.RemoveAt(i);
             }
             else {
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
-                    bodyGenome.addonJointMotorList[i].motorForce[0] = MutateBodyFloatMult(bodyGenome.addonJointMotorList[i].motorForce[0]);
+                    bodyGenome.addonJointMotorList[i].motorForce[0] = MutateBodyFloatMult(bodyGenome.addonJointMotorList[i].motorForce[0], 0.01f, 1000f);
                 }
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
-                    bodyGenome.addonJointMotorList[i].motorSpeed[0] = MutateBodyFloatMult(bodyGenome.addonJointMotorList[i].motorSpeed[0]);
+                    bodyGenome.addonJointMotorList[i].motorSpeed[0] = MutateBodyFloatMult(bodyGenome.addonJointMotorList[i].motorSpeed[0], 0.01f, 1000f);
                 }
             }            
         }
-        for (int i = 0; i < bodyGenome.addonThrusterEffector1DList.Count; i++) {
+        for (int i = bodyGenome.addonThrusterEffector1DList.Count - 1; i >= 0; i--) {
             if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
                 // DELETE THIS ADD-ON!!!
+                bodyGenome.addonThrusterEffector1DList.RemoveAt(i);
             }
             else {
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
                     bodyGenome.addonThrusterEffector1DList[i].forwardVector[0] = MutateBodyVector3Normalized(bodyGenome.addonThrusterEffector1DList[i].forwardVector[0]);
                 }
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
-                    bodyGenome.addonThrusterEffector1DList[i].maxForce[0] = MutateBodyFloatMult(bodyGenome.addonThrusterEffector1DList[i].maxForce[0]);
+                    bodyGenome.addonThrusterEffector1DList[i].maxForce[0] = MutateBodyFloatMult(bodyGenome.addonThrusterEffector1DList[i].maxForce[0], 0.01f, 100f);
                 }
             }            
         }
-        for (int i = 0; i < bodyGenome.addonThrusterEffector3DList.Count; i++) {
+        for (int i = bodyGenome.addonThrusterEffector3DList.Count - 1; i >= 0; i--) {
             if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
                 // DELETE THIS ADD-ON!!!
+                bodyGenome.addonThrusterEffector3DList.RemoveAt(i);
             }
             else {
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
-                    bodyGenome.addonThrusterEffector3DList[i].maxForce[0] = MutateBodyFloatMult(bodyGenome.addonThrusterEffector3DList[i].maxForce[0]);
+                    bodyGenome.addonThrusterEffector3DList[i].maxForce[0] = MutateBodyFloatMult(bodyGenome.addonThrusterEffector3DList[i].maxForce[0], 0.01f, 100f);
                 }
             }            
         }        
-        for (int i = 0; i < bodyGenome.addonTorqueEffector1DList.Count; i++) {
+        for (int i = bodyGenome.addonTorqueEffector1DList.Count - 1; i >= 0; i--) {
             if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
                 // DELETE THIS ADD-ON!!!
+                bodyGenome.addonTorqueEffector1DList.RemoveAt(i);
             }
             else {
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
-                    bodyGenome.addonTorqueEffector1DList[i].maxTorque[0] = MutateBodyFloatMult(bodyGenome.addonTorqueEffector1DList[i].maxTorque[0]);
+                    bodyGenome.addonTorqueEffector1DList[i].maxTorque[0] = MutateBodyFloatMult(bodyGenome.addonTorqueEffector1DList[i].maxTorque[0], 0.01f, 100f);
                 }
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
                     bodyGenome.addonTorqueEffector1DList[i].axis[0] = MutateBodyVector3Normalized(bodyGenome.addonTorqueEffector1DList[i].axis[0]);
                 }
             }            
         }
-        for (int i = 0; i < bodyGenome.addonTorqueEffector3DList.Count; i++) {
+        for (int i = bodyGenome.addonTorqueEffector3DList.Count - 1; i >= 0; i--) {
             if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
                 // DELETE THIS ADD-ON!!!
+                bodyGenome.addonTorqueEffector3DList.RemoveAt(i);
             }
             else {
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
-                    bodyGenome.addonTorqueEffector3DList[i].maxTorque[0] = MutateBodyFloatMult(bodyGenome.addonTorqueEffector3DList[i].maxTorque[0]);
+                    bodyGenome.addonTorqueEffector3DList[i].maxTorque[0] = MutateBodyFloatMult(bodyGenome.addonTorqueEffector3DList[i].maxTorque[0], 0.01f, 100f);
                 }
             }            
         }
-        for (int i = 0; i < bodyGenome.addonMouthBasicList.Count; i++) {
+        for (int i = bodyGenome.addonMouthBasicList.Count - 1; i >= 0; i--) {
             if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
                 // DELETE THIS ADD-ON!!!
+                bodyGenome.addonMouthBasicList.RemoveAt(i);
             }
             else {
 
             }
         }
-        for (int i = 0; i < bodyGenome.addonNoiseMakerBasicList.Count; i++) {
+        for (int i = bodyGenome.addonNoiseMakerBasicList.Count - 1; i >= 0; i--) {
             if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
                 // DELETE THIS ADD-ON!!!
+                bodyGenome.addonNoiseMakerBasicList.RemoveAt(i);
             }
             else {
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
-                    bodyGenome.addonNoiseMakerBasicList[i].amplitude[0] = MutateBodyFloatMult(bodyGenome.addonNoiseMakerBasicList[i].amplitude[0]);
+                    bodyGenome.addonNoiseMakerBasicList[i].amplitude[0] = MutateBodyFloatMult(bodyGenome.addonNoiseMakerBasicList[i].amplitude[0], 0.01f, 100f);
                 }
             }            
         }
-        for (int i = 0; i < bodyGenome.addonStickyList.Count; i++) {
+        for (int i = bodyGenome.addonStickyList.Count - 1; i >= 0; i--) {
             if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
                 // DELETE THIS ADD-ON!!!
+                bodyGenome.addonStickyList.RemoveAt(i);
             }
             else {
 
             }
         }
-        for (int i = 0; i < bodyGenome.addonWeaponBasicList.Count; i++) {
+        for (int i = bodyGenome.addonWeaponBasicList.Count - 1; i >= 0; i--) {
             if (CheckForMutation(removeAddonChance * bodyMutationBlastModifier)) {
                 // DELETE THIS ADD-ON!!!
+                bodyGenome.addonWeaponBasicList.RemoveAt(i);
             }
             else {
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
-                    bodyGenome.addonWeaponBasicList[i].strength[0] = MutateBodyFloatMult(bodyGenome.addonWeaponBasicList[i].strength[0]);
+                    bodyGenome.addonWeaponBasicList[i].strength[0] = MutateBodyFloatMult(bodyGenome.addonWeaponBasicList[i].strength[0], 0.01f, 100f);
                 }
             }            
         }
 
         // UPDATE BRAIN/BODY:
-        brainGenome.AdjustBrainAfterBodyChange(bodyGenome);
+        brainGenome.AdjustBrainAfterBodyChange(ref bodyGenome);
     }
 
     public void BodyCrossover(ref CritterNode clonedCritterNode, CritterNode lessFitNode) {
@@ -1963,9 +1996,9 @@ public class CrossoverManager {
                 childBrain.BuildBrainNetwork();
                 newChildAgent.brain = childBrain;
                 //Debug.Log("NEW CHILD numNodes: " + newChildAgent.brainGenome.nodeNEATList.Count.ToString() + ", #Neurons: " + newChildAgent.brain.neuronList.Count.ToString());
-                
+                //newChildAgent.bodyGenome.PreBuildCritter(0.8f);
                 // Species:
-                if(useSpeciation) {
+                if (useSpeciation) {
                     float randAdoption = UnityEngine.Random.Range(0f, 1f);
                     if (randAdoption < adoptionRate) { // Attempts to Found a new species
                         bool speciesGenomeMatch = false;
@@ -2037,7 +2070,7 @@ public class CrossoverManager {
             }
         }
         
-        Debug.Log("Finished Crossover! totalNumWeightMutations: " + totalNumWeightMutations.ToString() + ", mutationBlastModifier: " + mutationBlastModifier.ToString() + ", LifetimeGeneration: " + LifetimeGeneration.ToString() + ", currentGeneration: " + currentGeneration.ToString() + ", sourcePopulation.trainingGenerations: " + sourcePopulation.trainingGenerations.ToString());
+        Debug.Log("Finished Crossover! totalNumWeightMutations: " + totalNumWeightMutations.ToString() + ", mutationBlastModifier: " + mutationBlastModifier.ToString() + ", bodyMutationBlastModifier: " + bodyMutationBlastModifier.ToString() + ", LifetimeGeneration: " + LifetimeGeneration.ToString() + ", currentGeneration: " + currentGeneration.ToString() + ", sourcePopulation.trainingGenerations: " + sourcePopulation.trainingGenerations.ToString());
         sourcePopulation.masterAgentArray = newAgentArray;
         sourcePopulation.speciesBreedingPoolList = childSpeciesPoolsList;
 

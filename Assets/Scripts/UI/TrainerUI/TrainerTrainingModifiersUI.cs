@@ -24,6 +24,7 @@ public class TrainerTrainingModifiersUI : MonoBehaviour {
     public GameObject prefabTrainingModifierRowUI;
     public GameObject prefabModifierLinkExplosion;
     public GameObject prefabModifierMutationBlast;
+    public GameObject prefabModifierBodyMutationBlast;
     public GameObject prefabModifierPruneBrain;
     public GameObject prefabModifierTargetCone;
     public GameObject prefabModifierTargetForward;
@@ -116,6 +117,11 @@ public class TrainerTrainingModifiersUI : MonoBehaviour {
 
             case TrainingModifier.TrainingModifierType.MutationBlast:
                 modifierDisplayGO = (GameObject)Instantiate(prefabModifierMutationBlast);
+                modifierDisplayGO.transform.SetParent(panelModifierDisplay);
+                break;
+
+            case TrainingModifier.TrainingModifierType.BodyMutationBlast:
+                modifierDisplayGO = (GameObject)Instantiate(prefabModifierBodyMutationBlast);
                 modifierDisplayGO.transform.SetParent(panelModifierDisplay);
                 break;
 
@@ -218,6 +224,13 @@ public class TrainerTrainingModifiersUI : MonoBehaviour {
                 newModifier.duration = (int)mutationBlastSettings.sliderDuration.value;
                 newModifier.minMultiplier = mutationBlastSettings.sliderMinMultiplier.value;
                 newModifier.liveForever = mutationBlastSettings.toggleLiveForever.isOn;
+                break;
+
+            case TrainingModifier.TrainingModifierType.BodyMutationBlast:
+                TrainingModifierBodyMutationBlastUI bodyMutationBlastSettings = currentModifierPrefabGO.GetComponent<TrainingModifierBodyMutationBlastUI>();
+                newModifier.duration = (int)bodyMutationBlastSettings.sliderDuration.value;
+                newModifier.minMultiplier = bodyMutationBlastSettings.sliderMinMultiplier.value;
+                newModifier.liveForever = bodyMutationBlastSettings.toggleLiveForever.isOn;
                 break;
 
             case TrainingModifier.TrainingModifierType.PruneBrain:

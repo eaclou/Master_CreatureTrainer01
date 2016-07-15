@@ -126,7 +126,7 @@ public class GenomeNEAT {
             }
         }
         if(nodeIndex == -1) {
-            Debug.Log(debugNodes);
+            //Debug.Log(debugNodes);
         }
 
         return nodeIndex;
@@ -136,7 +136,7 @@ public class GenomeNEAT {
         return new Int3(nodeNEATList[nodeIndex].sourceAddonInno, nodeNEATList[nodeIndex].sourceAddonRecursionNum, nodeNEATList[nodeIndex].sourceAddonChannelNum);
     }
 
-    public void AdjustBrainAfterBodyChange(CritterGenome bodyGenome) {
+    public void AdjustBrainAfterBodyChange(ref CritterGenome bodyGenome) {
         // Try to do it assuming this function only took a CritterNode as input, rather than full bodyGenome:
         //CritterNode sourceNode = bodyGenome.CritterNodeList[bodyNodeID];
         string beforeBrain = "AdjustBrain Before: \n";
@@ -237,12 +237,12 @@ public class GenomeNEAT {
 
             if (linkSevered) {
                 linkNEATList[i].enabled = false;
-                Debug.Log("LINK " + i.ToString() + " SEVERED!! " + linkNEATList[i].fromNodeID.ToString() + ", " + linkNEATList[i].toNodeID.ToString());
+                //Debug.Log("LINK " + i.ToString() + " SEVERED!! " + linkNEATList[i].fromNodeID.ToString() + ", " + linkNEATList[i].toNodeID.ToString());
             }
         }
 
         //Debug.Log(beforeBrain);
-        //Debug.Log(afterBrain);
+        //Debug.Log(afterBrain + "\n deltaNodes: " + netNewNodes.ToString());
     }
     
     public void CreateInitialConnections(float connectedness, bool randomWeights) {
@@ -353,7 +353,7 @@ public class GenomeNEAT {
         }        
     }
 
-    public bool AreEqual(Vector3 vec1, Vector3 vec2) {
+    /*public bool AreEqual(Vector3 vec1, Vector3 vec2) {
         bool isEqual = false;
         if(vec1.x == vec2.x) {
             if (vec1.y == vec2.y) {
@@ -364,7 +364,7 @@ public class GenomeNEAT {
         }
         return isEqual;
     }
-
+    */
     public void AddNewRandomLink(int gen) {
         
         List<GeneNodeNEAT> eligibleFromNodes = new List<GeneNodeNEAT>();
@@ -381,40 +381,42 @@ public class GenomeNEAT {
                 eligibleToNodes.Add(nodeNEATList[i]);
             }
         }
-        int fromNodeID = (int)UnityEngine.Random.Range(0f, (float)eligibleFromNodes.Count);
-        int toNodeID = (int)UnityEngine.Random.Range(0f, (float)eligibleToNodes.Count);
-        if(eligibleFromNodes[fromNodeID].id == eligibleToNodes[toNodeID].id) {
-            // Check if this link already exists:
-            bool linkExists = false;
-            for (int i = 0; i < linkNEATList.Count; i++) {
-                if (GetNodeIndexFromInt3(linkNEATList[i].toNodeID) == eligibleToNodes[toNodeID].id && GetNodeIndexFromInt3(linkNEATList[i].fromNodeID) == eligibleFromNodes[fromNodeID].id) {
-                    Debug.Log("Attempted to add link but it already exists!!! from: " + eligibleFromNodes[fromNodeID].id.ToString() + ", to: " + eligibleToNodes[toNodeID].id.ToString());
-                    linkExists = true;
+        if(eligibleFromNodes.Count > 0 && eligibleToNodes.Count > 0) {
+            int fromNodeID = (int)UnityEngine.Random.Range(0f, (float)eligibleFromNodes.Count);
+            int toNodeID = (int)UnityEngine.Random.Range(0f, (float)eligibleToNodes.Count);
+            if (eligibleFromNodes[fromNodeID].id == eligibleToNodes[toNodeID].id) {
+                // Check if this link already exists:
+                bool linkExists = false;
+                for (int i = 0; i < linkNEATList.Count; i++) {
+                    if (GetNodeIndexFromInt3(linkNEATList[i].toNodeID) == eligibleToNodes[toNodeID].id && GetNodeIndexFromInt3(linkNEATList[i].fromNodeID) == eligibleFromNodes[fromNodeID].id) {
+                        Debug.Log("Attempted to add link but it already exists!!! from: " + eligibleFromNodes[fromNodeID].id.ToString() + ", to: " + eligibleToNodes[toNodeID].id.ToString());
+                        linkExists = true;
+                    }
+                }
+                if (!linkExists) {
+                    Debug.Log("New Link TO ITSELF: " + eligibleFromNodes[fromNodeID].id.ToString() + " Doing it anyway!");
+                    float randomWeight = Gaussian.GetRandomGaussian() * 0.2f; //0f; // start zeroed to give a chance to try both + and - //Gaussian.GetRandomGaussian();
+                    GeneLinkNEAT newLink = new GeneLinkNEAT(GetInt3FromNodeIndex(eligibleFromNodes[fromNodeID].id), GetInt3FromNodeIndex(eligibleToNodes[toNodeID].id), randomWeight, true, GetNextInnovNumber(), gen);
+                    linkNEATList.Add(newLink);
+                }
+
+            }
+            else {
+                // Check if this link already exists:
+                bool linkExists = false;
+                for (int i = 0; i < linkNEATList.Count; i++) {
+                    if (GetNodeIndexFromInt3(linkNEATList[i].toNodeID) == eligibleToNodes[toNodeID].id && GetNodeIndexFromInt3(linkNEATList[i].fromNodeID) == eligibleFromNodes[fromNodeID].id) {
+                        //Debug.Log("Attempted to add link but it already exists!!! from: " + eligibleFromNodes[fromNodeID].id.ToString() + ", to: " + eligibleToNodes[toNodeID].id.ToString());
+                        linkExists = true;
+                    }
+                }
+                if (!linkExists) {
+                    float randomWeight = Gaussian.GetRandomGaussian() * 0.2f; //0f; // start zeroed to give a chance to try both + and - //Gaussian.GetRandomGaussian();
+                    GeneLinkNEAT newLink = new GeneLinkNEAT(GetInt3FromNodeIndex(eligibleFromNodes[fromNodeID].id), GetInt3FromNodeIndex(eligibleToNodes[toNodeID].id), randomWeight, true, GetNextInnovNumber(), gen);
+                    linkNEATList.Add(newLink);
                 }
             }
-            if (!linkExists) {
-                Debug.Log("New Link TO ITSELF: " + eligibleFromNodes[fromNodeID].id.ToString() + " Doing it anyway!");
-                float randomWeight = Gaussian.GetRandomGaussian() * 0.2f; //0f; // start zeroed to give a chance to try both + and - //Gaussian.GetRandomGaussian();
-                GeneLinkNEAT newLink = new GeneLinkNEAT(GetInt3FromNodeIndex(eligibleFromNodes[fromNodeID].id), GetInt3FromNodeIndex(eligibleToNodes[toNodeID].id), randomWeight, true, GetNextInnovNumber(), gen);
-                linkNEATList.Add(newLink);
-            }
-            
-        }
-        else {
-            // Check if this link already exists:
-            bool linkExists = false;
-            for(int i = 0; i < linkNEATList.Count; i++) {
-                if(GetNodeIndexFromInt3(linkNEATList[i].toNodeID) == eligibleToNodes[toNodeID].id && GetNodeIndexFromInt3(linkNEATList[i].fromNodeID) == eligibleFromNodes[fromNodeID].id) {
-                    //Debug.Log("Attempted to add link but it already exists!!! from: " + eligibleFromNodes[fromNodeID].id.ToString() + ", to: " + eligibleToNodes[toNodeID].id.ToString());
-                    linkExists = true;                    
-                }
-            }
-            if(!linkExists) {
-                float randomWeight = Gaussian.GetRandomGaussian() * 0.2f; //0f; // start zeroed to give a chance to try both + and - //Gaussian.GetRandomGaussian();
-                GeneLinkNEAT newLink = new GeneLinkNEAT(GetInt3FromNodeIndex(eligibleFromNodes[fromNodeID].id), GetInt3FromNodeIndex(eligibleToNodes[toNodeID].id), randomWeight, true, GetNextInnovNumber(), gen);
-                linkNEATList.Add(newLink);
-            }            
-        }        
+        }                
     }
 
     public void AddNewExtraLink(float fromBias, int gen) {  // has a higher-than-random chance to create a new link with at least one node that is already connected
@@ -551,6 +553,13 @@ public class GenomeNEAT {
         float matchingGenes = 0f;
         float disjointGenes = 0f;
         float excessGenes = 0f;
+
+        // matching Links
+        // matching nodes/neurons
+        // matching activation functions?
+        // difference in weights
+        // difference in add-on settings?
+        // -- NEED TO GO BY BODY GENOME?????
 
         for(int i = 0; i < genomeA.linkNEATList.Count + genomeB.linkNEATList.Count; i++) {
             if(indexA < genomeA.linkNEATList.Count) {

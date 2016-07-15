@@ -19,6 +19,7 @@ public class CritterSegment : MonoBehaviour {
     public bool meshBuilt = false;
 
     public bool broken = false;
+    public bool colliding = false;
 
     //public virtual Mesh BuildMesh() {
     //    return new Mesh();
@@ -477,5 +478,8 @@ public class CritterSegment : MonoBehaviour {
         broken = true;
     }
 
+    void OnCollisionEnter(Collision col) {
+        colliding = true;
+    }
 }
 

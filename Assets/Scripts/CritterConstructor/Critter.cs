@@ -396,9 +396,10 @@ public class Critter : MonoBehaviour {
         return numSegments;
     }
     */  // deprecated, use similar function within CritterGenome class
-
+    
     public void RebuildCritterFromGenomeRecursive(bool physicsOn) {
         //Debug.Log("RebuildCritterFromGenomeRecursive: " + masterCritterGenome.CritterNodeList.Count.ToString());
+        masterCritterGenome.PreBuildCritter(0.8f);
         // Delete existing Segment GameObjects
         DeleteSegments();
         // Is this the best way to clear the lists? from a memory standpoint...
@@ -454,6 +455,7 @@ public class Critter : MonoBehaviour {
         int currentDepth = 0; // start with RootNode
         int maxDepth = 20;  // safeguard to prevent while loop lock
         int nextSegmentID = 0;
+        float critterTotalVolume = 0f;
         List<CritterSegment> builtSegmentsList = new List<CritterSegment>();  // keep track of segments that have been built - linear in-order array 0-n segments
         List<BuildSegmentInfo> currentBuildSegmentList = new List<BuildSegmentInfo>();  // keeps track of all current-depth segment build-requests, and holds important metadata
         List<BuildSegmentInfo> nextBuildSegmentList = new List<BuildSegmentInfo>();  // used to keep track of next childSegments that need to be built
@@ -480,6 +482,47 @@ public class Critter : MonoBehaviour {
                 newGO.GetComponent<MeshRenderer>().material.SetFloat("_Selected", 0f);
                 newGO.transform.SetParent(this.gameObject.transform);
                 newGO.AddComponent<BoxCollider>().isTrigger = false;
+                
+                critterSegmentList.Add(newGO);  // Add to master Linear list of Segments
+                newSegment.InitGamePiece();  // create the mesh and some other initialization stuff
+                newSegment.sourceNode = currentBuildSegmentList[i].sourceNode;
+                newSegment.id = nextSegmentID;
+                nextSegmentID++;
+                
+                if (currentBuildSegmentList[i].sourceNode.ID == 0) {  // is ROOT segment  -- Look into doing Root build BEFORE for loop to avoid the need to do this check
+                    newGO.transform.position = masterCritterGenome.centerOfMassOffset;
+                    newGO.transform.rotation = Quaternion.identity;
+                    newSegment.scalingFactor = newSegment.sourceNode.jointLink.recursionScalingFactor;
+                    newGO.transform.localScale = currentBuildSegmentList[i].sourceNode.dimensions * newSegment.scalingFactor;
+                    critterTotalVolume += newGO.transform.localScale.x * newGO.transform.localScale.y * newGO.transform.localScale.z;
+                    newSegment.surfaceArea = new Vector3(newGO.transform.localScale.y * newGO.transform.localScale.z * 2f, newGO.transform.localScale.x * newGO.transform.localScale.z * 2f, newGO.transform.localScale.x * newGO.transform.localScale.y * 2f);
+                    
+                }
+                else {  // if NOT root segment, can consider parent-related stuff:
+                    
+                    newSegment.parentSegment = currentBuildSegmentList[i].parentSegment;
+                    // Inherit Axis-Inversions from parent segment:
+                    newSegment.mirrorX = newSegment.parentSegment.mirrorX;
+                    newSegment.mirrorY = newSegment.parentSegment.mirrorY;
+                    newSegment.mirrorZ = newSegment.parentSegment.mirrorZ;
+                    // inherit scaling factor from parent -- this is later adjusted again if it is part of a recursion chain
+                    newSegment.scalingFactor = newSegment.parentSegment.scalingFactor;
+                    newSegment.scalingFactor *= currentBuildSegmentList[i].sourceNode.jointLink.recursionScalingFactor; // propagate scaling factor
+                    // Check for if the segment currently being built is a Mirror COPY:
+                    if (currentBuildSegmentList[i].isMirror) {
+                        //Debug.Log("This is a MIRROR COPY segment - Wow!");
+                        if(currentBuildSegmentList[i].sourceNode.jointLink.symmetryType == CritterJointLink.SymmetryType.MirrorX) {
+                            // Invert the X-axis  (this will propagate down to all this segment's children
+                            newSegment.mirrorX = !newSegment.mirrorX;
+                        }
+                        else if (currentBuildSegmentList[i].sourceNode.jointLink.symmetryType == CritterJointLink.SymmetryType.MirrorY) {
+                            newSegment.mirrorY = !newSegment.mirrorY;
+                        }
+                        else if (currentBuildSegmentList[i].sourceNode.jointLink.symmetryType == CritterJointLink.SymmetryType.MirrorZ) {
+                            newSegment.mirrorZ = !newSegment.mirrorZ;
+                        }
+                    }
+                }
                 if (physicsOn) {
                     newGO.AddComponent<Rigidbody>().isKinematic = false;
 
@@ -512,46 +555,27 @@ public class Critter : MonoBehaviour {
                     configJoint.angularYZLimitSpring = limitSpring;
                     */
                 }
-                critterSegmentList.Add(newGO);  // Add to master Linear list of Segments
-                newSegment.InitGamePiece();  // create the mesh and some other initialization stuff
-                newSegment.sourceNode = currentBuildSegmentList[i].sourceNode;
-                newSegment.id = nextSegmentID;
-                nextSegmentID++;
-                
-                if (currentBuildSegmentList[i].sourceNode.ID == 0) {  // is ROOT segment  -- Look into doing Root build BEFORE for loop to avoid the need to do this check
-                    newGO.transform.rotation = Quaternion.identity;
-                    newSegment.scalingFactor = newSegment.sourceNode.jointLink.recursionScalingFactor;
-                    newGO.transform.localScale = currentBuildSegmentList[i].sourceNode.dimensions * newSegment.scalingFactor;
-                    newSegment.surfaceArea = new Vector3(newGO.transform.localScale.y * newGO.transform.localScale.z * 2f, newGO.transform.localScale.x * newGO.transform.localScale.z * 2f, newGO.transform.localScale.x * newGO.transform.localScale.y * 2f);
-                    
+                // PositionSEGMENT GameObject!!!
+                if (newSegment.id == 0) {  // if ROOT NODE:
+
                 }
-                else {  // if NOT root segment, can consider parent-related stuff:
-                    
-                    newSegment.parentSegment = currentBuildSegmentList[i].parentSegment;
-                    // Inherit Axis-Inversions from parent segment:
-                    newSegment.mirrorX = newSegment.parentSegment.mirrorX;
-                    newSegment.mirrorY = newSegment.parentSegment.mirrorY;
-                    newSegment.mirrorZ = newSegment.parentSegment.mirrorZ;
-                    // inherit scaling factor from parent -- this is later adjusted again if it is part of a recursion chain
-                    newSegment.scalingFactor = newSegment.parentSegment.scalingFactor;
-                    newSegment.scalingFactor *= currentBuildSegmentList[i].sourceNode.jointLink.recursionScalingFactor; // propagate scaling factor
-                    // Check for if the segment currently being built is a Mirror COPY:
-                    if (currentBuildSegmentList[i].isMirror) {
-                        //Debug.Log("This is a MIRROR COPY segment - Wow!");
-                        if(currentBuildSegmentList[i].sourceNode.jointLink.symmetryType == CritterJointLink.SymmetryType.MirrorX) {
-                            // Invert the X-axis  (this will propagate down to all this segment's children
-                            newSegment.mirrorX = !newSegment.mirrorX;
-                        }
-                        else if (currentBuildSegmentList[i].sourceNode.jointLink.symmetryType == CritterJointLink.SymmetryType.MirrorY) {
-                            newSegment.mirrorY = !newSegment.mirrorY;
-                        }
-                        else if (currentBuildSegmentList[i].sourceNode.jointLink.symmetryType == CritterJointLink.SymmetryType.MirrorZ) {
-                            newSegment.mirrorZ = !newSegment.mirrorZ;
-                        }
+                else {
+                    SetSegmentTransform(newGO);  // Properly position the SegmentGO where it should be  && scale!
+                    critterTotalVolume += newGO.transform.localScale.x * newGO.transform.localScale.y * newGO.transform.localScale.z;
+                    if (physicsOn) {
+                        //newGO.GetComponent<Rigidbody>().isKinematic = false;
+                        newGO.GetComponent<Rigidbody>().ResetInertiaTensor();
+                        ConfigurableJoint configJoint = newGO.AddComponent<ConfigurableJoint>();
+                        configJoint.autoConfigureConnectedAnchor = false;
+                        configJoint.connectedBody = newSegment.parentSegment.gameObject.GetComponent<Rigidbody>();
+                        configJoint.anchor = GetJointAnchor(newSegment);
+                        configJoint.connectedAnchor = GetJointConnectedAnchor(newSegment); // <-- Might be Unnecessary
+                        ConfigureJointSettings(newSegment, ref configJoint);  // UPDATE THIS TO USE segaddonJointMotorSettings!?!?
                     }
                 }
+                
                 // SEGMENT ADDONS:
-                if(physicsOn) {
+                if (physicsOn) {
                     // Check for Physical Attributes:
                     List<AddonPhysicalAttributes> physicalAttributesList = masterCritterGenome.CheckForAddonPhysicalAttributes(currentBuildSegmentList[i].sourceNode.ID);
                     for(int a = 0; a < physicalAttributesList.Count; a++) {
@@ -652,78 +676,162 @@ public class Critter : MonoBehaviour {
                         segaddonContactSensorList.Add(newContactSensor);
                         SegaddonCollisionDetector collisionDetector = newGO.AddComponent<SegaddonCollisionDetector>();
                         collisionDetector.referencedContactSensor = newContactSensor;
+
+                        string inputChannelName = "Segment " + newContactSensor.segmentID.ToString() + " Contact Sensor";
+                        BrainInputChannel BIC_SegmentContactInput = new BrainInputChannel(ref newContactSensor.contactStatus, true, inputChannelName);
+                        inputChannelsList.Add(BIC_SegmentContactInput);
                     }
                     List<AddonRaycastSensor> raycastSensorList = masterCritterGenome.CheckForAddonRaycastSensor(currentBuildSegmentList[i].sourceNode.ID);
                     for (int j = 0; j < raycastSensorList.Count; j++) {
                         SegaddonRaycastSensor newRaycastSensor = new SegaddonRaycastSensor(raycastSensorList[j]);
                         newRaycastSensor.segmentID = newSegment.id;
                         segaddonRaycastSensorList.Add(newRaycastSensor);
+
+                        string inputChannelName = "Segment " + newRaycastSensor.segmentID.ToString() + " Raycast Sensor(dist)";
+                        BrainInputChannel BIC_SegmentRaycastInput = new BrainInputChannel(ref newRaycastSensor.distance, true, inputChannelName);
+                        inputChannelsList.Add(BIC_SegmentRaycastInput);
                     }
                     List<AddonCompassSensor1D> compassSensor1DList = masterCritterGenome.CheckForAddonCompassSensor1D(currentBuildSegmentList[i].sourceNode.ID);
                     for (int j = 0; j < compassSensor1DList.Count; j++) {
                         SegaddonCompassSensor1D newCompassSensor1D = new SegaddonCompassSensor1D(compassSensor1DList[j]);
                         newCompassSensor1D.segmentID = newSegment.id;
                         segaddonCompassSensor1DList.Add(newCompassSensor1D);
+
+                        string inputChannelName = "Segment " + newCompassSensor1D.segmentID.ToString() + " Compass1D";
+                        BrainInputChannel BIC_SegmentCompass1DInput = new BrainInputChannel(ref newCompassSensor1D.dotProduct, true, inputChannelName);
+                        inputChannelsList.Add(BIC_SegmentCompass1DInput);
                     }
                     List<AddonCompassSensor3D> compassSensor3DList = masterCritterGenome.CheckForAddonCompassSensor3D(currentBuildSegmentList[i].sourceNode.ID);
                     for (int j = 0; j < compassSensor3DList.Count; j++) {
                         SegaddonCompassSensor3D newCompassSensor3D = new SegaddonCompassSensor3D(compassSensor3DList[j]);
                         newCompassSensor3D.segmentID = newSegment.id;
                         segaddonCompassSensor3DList.Add(newCompassSensor3D);
+
+                        string inputChannelName = "Segment " + newCompassSensor3D.segmentID.ToString() + " Compass3D Right";
+                        BrainInputChannel BIC_SegmentCompass3DInputRight = new BrainInputChannel(ref newCompassSensor3D.dotProductRight, true, inputChannelName);
+                        inputChannelsList.Add(BIC_SegmentCompass3DInputRight);
+
+                        inputChannelName = "Segment " + newCompassSensor3D.segmentID.ToString() + " Compass3D Up";
+                        BrainInputChannel BIC_SegmentCompass3DInputUp = new BrainInputChannel(ref newCompassSensor3D.dotProductUp, true, inputChannelName);
+                        inputChannelsList.Add(BIC_SegmentCompass3DInputUp);
+
+                        inputChannelName = "Segment " + newCompassSensor3D.segmentID.ToString() + " Compass3D Forward";
+                        BrainInputChannel BIC_SegmentCompass3DInputForward = new BrainInputChannel(ref newCompassSensor3D.dotProductForward, true, inputChannelName);
+                        inputChannelsList.Add(BIC_SegmentCompass3DInputForward);
                     }
                     List<AddonPositionSensor1D> positionSensor1DList = masterCritterGenome.CheckForAddonPositionSensor1D(currentBuildSegmentList[i].sourceNode.ID);
                     for (int j = 0; j < positionSensor1DList.Count; j++) {
                         SegaddonPositionSensor1D newPositionSensor1D = new SegaddonPositionSensor1D(positionSensor1DList[j]);
                         newPositionSensor1D.segmentID = newSegment.id;
                         segaddonPositionSensor1DList.Add(newPositionSensor1D);
+
+                        string inputChannelName = "Segment " + newPositionSensor1D.segmentID.ToString() + " Position1D Forward";
+                        BrainInputChannel BIC_SegmentPosition1DInput = new BrainInputChannel(ref newPositionSensor1D.linearDistance, true, inputChannelName);
+                        inputChannelsList.Add(BIC_SegmentPosition1DInput);
                     }
                     List<AddonPositionSensor3D> positionSensor3DList = masterCritterGenome.CheckForAddonPositionSensor3D(currentBuildSegmentList[i].sourceNode.ID);
                     for (int j = 0; j < positionSensor3DList.Count; j++) {
                         SegaddonPositionSensor3D newPositionSensor3D = new SegaddonPositionSensor3D(positionSensor3DList[j]);
                         newPositionSensor3D.segmentID = newSegment.id;
                         segaddonPositionSensor3DList.Add(newPositionSensor3D);
+
+                        string inputChannelName = "Segment " + newPositionSensor3D.segmentID.ToString() + " Position3D Right";
+                        BrainInputChannel BIC_SegmentPosition3DInputRight = new BrainInputChannel(ref newPositionSensor3D.distanceRight, true, inputChannelName);
+                        inputChannelsList.Add(BIC_SegmentPosition3DInputRight);
+
+                        inputChannelName = "Segment " + newPositionSensor3D.segmentID.ToString() + " Position3D Up";
+                        BrainInputChannel BIC_SegmentPosition3DInputUp = new BrainInputChannel(ref newPositionSensor3D.distanceUp, true, inputChannelName);
+                        inputChannelsList.Add(BIC_SegmentPosition3DInputUp);
+
+                        inputChannelName = "Segment " + newPositionSensor3D.segmentID.ToString() + " Position3D Forward";
+                        BrainInputChannel BIC_SegmentPosition3DInputForward = new BrainInputChannel(ref newPositionSensor3D.distanceForward, true, inputChannelName);
+                        inputChannelsList.Add(BIC_SegmentPosition3DInputForward);
                     }
                     List<AddonRotationSensor1D> rotationSensor1DList = masterCritterGenome.CheckForAddonRotationSensor1D(currentBuildSegmentList[i].sourceNode.ID);
                     for (int j = 0; j < rotationSensor1DList.Count; j++) {
                         SegaddonRotationSensor1D newRotationSensor1D = new SegaddonRotationSensor1D(rotationSensor1DList[j]);
                         newRotationSensor1D.segmentID = newSegment.id;
                         segaddonRotationSensor1DList.Add(newRotationSensor1D);
+
+                        string inputChannelName = "Segment " + newRotationSensor1D.segmentID.ToString() + " Rotation1D";
+                        BrainInputChannel BIC_SegmentRotation1DInput = new BrainInputChannel(ref newRotationSensor1D.rotationRate, true, inputChannelName);
+                        inputChannelsList.Add(BIC_SegmentRotation1DInput);
                     }
                     List<AddonRotationSensor3D> rotationSensor3DList = masterCritterGenome.CheckForAddonRotationSensor3D(currentBuildSegmentList[i].sourceNode.ID);
                     for (int j = 0; j < rotationSensor3DList.Count; j++) {
                         SegaddonRotationSensor3D newRotationSensor3D = new SegaddonRotationSensor3D(rotationSensor3DList[j]);
                         newRotationSensor3D.segmentID = newSegment.id;
                         segaddonRotationSensor3DList.Add(newRotationSensor3D);
+
+                        string inputChannelName = "Segment " + newRotationSensor3D.segmentID.ToString() + " Rotation3D X";
+                        BrainInputChannel BIC_SegmentRotation3DInputX = new BrainInputChannel(ref newRotationSensor3D.rotationRateX, true, inputChannelName);
+                        inputChannelsList.Add(BIC_SegmentRotation3DInputX);
+
+                        inputChannelName = "Segment " + newRotationSensor3D.segmentID.ToString() + " Rotation3D Y";
+                        BrainInputChannel BIC_SegmentRotation3DInputY = new BrainInputChannel(ref newRotationSensor3D.rotationRateY, true, inputChannelName);
+                        inputChannelsList.Add(BIC_SegmentRotation3DInputY);
+
+                        inputChannelName = "Segment " + newRotationSensor3D.segmentID.ToString() + " Rotation3D Z";
+                        BrainInputChannel BIC_SegmentRotation3DInputZ = new BrainInputChannel(ref newRotationSensor3D.rotationRateZ, true, inputChannelName);
+                        inputChannelsList.Add(BIC_SegmentRotation3DInputZ);
                     }
                     List<AddonVelocitySensor1D> velocitySensor1DList = masterCritterGenome.CheckForAddonVelocitySensor1D(currentBuildSegmentList[i].sourceNode.ID);
                     for (int j = 0; j < velocitySensor1DList.Count; j++) {
                         SegaddonVelocitySensor1D newVelocitySensor1D = new SegaddonVelocitySensor1D(velocitySensor1DList[j]);
                         newVelocitySensor1D.segmentID = newSegment.id;
                         segaddonVelocitySensor1DList.Add(newVelocitySensor1D);
+
+                        string inputChannelName = "Segment " + newVelocitySensor1D.segmentID.ToString() + " Velocity1D";
+                        BrainInputChannel BIC_SegmentVelocity1DInput = new BrainInputChannel(ref newVelocitySensor1D.componentVelocity, true, inputChannelName);
+                        inputChannelsList.Add(BIC_SegmentVelocity1DInput);
                     }
                     List<AddonVelocitySensor3D> velocitySensor3DList = masterCritterGenome.CheckForAddonVelocitySensor3D(currentBuildSegmentList[i].sourceNode.ID);
                     for (int j = 0; j < velocitySensor3DList.Count; j++) {
                         SegaddonVelocitySensor3D newVelocitySensor3D = new SegaddonVelocitySensor3D(velocitySensor3DList[j]);
                         newVelocitySensor3D.segmentID = newSegment.id;
                         segaddonVelocitySensor3DList.Add(newVelocitySensor3D);
+
+                        string inputChannelName = "Segment " + newVelocitySensor3D.segmentID.ToString() + " Velocity3D Right";
+                        BrainInputChannel BIC_SegmentVelocity3DInputRight = new BrainInputChannel(ref newVelocitySensor3D.velocityRight, true, inputChannelName);
+                        inputChannelsList.Add(BIC_SegmentVelocity3DInputRight);
+
+                        inputChannelName = "Segment " + newVelocitySensor3D.segmentID.ToString() + " Velocity3D Up";
+                        BrainInputChannel BIC_SegmentVelocity3DInputUp = new BrainInputChannel(ref newVelocitySensor3D.velocityUp, true, inputChannelName);
+                        inputChannelsList.Add(BIC_SegmentVelocity3DInputUp);
+
+                        inputChannelName = "Segment " + newVelocitySensor3D.segmentID.ToString() + " Velocity3D Forward";
+                        BrainInputChannel BIC_SegmentVelocity3DInputForward = new BrainInputChannel(ref newVelocitySensor3D.velocityForward, true, inputChannelName);
+                        inputChannelsList.Add(BIC_SegmentVelocity3DInputForward);
                     }
                     List<AddonAltimeter> altimeterList = masterCritterGenome.CheckForAddonAltimeter(currentBuildSegmentList[i].sourceNode.ID);
                     for (int j = 0; j < altimeterList.Count; j++) {
                         SegaddonAltimeter newAltimeter = new SegaddonAltimeter(altimeterList[j]);
                         newAltimeter.segmentID = newSegment.id;
                         segaddonAltimeterList.Add(newAltimeter);
+
+                        string inputChannelName = "Segment " + newAltimeter.segmentID.ToString() + " Altimeter";
+                        BrainInputChannel BIC_SegmentAltimeterInput = new BrainInputChannel(ref newAltimeter.altitude, true, inputChannelName);
+                        inputChannelsList.Add(BIC_SegmentAltimeterInput);
                     }
                     List<AddonEarBasic> earBasicList = masterCritterGenome.CheckForAddonEarBasic(currentBuildSegmentList[i].sourceNode.ID);
                     for (int j = 0; j < earBasicList.Count; j++) {
                         SegaddonEarBasic newEarBasic = new SegaddonEarBasic(earBasicList[j]);
                         newEarBasic.segmentID = newSegment.id;
                         segaddonEarBasicList.Add(newEarBasic);
+
+                        string inputChannelName = "Segment " + newEarBasic.segmentID.ToString() + " Ear Basic";
+                        BrainInputChannel BIC_SegmentEarBasicInput = new BrainInputChannel(ref newEarBasic.activation, true, inputChannelName);
+                        inputChannelsList.Add(BIC_SegmentEarBasicInput);
                     }
                     List<AddonGravitySensor> gravitySensorList = masterCritterGenome.CheckForAddonGravitySensor(currentBuildSegmentList[i].sourceNode.ID);
                     for (int j = 0; j < gravitySensorList.Count; j++) {
                         SegaddonGravitySensor newGravitySensor = new SegaddonGravitySensor(gravitySensorList[j]);
                         newGravitySensor.segmentID = newSegment.id;
                         segaddonGravitySensorList.Add(newGravitySensor);
+
+                        string inputChannelName = "Segment " + newGravitySensor.segmentID.ToString() + " Gravity Sensor";
+                        BrainInputChannel BIC_SegmentGravityInput = new BrainInputChannel(ref newGravitySensor.gravityDot, true, inputChannelName);
+                        inputChannelsList.Add(BIC_SegmentGravityInput);
                     }
                     List<AddonOscillatorInput> oscillatorInputList = masterCritterGenome.CheckForAddonOscillatorInput(currentBuildSegmentList[i].sourceNode.ID);
                     for (int j = 0; j < oscillatorInputList.Count; j++) {
@@ -741,12 +849,20 @@ public class Critter : MonoBehaviour {
                         SegaddonValueInput newValueInput = new SegaddonValueInput(valueInputList[j]);
                         newValueInput.segmentID = newSegment.id;
                         segaddonValueInputList.Add(newValueInput);
+
+                        string inputChannelName = "Segment " + newValueInput.segmentID.ToString() + " Value Input";
+                        BrainInputChannel BIC_SegmentValueInput = new BrainInputChannel(ref newValueInput.value, true, inputChannelName);
+                        inputChannelsList.Add(BIC_SegmentValueInput);
                     }
                     List<AddonTimerInput> timerInputList = masterCritterGenome.CheckForAddonTimerInput(currentBuildSegmentList[i].sourceNode.ID);
                     for (int j = 0; j < timerInputList.Count; j++) {
                         SegaddonTimerInput newTimerInput = new SegaddonTimerInput(timerInputList[j]);
                         newTimerInput.segmentID = newSegment.id;
                         segaddonTimerInputList.Add(newTimerInput);
+
+                        string inputChannelName = "Segment " + newTimerInput.segmentID.ToString() + " Timer Input";
+                        BrainInputChannel BIC_SegmentTimerInput = new BrainInputChannel(ref newTimerInput.value, true, inputChannelName);
+                        inputChannelsList.Add(BIC_SegmentTimerInput);
                     }
                     #endregion
 
@@ -788,24 +904,56 @@ public class Critter : MonoBehaviour {
                         SegaddonThrusterEffector1D newThrusterEffector1D = new SegaddonThrusterEffector1D(thrusterEffector1DList[j]);
                         newThrusterEffector1D.segmentID = newSegment.id;
                         segaddonThrusterEffector1DList.Add(newThrusterEffector1D);
+
+                        string outputChannelName = "Segment " + newThrusterEffector1D.segmentID.ToString() + " Thruster1D";
+                        BrainOutputChannel BOC_SegmentThruster1D = new BrainOutputChannel(ref newThrusterEffector1D.throttle, true, outputChannelName);
+                        outputChannelsList.Add(BOC_SegmentThruster1D);
                     }
                     List<AddonThrusterEffector3D> thrusterEffector3DList = masterCritterGenome.CheckForAddonThrusterEffector3D(currentBuildSegmentList[i].sourceNode.ID);
                     for (int j = 0; j < thrusterEffector3DList.Count; j++) {
                         SegaddonThrusterEffector3D newThrusterEffector3D = new SegaddonThrusterEffector3D(thrusterEffector3DList[j]);
                         newThrusterEffector3D.segmentID = newSegment.id;
                         segaddonThrusterEffector3DList.Add(newThrusterEffector3D);
+
+                        string outputChannelName = "Segment " + newThrusterEffector3D.segmentID.ToString() + " Thruster3D X";
+                        BrainOutputChannel BOC_SegmentThruster3DX = new BrainOutputChannel(ref newThrusterEffector3D.throttleX, true, outputChannelName);
+                        outputChannelsList.Add(BOC_SegmentThruster3DX);
+
+                        outputChannelName = "Segment " + newThrusterEffector3D.segmentID.ToString() + " Thruster3D Y";
+                        BrainOutputChannel BOC_SegmentThruster3DY = new BrainOutputChannel(ref newThrusterEffector3D.throttleY, true, outputChannelName);
+                        outputChannelsList.Add(BOC_SegmentThruster3DY);
+
+                        outputChannelName = "Segment " + newThrusterEffector3D.segmentID.ToString() + " Thruster3D Z";
+                        BrainOutputChannel BOC_SegmentThruster3DZ = new BrainOutputChannel(ref newThrusterEffector3D.throttleZ, true, outputChannelName);
+                        outputChannelsList.Add(BOC_SegmentThruster3DZ);
                     }
                     List<AddonTorqueEffector1D> torqueEffector1DList = masterCritterGenome.CheckForAddonTorqueEffector1D(currentBuildSegmentList[i].sourceNode.ID);
                     for (int j = 0; j < torqueEffector1DList.Count; j++) {
                         SegaddonTorqueEffector1D newTorqueEffector1D = new SegaddonTorqueEffector1D(torqueEffector1DList[j]);
                         newTorqueEffector1D.segmentID = newSegment.id;
                         segaddonTorqueEffector1DList.Add(newTorqueEffector1D);
+
+                        string outputChannelName = "Segment " + newTorqueEffector1D.segmentID.ToString() + " Torque1D";
+                        BrainOutputChannel BOC_SegmentTorque1D = new BrainOutputChannel(ref newTorqueEffector1D.throttle, true, outputChannelName);
+                        outputChannelsList.Add(BOC_SegmentTorque1D);
                     }
                     List<AddonTorqueEffector3D> torqueEffector3DList = masterCritterGenome.CheckForAddonTorqueEffector3D(currentBuildSegmentList[i].sourceNode.ID);
                     for (int j = 0; j < torqueEffector3DList.Count; j++) {
                         SegaddonTorqueEffector3D newTorqueEffector3D = new SegaddonTorqueEffector3D(torqueEffector3DList[j]);
                         newTorqueEffector3D.segmentID = newSegment.id;
                         segaddonTorqueEffector3DList.Add(newTorqueEffector3D);
+
+                        string outputChannelName = "Segment " + newTorqueEffector3D.segmentID.ToString() + " Torque3D X";
+                        BrainOutputChannel BOC_SegmentTorque3DX = new BrainOutputChannel(ref newTorqueEffector3D.throttleX, true, outputChannelName);
+                        outputChannelsList.Add(BOC_SegmentTorque3DX);
+
+                        outputChannelName = "Segment " + newTorqueEffector3D.segmentID.ToString() + " Torque3D Y";
+                        BrainOutputChannel BOC_SegmentTorque3DY = new BrainOutputChannel(ref newTorqueEffector3D.throttleY, true, outputChannelName);
+                        outputChannelsList.Add(BOC_SegmentTorque3DY);
+
+                        outputChannelName = "Segment " + newTorqueEffector3D.segmentID.ToString() + " Torque3D Z";
+                        BrainOutputChannel BOC_SegmentTorque3DZ = new BrainOutputChannel(ref newTorqueEffector3D.throttleZ, true, outputChannelName);
+                        outputChannelsList.Add(BOC_SegmentTorque3DZ);
                     }
                     List<AddonMouthBasic> mouthBasicList = masterCritterGenome.CheckForAddonMouthBasic(currentBuildSegmentList[i].sourceNode.ID);
                     for (int j = 0; j < mouthBasicList.Count; j++) {
@@ -821,18 +969,30 @@ public class Critter : MonoBehaviour {
                         SegaddonNoiseMakerBasic newNoiseMakerBasic = new SegaddonNoiseMakerBasic(noiseMakerBasicList[j]);
                         newNoiseMakerBasic.segmentID = newSegment.id;
                         segaddonNoiseMakerBasicList.Add(newNoiseMakerBasic);
+
+                        string outputChannelName = "Segment " + newNoiseMakerBasic.segmentID.ToString() + " NoiseMaker";
+                        BrainOutputChannel BOC_SegmentNoiseMaker = new BrainOutputChannel(ref newNoiseMakerBasic.volume, true, outputChannelName);
+                        outputChannelsList.Add(BOC_SegmentNoiseMaker);
                     }
                     List<AddonSticky> stickyList = masterCritterGenome.CheckForAddonSticky(currentBuildSegmentList[i].sourceNode.ID);
                     for (int j = 0; j < stickyList.Count; j++) {
                         SegaddonSticky newSticky = new SegaddonSticky(stickyList[j]);
                         newSticky.segmentID = newSegment.id;
                         segaddonStickyList.Add(newSticky);
+
+                        string outputChannelName = "Segment " + newSticky.segmentID.ToString() + " Sticky";
+                        BrainOutputChannel BOC_SegmentSticky = new BrainOutputChannel(ref newSticky.stickiness, true, outputChannelName);
+                        outputChannelsList.Add(BOC_SegmentSticky);
                     }
                     List<AddonWeaponBasic> weaponBasicList = masterCritterGenome.CheckForAddonWeaponBasic(currentBuildSegmentList[i].sourceNode.ID);
                     for (int j = 0; j < weaponBasicList.Count; j++) {
                         SegaddonWeaponBasic newWeaponBasic = new SegaddonWeaponBasic(weaponBasicList[j]);
                         newWeaponBasic.segmentID = newSegment.id;
                         segaddonWeaponBasicList.Add(newWeaponBasic);
+
+                        string outputChannelName = "Segment " + newWeaponBasic.segmentID.ToString() + " Weapon";
+                        BrainOutputChannel BOC_SegmentWeapon = new BrainOutputChannel(ref newWeaponBasic.strength, true, outputChannelName);
+                        outputChannelsList.Add(BOC_SegmentWeapon);
                     }                    
                     #endregion
                     
@@ -950,23 +1110,7 @@ public class Critter : MonoBehaviour {
                     }             
                 }
 
-                // PositionSEGMENT GameObject!!!
-                if(newSegment.id == 0) {  // if ROOT NODE:
-
-                }
-                else {
-                    SetSegmentTransform(newGO);  // Properly position the SegmentGO where it should be  && scale!
-                    if (physicsOn) {
-                        //newGO.GetComponent<Rigidbody>().isKinematic = false;
-                        newGO.GetComponent<Rigidbody>().ResetInertiaTensor();
-                        ConfigurableJoint configJoint = newGO.AddComponent<ConfigurableJoint>();
-                        configJoint.autoConfigureConnectedAnchor = false;
-                        configJoint.connectedBody = newSegment.parentSegment.gameObject.GetComponent<Rigidbody>();
-                        configJoint.anchor = GetJointAnchor(newSegment);
-                        configJoint.connectedAnchor = GetJointConnectedAnchor(newSegment); // <-- Might be Unnecessary
-                        ConfigureJointSettings(newSegment, ref configJoint);  // UPDATE THIS TO USE segaddonJointMotorSettings!?!?
-                    }
-                }                
+                               
             }
             // After all buildNodes have been built, and their subsequent childNodes Enqueued, copy pendingChildQueue into buildNodesQueue
             currentBuildSegmentList.Clear();
@@ -986,13 +1130,14 @@ public class Critter : MonoBehaviour {
             currentDepth++;
         }
 
-        //Debug.Log("RebuildCritterFromGenomeRecursive " + inputChannelsList.Count.ToString() + ", " + outputChannelsList.Count.ToString());   
+        //Debug.Log("RebuildCritterFromGenomeRecursive " + inputChannelsList.Count.ToString() + ", " + outputChannelsList.Count.ToString());
+        //Debug.Log("RebuildCritterFromGenomeRecursive: COM_Offset: (" + masterCritterGenome.centerOfMassOffset.x.ToString() + ", " + masterCritterGenome.centerOfMassOffset.y.ToString() + ", " + masterCritterGenome.centerOfMassOffset.z.ToString() + "), totalVolume: " + critterTotalVolume.ToString());
     }
 
     void ConfigureJointSettings(CritterSegment segment, ref ConfigurableJoint joint) {
         CritterNode node = segment.sourceNode;
-        joint.breakForce = 100000f;
-        joint.breakTorque = 100000f;
+        joint.breakForce = 1000000f;
+        joint.breakTorque = 1000000f;
         if (node.jointLink.jointType == CritterJointLink.JointType.Fixed) { // Fixed Joint
                                                                                   // Lock mobility:
             joint.xMotion = ConfigurableJointMotion.Locked;

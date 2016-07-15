@@ -42,8 +42,8 @@ public class Population {
     
 	public void InitializeMasterAgentArray(CritterGenome bodyGenome, bool useSpeciation) {  // Creates a new population for the FIRST TIME!!!
 		DebugBot.DebugFunctionCall("Population; InitializeMasterAgentArray(CritterGenome); ", debugFunctionCalls);
-		templateGenome = bodyGenome;
-        
+		templateGenome = bodyGenome;        
+
         // $$$$$$$$$$$$ TRY TO REMOVE THIS SOON!!!!!!!!!!!!!!!!  $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
         int[] critterData = templateGenome.CalculateNumberOfSegmentsInputsOutputs(); // just to check number of segments, inputs, and outputs
         int numSegments = critterData[0];

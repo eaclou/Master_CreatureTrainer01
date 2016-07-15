@@ -7,6 +7,7 @@ public class TrainingModifier {
     public enum TrainingModifierType {
         LinkExplosion,
         MutationBlast,
+        BodyMutationBlast,
         PruneBrain,
         TargetCone,
         TargetForward,

@@ -49,6 +49,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
     public float[] fitMoveSpeed = new float[1];
     public float[] fitCustomTarget = new float[1];
     public float[] fitCustomPole = new float[1];
+    public float[] fitCustomBody = new float[1];
 
     public List<float[]> fitnessCompassSensor1DList;
     public List<float[]> fitnessCompassSensor3DListRight;
@@ -353,9 +354,9 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         for (int k = 0; k < numberOfSegments; k++)
         {
             // Center the creature so that its center of mass is at the origin, to avoid initial position bias  // This isn't working right now!!! fix creature Rebuild to support offset COM
-            wormSegmentArray_PosX[k][0] -= wormCOM.x;
-            wormSegmentArray_PosY[k][0] -= wormCOM.y;
-            wormSegmentArray_PosZ[k][0] -= wormCOM.z;
+            //wormSegmentArray_PosX[k][0] -= wormCOM.x;
+            //wormSegmentArray_PosY[k][0] -= wormCOM.y;
+            //wormSegmentArray_PosZ[k][0] -= wormCOM.z;
         }
 
         // Reset wormCOM to 0f, now that it's been moved:
@@ -368,6 +369,8 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         //critterBeingTested.critterSegmentList[4].GetComponent<Rigidbody>().AddForce(initialForceList[gameCurrentRound], ForceMode.Impulse);
         //critterBeingTested.critterSegmentList[6].GetComponent<Rigidbody>().AddForce(initialForceList[gameCurrentRound], ForceMode.Impulse);
         //critterBeingTested.critterSegmentList[7].GetComponent<Rigidbody>().AddForce(initialForceList[gameCurrentRound], ForceMode.Impulse);
+
+        SetNonPhysicsGamePieceTransformsFromData();
 
         gameEndStateReached = false;
         gameInitialized = true;
@@ -798,19 +801,6 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             //SegaddonWeaponBasic weaponBasic = critterBeingTested.segaddonWeaponBasicList[weaponBasicIndex];
         }
         
-
-        for (int w = 0; w < numberOfSegments; w++)
-        {
-            // VISCOSITY!!!!!!!!!!! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-            if(critterBeingTested.critterSegmentList[w].GetComponent<CritterSegment>().broken) {
-                fitMoveToTarget[0] = 0;
-                fitMoveSpeed[0] = 0;
-                fitDistFromOrigin[0] = 0;
-                gameEndStateReached = true;
-            }
-            ApplyViscosityForces(critterBeingTested.critterSegmentList[w], w, customSettings.viscosityDrag[0]);          
-        }
-
         // FITNESS COMPONENTS!
         float avgMass = wormTotalMass / numberOfSegments;  //
         Vector3 prevFrameWormCOM = wormCOM;
@@ -871,9 +861,26 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             //gameEndStateReached = true;
         }
 
+        for (int w = 0; w < numberOfSegments; w++) {
+            // VISCOSITY!!!!!!!!!!! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            if (critterBeingTested.critterSegmentList[w].GetComponent<CritterSegment>().broken) {
+                fitCustomBody[0] = -1000;
+                gameEndStateReached = true;
+            }
+            if(gameCurrentTimeStep < 1) {
+                if (critterBeingTested.critterSegmentList[w].GetComponent<CritterSegment>().colliding) {
+                    fitCustomBody[0] = -1000;
+                    gameEndStateReached = true;
+                    Debug.Log("COLLISION! gameCurrentTimeStep: " + gameCurrentTimeStep.ToString() + ", w: " + w.ToString());
+                }
+            }
+            ApplyViscosityForces(critterBeingTested.critterSegmentList[w], w, customSettings.viscosityDrag[0]);
+        }
+
         //fitCustomTarget[0] += 1f;
 
         //SetNonPhysicsGamePieceTransformsFromData();  // debug objects that rely on PhysX object positions
+        SetNonPhysicsGamePieceTransformsFromData();
 
         gameTicked = true;
         //gameCurrentTimeStep++;  This is updated in base class function: GameTimeStepCompleted()
@@ -1242,8 +1249,8 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         //fitnessComponentList.Add(FC_moveToTarget); // 7
         FitnessComponent FC_moveSpeed = new FitnessComponent(ref fitMoveSpeed, true, true, 1f, 0f, "Average Speed", true);
         fitnessComponentList.Add(FC_moveSpeed); // 8
-        //FitnessComponent FC_customTarget = new FitnessComponent(ref fitCustomTarget, true, true, 1f, 1f, "Custom Target", true);
-        //fitnessComponentList.Add(FC_customTarget); // 8
+        FitnessComponent FC_customBody = new FitnessComponent(ref fitCustomBody, true, true, 1f, 1f, "Custom Body", false);
+        fitnessComponentList.Add(FC_customBody); // 8
         //FitnessComponent FC_customPole = new FitnessComponent(ref fitCustomPole, true, true, 1f, 1f, "Custom Pole", false);
         //fitnessComponentList.Add(FC_customPole); // 8
 
@@ -1396,6 +1403,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         fitMoveSpeed[0] = 0f;
         fitCustomTarget[0] = 0f;
         fitCustomPole[0] = 0f;
+        fitCustomBody[0] = 0f;
 
         for (int contactSensorIndex = 0; contactSensorIndex < critterBeingTested.segaddonContactSensorList.Count; contactSensorIndex++) {
             critterBeingTested.segaddonContactSensorList[contactSensorIndex].fitnessContact[0] = 0f;

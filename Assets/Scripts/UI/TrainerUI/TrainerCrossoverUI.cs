@@ -203,11 +203,11 @@ public class TrainerCrossoverUI : MonoBehaviour {
 
         // BODY TAB!!!!
         sliderMaxAttributeValueChange.minValue = 1f;  // multiplier
-        sliderMaxAttributeValueChange.maxValue = 5f;
+        sliderMaxAttributeValueChange.maxValue = 2f;
         sliderNewSegmentChance.minValue = 0f;
-        sliderNewSegmentChance.maxValue = 0.2f;
+        sliderNewSegmentChance.maxValue = 0.05f;
         sliderRemoveSegmentChance.minValue = 0f;
-        sliderRemoveSegmentChance.maxValue = 0.2f;
+        sliderRemoveSegmentChance.maxValue = 0.05f;
         sliderSegmentProportionChance.minValue = 0f;
         sliderSegmentProportionChance.maxValue = 0.2f;
         sliderSegmentAttachSettingsChance.minValue = 0f;
@@ -215,13 +215,15 @@ public class TrainerCrossoverUI : MonoBehaviour {
         sliderJointSettingsChance.minValue = 0f;
         sliderJointSettingsChance.maxValue = 0.2f;
         sliderNewAddonChance.minValue = 0f;
-        sliderNewAddonChance.maxValue = 0.2f;
+        sliderNewAddonChance.maxValue = 0.05f;
         sliderRemoveAddonChance.minValue = 0f;
-        sliderRemoveAddonChance.maxValue = 0.2f;
+        sliderRemoveAddonChance.maxValue = 0.05f;
         sliderAddonSettingsChance.minValue = 0f;
         sliderAddonSettingsChance.maxValue = 0.2f;
         sliderRecursionChance.minValue = 0f;
-        sliderSymmetryChance.maxValue = 0.2f;
+        sliderRecursionChance.maxValue = 0.05f;
+        sliderSymmetryChance.maxValue = 0f;
+        sliderSymmetryChance.maxValue = 0.05f;
 
         // COMMON!!!!
         sliderSurvivalRate.minValue = 0f; // set up slider bounds
