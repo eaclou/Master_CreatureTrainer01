@@ -39,7 +39,9 @@ public class CritterGenome {
     public List<AddonMouthBasic> addonMouthBasicList;
     public List<AddonNoiseMakerBasic> addonNoiseMakerBasicList;
     public List<AddonSticky> addonStickyList;
-    public List<AddonWeaponBasic> addonWeaponBasicList;    
+    public List<AddonWeaponBasic> addonWeaponBasicList;
+
+    public bool degenerate = false;   
 
     public CritterGenome() {
         //Debug.Log("CritterGenome Constructor()!");
@@ -829,30 +831,30 @@ public class CritterGenome {
                     for (int j = 0; j < jointMotorList.Count; j++) {
                         if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeX) {
                             numOutputs++;
-                            GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, jointMotorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                            GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, jointMotorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
                             outputNodeList.Add(newNodeNEAT);
                             currentBrainNodeID++;
                         }
                         else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeY) {
                             numOutputs++;
-                            GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, jointMotorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                            GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, jointMotorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
                             outputNodeList.Add(newNodeNEAT);
                             currentBrainNodeID++;
                         }
                         else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeZ) {
                             numOutputs++;
-                            GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, jointMotorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                            GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, jointMotorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
                             outputNodeList.Add(newNodeNEAT);
                             currentBrainNodeID++;
                         }
                         else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.DualXY) {
                             numOutputs++;
-                            GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, jointMotorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                            GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, jointMotorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
                             outputNodeList.Add(newNodeNEAT1);
                             currentBrainNodeID++;
 
                             numOutputs++;
-                            GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, jointMotorList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
+                            GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, jointMotorList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
                             outputNodeList.Add(newNodeNEAT2);
                             currentBrainNodeID++;
                         }
@@ -877,48 +879,48 @@ public class CritterGenome {
                 List<AddonThrusterEffector1D> thrusterEffector1DList = CheckForAddonThrusterEffector1D(currentBuildSegmentList[i].sourceNode.ID);
                 for (int j = 0; j < thrusterEffector1DList.Count; j++) {
                     numOutputs++;
-                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, thrusterEffector1DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, thrusterEffector1DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
                     outputNodeList.Add(newNodeNEAT);
                     currentBrainNodeID++;
                 }
                 List<AddonThrusterEffector3D> thrusterEffector3DList = CheckForAddonThrusterEffector3D(currentBuildSegmentList[i].sourceNode.ID);
                 for (int j = 0; j < thrusterEffector3DList.Count; j++) {
                     numOutputs++;
-                    GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, thrusterEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, thrusterEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
                     outputNodeList.Add(newNodeNEAT1);
                     currentBrainNodeID++;
 
                     numOutputs++;
-                    GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, thrusterEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
+                    GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, thrusterEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
                     outputNodeList.Add(newNodeNEAT2);
                     currentBrainNodeID++;
 
                     numOutputs++;
-                    GeneNodeNEAT newNodeNEAT3 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, thrusterEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 2);
+                    GeneNodeNEAT newNodeNEAT3 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, thrusterEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 2);
                     outputNodeList.Add(newNodeNEAT3);
                     currentBrainNodeID++;
                 }
                 List<AddonTorqueEffector1D> torqueEffector1DList = CheckForAddonTorqueEffector1D(currentBuildSegmentList[i].sourceNode.ID);
                 for (int j = 0; j < torqueEffector1DList.Count; j++) {
                     numOutputs++;
-                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, torqueEffector1DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, torqueEffector1DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
                     outputNodeList.Add(newNodeNEAT);
                     currentBrainNodeID++;
                 }
                 List<AddonTorqueEffector3D> torqueEffector3DList = CheckForAddonTorqueEffector3D(currentBuildSegmentList[i].sourceNode.ID);
                 for (int j = 0; j < torqueEffector3DList.Count; j++) {
                     numOutputs++;
-                    GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, torqueEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, torqueEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
                     outputNodeList.Add(newNodeNEAT1);
                     currentBrainNodeID++;
 
                     numOutputs++;
-                    GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, torqueEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
+                    GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, torqueEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
                     outputNodeList.Add(newNodeNEAT2);
                     currentBrainNodeID++;
 
                     numOutputs++;
-                    GeneNodeNEAT newNodeNEAT3 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, torqueEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 2);
+                    GeneNodeNEAT newNodeNEAT3 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, torqueEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 2);
                     outputNodeList.Add(newNodeNEAT3);
                     currentBrainNodeID++;
                 }
@@ -929,21 +931,21 @@ public class CritterGenome {
                 List<AddonNoiseMakerBasic> noiseMakerBasicList = CheckForAddonNoiseMakerBasic(currentBuildSegmentList[i].sourceNode.ID);
                 for (int j = 0; j < noiseMakerBasicList.Count; j++) {
                     numOutputs++;
-                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, noiseMakerBasicList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, noiseMakerBasicList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
                     outputNodeList.Add(newNodeNEAT);
                     currentBrainNodeID++;
                 }
                 List<AddonSticky> stickyList = CheckForAddonSticky(currentBuildSegmentList[i].sourceNode.ID);
                 for (int j = 0; j < stickyList.Count; j++) {
                     numOutputs++;
-                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, stickyList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, stickyList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
                     outputNodeList.Add(newNodeNEAT);
                     currentBrainNodeID++;
                 }
                 List<AddonWeaponBasic> weaponBasicList = CheckForAddonWeaponBasic(currentBuildSegmentList[i].sourceNode.ID);
                 for (int j = 0; j < weaponBasicList.Count; j++) {
                     numOutputs++;
-                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.Linear, weaponBasicList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, weaponBasicList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
                     outputNodeList.Add(newNodeNEAT);
                     currentBrainNodeID++;
                 }
@@ -1494,7 +1496,7 @@ public class CritterGenome {
         Vector3 worldNormalDir = newSegmentRotation * Vector3.forward;
 
         newSegmentPos = attachPosWorld + worldNormalDir * newSegmentDimensions.z * 0.5f;  // REVISIT -- will only work for cubes! 
-        newSegment.transform.rotation = newSegmentRotation;
+        newSegmentGO.transform.rotation = newSegmentRotation;
         newSegmentGO.transform.position = newSegmentPos;
         newSegmentGO.transform.localScale = newSegmentDimensions;
         //Debug.Log("attachPosWorld = " + attachPosWorld.ToString() + ", attachPosition = " + ") newSegmentPos = " + newSegmentPos.ToString());
@@ -1503,9 +1505,7 @@ public class CritterGenome {
 
     public void PreBuildCritter(float variableMass) {
         //Debug.Log("RebuildCritterFromGenomeRecursive: " + masterCritterGenome.CritterNodeList.Count.ToString());
-        centerOfMassOffset.x = 0f;
-        centerOfMassOffset.y = 0f;
-        centerOfMassOffset.z = 0f;
+
         // interpret Genome and construct critter in its bind pose
         bool isPendingChildren = true;
         int currentDepth = 0; // start with RootNode
@@ -1514,6 +1514,7 @@ public class CritterGenome {
         List<CritterSegment> builtSegmentsList = new List<CritterSegment>();  // keep track of segments that have been built - linear in-order array 0-n segments
         List<BuildSegmentInfo> currentBuildSegmentList = new List<BuildSegmentInfo>();  // keeps track of all current-depth segment build-requests, and holds important metadata
         List<BuildSegmentInfo> nextBuildSegmentList = new List<BuildSegmentInfo>();  // used to keep track of next childSegments that need to be built
+        float critterTotalVolume = 0f; // keep track of total volume
 
         // ***********  Will attempt to traverse the Segments to be created, keeping track of where on each graph (nodes# & segment#) the current build is on.
         BuildSegmentInfo rootSegmentBuildInfo = new BuildSegmentInfo();
@@ -1521,6 +1522,224 @@ public class CritterGenome {
         currentBuildSegmentList.Add(rootSegmentBuildInfo);  // ROOT NODE IS SPECIAL!        
 
         // Do a Breadth-first traversal??
+        #region First WhileLoop
+        while (isPendingChildren) {
+            //int numberOfChildNodes = masterCritterGenome.CritterNodeList[currentNode].attachedJointLinkList.Count;
+
+            for (int i = 0; i < currentBuildSegmentList.Count; i++) {
+                //Debug.Log("currentDepth: " + currentDepth.ToString() + "builtNodesQueue.Count: " + builtSegmentsList.Count.ToString() + ", pendingNodes: " + currentBuildSegmentList.Count.ToString() + ", i: " + i.ToString());
+                // Iterate through pending nodes
+                // Build current node --> Segment
+                GameObject newGO = new GameObject("Node" + nextSegmentID.ToString());
+                CritterSegment newSegment = newGO.AddComponent<CritterSegment>();
+                builtSegmentsList.Add(newSegment);
+
+                newGO.transform.SetParent(TempCritterConstructionGroup.tempCritterConstructionGroup.gameObject.transform);
+                //newGO.AddComponent<BoxCollider>().isTrigger = false;                
+                //critterSegmentList.Add(newGO);  // Add to master Linear list of Segments
+                //newSegment.InitGamePiece();  // create the mesh and some other initialization stuff
+                newSegment.sourceNode = currentBuildSegmentList[i].sourceNode;
+                newSegment.id = nextSegmentID;
+                nextSegmentID++;
+
+                if (currentBuildSegmentList[i].sourceNode.ID == 0) {  // is ROOT segment  -- Look into doing Root build BEFORE for loop to avoid the need to do this check
+                    newGO.transform.position = Vector3.zero;
+                    newGO.transform.localPosition = Vector3.zero;
+                    newGO.transform.rotation = Quaternion.identity;
+                    newSegment.scalingFactor = newSegment.sourceNode.jointLink.recursionScalingFactor;
+                    newGO.transform.localScale = currentBuildSegmentList[i].sourceNode.dimensions * newSegment.scalingFactor;
+                    //newSegment.surfaceArea = new Vector3(newGO.transform.localScale.y * newGO.transform.localScale.z * 2f, newGO.transform.localScale.x * newGO.transform.localScale.z * 2f, newGO.transform.localScale.x * newGO.transform.localScale.y * 2f);
+
+                }
+                else {  // if NOT root segment, can consider parent-related stuff:
+                    newSegment.parentSegment = currentBuildSegmentList[i].parentSegment;
+                    // Inherit Axis-Inversions from parent segment:
+                    newSegment.mirrorX = newSegment.parentSegment.mirrorX;
+                    newSegment.mirrorY = newSegment.parentSegment.mirrorY;
+                    newSegment.mirrorZ = newSegment.parentSegment.mirrorZ;
+                    // inherit scaling factor from parent -- this is later adjusted again if it is part of a recursion chain
+                    newSegment.scalingFactor = newSegment.parentSegment.scalingFactor;
+                    newSegment.scalingFactor *= currentBuildSegmentList[i].sourceNode.jointLink.recursionScalingFactor; // propagate scaling factor
+                    // Check for if the segment currently being built is a Mirror COPY:
+                    if (currentBuildSegmentList[i].isMirror) {
+                        //Debug.Log("This is a MIRROR COPY segment - Wow!");
+                        if (currentBuildSegmentList[i].sourceNode.jointLink.symmetryType == CritterJointLink.SymmetryType.MirrorX) {
+                            // Invert the X-axis  (this will propagate down to all this segment's children
+                            newSegment.mirrorX = !newSegment.mirrorX;
+                        }
+                        else if (currentBuildSegmentList[i].sourceNode.jointLink.symmetryType == CritterJointLink.SymmetryType.MirrorY) {
+                            newSegment.mirrorY = !newSegment.mirrorY;
+                        }
+                        else if (currentBuildSegmentList[i].sourceNode.jointLink.symmetryType == CritterJointLink.SymmetryType.MirrorZ) {
+                            newSegment.mirrorZ = !newSegment.mirrorZ;
+                        }
+                    }
+                }
+
+                // CHECK FOR RECURSION:
+                if (currentBuildSegmentList[i].sourceNode.jointLink.numberOfRecursions > 0) { // if the node being considered has recursions:
+                    //Debug.Log("currentNode: " + currentBuildSegmentList[i].sourceNode.ID.ToString() + "newSegmentRecursion#: " + newSegment.recursionNumber.ToString() + ", parentRecursion#: " + currentBuildSegmentList[i].parentSegment.recursionNumber.ToString());
+                    if (newSegment.sourceNode == currentBuildSegmentList[i].parentSegment.sourceNode) {  // if this segment's sourceNode is the same is its parent Segment's sourceNode, then it is not the root of the recursion chain!
+                        //Debug.Log("newSegment.sourceNode == currentBuildNodeParentSegmentList[i].sourceNode!");
+
+                        // Are we at the end of a recursion chain?
+                        if (currentBuildSegmentList[i].parentSegment.recursionNumber >= currentBuildSegmentList[i].sourceNode.jointLink.numberOfRecursions) {
+                            //Debug.Log("recursion number greater than numRecursions! ( " + currentBuildSegmentList[i].parentSegment.recursionNumber.ToString() + " vs " + currentBuildSegmentList[i].sourceNode.jointLink.numberOfRecursions.ToString());
+                            newSegment.recursionNumber = currentBuildSegmentList[i].parentSegment.recursionNumber + 1; //
+                            //newSegment.scalingFactor *= currentBuildSegmentList[i].sourceNode.jointLink.recursionScalingFactor;
+                        }
+                        else {  // create new recursion instance!!
+                            BuildSegmentInfo newSegmentInfo = new BuildSegmentInfo();
+                            newSegmentInfo.sourceNode = currentBuildSegmentList[i].sourceNode;  // request a segment to be built again based on the current sourceNode
+                            newSegment.recursionNumber = currentBuildSegmentList[i].parentSegment.recursionNumber + 1;
+                            //newSegment.scalingFactor *= currentBuildSegmentList[i].sourceNode.jointLink.recursionScalingFactor; // propagate scaling factor
+                            newSegmentInfo.parentSegment = newSegment; // parent of itself (the just-built Segment)
+                            nextBuildSegmentList.Add(newSegmentInfo);
+                            // If the node also has Symmetry:
+                            if (newSegmentInfo.sourceNode.jointLink.symmetryType != CritterJointLink.SymmetryType.None) {
+                                // the child node has some type of symmetry, so add a buildOrder for a mirrored Segment:
+                                BuildSegmentInfo newSegmentInfoMirror = new BuildSegmentInfo();
+                                newSegmentInfoMirror.sourceNode = currentBuildSegmentList[i].sourceNode;  // uses same sourceNode, but tags as Mirror:
+                                newSegmentInfoMirror.isMirror = true;  // This segment is the COPY, not the original
+                                newSegmentInfoMirror.parentSegment = newSegment;  // 
+                                nextBuildSegmentList.Add(newSegmentInfoMirror);
+                            }
+                        }
+                    }
+                    else { // this is the root --- its sourceNode has recursion, and this segment is unique from its parentNode:
+                        BuildSegmentInfo newSegmentInfo = new BuildSegmentInfo();
+                        newSegmentInfo.sourceNode = currentBuildSegmentList[i].sourceNode;
+                        newSegment.recursionNumber = 1;
+                        newSegmentInfo.parentSegment = newSegment;
+                        nextBuildSegmentList.Add(newSegmentInfo);
+                        // If the node also has Symmetry:
+                        if (newSegmentInfo.sourceNode.jointLink.symmetryType != CritterJointLink.SymmetryType.None) {
+                            // the child node has some type of symmetry, so add a buildOrder for a mirrored Segment:
+                            BuildSegmentInfo newSegmentInfoMirror = new BuildSegmentInfo();
+                            newSegmentInfoMirror.sourceNode = currentBuildSegmentList[i].sourceNode;  // uses same sourceNode, but tags as Mirror:
+                            newSegmentInfoMirror.isMirror = true;  // This segment is the COPY, not the original
+                            newSegmentInfoMirror.parentSegment = newSegment;  // 
+                            nextBuildSegmentList.Add(newSegmentInfoMirror);
+                        }
+                    }
+                }
+                // Figure out how many unique Child nodes this built node has:
+                //int numberOfChildNodes = currentBuildSegmentList[i].sourceNode.attachedJointLinkList.Count; // old
+                int numberOfChildNodes = currentBuildSegmentList[i].sourceNode.attachedChildNodesIdList.Count;
+                //Debug.Log("numberOfChildNodes: " + numberOfChildNodes.ToString() + "currentBuildSegmentList[i].sourceNode: " + currentBuildSegmentList[i].sourceNode.ID.ToString() + ", i: " + i.ToString());
+                for (int c = 0; c < numberOfChildNodes; c++) {
+
+                    // if NO symmetry:
+                    // Check if Attaching to a recursion chain && if onlyattachToTail is active:
+                    int childID = currentBuildSegmentList[i].sourceNode.attachedChildNodesIdList[c];
+                    //Debug.Log("%%%%% c=" + c.ToString() + ", childID: " + childID.ToString() + ", critterNodeListCount: " + masterCritterGenome.CritterNodeList.Count.ToString());
+                    // if(currentBuildSegmentList[i].sourceNode.attachedJointLinkList[c].childNode.parentJointLink.onlyAttachToTailNode)  // OLD
+                    if (CritterNodeList[childID].jointLink.onlyAttachToTailNode) {
+                        if (currentBuildSegmentList[i].sourceNode.jointLink.numberOfRecursions > 0) {
+                            if (newSegment.recursionNumber > newSegment.sourceNode.jointLink.numberOfRecursions) {
+                                // Only build segment if it is on the end of a recursion chain:
+                                BuildSegmentInfo newSegmentInfo = new BuildSegmentInfo();
+                                newSegmentInfo.sourceNode = CritterNodeList[childID];
+                                newSegmentInfo.parentSegment = newSegment;
+                                nextBuildSegmentList.Add(newSegmentInfo);
+
+                                if (CritterNodeList[childID].jointLink.symmetryType != CritterJointLink.SymmetryType.None) {
+                                    // the child node has some type of symmetry, so add a buildOrder for a mirrored Segment:
+                                    BuildSegmentInfo newSegmentInfoMirror = new BuildSegmentInfo();
+                                    newSegmentInfoMirror.sourceNode = CritterNodeList[childID];
+                                    newSegmentInfoMirror.isMirror = true;  // This segment is the COPY, not the original
+                                    newSegmentInfoMirror.parentSegment = newSegment;  // 
+                                    nextBuildSegmentList.Add(newSegmentInfoMirror);
+                                }
+                            }
+                        }
+                        else {
+                            // It only attaches to End nodes, but is parented to a Non-recursive segment, so proceed normally!!!
+                            BuildSegmentInfo newSegmentInfo = new BuildSegmentInfo();
+                            newSegmentInfo.sourceNode = CritterNodeList[childID];
+                            newSegmentInfo.parentSegment = newSegment;
+                            nextBuildSegmentList.Add(newSegmentInfo);
+
+                            if (CritterNodeList[childID].jointLink.symmetryType != CritterJointLink.SymmetryType.None) {
+                                // the child node has some type of symmetry, so add a buildOrder for a mirrored Segment:
+                                BuildSegmentInfo newSegmentInfoMirror = new BuildSegmentInfo();
+                                newSegmentInfoMirror.sourceNode = CritterNodeList[childID];
+                                newSegmentInfoMirror.isMirror = true;  // This segment is the COPY, not the original
+                                newSegmentInfoMirror.parentSegment = newSegment;  // 
+                                nextBuildSegmentList.Add(newSegmentInfoMirror);
+                            }
+                        }
+                    }
+                    else {  // proceed normally:
+                        BuildSegmentInfo newSegmentInfo = new BuildSegmentInfo();
+                        newSegmentInfo.sourceNode = CritterNodeList[childID];
+                        newSegmentInfo.parentSegment = newSegment;
+                        nextBuildSegmentList.Add(newSegmentInfo);
+
+                        if (CritterNodeList[childID].jointLink.symmetryType != CritterJointLink.SymmetryType.None) {
+                            // the child node has some type of symmetry, so add a buildOrder for a mirrored Segment:
+                            BuildSegmentInfo newSegmentInfoMirror = new BuildSegmentInfo();
+                            newSegmentInfoMirror.sourceNode = CritterNodeList[childID];
+                            newSegmentInfoMirror.isMirror = true;  // This segment is the COPY, not the original
+                            newSegmentInfoMirror.parentSegment = newSegment;  // 
+                            nextBuildSegmentList.Add(newSegmentInfoMirror);
+                        }
+                    }
+                }
+
+                // PositionSEGMENT GameObject!!!
+                if (newSegment.id == 0) {  // if ROOT NODE:
+
+                }
+                else {
+                    SetSegmentTransform(newGO);  // Properly position the SegmentGO where it should be  && scale!
+                }
+                critterTotalVolume += newGO.transform.localScale.x * newGO.transform.localScale.y * newGO.transform.localScale.z;
+            }
+            // After all buildNodes have been built, and their subsequent childNodes Enqueued, copy pendingChildQueue into buildNodesQueue
+            currentBuildSegmentList.Clear();
+            // SWAP LISTS:
+            if (nextBuildSegmentList.Count > 0) {
+                for (int j = 0; j < nextBuildSegmentList.Count; j++) {
+                    currentBuildSegmentList.Add(nextBuildSegmentList[j]);
+                }
+                nextBuildSegmentList.Clear();  // empty this list for next depth-round
+            }
+            else {
+                isPendingChildren = false;
+            }
+            if (currentDepth >= maxDepth) { // SAFEGUARD!! prevents infinite loop in case I mess something up
+                isPendingChildren = false;
+            }
+            currentDepth++;
+        }
+        #endregion
+        //Debug.Log("RebuildCritterFromGenomeRecursive " + inputChannelsList.Count.ToString() + ", " + outputChannelsList.Count.ToString());
+
+        // Re-Size Critter based on target volume:
+        float targetTotalVolume = 4f;
+        float linearScaling = Mathf.Pow(targetTotalVolume / critterTotalVolume, 1f / 3f);
+        for (int i = 0; i < CritterNodeList.Count; i++) {
+            CritterNodeList[i].dimensions.x *= linearScaling;
+            CritterNodeList[i].dimensions.y *= linearScaling;
+            CritterNodeList[i].dimensions.z *= linearScaling;
+        }
+
+        // interpret Genome and construct critter in its bind pose
+        isPendingChildren = true;
+        currentDepth = 0; // start with RootNode
+        maxDepth = 20;  // safeguard to prevent while loop lock
+        nextSegmentID = 0;
+        builtSegmentsList.Clear();
+        currentBuildSegmentList.Clear();
+        nextBuildSegmentList.Clear();
+        // ***********  Will attempt to traverse the Segments to be created, keeping track of where on each graph (nodes# & segment#) the current build is on.
+        rootSegmentBuildInfo = new BuildSegmentInfo();
+        rootSegmentBuildInfo.sourceNode = CritterNodeList[0];
+        currentBuildSegmentList.Add(rootSegmentBuildInfo);  // ROOT NODE IS SPECIAL!        
+
+        // Do a Breadth-first traversal??
+        #region Second WhileLoop
         while (isPendingChildren) {
             //int numberOfChildNodes = masterCritterGenome.CritterNodeList[currentNode].attachedJointLinkList.Count;
 
@@ -1709,63 +1928,40 @@ public class CritterGenome {
             }
             currentDepth++;
         }
+        #endregion
         //Debug.Log("RebuildCritterFromGenomeRecursive " + inputChannelsList.Count.ToString() + ", " + outputChannelsList.Count.ToString());
 
+        centerOfMassOffset.x = 0f;
+        centerOfMassOffset.y = 0f;
+        centerOfMassOffset.z = 0f;
         Vector3 avgPos = new Vector3(0f, 0f, 0f);
         List<float> segmentMassesList = new List<float>();
-        float critterTotalMass = 0f;
-        float critterTotalVolume = 0f;
-        float linearScaling = 0f;
-        float targetTotalVolume = 4f;
-
+        float critterTotalMass = 0f;        
+        
         // Fill data arrays with Critter stats for CritterSEGMENTS:
-        for (int i = 0; i < builtSegmentsList.Count; i++) {  // iterate through every segment
-            //CritterSegment currentSegment = critterBeingTested.critterSegmentList[i].GetComponent<CritterSegment>();
-            // SHARED:
-            float segmentVolume = builtSegmentsList[i].transform.localScale.x * builtSegmentsList[i].transform.localScale.y * builtSegmentsList[i].transform.localScale.z;
-            critterTotalVolume += segmentVolume;
-            //wormSegmentArray_ScaleX[i][0] = currentSegment.scalingFactor * currentSegment.sourceNode.dimensions.x;
-            //wormSegmentArray_ScaleY[i][0] = currentSegment.scalingFactor * currentSegment.sourceNode.dimensions.y;
-            //wormSegmentArray_ScaleZ[i][0] = currentSegment.scalingFactor * currentSegment.sourceNode.dimensions.z;
-
-            // Temporariliy diasbled VARIABLE MASS *****************************************************************************************************
-            //wormSegmentArray_Mass[i] = 1f;
+        for (int i = 0; i < builtSegmentsList.Count; i++) {  // iterate through every segment            
+            float segmentVolume = builtSegmentsList[i].transform.localScale.x * builtSegmentsList[i].transform.localScale.y * builtSegmentsList[i].transform.localScale.z;            
             float segmentMass = Mathf.Lerp(1f, segmentVolume, variableMass);
             segmentMassesList.Add(segmentMass);
             critterTotalMass += segmentMass;
-            //wormSegmentArray_Mass[i] = Mathf.Lerp(1f, wormSegmentArray_ScaleX[i][0] * wormSegmentArray_ScaleY[i][0] * wormSegmentArray_ScaleZ[i][0], customSettings.variableMass[0]);
-            //wormTotalMass += wormSegmentArray_Mass[i];
-            
         }
         float avgMass = critterTotalMass / builtSegmentsList.Count;  //
-
+        string segmentPositions = "CritterPreBuild SegmentPositions: \n";
         critterTotalMass /= avgMass;  // Adjust to center around 1f;
         for (int j = 0; j < builtSegmentsList.Count; j++) {
             // Finalize Segment Mass Value:
             segmentMassesList[j] /= avgMass;  // Center the segment Masses around 1f, to avoid precision errors
             //critterBeingTested.critterSegmentList[j].GetComponent<Rigidbody>().mass = wormSegmentArray_Mass[j];
-
             float shareOfTotalMass = segmentMassesList[j] / critterTotalMass;
             avgPos.x += builtSegmentsList[j].transform.position.x * shareOfTotalMass;  // multiply position by proportional share of total mass
             avgPos.y += builtSegmentsList[j].transform.position.y * shareOfTotalMass;
             avgPos.z += builtSegmentsList[j].transform.position.z * shareOfTotalMass;
-        }
-
-        linearScaling = Mathf.Pow(targetTotalVolume / critterTotalVolume, 1f/3f);
-        avgPos *= linearScaling;
-
-        //Debug.Log("avgPos: " + avgPos.ToString() + ", linearScaling: " + linearScaling.ToString() + ", critterTotalMass: " + critterTotalMass.ToString() + ", critterTotalVolume: " + critterTotalVolume.ToString());
-
+            segmentPositions += "(" + builtSegmentsList[j].transform.position.x.ToString() + ", " + builtSegmentsList[j].transform.position.y.ToString() + ", " + builtSegmentsList[j].transform.position.z.ToString() + ")\n";
+        }        
         centerOfMassOffset.x = -avgPos.x;
         centerOfMassOffset.y = -avgPos.y;
         centerOfMassOffset.z = -avgPos.z;
-
-        for(int i = 0; i < CritterNodeList.Count; i++) {
-            CritterNodeList[i].dimensions.x *= linearScaling;
-            CritterNodeList[i].dimensions.y *= linearScaling;
-            CritterNodeList[i].dimensions.z *= linearScaling;
-        }
-        
+        //Debug.Log(segmentPositions + "\nC.O.M: (" + avgPos.x.ToString() + ", " + avgPos.y.ToString() + ", " + avgPos.z.ToString() + ")");        
         // Delete created Segment GameObjects:
         // Do I need to delete Components first?
         TempCritterConstructionGroup.tempCritterConstructionGroup.DeleteSegments();

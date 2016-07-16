@@ -1246,7 +1246,7 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
             Vector3 attachDir = ConvertWorldSpaceToAttachDir(selectedSegment, rightClickWorldPosition);            
             int nextID = critterConstructorManager.masterCritter.masterCritterGenome.CritterNodeList.Count;
             critterConstructorManager.masterCritter.masterCritterGenome.AddNewNode(selectedSegment.GetComponent<CritterSegment>().sourceNode, attachDir, new Vector3(0f, 0f, 0f), nextID, GetNextNodeInnov());            
-            critterConstructorManager.masterCritter.RebuildCritterFromGenomeRecursive(false);
+            critterConstructorManager.masterCritter.RebuildCritterFromGenomeRecursive(false, true, 0f);
             
             // TEMPORARY:  -- DUE to critter being fully destroyed and re-built, the references to selected/hoverSegments are broken:
             CommandSetSelected(nextID);
@@ -1272,7 +1272,7 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
             critterConstructorManager.masterCritter.DeleteNode(selectedSegment.GetComponent<CritterSegment>().sourceNode);
             critterConstructorManager.masterCritter.RenumberNodes();
             critterConstructorManager.masterCritter.DeleteSegments();
-            critterConstructorManager.masterCritter.RebuildCritterFromGenomeRecursive(false);
+            critterConstructorManager.masterCritter.RebuildCritterFromGenomeRecursive(false, true, 0f);
             CommandSetSelected(0); // CHANGE THIS!!!!
             SetHoverFromID();
         }
@@ -1637,7 +1637,7 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
     }
 
     public void PreviewPhysicsEnter() {
-        critterConstructorManager.masterCritter.RebuildCritterFromGenomeRecursive(true);
+        critterConstructorManager.masterCritter.RebuildCritterFromGenomeRecursive(true, true, 0f);
         isPhysicsPreview = true;
         critterEditorUI.textPreviewPhysics.text = "Stop Preview";
         critterEditorUI.buttonPreviewPhysics.image.color = new Color(1f, 0.75f, 0.75f);
@@ -1653,7 +1653,7 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
         }        
     }
     public void PreviewPhysicsExit() {
-        critterConstructorManager.masterCritter.RebuildCritterFromGenomeRecursive(false);
+        critterConstructorManager.masterCritter.RebuildCritterFromGenomeRecursive(false, true, 0f);
         isPhysicsPreview = false;
         critterEditorUI.textPreviewPhysics.text = "Preview Physics";
         critterEditorUI.buttonPreviewPhysics.image.color = critterEditorUI.colorButtonNormal;
@@ -2094,7 +2094,7 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
 
     private void RebuildCritterStatic() {
         if(!isPhysicsPreview) {  // hack to prevent changing UI to interrupt physics preview simulation -- eventually this will be fixed with dedicated UI handler classes
-            critterConstructorManager.masterCritter.RebuildCritterFromGenomeRecursive(false);
+            critterConstructorManager.masterCritter.RebuildCritterFromGenomeRecursive(false, true, 0f);
             //SetHoverAndSelectedFromID();
             SetHoverFromID();
             CommandSetSelected(selectedNodeID);

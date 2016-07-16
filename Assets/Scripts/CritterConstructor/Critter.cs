@@ -164,7 +164,7 @@ public class Critter : MonoBehaviour {
             masterCritterGenome.ResetToBlankGenome();
         }
 
-        RebuildCritterFromGenomeRecursive(false);
+        RebuildCritterFromGenomeRecursive(false, true, 0f);
     }
 
     public void UpdateCritterFromGenome() {  // only use if the genome node graph hasn't changed -- only attributes & settings!!!
@@ -397,11 +397,12 @@ public class Critter : MonoBehaviour {
     }
     */  // deprecated, use similar function within CritterGenome class
     
-    public void RebuildCritterFromGenomeRecursive(bool physicsOn) {
+    public void RebuildCritterFromGenomeRecursive(bool physicsOn, bool useSegments, float variableMass) {
         //Debug.Log("RebuildCritterFromGenomeRecursive: " + masterCritterGenome.CritterNodeList.Count.ToString());
-        masterCritterGenome.PreBuildCritter(0.8f);
+        masterCritterGenome.PreBuildCritter(variableMass);
         // Delete existing Segment GameObjects
-        DeleteSegments();
+        if(!useSegments)
+            DeleteSegments();
         // Is this the best way to clear the lists? from a memory standpoint...
         segaddonPhysicalAttributesList.Clear();
         
@@ -477,13 +478,19 @@ public class Critter : MonoBehaviour {
                 CritterSegment newSegment = newGO.AddComponent<CritterSegment>();
                 builtSegmentsList.Add(newSegment);
                 newGO.layer = LayerMask.NameToLayer("editorSegment"); ; // set segmentGO layer to editorSegment, to distinguish it from Gizmos
-                newGO.GetComponent<MeshRenderer>().material = critterSegmentMaterial;
-                newGO.GetComponent<MeshRenderer>().material.SetFloat("_DisplayTarget", 0f);
-                newGO.GetComponent<MeshRenderer>().material.SetFloat("_Selected", 0f);
-                newGO.transform.SetParent(this.gameObject.transform);
-                newGO.AddComponent<BoxCollider>().isTrigger = false;
                 
-                critterSegmentList.Add(newGO);  // Add to master Linear list of Segments
+                newGO.transform.SetParent(this.gameObject.transform);
+                if (useSegments) {
+                    newGO.GetComponent<MeshRenderer>().material = critterSegmentMaterial;
+                    newGO.GetComponent<MeshRenderer>().material.SetFloat("_DisplayTarget", 0f);
+                    newGO.GetComponent<MeshRenderer>().material.SetFloat("_Selected", 0f);
+                    newGO.AddComponent<BoxCollider>().isTrigger = false;                    
+                    critterSegmentList.Add(newGO);  // Add to master Linear list of Segments
+                }
+                else {
+                    newGO.SetActive(false);
+                }                    
+  
                 newSegment.InitGamePiece();  // create the mesh and some other initialization stuff
                 newSegment.sourceNode = currentBuildSegmentList[i].sourceNode;
                 newSegment.id = nextSegmentID;
@@ -1131,13 +1138,13 @@ public class Critter : MonoBehaviour {
         }
 
         //Debug.Log("RebuildCritterFromGenomeRecursive " + inputChannelsList.Count.ToString() + ", " + outputChannelsList.Count.ToString());
-        //Debug.Log("RebuildCritterFromGenomeRecursive: COM_Offset: (" + masterCritterGenome.centerOfMassOffset.x.ToString() + ", " + masterCritterGenome.centerOfMassOffset.y.ToString() + ", " + masterCritterGenome.centerOfMassOffset.z.ToString() + "), totalVolume: " + critterTotalVolume.ToString());
+        //Debug.Log("RebuildCritterFromGenomeRecursive: COM_Offset: (" + masterCritterGenome.centerOfMassOffset.x.ToString() + ", " + masterCritterGenome.centerOfMassOffset.y.ToString() + ", " + masterCritterGenome.centerOfMassOffset.z.ToString() + "), totalVolume: " + critterTotalVolume.ToString());// + " RootPos: " + critterSegmentList[0].transform.position.ToString());
     }
 
     void ConfigureJointSettings(CritterSegment segment, ref ConfigurableJoint joint) {
         CritterNode node = segment.sourceNode;
-        joint.breakForce = 1000000f;
-        joint.breakTorque = 1000000f;
+        joint.breakForce = 100000f;
+        joint.breakTorque = 100000f;
         if (node.jointLink.jointType == CritterJointLink.JointType.Fixed) { // Fixed Joint
                                                                                   // Lock mobility:
             joint.xMotion = ConfigurableJointMotion.Locked;
@@ -1425,6 +1432,6 @@ public class Critter : MonoBehaviour {
         Debug.Log("LoadCritterGenome!!");
         masterCritterGenome = newGenome;
         masterCritterGenome.ReconstructGenomeFromLoad();
-        RebuildCritterFromGenomeRecursive(false);
+        RebuildCritterFromGenomeRecursive(false, true, 0f);
     }
 }

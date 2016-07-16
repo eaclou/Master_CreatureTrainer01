@@ -140,7 +140,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         //ResetTargetPositions(0);  // create new List<Vector3>()
 
         // Build Critter
-        critterBeingTested.RebuildCritterFromGenomeRecursive(true);  //  REVISIT THIS!! UGGGGLLLYYYYYY!!!!
+        critterBeingTested.RebuildCritterFromGenomeRecursive(true, true, customSettings.variableMass[0]);  //  REVISIT THIS!! UGGGGLLLYYYYYY!!!!
         numberOfSegments = critterBeingTested.critterSegmentList.Count;
 
         InitializeGameDataArrays();
@@ -186,7 +186,9 @@ public class MiniGameCritterWalkBasic : MiniGameBase
     }
 
     public void ResetCritter() {
-        critterBeingTested.RebuildCritterFromGenomeRecursive(true); // builds critter     and segment addons   
+        critterBeingTested.RebuildCritterFromGenomeRecursive(false, false, customSettings.variableMass[0]); // builds critter     and segment addons  
+        critterBeingTested.RebuildCritterFromGenomeRecursive(true, true, customSettings.variableMass[0]); // builds critter     and segment addons   
+         
         //Debug.Log("ResetCritter() " + critterBeingTested.inputChannelsList.Count.ToString());
     }
     
@@ -236,7 +238,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
 
             Vector3 forceDir = UnityEngine.Random.onUnitSphere;
             float forceMag = UnityEngine.Random.Range(customSettings.initForceMin[0], customSettings.initForceMax[0]);
-            initialForceList.Add(new Vector3(0f, forceDir.y * forceMag, forceDir.z * forceMag));
+            initialForceList.Add(new Vector3(forceDir.x * forceMag, forceDir.y * forceMag, forceDir.z * forceMag));
         }  
         
     }
@@ -347,23 +349,9 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             float shareOfTotalMass = wormSegmentArray_Mass[j] / wormTotalMass;
             wormCOM.x += wormSegmentArray_PosX[j][0] * shareOfTotalMass;  // multiply position by proportional share of total mass
             wormCOM.y += wormSegmentArray_PosY[j][0] * shareOfTotalMass;
-            wormCOM.z += wormSegmentArray_PosZ[j][0] * shareOfTotalMass;
-            
+            wormCOM.z += wormSegmentArray_PosZ[j][0] * shareOfTotalMass;            
         }
-
-        for (int k = 0; k < numberOfSegments; k++)
-        {
-            // Center the creature so that its center of mass is at the origin, to avoid initial position bias  // This isn't working right now!!! fix creature Rebuild to support offset COM
-            //wormSegmentArray_PosX[k][0] -= wormCOM.x;
-            //wormSegmentArray_PosY[k][0] -= wormCOM.y;
-            //wormSegmentArray_PosZ[k][0] -= wormCOM.z;
-        }
-
-        // Reset wormCOM to 0f, now that it's been moved:
-        wormCOM.x = 0f;
-        wormCOM.y = 0f;
-        wormCOM.z = 0f;
-
+        
         // INITIAL PUSH!!!  (currently only on root segment)
         critterBeingTested.critterSegmentList[0].GetComponent<Rigidbody>().AddForce(initialForceList[gameCurrentRound], ForceMode.Impulse);
         //critterBeingTested.critterSegmentList[4].GetComponent<Rigidbody>().AddForce(initialForceList[gameCurrentRound], ForceMode.Impulse);
@@ -651,7 +639,6 @@ public class MiniGameCritterWalkBasic : MiniGameBase
                     //drive.maximumForce = motor.motorForce[0] * customSettings.jointMotorForce[0];  // game option is a global multiplier on force/speed
                     critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularXDrive = drive;
                     Vector3 targetVel = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity;
-
                     targetVel.x = motor.targetAngularX[0] * customSettings.jointMotorSpeed[0]; // game option is a global multiplier on force/speed
                     critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity = targetVel;
 
@@ -663,7 +650,9 @@ public class MiniGameCritterWalkBasic : MiniGameBase
                 }
                 else if (critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<CritterSegment>().sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeY) {
                     JointDrive drive = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularYZDrive;
-                    drive.maximumForce = motor.motorForce[0] * customSettings.jointMotorForce[0];  // game option is a global multiplier on force/speed
+                    drive.positionSpring = motor.motorForce[0] * customSettings.jointMotorForce[0]; // TEMP!
+                    drive.positionDamper = motor.motorForce[0] * customSettings.jointMotorForce[0] / 2f; // TEMP!
+                    //drive.maximumForce = motor.motorForce[0] * customSettings.jointMotorForce[0];  // game option is a global multiplier on force/speed
                     critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularYZDrive = drive;
                     Vector3 targetVel = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity;
                     targetVel.y = motor.targetAngularY[0] * motor.motorSpeed[0] * customSettings.jointMotorSpeed[0]; // game option is a global multiplier on force/speed
@@ -673,7 +662,9 @@ public class MiniGameCritterWalkBasic : MiniGameBase
                 }
                 else if (critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<CritterSegment>().sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeZ) {
                     JointDrive drive = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularYZDrive;
-                    drive.maximumForce = motor.motorForce[0] * customSettings.jointMotorForce[0];  // game option is a global multiplier on force/speed
+                    drive.positionSpring = motor.motorForce[0] * customSettings.jointMotorForce[0]; // TEMP!
+                    drive.positionDamper = motor.motorForce[0] * customSettings.jointMotorForce[0] / 2f; // TEMP!
+                    //drive.maximumForce = motor.motorForce[0] * customSettings.jointMotorForce[0];  // game option is a global multiplier on force/speed
                     critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularYZDrive = drive;
                     Vector3 targetVel = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity;
                     targetVel.z = motor.targetAngularZ[0] * motor.motorSpeed[0] * customSettings.jointMotorSpeed[0]; // game option is a global multiplier on force/speed
@@ -683,7 +674,9 @@ public class MiniGameCritterWalkBasic : MiniGameBase
                 }
                 else if (critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<CritterSegment>().sourceNode.jointLink.jointType == CritterJointLink.JointType.DualXY) {
                     JointDrive drive = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularXDrive;
-                    drive.maximumForce = motor.motorForce[0] * customSettings.jointMotorForce[0];  // game option is a global multiplier on force/speed
+                    drive.positionSpring = motor.motorForce[0] * customSettings.jointMotorForce[0]; // TEMP!
+                    drive.positionDamper = motor.motorForce[0] * customSettings.jointMotorForce[0] / 2f; // TEMP!
+                    //drive.maximumForce = motor.motorForce[0] * customSettings.jointMotorForce[0];  // game option is a global multiplier on force/speed
                     critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularXDrive = drive;
                     Vector3 targetVel = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity;
                     targetVel.x = motor.targetAngularX[0] * motor.motorSpeed[0] * customSettings.jointMotorSpeed[0]; // game option is a global multiplier on force/speed
@@ -820,18 +813,19 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             //fitEnergySpent[0] += Mathf.Abs(wormSegmentArray_MotorTargetZ[e][0]) / 3f;
         }
         Vector3 comVel = wormCOM - prevFrameWormCOM;
+        
+            
+
         ArenaCameraController.arenaCameraControllerStatic.focusPosition = wormCOM;
         Vector3 targetDirection = new Vector3(targetPosX[0] - wormCOM.x, targetPosY[0] - wormCOM.y, targetPosZ[0] - wormCOM.z);
         float distToTarget = targetDirection.magnitude;
         //if(preWarm == false) {
-        fitDistToTarget[0] += distToTarget;
-        fitDistFromOrigin[0] += wormCOM.magnitude;
+        
         //}
 
         Vector3 headToTargetVect = new Vector3(targetPosX[0] - wormSegmentArray_PosX[0][0], targetPosY[0] - wormSegmentArray_PosY[0][0], targetPosZ[0] - wormSegmentArray_PosZ[0][0]).normalized;
 
-        fitMoveToTarget[0] += Vector3.Dot(comVel.normalized, targetDirection.normalized);
-        fitMoveSpeed[0] += comVel.magnitude;
+        
 
         bool inTarget = false;
         if (distToTarget < customSettings.targetRadius[0])
@@ -853,7 +847,14 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             fitCustomTarget[0] += Vector3.Dot(comVel, targetDirection.normalized);  // move quickly towards target
         }
 
-        if(Mathf.Abs(wormCOM.z) < 6f) {  // can't move more than this
+        if (gameCurrentTimeStep > 2) {
+            fitMoveToTarget[0] += Vector3.Dot(comVel.normalized, targetDirection.normalized);
+            fitMoveSpeed[0] += comVel.magnitude;
+            fitDistToTarget[0] += distToTarget;
+            fitDistFromOrigin[0] += wormCOM.magnitude;
+        }
+
+        if (Mathf.Abs(wormCOM.z) < 6f) {  // can't move more than this
             //fitCustomPole[0] += 1f; 
         }
         else {
@@ -866,12 +867,20 @@ public class MiniGameCritterWalkBasic : MiniGameBase
             if (critterBeingTested.critterSegmentList[w].GetComponent<CritterSegment>().broken) {
                 fitCustomBody[0] = -1000;
                 gameEndStateReached = true;
+                agentBodyGenomeBeingTested.degenerate = true;
             }
-            if(gameCurrentTimeStep < 1) {
+            if (critterBeingTested.critterSegmentList[w].GetComponent<Rigidbody>().velocity.magnitude > 30f) {
+                fitCustomBody[0] = -1000;
+                gameEndStateReached = true;
+                Debug.Log("PHYS-X EXPLOSION! velocity.magnitude > 30f: " + gameCurrentTimeStep.ToString() + ", w: " + w.ToString());
+                agentBodyGenomeBeingTested.degenerate = true;
+            }
+            if (gameCurrentTimeStep < 1) {
                 if (critterBeingTested.critterSegmentList[w].GetComponent<CritterSegment>().colliding) {
                     fitCustomBody[0] = -1000;
                     gameEndStateReached = true;
-                    Debug.Log("COLLISION! gameCurrentTimeStep: " + gameCurrentTimeStep.ToString() + ", w: " + w.ToString());
+                    //Debug.Log("COLLISION! gameCurrentTimeStep: " + gameCurrentTimeStep.ToString() + ", w: " + w.ToString());
+                    agentBodyGenomeBeingTested.degenerate = true;
                 }
             }
             ApplyViscosityForces(critterBeingTested.critterSegmentList[w], w, customSettings.viscosityDrag[0]);

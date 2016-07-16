@@ -45,7 +45,7 @@ public class CrossoverManager {
     public float largeSpeciesPenalty = 0.04f;
     public float interspeciesBreedingRate = 0.01f;
     // BODY!!!:
-    public float maxAttributeValueChange = 1.25f;
+    public float maxAttributeValueChange = 1.2f;
     public float newSegmentChance = 0f;
     public float removeSegmentChance = 0f;
     public float segmentProportionChance = 0f;
@@ -296,10 +296,10 @@ public class CrossoverManager {
         return sourceFloat + Mathf.Max(Mathf.Min(UnityEngine.Random.Range(-maxAmount, maxAmount), max), min);
     }
     public float MutateBodyFloatMult(float sourceFloat) {
-        return sourceFloat * UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange);
+        return sourceFloat * UnityEngine.Random.Range(1f / (maxAttributeValueChange * bodyMutationBlastModifier), maxAttributeValueChange * bodyMutationBlastModifier);
     }
     public float MutateBodyFloatMult(float sourceFloat, float min, float max) {
-        return sourceFloat * Mathf.Max(Mathf.Min(UnityEngine.Random.Range(1f / maxAttributeValueChange, maxAttributeValueChange), max), min);
+        return sourceFloat * Mathf.Max(Mathf.Min(UnityEngine.Random.Range(1f / (maxAttributeValueChange * bodyMutationBlastModifier), maxAttributeValueChange * bodyMutationBlastModifier), max), min);
     }
     public bool MutateBodyBool(bool sourceBool) {        
         if(UnityEngine.Random.Range(0f, 1f) < 0.5f) {
@@ -312,7 +312,7 @@ public class CrossoverManager {
         //return sourceVector;
     //}
     public Vector3 MutateBodyVector3Normalized(Vector3 sourceVector) {        
-        return Vector3.Slerp(sourceVector, UnityEngine.Random.onUnitSphere, maxAttributeValueChange - 1f).normalized;
+        return Vector3.Slerp(sourceVector, UnityEngine.Random.onUnitSphere, (maxAttributeValueChange * bodyMutationBlastModifier) - 1f).normalized;
     }
 
     public Agent SelectAgentFromPopForBreeding(Population breedingPop, int numEligibleBreederAgents, ref int currentRankIndex) {
@@ -1284,10 +1284,10 @@ public class CrossoverManager {
             }
             else {
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
-                    bodyGenome.addonJointMotorList[i].motorForce[0] = MutateBodyFloatMult(bodyGenome.addonJointMotorList[i].motorForce[0], 0.01f, 1000f);
+                    bodyGenome.addonJointMotorList[i].motorForce[0] = MutateBodyFloatMult(bodyGenome.addonJointMotorList[i].motorForce[0], 0.01f, 200f);
                 }
                 if (CheckForMutation(addonSettingsChance * bodyMutationBlastModifier)) {
-                    bodyGenome.addonJointMotorList[i].motorSpeed[0] = MutateBodyFloatMult(bodyGenome.addonJointMotorList[i].motorSpeed[0], 0.01f, 1000f);
+                    bodyGenome.addonJointMotorList[i].motorSpeed[0] = MutateBodyFloatMult(bodyGenome.addonJointMotorList[i].motorSpeed[0], 0.01f, 200f);
                 }
             }            
         }

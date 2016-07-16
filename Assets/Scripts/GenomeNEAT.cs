@@ -112,9 +112,9 @@ public class GenomeNEAT {
 
     public int GetNodeIndexFromInt3(Int3 identifierTag) {
         int nodeIndex = -1;
-        string debugNodes = "GetNodeIndexFromVector3 ERROR!!!Can't Find Node " + identifierTag.ToString() + "\n";
+        //string debugNodes = "GetNodeIndexFromVector3 ERROR!!!Can't Find Node " + identifierTag.ToString() + "\n";
         for (int i = 0; i < nodeNEATList.Count; i++) {
-            debugNodes += i.ToString() + ", " + nodeNEATList[i].sourceAddonInno.ToString() + ", " + nodeNEATList[i].sourceAddonRecursionNum.ToString() + ", " + nodeNEATList[i].sourceAddonChannelNum.ToString() + "\n";
+            //debugNodes += i.ToString() + ", " + nodeNEATList[i].sourceAddonInno.ToString() + ", " + nodeNEATList[i].sourceAddonRecursionNum.ToString() + ", " + nodeNEATList[i].sourceAddonChannelNum.ToString() + "\n";
             if (nodeNEATList[i].sourceAddonInno == identifierTag.x) {
                 if (nodeNEATList[i].sourceAddonRecursionNum == identifierTag.y) {
                     if (nodeNEATList[i].sourceAddonChannelNum == identifierTag.z) {
@@ -551,8 +551,14 @@ public class GenomeNEAT {
         float weightDeltaTotal = 0f;
         float maxGenes = Mathf.Max((float)genomeA.linkNEATList.Count, (float)genomeB.linkNEATList.Count);
         float matchingGenes = 0f;
-        float disjointGenes = 0f;
-        float excessGenes = 0f;
+        //float disjointGenes = 0f;
+        //float excessGenes = 0f;
+        float linkGenes = 0f;
+        float neuronGenes = 0f;
+        int matchingNeurons = 0;
+        //float smallestWeightValue = 0f;
+        float largestWeightDelta = 0f;
+        
 
         // matching Links
         // matching nodes/neurons
@@ -561,6 +567,7 @@ public class GenomeNEAT {
         // difference in add-on settings?
         // -- NEED TO GO BY BODY GENOME?????
 
+        // LINKS:::
         for(int i = 0; i < genomeA.linkNEATList.Count + genomeB.linkNEATList.Count; i++) {
             if(indexA < genomeA.linkNEATList.Count) {
 
@@ -568,33 +575,35 @@ public class GenomeNEAT {
 
                     if (genomeA.linkNEATList[indexA].innov < genomeB.linkNEATList[indexB].innov) {
                         // disjoint A
-                        disjointGenes++;
+                        linkGenes++;
                         indexA++;
                     }
                     else if (genomeA.linkNEATList[indexA].innov > genomeB.linkNEATList[indexB].innov) {
                         // disjoint B
-                        disjointGenes++;
+                        linkGenes++;
                         indexB++;
                     }
                     else if (genomeA.linkNEATList[indexA].innov == genomeB.linkNEATList[indexB].innov) {
                         // match!
-                        
-                        weightDeltaTotal += Mathf.Abs(genomeA.linkNEATList[indexA].weight - genomeB.linkNEATList[indexB].weight);
+                        float weightDelta = Mathf.Abs(genomeA.linkNEATList[indexA].weight - genomeB.linkNEATList[indexB].weight);
+                        weightDeltaTotal += weightDelta;
                         matchingGenes++;
                         //Debug.Log("!@$#!$#!@$#!@$# MeasureGeneticDistance! innov MATCHING GENE: weightA: " + genomeA.linkNEATList[indexA].weight.ToString() + ", weightB: " + genomeB.linkNEATList[indexB].weight.ToString());
                         indexA++;
                         indexB++;
+                        
+                        largestWeightDelta = Mathf.Max(largestWeightDelta, weightDelta);
                     }
 
                 }
                 else { // A is good, B is finished
-                    excessGenes++;
+                    linkGenes++;
                     indexA++;
                 }
             }
             else { // A done
                 if (indexB < genomeB.linkNEATList.Count) {  // A is finished, B is good
-                    excessGenes++;
+                    linkGenes++;
                     indexB++;
 
                 }
@@ -603,13 +612,32 @@ public class GenomeNEAT {
                 }
             }            
         }
+        
+        for (int i = 0; i < genomeA.nodeNEATList.Count; i++) {
+            Int3 nodeID = new Int3(genomeA.nodeNEATList[i].sourceAddonInno, genomeA.nodeNEATList[i].sourceAddonRecursionNum, genomeA.nodeNEATList[i].sourceAddonChannelNum);
+            if(genomeB.GetNodeIndexFromInt3(nodeID) != -1) { // if genomeB has the same neuron:
+                matchingNeurons++;
+            }            
+        }
+        int totalNeurons = (genomeA.nodeNEATList.Count + genomeB.nodeNEATList.Count);
+        int totalLinks = (genomeA.linkNEATList.Count + genomeB.linkNEATList.Count);
+        if(totalNeurons > 0) {
+            neuronGenes = (float)((totalNeurons) - matchingNeurons * 2) / (float)(totalNeurons); // get proportion of neurons that match between the two genomes, should be 0-1
+        }      
+        if(totalLinks > 0) {
+            linkGenes = ((float)(totalLinks) - matchingGenes * 2f) / (float)(totalLinks);
+        }
+        //float weightSpan = largestWeightValue - smallestWeightValue;       
 
         float distance = 0f;
         if(maxGenes > 0f) {
-            float excessComponent = excessCoefficient * Mathf.Lerp(excessGenes, excessGenes / maxGenes, normExcess);
-            float disjointComponent = disjointCoefficient * Mathf.Lerp(disjointGenes, disjointGenes / maxGenes, normDisjoint);
+            //float excessComponent = excessCoefficient * Mathf.Lerp(excessGenes, excessGenes / maxGenes, normExcess);
+            //float disjointComponent = disjointCoefficient * Mathf.Lerp(disjointGenes, disjointGenes / maxGenes, normDisjoint);
             float weightComponent = weightCoefficient * Mathf.Lerp(weightDeltaTotal, weightDeltaTotal / Mathf.Max((float)matchingGenes, 1f), normWeight);
-            distance = excessComponent + disjointComponent + weightComponent;
+            weightComponent = weightDeltaTotal / Mathf.Max((float)matchingGenes, 1f) / largestWeightDelta;
+            // OLD //distance = excessComponent + disjointComponent + weightComponent;
+            distance = neuronGenes + linkGenes + weightComponent;
+            Debug.Log("MeasureGeneticDistance! neuronGenes: " + (neuronGenes).ToString() + ", linkGenes: " + (linkGenes).ToString() + ", weight: " + (weightDeltaTotal / Mathf.Max((float)matchingGenes, 1f)).ToString() + ", distance: " + distance.ToString());
             //Debug.Log("MeasureGeneticDistance! disjoint: " + (disjointGenes).ToString() + ", excess: " + (excessGenes).ToString() + ", weight: " + (weightDeltaTotal / Mathf.Max((float)matchingGenes, 1f)).ToString() + ", distance: " + distance.ToString());
         }
         // else stays 0f;

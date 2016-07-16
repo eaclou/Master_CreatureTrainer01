@@ -29,10 +29,10 @@ public class MiniGameCritterWalkBasicSettings : MiniGameSettingsBase {
 
     public MiniGameCritterWalkBasicSettings() {
         // DEFAULTS:
-        viscosityDrag[0] = 0f;
+        viscosityDrag[0] = 1f;
         gravityStrength[0] = 0f;
-        jointMotorForce[0] = 2f; // global multipliers on individual joint motor settings
-        jointMotorSpeed[0] = 2f;
+        jointMotorForce[0] = 0.1f; // global multipliers on individual joint motor settings
+        jointMotorSpeed[0] = 0.2f;
         variableMass[0] = 0.8f;
         minTargetX[0] = 0f;
         maxTargetX[0] = 0f;
@@ -42,11 +42,11 @@ public class MiniGameCritterWalkBasicSettings : MiniGameSettingsBase {
         maxTargetZ[0] = 6f;
         minScoreDistance[0] = 1f;
         maxScoreDistance[0] = 0.75f;
-        targetRadius[0] = 1f;
+        targetRadius[0] = 0.01f;
         groundPositionY[0] = -50f;
         angleSensorSensitivity[0] = 1f;
         initForceMin[0] = 0f;
-        initForceMax[0] = 0f;
+        initForceMax[0] = 0.5f;
         groundBounce[0] = 0f;
         groundFriction[0] = 1f;
         useRandomTargetPos[0] = 0f;

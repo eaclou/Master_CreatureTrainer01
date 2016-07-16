@@ -333,6 +333,9 @@ public class Trainer {
                                 score01 = 1f - score01;
                             }
                             score01 = Mathf.Pow(score01, playerList[p].masterTrialsList[trialIndex].fitnessManager.masterFitnessCompList[fitCompIndex].power);
+                            if(playerList[p].masterPopulation.masterAgentArray[a].bodyGenome.degenerate) {
+                                score01 = 0f;  // if bodyGenome indicates that critter had initially intersecting/colliding sections, give it 0 in all fitness scores;
+                            }
                             // figure out this fitnessComponent's share of total
                             // should I store totalSumOfWeights, or calculate it at beginning of this function?
                             float trialPieSlice = playerList[p].masterTrialsList[trialIndex].weight / playerList[p].dataManager.generationDataList[playingCurGeneration].totalSumOfWeights;
@@ -610,15 +613,17 @@ public class Trainer {
             currentGameManager.miniGameInstance.gameCurrentRound = playingCurTrialRound;
             currentGameManager.miniGameInstance.Reset();
             currentGameManager.SetInputOutputArrays();
-            if (currentGameManager.miniGameInstance.critterBeingTested != null) {
-                //networkVisualizer.sourceCritter = currentGameManager.miniGameInstance.critterBeingTested;
-                playerList[playingCurPlayer].masterPopulation.masterAgentArray[playingCurAgent].brain.ClearBrainState();  // zeroes out all values
-            }
+            //currentGameManager.miniGameInstance.SetNonPhysicsGamePieceTransformsFromData();
             //BuildBrainMesh(playerList[playingCurPlayer].masterPopulation.masterAgentArray[playingCurAgent].brain);
-            
+
         }
         else {
+            //currentGameManager.miniGameInstance.SetNonPhysicsGamePieceTransformsFromData();
             if (currentGameManager.miniGameInstance.gameCleared) {
+                if (currentGameManager.miniGameInstance.critterBeingTested != null) {
+                    //networkVisualizer.sourceCritter = currentGameManager.miniGameInstance.critterBeingTested;
+                    playerList[playingCurPlayer].masterPopulation.masterAgentArray[playingCurAgent].brain.ClearBrainState();  // zeroes out all values
+                }
                 currentGameManager.miniGameInstance.waitingForReset = true;
             }
             else {
