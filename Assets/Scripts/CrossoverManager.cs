@@ -11,8 +11,10 @@ public class CrossoverManager {
     public bool useCrossover = true;
     public bool useSpeciation = false;
 
-    public static int nextNodeInnov;
-    public static int nextAddonInnov;
+    public static int nextNodeInnov;  // Segment Innovation#
+    public int savedNextNodeInnov;
+    public static int nextAddonInnov;   // Addon/Neuron Innovation#
+    public int savedNextAddonInnov;
 
     // Body OLD:
     //public float mutationBodyChance = 0.5f;
@@ -35,11 +37,11 @@ public class CrossoverManager {
     public float crossoverRandomLinkChance = 0f;
     // SPECIES!!!:
     public float speciesSimilarityThreshold = 1.5f;
-    public float excessLinkWeight = 0.425f;
-    public float disjointLinkWeight = 0.425f;
-    public float linkWeightWeight = 0.15f;
-    public float normalizeExcess = 0f;
-    public float normalizeDisjoint = 0f;
+    public float neuronWeight = 1f;
+    public float linkWeight = 0.25f;
+    public float weightWeight = 0.25f;
+    public float normalizeExcess = 1f;
+    public float normalizeDisjoint = 1f;
     public float normalizeLinkWeight = 1f;
     public float adoptionRate = 0.05f;
     public float largeSpeciesPenalty = 0.04f;
@@ -109,9 +111,9 @@ public class CrossoverManager {
         crossoverRandomLinkChance = sourceManager.crossoverRandomLinkChance;
         //Species
         speciesSimilarityThreshold = sourceManager.speciesSimilarityThreshold;
-        excessLinkWeight = sourceManager.excessLinkWeight;
-        disjointLinkWeight = sourceManager.disjointLinkWeight;
-        linkWeightWeight = sourceManager.linkWeightWeight;
+        neuronWeight = sourceManager.neuronWeight;
+        linkWeight = sourceManager.linkWeight;
+        weightWeight = sourceManager.weightWeight;
         normalizeExcess = sourceManager.normalizeExcess;
         normalizeDisjoint = sourceManager.normalizeDisjoint;
         normalizeLinkWeight = sourceManager.normalizeLinkWeight;
@@ -296,10 +298,12 @@ public class CrossoverManager {
         return sourceFloat + Mathf.Max(Mathf.Min(UnityEngine.Random.Range(-maxAmount, maxAmount), max), min);
     }
     public float MutateBodyFloatMult(float sourceFloat) {
-        return sourceFloat * UnityEngine.Random.Range(1f / (maxAttributeValueChange * bodyMutationBlastModifier), maxAttributeValueChange * bodyMutationBlastModifier);
+        float maxValue = (maxAttributeValueChange - 1f) * bodyMutationBlastModifier + 1f;
+        return sourceFloat * UnityEngine.Random.Range(1f / maxValue, maxValue);
     }
     public float MutateBodyFloatMult(float sourceFloat, float min, float max) {
-        return sourceFloat * Mathf.Max(Mathf.Min(UnityEngine.Random.Range(1f / (maxAttributeValueChange * bodyMutationBlastModifier), maxAttributeValueChange * bodyMutationBlastModifier), max), min);
+        float maxValue = (maxAttributeValueChange - 1f) * bodyMutationBlastModifier + 1f;
+        return sourceFloat * Mathf.Max(Mathf.Min(UnityEngine.Random.Range(1f / maxValue, maxValue), max), min);
     }
     public bool MutateBodyBool(bool sourceBool) {        
         if(UnityEngine.Random.Range(0f, 1f) < 0.5f) {
@@ -311,8 +315,9 @@ public class CrossoverManager {
     //public Vector3 MutateBodyVector3(Vector3 sourceVector) {
         //return sourceVector;
     //}
-    public Vector3 MutateBodyVector3Normalized(Vector3 sourceVector) {        
-        return Vector3.Slerp(sourceVector, UnityEngine.Random.onUnitSphere, (maxAttributeValueChange * bodyMutationBlastModifier) - 1f).normalized;
+    public Vector3 MutateBodyVector3Normalized(Vector3 sourceVector) {
+        float maxValue = (maxAttributeValueChange - 1f) * bodyMutationBlastModifier + 1f;
+        return Vector3.Slerp(sourceVector, UnityEngine.Random.onUnitSphere, (maxValue) - 1f).normalized;
     }
 
     public Agent SelectAgentFromPopForBreeding(Population breedingPop, int numEligibleBreederAgents, ref int currentRankIndex) {
@@ -967,9 +972,12 @@ public class CrossoverManager {
                     }
 
                     // SYMMETRY
-
+                    if (CheckForMutation(symmetryChance * bodyMutationBlastModifier)) {
+                        int symmetryType = Mathf.RoundToInt(UnityEngine.Random.Range(0f, 2f));  // 0=none,1=x, or 2=y
+                        Debug.Log("Mutated Symmetry! " + bodyGenome.CritterNodeList[i].jointLink.symmetryType.ToString() + " => " + ((CritterJointLink.SymmetryType)symmetryType).ToString());
+                        bodyGenome.CritterNodeList[i].jointLink.symmetryType = (CritterJointLink.SymmetryType)symmetryType;                        
+                    }
                     // EXTRA -- recursion forward, only attach to tail
-                    
                 }
 
                 // CREATE NEW ADD-ON!!  On this segment
@@ -1743,7 +1751,11 @@ public class CrossoverManager {
                         }
                         if (CheckForMutation(mutationBlastModifier * mutationAddNodeChance)) {   // Adds a new node
                             //Debug.Log("Add Node Mutation Agent[" + newChildIndex.ToString() + "]");
-                            childBrainGenome.AddNewRandomNode(LifetimeGeneration);
+                            childBrainGenome.AddNewRandomNode(LifetimeGeneration, GetNextAddonInnov());
+                        }
+                        if (CheckForMutation(mutationBlastModifier * mutationRemoveNodeChance)) {   // Adds a new node
+                            //Debug.Log("Add Node Mutation Agent[" + newChildIndex.ToString() + "]");
+                            childBrainGenome.RemoveRandomNode();
                         }
                         if (CheckForMutation(mutationBlastModifier * mutationAddLinkChance)) { // Adds new connection
                             //Debug.Log("Add Link Mutation Agent[" + newChildIndex.ToString() + "]");
@@ -1891,7 +1903,7 @@ public class CrossoverManager {
                         }
                         if (CheckForMutation(mutationBlastModifier * mutationAddNodeChance)) {   // Adds a new node
                             //Debug.Log("Add Node Mutation Agent[" + newChildIndex.ToString() + "]");
-                            childBrainGenome.AddNewRandomNode(LifetimeGeneration);
+                            childBrainGenome.AddNewRandomNode(LifetimeGeneration, GetNextAddonInnov());
                         }
                         if (CheckForMutation(mutationBlastModifier * mutationAddLinkChance)) { // Adds new connection
                             //Debug.Log("Add Link Mutation Agent[" + newChildIndex.ToString() + "]");
@@ -2003,7 +2015,7 @@ public class CrossoverManager {
                     if (randAdoption < adoptionRate) { // Attempts to Found a new species
                         bool speciesGenomeMatch = false;
                         for (int s = 0; s < childSpeciesPoolsList.Count; s++) {
-                            float geneticDistance = GenomeNEAT.MeasureGeneticDistance(newChildAgent.brainGenome, childSpeciesPoolsList[s].templateGenome, excessLinkWeight, disjointLinkWeight, linkWeightWeight, normalizeExcess, normalizeDisjoint, normalizeLinkWeight);
+                            float geneticDistance = GenomeNEAT.MeasureGeneticDistance(newChildAgent.brainGenome, childSpeciesPoolsList[s].templateGenome, neuronWeight, linkWeight, weightWeight, normalizeExcess, normalizeDisjoint, normalizeLinkWeight);
 
                             if (geneticDistance < speciesSimilarityThreshold) {
                                 speciesGenomeMatch = true;

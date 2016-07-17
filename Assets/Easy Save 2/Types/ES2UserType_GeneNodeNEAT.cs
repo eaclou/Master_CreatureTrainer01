@@ -16,6 +16,9 @@ public class ES2UserType_GeneNodeNEAT : ES2Type
         writer.Write(data.activationFunction);
         writer.Write(data.id);
         writer.Write(data.nodeType);
+        writer.Write(data.sourceAddonInno);
+        writer.Write(data.sourceAddonRecursionNum);
+        writer.Write(data.sourceAddonChannelNum);
     }
 	
 	public override object Read(ES2Reader reader)
@@ -37,6 +40,9 @@ public class ES2UserType_GeneNodeNEAT : ES2Type
             data.activationFunction = reader.Read<TransferFunctions.TransferFunction>();
             data.id = reader.Read<int>();
             data.nodeType = reader.Read<GeneNodeNEAT.GeneNodeType>();
+            data.sourceAddonInno = reader.Read<int>();
+            data.sourceAddonRecursionNum = reader.Read<int>();
+            data.sourceAddonChannelNum = reader.Read<int>();
         }
     }
 	

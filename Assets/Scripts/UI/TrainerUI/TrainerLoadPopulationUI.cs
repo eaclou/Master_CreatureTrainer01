@@ -72,8 +72,10 @@ public class TrainerLoadPopulationUI : MonoBehaviour {
             Debug.Log("Loaded Training Save!!! body nodes: " + currentPlayer.masterPopulation.templateGenome.ToString() + ", startGen: " + trainingDataToLoad.beginGeneration.ToString() + ", endGen: " + trainingDataToLoad.endGeneration.ToString());
 
             currentPlayer.masterCupid = trainingDataToLoad.savedCrossoverManager;
+            CrossoverManager.nextNodeInnov = currentPlayer.masterCupid.savedNextNodeInnov;
+            CrossoverManager.nextAddonInnov = currentPlayer.masterCupid.savedNextAddonInnov;
 
-			trainerModuleScript.SetAllPanelsFromTrainerData();
+            trainerModuleScript.SetAllPanelsFromTrainerData();
 		}
 		else {
 			Debug.LogError("No TrainingData File Exists!");

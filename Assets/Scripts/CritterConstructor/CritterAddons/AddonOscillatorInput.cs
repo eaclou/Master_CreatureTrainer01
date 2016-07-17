@@ -12,7 +12,7 @@ public class AddonOscillatorInput {
     public AddonOscillatorInput() {
         Debug.Log("Constructor AddonOscillatorInput()");
         frequency = new float[1];
-        frequency[0] = 1f;
+        frequency[0] = 3f;
         amplitude = new float[1];
         amplitude[0] = 1f;
         offset = new float[1];
@@ -24,7 +24,7 @@ public class AddonOscillatorInput {
         critterNodeID = id;
         innov = inno;
         frequency = new float[1];
-        frequency[0] = 1f;
+        frequency[0] = 3f;
         amplitude = new float[1];
         amplitude[0] = 1f;
         offset = new float[1];

@@ -34,8 +34,7 @@ public class CritterJointLink {
     public enum SymmetryType {
         None,
         MirrorX,
-        MirrorY,
-        MirrorZ
+        MirrorY,        
     }
 
     public CritterJointLink() {

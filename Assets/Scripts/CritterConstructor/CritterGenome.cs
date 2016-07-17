@@ -1534,7 +1534,10 @@ public class CritterGenome {
                 CritterSegment newSegment = newGO.AddComponent<CritterSegment>();
                 builtSegmentsList.Add(newSegment);
 
-                newGO.transform.SetParent(TempCritterConstructionGroup.tempCritterConstructionGroup.gameObject.transform);
+                if(TempCritterConstructionGroup.tempCritterConstructionGroup != null) {
+                    newGO.transform.SetParent(TempCritterConstructionGroup.tempCritterConstructionGroup.gameObject.transform);
+                }
+                
                 //newGO.AddComponent<BoxCollider>().isTrigger = false;                
                 //critterSegmentList.Add(newGO);  // Add to master Linear list of Segments
                 //newSegment.InitGamePiece();  // create the mesh and some other initialization stuff
@@ -1570,9 +1573,9 @@ public class CritterGenome {
                         else if (currentBuildSegmentList[i].sourceNode.jointLink.symmetryType == CritterJointLink.SymmetryType.MirrorY) {
                             newSegment.mirrorY = !newSegment.mirrorY;
                         }
-                        else if (currentBuildSegmentList[i].sourceNode.jointLink.symmetryType == CritterJointLink.SymmetryType.MirrorZ) {
-                            newSegment.mirrorZ = !newSegment.mirrorZ;
-                        }
+                        //else if (currentBuildSegmentList[i].sourceNode.jointLink.symmetryType == CritterJointLink.SymmetryType.MirrorZ) {
+                        //    newSegment.mirrorZ = !newSegment.mirrorZ;
+                        //}
                     }
                 }
 
@@ -1786,9 +1789,9 @@ public class CritterGenome {
                         else if (currentBuildSegmentList[i].sourceNode.jointLink.symmetryType == CritterJointLink.SymmetryType.MirrorY) {
                             newSegment.mirrorY = !newSegment.mirrorY;
                         }
-                        else if (currentBuildSegmentList[i].sourceNode.jointLink.symmetryType == CritterJointLink.SymmetryType.MirrorZ) {
-                            newSegment.mirrorZ = !newSegment.mirrorZ;
-                        }
+                        //else if (currentBuildSegmentList[i].sourceNode.jointLink.symmetryType == CritterJointLink.SymmetryType.MirrorZ) {
+                        //    newSegment.mirrorZ = !newSegment.mirrorZ;
+                        //}
                     }
                 }
                 

@@ -22,7 +22,9 @@ public class TrainerDataViewUI : MonoBehaviour {
         EachAgentBrain,
         EachAgentBrainConnections,
         GeneLinks,
-        AllAgentsBrains,        
+        AllAgentsBrains,
+        BrainGenome,
+        BodyGenome,       
         FitnessRealtime,
         EachAgentFitnessPrev,
         AllAgentsFitnessPrev,
@@ -66,18 +68,18 @@ public class TrainerDataViewUI : MonoBehaviour {
                 for (int n = 0; n < sourceAgent.brain.neuronList.Count; n++) {
                     string neuronName = "";
                     if (sourceAgent.brain.neuronList[n].nodeType == GeneNodeNEAT.GeneNodeType.In) {
-                        if (curInput <= minigameRef.inputChannelsList.Count) {
+                        if (curInput < minigameRef.inputChannelsList.Count) {
                             neuronName += minigameRef.inputChannelsList[curInput].channelName;
                             curInput++;
                         }
                     }
                     if (sourceAgent.brain.neuronList[n].nodeType == GeneNodeNEAT.GeneNodeType.Out) {
-                        if (curOutput <= minigameRef.outputChannelsList.Count) {
+                        if (curOutput < minigameRef.outputChannelsList.Count) {
                             neuronName += minigameRef.outputChannelsList[curOutput].channelName;
                             curOutput++;
                         }
                     }
-                    bodyText += "Neuron #" + n.ToString() + " (" + sourceAgent.brain.neuronList[n].nodeType.ToString() + " - " + neuronName + ") f: " + sourceAgent.brain.neuronList[n].activationFunction.ToString() + ", pVal: "
+                    bodyText += "Neuron #" + n.ToString() + " (" + sourceAgent.brain.neuronList[n].nodeType.ToString() + " - " + neuronName + ") f: " + sourceAgent.brain.neuronList[n].activationFunction.ToString() + " " + sourceAgent.brainGenome.nodeNEATList[n].id.ToString() + ", pVal: "
                                 + sourceAgent.brain.neuronList[n].previousValue.ToString() + ", curVal: " + sourceAgent.brain.neuronList[n].currentValue[0].ToString() + "\n";
                 }
                 // Go through all Connections:
@@ -136,6 +138,37 @@ public class TrainerDataViewUI : MonoBehaviour {
                     int numHiddenNodes = numNodes - numInputNodes - numOutputNodes;
                     int numConnections = populationRef.masterAgentArray[a].brain.connectionList.Count;
                     bodyText += ":   TotalNodes: " + numNodes.ToString() + "   InNodes: " + numInputNodes.ToString() + ",   OutNodes: " + numOutputNodes.ToString() + ",   HidNodes: " + numHiddenNodes.ToString() + ",   Links: " + numConnections.ToString() + ", sID: " + populationRef.masterAgentArray[a].speciesID.ToString() + "\n";
+                }
+                break;
+
+            case CurrentPage.BrainGenome:
+                //+++++++++++++++++++++  BrainGenome ++++++++++++++++++++++++++++++++++++++++
+                sourceAgent = populationRef.masterAgentArray[currentAgent];
+                // Intro Info:
+                bodyText += "Agent #" + currentAgent.ToString() + ", speciesID: " + sourceAgent.speciesID.ToString() + "\n";
+                // High-level stats:
+                bodyText += sourceAgent.brainGenome.nodeNEATList.Count.ToString() + " nodes, " + sourceAgent.brainGenome.linkNEATList.Count + " links\n";
+                bodyText += sourceAgent.brain.neuronList.Count.ToString() + " neurons, " + sourceAgent.brain.connectionList.Count + " connections\n";
+                // Go through all Connections:
+                for (int c = 0; c < sourceAgent.brainGenome.nodeNEATList.Count; c++) {
+                    bodyText += "Node #" + c.ToString() + ", ID: " + sourceAgent.brainGenome.nodeNEATList[c].id.ToString() + " " + new Int3(sourceAgent.brainGenome.nodeNEATList[c].sourceAddonInno, sourceAgent.brainGenome.nodeNEATList[c].sourceAddonRecursionNum, sourceAgent.brainGenome.nodeNEATList[c].sourceAddonChannelNum).ToString() + ", Type: "
+                                 + sourceAgent.brainGenome.nodeNEATList[c].nodeType + ", Activation: " + sourceAgent.brainGenome.nodeNEATList[c].activationFunction.ToString() + "\n";
+                }
+                for (int c = 0; c < sourceAgent.brainGenome.linkNEATList.Count; c++) {
+                    bodyText += "Link #" + c.ToString() + ", inno: " + sourceAgent.brainGenome.linkNEATList[c].innov.ToString() + ", active: " + sourceAgent.brainGenome.linkNEATList[c].enabled.ToString() + ", From: "
+                                 + sourceAgent.brainGenome.linkNEATList[c].fromNodeID.ToString() + ", To: " + sourceAgent.brainGenome.linkNEATList[c].toNodeID.ToString() + ", weight: " + sourceAgent.brainGenome.linkNEATList[c].weight.ToString() + "\n";
+                }
+                break;
+
+            case CurrentPage.BodyGenome:
+                //+++++++++++++++++++++  BodyGenome ++++++++++++++++++++++++++++++++++++++++
+                sourceAgent = populationRef.masterAgentArray[currentAgent];
+                // Intro Info:
+                bodyText += "Agent #" + currentAgent.ToString() + ", speciesID: " + sourceAgent.speciesID.ToString() + " #Nodes: " + sourceAgent.bodyGenome.CritterNodeList.Count.ToString() + "\n";
+                // High-level stats:                
+                // Go through all Connections:
+                for (int c = 0; c < sourceAgent.bodyGenome.CritterNodeList.Count; c++) {
+                    bodyText += "Node #" + c.ToString() + ", Inno: " + sourceAgent.bodyGenome.CritterNodeList[c].innov.ToString() + ", ParentNode: " + sourceAgent.bodyGenome.CritterNodeList[c].jointLink.parentNodeID.ToString() + "\n";
                 }
                 break;
 

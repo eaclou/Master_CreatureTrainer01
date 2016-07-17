@@ -399,7 +399,8 @@ public class Critter : MonoBehaviour {
     
     public void RebuildCritterFromGenomeRecursive(bool physicsOn, bool useSegments, float variableMass) {
         //Debug.Log("RebuildCritterFromGenomeRecursive: " + masterCritterGenome.CritterNodeList.Count.ToString());
-        masterCritterGenome.PreBuildCritter(variableMass);
+        
+        //masterCritterGenome.PreBuildCritter(variableMass);
         // Delete existing Segment GameObjects
         if(!useSegments)
             DeleteSegments();
@@ -525,9 +526,9 @@ public class Critter : MonoBehaviour {
                         else if (currentBuildSegmentList[i].sourceNode.jointLink.symmetryType == CritterJointLink.SymmetryType.MirrorY) {
                             newSegment.mirrorY = !newSegment.mirrorY;
                         }
-                        else if (currentBuildSegmentList[i].sourceNode.jointLink.symmetryType == CritterJointLink.SymmetryType.MirrorZ) {
-                            newSegment.mirrorZ = !newSegment.mirrorZ;
-                        }
+                        //else if (currentBuildSegmentList[i].sourceNode.jointLink.symmetryType == CritterJointLink.SymmetryType.MirrorZ) {
+                        //    newSegment.mirrorZ = !newSegment.mirrorZ;
+                        //}
                     }
                 }
                 if (physicsOn) {

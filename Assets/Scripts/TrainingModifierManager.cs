@@ -236,7 +236,7 @@ public class TrainingModifierManager {
                             int numLinks = genome.linkNEATList.Count;
                             int numNewNodes = (int)((float)numLinks * activeTrainingModifierList[i].nodesPerLink);
                             for (int b = 0; b < numNewNodes; b++) {
-                                genome.AddNewRandomNode(currentGen);
+                                genome.AddNewRandomNode(currentGen, crossoverManager.GetNextAddonInnov());
                             }
                         }
                         activeTrainingModifierList.RemoveAt(i);

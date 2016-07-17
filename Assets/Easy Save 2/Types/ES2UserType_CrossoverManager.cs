@@ -19,14 +19,14 @@ public class ES2UserType_CrossoverManager : ES2Type
         writer.Write(data.breedingRate);
         writer.Write(data.breedingStochastic);
         writer.Write(data.crossoverRandomLinkChance);
-        writer.Write(data.disjointLinkWeight);
-        writer.Write(data.excessLinkWeight);
+        writer.Write(data.linkWeight);
+        writer.Write(data.neuronWeight);
         writer.Write(data.existingFromNodeBias);
         writer.Write(data.existingNetworkBias);
         writer.Write(data.interspeciesBreedingRate);
         writer.Write(data.largeBrainPenalty);
         writer.Write(data.largeSpeciesPenalty);
-        writer.Write(data.linkWeightWeight);
+        writer.Write(data.weightWeight);
         writer.Write(data.masterMutationRate);
         //writer.Write(data.maxBodyMutationFactor);
         writer.Write(data.maximumWeightMagnitude);
@@ -63,6 +63,9 @@ public class ES2UserType_CrossoverManager : ES2Type
         writer.Write(data.useCrossover);
         writer.Write(data.useMutation);
         writer.Write(data.useSpeciation);
+
+        writer.Write(data.savedNextNodeInnov);
+        writer.Write(data.savedNextAddonInnov);
     }
 	
 	public override object Read(ES2Reader reader)
@@ -87,14 +90,14 @@ public class ES2UserType_CrossoverManager : ES2Type
             data.breedingRate = reader.Read<float>();
             data.breedingStochastic = reader.Read<bool>();
             data.crossoverRandomLinkChance = reader.Read<float>();
-            data.disjointLinkWeight = reader.Read<float>();
-            data.excessLinkWeight = reader.Read<float>();
+            data.linkWeight = reader.Read<float>();
+            data.neuronWeight = reader.Read<float>();
             data.existingFromNodeBias = reader.Read<float>();
             data.existingNetworkBias = reader.Read<float>();
             data.interspeciesBreedingRate = reader.Read<float>();
             data.largeBrainPenalty = reader.Read<float>();
             data.largeSpeciesPenalty = reader.Read<float>();
-            data.linkWeightWeight = reader.Read<float>();
+            data.weightWeight = reader.Read<float>();
             data.masterMutationRate = reader.Read<float>();
             //data.maxBodyMutationFactor = reader.Read<float>();
             data.maximumWeightMagnitude = reader.Read<float>();
@@ -131,6 +134,9 @@ public class ES2UserType_CrossoverManager : ES2Type
             data.useCrossover = reader.Read<bool>();
             data.useMutation = reader.Read<bool>();
             data.useSpeciation = reader.Read<bool>();
+
+            data.savedNextNodeInnov = reader.Read<int>();
+            data.savedNextAddonInnov = reader.Read<int>();
 
             if (fileVersion >= 1) {
                 // new attributes

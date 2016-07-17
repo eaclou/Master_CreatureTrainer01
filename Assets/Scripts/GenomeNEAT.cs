@@ -68,11 +68,12 @@ public class GenomeNEAT {
         nodeNEATList = critterBodyGenome.GetBlankBrainNodesFromBody();  // returns a list of nodeNEAT's based on bodyGenome
         
         int currentID = nodeNEATList.Count;
-        // Add in hidden nodes:
+        // Add in hidden nodes:        
         for (int h = 0; h < numHidden; h++) {
-            GeneNodeNEAT newHiddenNode = new GeneNodeNEAT(currentID, GeneNodeNEAT.GeneNodeType.Hid, TransferFunctions.TransferFunction.RationalSigmoid, -1, 0, -1);
-            nodeNEATList.Add(newHiddenNode);
-            currentID++;
+            Debug.Log("NO HIDDEN NODES CREATED!!! -- need a way to keep track of innovation#'s, have no access to crossoverManager");
+            //GeneNodeNEAT newHiddenNode = new GeneNodeNEAT(currentID, GeneNodeNEAT.GeneNodeType.Hid, TransferFunctions.TransferFunction.RationalSigmoid, -1, 0, -1);
+            //nodeNEATList.Add(newHiddenNode);
+            //currentID++;
         }
         // do I need to save body-part&add-on information on the Brain NODES? or only on Neurons?
         linkNEATList = new List<GeneLinkNEAT>();
@@ -142,82 +143,32 @@ public class GenomeNEAT {
         string beforeBrain = "AdjustBrain Before: \n";
         string afterBrain = "AdjustBrain After: \n";
 
-        List<GeneNodeNEAT> newBrainNodeList = bodyGenome.GetBlankBrainNodesFromBody();
+        List<GeneNodeNEAT> newBrainNodeList = bodyGenome.GetBlankBrainNodesFromBody(); // doesn't include Hidden Nodes
         //List<GeneLinkNEAT> newBrainLinkList = new List<GeneLinkNEAT>();  // need to make a new copy so that the old link-list stays static while searching for matching from/toID's
         // Find number of Input+Output nodes in the old list:
-        int numOriginalInOutNodes = 0;
-        for (int i = 0; i < nodeNEATList.Count; i++) {
-            if(nodeNEATList[i].nodeType != GeneNodeNEAT.GeneNodeType.Hid) {
-                numOriginalInOutNodes++;
-            }            
-        }
+        //int numOriginalInOutNodes = 0;
+        //for (int i = 0; i < nodeNEATList.Count; i++) {
+        //    if(nodeNEATList[i].nodeType != GeneNodeNEAT.GeneNodeType.Hid) {
+        //        numOriginalInOutNodes++;
+        //    }            
+        //}
         // Compare this to the number of nodes in the new list (which doesn't contain any hidden nodes)
-        int netNewNodes = newBrainNodeList.Count - numOriginalInOutNodes;
+        //int netNewNodes = newBrainNodeList.Count - numOriginalInOutNodes;
 
         //Debug.Log("AdjustBrainAddedRecursion! numOriginalInOutNodes: " + numOriginalInOutNodes.ToString() + ", netNewNodes: " + netNewNodes.ToString() + ", bodyNodeID: " + bodyNodeID.ToString() + ", recursionNum: " + recursionNum.ToString());
 
+        int nextNodeIndexID = newBrainNodeList.Count;  // where to start counting for hiddenNode ID's
         for (int i = 0; i < nodeNEATList.Count; i++) {
             beforeBrain += "Node " + nodeNEATList[i].id.ToString() + " (" + nodeNEATList[i].sourceAddonInno.ToString() + ", " + nodeNEATList[i].sourceAddonRecursionNum.ToString() + ", " + nodeNEATList[i].sourceAddonChannelNum.ToString() + ")\n";
 
             if (nodeNEATList[i].nodeType == GeneNodeNEAT.GeneNodeType.Hid) {
-                GeneNodeNEAT clonedNode = new GeneNodeNEAT(nodeNEATList[i].id, nodeNEATList[i].nodeType, nodeNEATList[i].activationFunction, nodeNEATList[i].sourceAddonInno, nodeNEATList[i].sourceAddonRecursionNum, nodeNEATList[i].sourceAddonChannelNum);
+                //Debug.Log("AdjustBrainAfterBodyChange HID NODE: nextNodeIndexID: " + (nextNodeIndexID).ToString());
+                GeneNodeNEAT clonedNode = new GeneNodeNEAT(nextNodeIndexID, nodeNEATList[i].nodeType, nodeNEATList[i].activationFunction, nodeNEATList[i].sourceAddonInno, nodeNEATList[i].sourceAddonRecursionNum, nodeNEATList[i].sourceAddonChannelNum);
                 newBrainNodeList.Add(clonedNode);
+                nextNodeIndexID++;
             }
-        }
+        }        
         
-        if (netNewNodes != 0) {  // if the node that was recursed had any Add-ons/Brain channels on it:
-            // Copy all the hidden nodes into the newNodeList, adjust their id's based on the numNewNodes found in previous comment
-            
-            // Go through all links and if a connectionID is greater than the cutoff-point (was a link to hidden node) then adjust its id by the Offset to match the new listIndex/ID
-            /*   // Links SHOULD be able to stay the same now that they use fully unique identifiers for their From-To connections:
-            for (int j = 0; j < linkNEATList.Count; j++) {
-                beforeBrain += "Link " + linkNEATList[j].innov.ToString() + " (" + linkNEATList[j].fromNodeID.ToString() + ", " + linkNEATList[j].toNodeID.ToString() + ") weight: " + linkNEATList[j].weight.ToString() + ")\n";
-
-                GeneLinkNEAT clonedLink = new GeneLinkNEAT(linkNEATList[j].fromNodeID, linkNEATList[j].toNodeID, linkNEATList[j].weight, linkNEATList[j].enabled, linkNEATList[j].innov, linkNEATList[j].birthGen);
-                newBrainLinkList.Add(clonedLink);
-                if (linkNEATList[j].fromNodeID > numOriginalInOutNodes) {
-                    clonedLink.fromNodeID += netNewNodes;
-                    Debug.Log("HIDLink [" + j.ToString() + "] FromNode Re-Number! fromNodeID: " + linkNEATList[j].fromNodeID.ToString());
-                }
-                if (linkNEATList[j].toNodeID > numOriginalInOutNodes) {
-                    clonedLink.toNodeID += netNewNodes;
-                    Debug.Log("HIDLink [" + j.ToString() + "] ToNode Re-Number! toNodeID: " + linkNEATList[j].toNodeID.ToString());
-                }                
-            }*/
-
-            // Go through existing nodeList, searching for matches, based on sourceInno#, recursion#, and channel#        
-            /*for (int i = 0; i < nodeNEATList.Count; i++) {
-                for (int k = 0; k < newBrainNodeList.Count; k++) {
-                    // If so, copy attributes from old node to new node  
-                    if (nodeNEATList[i].sourceAddonInno == newBrainNodeList[k].sourceAddonInno) {
-                        if (nodeNEATList[i].sourceAddonRecursionNum == newBrainNodeList[k].sourceAddonRecursionNum) {
-                            if (nodeNEATList[i].sourceAddonChannelNum == newBrainNodeList[k].sourceAddonChannelNum) {
-                                int origID = i;  // or nodeNEATList[i].id???
-                                int newID = k;
-                                //Debug.Log("NEURON MATCH! i: " + i.ToString() + ", id: " + nodeNEATList[i].id.ToString() + ", orig: " + origID.ToString() + ", new: " + newID.ToString() + " sourceAddonInno: " + nodeNEATList[i].sourceAddonInno.ToString() + " sourceAddonRecursionNum: " + nodeNEATList[i].sourceAddonRecursionNum.ToString() + ", sourceAddonChannelNum: " + nodeNEATList[i].sourceAddonChannelNum.ToString());
-                                // Keep track of originalID<=>newID so it can be changed on all existing links:
-                                // and re-wire and links that referenced that old node
-                                for (int l = 0; l < linkNEATList.Count; l++) {
-                                    if (linkNEATList[l].fromNodeID == origID) {
-                                        newBrainLinkList[l].fromNodeID = newID;
-                                        //Debug.Log("Link [" + l.ToString() + "] FromNode Re-Number! orig: " + origID.ToString() + ", new: " + newID.ToString());
-                                    }
-                                    if (linkNEATList[l].toNodeID == origID) {
-                                        newBrainLinkList[l].toNodeID = newID;
-                                        //Debug.Log("Link [" + l.ToString() + "] ToNode Re-Number! orig: " + origID.ToString() + ", new: " + newID.ToString());
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }*/
-
-            
-            //for(int j = 0; j < newBrainLinkList.Count; j++) {
-            //    afterBrain += "Link " + newBrainLinkList[j].innov.ToString() + " (" + newBrainLinkList[j].fromNodeID.ToString() + ", " + newBrainLinkList[j].toNodeID.ToString() + ") weight: " + newBrainLinkList[j].weight.ToString() + ")\n";
-            //}
-        }
         for (int i = 0; i < newBrainNodeList.Count; i++) {
             afterBrain += "Node " + newBrainNodeList[i].id.ToString() + " (" + newBrainNodeList[i].sourceAddonInno.ToString() + ", " + newBrainNodeList[i].sourceAddonRecursionNum.ToString() + ", " + newBrainNodeList[i].sourceAddonChannelNum.ToString() + ")\n";
         }
@@ -351,6 +302,44 @@ public class GenomeNEAT {
             //Debug.Log("Remove RandomLink #" + randomLinkID.ToString());
             linkNEATList.RemoveAt(randomLinkID);
         }        
+    }
+
+    public void RemoveRandomNode() {  // NEEDS SOME WORK!!!!
+        List<GeneNodeNEAT> eligibleNodes = new List<GeneNodeNEAT>();
+        for (int i = 0; i < nodeNEATList.Count; i++) {
+            if (nodeNEATList[i].nodeType == GeneNodeNEAT.GeneNodeType.Hid) {
+                eligibleNodes.Add(nodeNEATList[i]);
+            }
+        }
+        // Weight by number of connections? i.e. if it has no connections == more likely to be deleted?
+        int nodeToRemove = Mathf.RoundToInt(UnityEngine.Random.Range(0f, (float)(eligibleNodes.Count - 1)));
+        Int3 deletedNodeID = new Int3(eligibleNodes[nodeToRemove].sourceAddonInno, eligibleNodes[nodeToRemove].sourceAddonRecursionNum, eligibleNodes[nodeToRemove].sourceAddonChannelNum);
+        // Find affected links:
+        // Make sure that there aren't any links pointing to non-existent nodes:
+        for (int i = 0; i < linkNEATList.Count; i++) {
+            bool linkSevered = false;
+            if (linkNEATList[i].fromNodeID == deletedNodeID) {
+                linkSevered = true;
+            }
+            if (linkNEATList[i].toNodeID == deletedNodeID) {
+                linkSevered = true;
+            }
+
+            if (linkSevered) {
+                linkNEATList[i].enabled = false;
+                //Debug.Log("LINK " + i.ToString() + " SEVERED!! " + linkNEATList[i].fromNodeID.ToString() + ", " + linkNEATList[i].toNodeID.ToString());
+            }
+        }
+
+        // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        // Add/Re-Enable Links that were affected by deletedNode??
+        // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+        nodeNEATList.RemoveAt(eligibleNodes[nodeToRemove].id);
+        // Fix up indexIDs:
+        for (int i = 0; i < nodeNEATList.Count; i++) {
+            nodeNEATList[i].id = i;
+        }
     }
 
     /*public bool AreEqual(Vector3 vec1, Vector3 vec2) {
@@ -512,11 +501,11 @@ public class GenomeNEAT {
         }        
     }
 
-    public void AddNewRandomNode(int gen) {
+    public void AddNewRandomNode(int gen, int inno) {
         if(linkNEATList.Count > 0) {
             int linkID = (int)UnityEngine.Random.Range(0f, (float)linkNEATList.Count);
             linkNEATList[linkID].enabled = false;  // disable old connection
-            GeneNodeNEAT newHiddenNode = new GeneNodeNEAT(nodeNEATList.Count, GeneNodeNEAT.GeneNodeType.Hid, TransferFunctions.TransferFunction.RationalSigmoid, -1, 0, -1);
+            GeneNodeNEAT newHiddenNode = new GeneNodeNEAT(nodeNEATList.Count, GeneNodeNEAT.GeneNodeType.Hid, TransferFunctions.TransferFunction.RationalSigmoid, inno, 0, 0);
             nodeNEATList.Add(newHiddenNode);
             // add new node between old connection
             // create two new connections
@@ -543,7 +532,7 @@ public class GenomeNEAT {
         return nextAvailableInnovationNumber;
     }
 
-    public static float MeasureGeneticDistance(GenomeNEAT genomeA, GenomeNEAT genomeB, float excessCoefficient, float disjointCoefficient, float weightCoefficient, float normExcess, float normDisjoint, float normWeight) {
+    public static float MeasureGeneticDistance(GenomeNEAT genomeA, GenomeNEAT genomeB, float neuronCoefficient, float linkCoefficient, float weightCoefficient, float normNeuron, float normLink, float normWeight) {
         
         int indexA = 0;
         int indexB = 0;
@@ -611,8 +600,7 @@ public class GenomeNEAT {
                     break;
                 }
             }            
-        }
-        
+        }        
         for (int i = 0; i < genomeA.nodeNEATList.Count; i++) {
             Int3 nodeID = new Int3(genomeA.nodeNEATList[i].sourceAddonInno, genomeA.nodeNEATList[i].sourceAddonRecursionNum, genomeA.nodeNEATList[i].sourceAddonChannelNum);
             if(genomeB.GetNodeIndexFromInt3(nodeID) != -1) { // if genomeB has the same neuron:
@@ -622,10 +610,10 @@ public class GenomeNEAT {
         int totalNeurons = (genomeA.nodeNEATList.Count + genomeB.nodeNEATList.Count);
         int totalLinks = (genomeA.linkNEATList.Count + genomeB.linkNEATList.Count);
         if(totalNeurons > 0) {
-            neuronGenes = (float)((totalNeurons) - matchingNeurons * 2) / (float)(totalNeurons); // get proportion of neurons that match between the two genomes, should be 0-1
+            neuronGenes = Mathf.Lerp((float)((totalNeurons) - matchingNeurons * 2), (float)((totalNeurons) - matchingNeurons * 2) / (float)(totalNeurons), normNeuron); // get proportion of neurons that match between the two genomes, should be 0-1
         }      
         if(totalLinks > 0) {
-            linkGenes = ((float)(totalLinks) - matchingGenes * 2f) / (float)(totalLinks);
+            linkGenes = Mathf.Lerp(((float)(totalLinks) - matchingGenes * 2f), ((float)(totalLinks) - matchingGenes * 2f) / (float)(totalLinks), normLink);
         }
         //float weightSpan = largestWeightValue - smallestWeightValue;       
 
@@ -633,11 +621,17 @@ public class GenomeNEAT {
         if(maxGenes > 0f) {
             //float excessComponent = excessCoefficient * Mathf.Lerp(excessGenes, excessGenes / maxGenes, normExcess);
             //float disjointComponent = disjointCoefficient * Mathf.Lerp(disjointGenes, disjointGenes / maxGenes, normDisjoint);
-            float weightComponent = weightCoefficient * Mathf.Lerp(weightDeltaTotal, weightDeltaTotal / Mathf.Max((float)matchingGenes, 1f), normWeight);
-            weightComponent = weightDeltaTotal / Mathf.Max((float)matchingGenes, 1f) / largestWeightDelta;
+            //float weightComponent = weightCoefficient * Mathf.Lerp(weightDeltaTotal, weightDeltaTotal / Mathf.Max((float)matchingGenes, 1f), normWeight);
+            float totalPie = neuronCoefficient + linkCoefficient + weightCoefficient;
+            float weightComponent = 0f;
+            if(largestWeightDelta > 0f)
+                weightComponent = Mathf.Lerp(weightDeltaTotal / largestWeightDelta, weightDeltaTotal / Mathf.Max((float)matchingGenes, 1f) / largestWeightDelta, normWeight);
             // OLD //distance = excessComponent + disjointComponent + weightComponent;
-            distance = neuronGenes + linkGenes + weightComponent;
-            Debug.Log("MeasureGeneticDistance! neuronGenes: " + (neuronGenes).ToString() + ", linkGenes: " + (linkGenes).ToString() + ", weight: " + (weightDeltaTotal / Mathf.Max((float)matchingGenes, 1f)).ToString() + ", distance: " + distance.ToString());
+            distance = neuronGenes * (neuronCoefficient / totalPie) + linkGenes * (linkCoefficient / totalPie) + weightComponent * (weightCoefficient / totalPie);
+            Debug.Log("MeasureGeneticDistance! neuronGenes: " + (neuronGenes).ToString() + " (" + genomeA.nodeNEATList.Count.ToString() + "," + genomeB.nodeNEATList.Count.ToString() + 
+                "), linkGenes: " + (linkGenes).ToString() + " (" + genomeA.linkNEATList.Count.ToString() + "," + genomeB.linkNEATList.Count.ToString() +                
+                "), weight: " + weightComponent.ToString() + ", largestWeightDelta: " + largestWeightDelta.ToString() + ", weightDeltaTotal: " + weightDeltaTotal.ToString() + "weightMatches: " + matchingGenes.ToString() +
+                ", distance: " + distance.ToString());
             //Debug.Log("MeasureGeneticDistance! disjoint: " + (disjointGenes).ToString() + ", excess: " + (excessGenes).ToString() + ", weight: " + (weightDeltaTotal / Mathf.Max((float)matchingGenes, 1f)).ToString() + ", distance: " + distance.ToString());
         }
         // else stays 0f;

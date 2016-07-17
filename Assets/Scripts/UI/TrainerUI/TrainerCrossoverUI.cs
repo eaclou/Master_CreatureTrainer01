@@ -54,18 +54,18 @@ public class TrainerCrossoverUI : MonoBehaviour {
     // SPECIES PANEL!!!!:
     public Slider sliderSimilarityThreshold;  // the similarity score below which an offspring matches an existing species template genome
     public Text textSimilarityThreshold;
-    public Slider sliderExcessLinkWeight;   // how much excess link gene's count towards the similarityThreshold score
-    public Text textExcessLinkWeight;
-    public Slider sliderDisjointLinkWeight;   // how much disjoint link gene's count towards the similarityThreshold score
-    public Text textDisjointLinkWeight;
-    public Slider sliderLinkWeightWeight;   // how much link gene's connection weights count towards the similarityThreshold score
-    public Text textLinkWeightWeight;
-    public Slider sliderNormalizeExcess;   // how much the excessLinkGene score is adjusted by the total # of links in the genome
-    public Text textNormalizeExcess;
-    public Slider sliderNormalizeDisjoint;   // how much the disjointLinkGene score is adjusted by the total # of links in the genome
-    public Text textNormalizeDisjoint;
-    public Slider sliderNormalizeLinkWeights;   // how much the link weights similarity score is adjusted by the total # of links in the genome
-    public Text textNormalizeLinkWeights;
+    public Slider sliderNeuronWeight;   // how much excess link gene's count towards the similarityThreshold score
+    public Text textNeuronWeight;
+    public Slider sliderLinkWeight;   // how much disjoint link gene's count towards the similarityThreshold score
+    public Text textLinkWeight;
+    public Slider sliderWeightWeight;   // how much link gene's connection weights count towards the similarityThreshold score
+    public Text textWeightWeight;
+    public Slider sliderNormalizeNeuron;   // how much the excessLinkGene score is adjusted by the total # of links in the genome
+    public Text textNormalizeNeuron;
+    public Slider sliderNormalizeLink;   // how much the disjointLinkGene score is adjusted by the total # of links in the genome
+    public Text textNormalizeLink;
+    public Slider sliderNormalizeWeight;   // how much the link weights similarity score is adjusted by the total # of links in the genome
+    public Text textNormalizeWeight;
     public Slider sliderAdoptionRate;    // the chance that a newly created offspring will check what species it belongs to -- otherwise it joins its parent's species automatically
     public Text textAdoptionRate;
     public Slider sliderSpeciesSizePenalty;   //  the penalty for a species containing a large number of members -- this is to encourage diversity by protecting smaller species
@@ -182,18 +182,18 @@ public class TrainerCrossoverUI : MonoBehaviour {
         // SPECIES TAB!!!!!
         sliderSimilarityThreshold.minValue = 0f; // set up slider bounds
         sliderSimilarityThreshold.maxValue = 10f;
-        sliderExcessLinkWeight.minValue = 0f;
-        sliderExcessLinkWeight.maxValue = 1f;
-        sliderDisjointLinkWeight.minValue = 0f;
-        sliderDisjointLinkWeight.maxValue = 1f;
-        sliderLinkWeightWeight.minValue = 0f;
-        sliderLinkWeightWeight.maxValue = 1f;
-        sliderNormalizeExcess.minValue = 0f;
-        sliderNormalizeExcess.maxValue = 1f;
-        sliderNormalizeDisjoint.minValue = 0f;
-        sliderNormalizeDisjoint.maxValue = 1f;
-        sliderNormalizeLinkWeights.minValue = 0f;
-        sliderNormalizeLinkWeights.maxValue = 1f;
+        sliderNeuronWeight.minValue = 0f;
+        sliderNeuronWeight.maxValue = 1f;
+        sliderLinkWeight.minValue = 0f;
+        sliderLinkWeight.maxValue = 1f;
+        sliderWeightWeight.minValue = 0f;
+        sliderWeightWeight.maxValue = 1f;
+        sliderNormalizeNeuron.minValue = 0f;
+        sliderNormalizeNeuron.maxValue = 1f;
+        sliderNormalizeLink.minValue = 0f;
+        sliderNormalizeLink.maxValue = 1f;
+        sliderNormalizeWeight.minValue = 0f;
+        sliderNormalizeWeight.maxValue = 1f;
         sliderAdoptionRate.minValue = 0f; // set up slider bounds
         sliderAdoptionRate.maxValue = 1f;
         sliderSpeciesSizePenalty.minValue = 0f; // set up slider bounds
@@ -222,7 +222,7 @@ public class TrainerCrossoverUI : MonoBehaviour {
         sliderAddonSettingsChance.maxValue = 0.2f;
         sliderRecursionChance.minValue = 0f;
         sliderRecursionChance.maxValue = 0.05f;
-        sliderSymmetryChance.maxValue = 0f;
+        sliderSymmetryChance.minValue = 0f;
         sliderSymmetryChance.maxValue = 0.05f;
 
         // COMMON!!!!
@@ -375,18 +375,18 @@ public class TrainerCrossoverUI : MonoBehaviour {
         // SPECIES TAB!!!!!
         sliderSimilarityThreshold.value = pendingCrossoverManager.speciesSimilarityThreshold;
         textSimilarityThreshold.text = pendingCrossoverManager.speciesSimilarityThreshold.ToString();
-        sliderExcessLinkWeight.value = pendingCrossoverManager.excessLinkWeight;
-        textExcessLinkWeight.text = pendingCrossoverManager.excessLinkWeight.ToString();
-        sliderDisjointLinkWeight.value = pendingCrossoverManager.disjointLinkWeight;
-        textDisjointLinkWeight.text = pendingCrossoverManager.disjointLinkWeight.ToString();
-        sliderLinkWeightWeight.value = pendingCrossoverManager.linkWeightWeight;
-        textLinkWeightWeight.text = pendingCrossoverManager.linkWeightWeight.ToString();
-        sliderNormalizeExcess.value = pendingCrossoverManager.normalizeExcess;
-        textNormalizeExcess.text = pendingCrossoverManager.normalizeExcess.ToString();
-        sliderNormalizeDisjoint.value = pendingCrossoverManager.normalizeDisjoint;
-        textNormalizeDisjoint.text = pendingCrossoverManager.normalizeDisjoint.ToString();
-        sliderNormalizeLinkWeights.value = pendingCrossoverManager.normalizeLinkWeight;
-        textNormalizeLinkWeights.text = pendingCrossoverManager.normalizeLinkWeight.ToString();
+        sliderNeuronWeight.value = pendingCrossoverManager.neuronWeight;
+        textNeuronWeight.text = pendingCrossoverManager.neuronWeight.ToString();
+        sliderLinkWeight.value = pendingCrossoverManager.linkWeight;
+        textLinkWeight.text = pendingCrossoverManager.linkWeight.ToString();
+        sliderWeightWeight.value = pendingCrossoverManager.weightWeight;
+        textWeightWeight.text = pendingCrossoverManager.weightWeight.ToString();
+        sliderNormalizeNeuron.value = pendingCrossoverManager.normalizeExcess;
+        textNormalizeNeuron.text = pendingCrossoverManager.normalizeExcess.ToString();
+        sliderNormalizeLink.value = pendingCrossoverManager.normalizeDisjoint;
+        textNormalizeLink.text = pendingCrossoverManager.normalizeDisjoint.ToString();
+        sliderNormalizeWeight.value = pendingCrossoverManager.normalizeLinkWeight;
+        textNormalizeWeight.text = pendingCrossoverManager.normalizeLinkWeight.ToString();
         sliderAdoptionRate.value = pendingCrossoverManager.adoptionRate;
         textAdoptionRate.text = pendingCrossoverManager.adoptionRate.ToString();
         sliderSpeciesSizePenalty.value = pendingCrossoverManager.largeSpeciesPenalty;
@@ -618,11 +618,11 @@ public class TrainerCrossoverUI : MonoBehaviour {
         }
         UpdateUIWithCurrentData();  // Will update text display of PENDING numPlayers value (NOT the applied value!)
     }
-    public void SliderExcessLinkWeight(float sliderValue) { // On Slider Value Changed
+    public void SliderNeuronWeight(float sliderValue) { // On Slider Value Changed
         DebugBot.DebugFunctionCall("TCrossoverUI; SliderExcessLinkWeight(); ", debugFunctionCalls);
-        pendingCrossoverManager.excessLinkWeight = sliderValue;
-        float dataExcessLinkWeight = playerRef.masterCupid.excessLinkWeight;
-        if (pendingCrossoverManager.excessLinkWeight != dataExcessLinkWeight) {
+        pendingCrossoverManager.neuronWeight = sliderValue;
+        float dataExcessLinkWeight = playerRef.masterCupid.neuronWeight;
+        if (pendingCrossoverManager.neuronWeight != dataExcessLinkWeight) {
             valuesChanged = true;
         }
         else {
@@ -630,11 +630,11 @@ public class TrainerCrossoverUI : MonoBehaviour {
         }
         UpdateUIWithCurrentData();  // Will update text display of PENDING numPlayers value (NOT the applied value!)
     }
-    public void SliderDisjointLinkWeight(float sliderValue) { // On Slider Value Changed
+    public void SliderLinkWeight(float sliderValue) { // On Slider Value Changed
         DebugBot.DebugFunctionCall("TCrossoverUI; SliderDisjointLinkWeight(); ", debugFunctionCalls);
-        pendingCrossoverManager.disjointLinkWeight = sliderValue;
-        float dataDisjointLinkWeight = playerRef.masterCupid.disjointLinkWeight;
-        if (pendingCrossoverManager.disjointLinkWeight != dataDisjointLinkWeight) {
+        pendingCrossoverManager.linkWeight = sliderValue;
+        float dataDisjointLinkWeight = playerRef.masterCupid.linkWeight;
+        if (pendingCrossoverManager.linkWeight != dataDisjointLinkWeight) {
             valuesChanged = true;
         }
         else {
@@ -642,11 +642,11 @@ public class TrainerCrossoverUI : MonoBehaviour {
         }
         UpdateUIWithCurrentData();  // Will update text display of PENDING numPlayers value (NOT the applied value!)
     }
-    public void SliderLinkWeightWeight(float sliderValue) { // On Slider Value Changed
+    public void SliderWeightWeight(float sliderValue) { // On Slider Value Changed
         DebugBot.DebugFunctionCall("TCrossoverUI; SliderLinkWeightWeight(); ", debugFunctionCalls);
-        pendingCrossoverManager.linkWeightWeight = sliderValue;
-        float dataLinkWeightWeight = playerRef.masterCupid.linkWeightWeight;
-        if (pendingCrossoverManager.linkWeightWeight != dataLinkWeightWeight) {
+        pendingCrossoverManager.weightWeight = sliderValue;
+        float dataLinkWeightWeight = playerRef.masterCupid.weightWeight;
+        if (pendingCrossoverManager.weightWeight != dataLinkWeightWeight) {
             valuesChanged = true;
         }
         else {

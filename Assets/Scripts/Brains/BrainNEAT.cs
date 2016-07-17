@@ -3,36 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class BrainNEAT {
-
-    // BASE properties:
-    //public string Name = "Default";
-    //public List<FitnessComponent> brainFitnessComponentList;
-    // Change these to List<float[]> ??
-    //public float[][] layerOutput;  // first array specifies the layer, second specifies the nodes within that layer
-    //public float[][] layerInput;  // first array specifies the layer, second specifies the nodes within that layer 
-
-    /* // LayerAll2All BRAIN:
-    public int numHiddenLayers = 0;
-    public int[] numNodesEachLayer;
-    // Layer Count doesn't include Input Layer, since it's simply a buffer that is not manipulated
-    private int layerCount;  // number of 'real' layers (excluding input layer)
-    private int inputSize;  // the number of input layer nodes
-    private int[] layerSize;  // the number of nodes within each of the 'real' layers
-    //public TransferFunction[] transferFunction;  // determines the transfer function to be used on each layer/node
-    // MOVED TO BASE CLASS:
-    //public float[][] layerOutput;  // first array specifies the layer, second specifies the nodes within that layer
-    //public float[][] layerInput;  // first array specifies the layer, second specifies the nodes within that layer 
-    private float[][] bias;  // the bias term to be added to the weights before being evaluated by the transfer function
-    private TransferFunctions.TransferFunction[][] transferFunctions;
-    private float[][] delta;  // the delta between the output value for that node and the target value
-    private float[][] previousBiasDelta; // the delta of the bias term for the previous epoch - will be used when calculating Momentum for the back-propogation algorithm
-    private float[][][] weight;   // first array is the layer, second is the source node, third is the target node
-    private float[][][] previousWeightDelta;  // weights of the preceding epoch, to be used for calculating momentum
-    // Fitness Components:
-    public float[] fitConnectionCost = new float[1];
-    */
-
-    //private List<NeuronNEAT> neuronList;
+    
     private GenomeNEAT sourceGenome;
     
     public List<NeuronNEAT> neuronList;
