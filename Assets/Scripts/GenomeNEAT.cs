@@ -618,7 +618,7 @@ public class GenomeNEAT {
         //float weightSpan = largestWeightValue - smallestWeightValue;       
 
         float distance = 0f;
-        if(maxGenes > 0f) {
+        if(true) {  // maxGenes > 0f
             //float excessComponent = excessCoefficient * Mathf.Lerp(excessGenes, excessGenes / maxGenes, normExcess);
             //float disjointComponent = disjointCoefficient * Mathf.Lerp(disjointGenes, disjointGenes / maxGenes, normDisjoint);
             //float weightComponent = weightCoefficient * Mathf.Lerp(weightDeltaTotal, weightDeltaTotal / Mathf.Max((float)matchingGenes, 1f), normWeight);

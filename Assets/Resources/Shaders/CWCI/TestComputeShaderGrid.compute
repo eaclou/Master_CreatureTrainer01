@@ -1,0 +1,30 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMainGrid
+
+#define thread_group_size_x 10
+#define thread_group_size_y 10
+#define thread_group_size_z 10
+
+#define group_size_x 10
+#define group_size_y 10
+#define group_size_z 10
+
+struct positionStruct {
+	float3 pos;
+};
+
+RWStructuredBuffer<positionStruct> outputBuffer;
+
+[numthreads(thread_group_size_x, thread_group_size_y, thread_group_size_z)]
+void CSMainGrid (uint3 grpID : SV_GroupID, uint3 id : SV_DispatchThreadID, uint3 grpTID : SV_GroupThreadID, uint grpIdx : SV_GroupIndex)
+{
+	// Find the linear index of this thread within the computeBuffer
+	int idx = id.x + (id.y * thread_group_size_x * group_size_x) + (id.z * thread_group_size_x * group_size_y * thread_group_size_y * group_size_z);
+
+	float scale = 0.5;  // overall scalar of the box
+
+	// Find position of this point
+	float3 pos = (id + grpTID + (grpID * float3(thread_group_size_x, thread_group_size_y, thread_group_size_z)));
+
+	outputBuffer[idx].pos = pos * scale;
+}

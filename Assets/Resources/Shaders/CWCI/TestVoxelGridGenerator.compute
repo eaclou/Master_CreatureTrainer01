@@ -1,0 +1,93 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+#define thread_group_size_x 10
+#define thread_group_size_y 10
+#define thread_group_size_z 10
+
+float3 group_size = float3(5,5,5);
+
+struct positionStruct {
+	float3 pos;
+	int renderFace[6];
+};
+
+struct blockStruct {
+	int On;
+};
+
+RWStructuredBuffer<positionStruct> outputBuffer;
+StructuredBuffer<blockStruct> mapBuffer;  // only populated once at Start()
+
+[numthreads(thread_group_size_x, thread_group_size_y, thread_group_size_z)]
+void CSMain (uint3 grpID : SV_GroupID, uint3 id : SV_DispatchThreadID, uint3 grpTID : SV_GroupThreadID, uint grpIdx : SV_GroupIndex)
+{
+	// Find the linear index of this thread within the computeBuffer
+	int idx = id.x + (id.y * thread_group_size_x * group_size.x) + (id.z * thread_group_size_x * group_size.y * thread_group_size_y * group_size.z);
+
+	float scale = 1;  // overall scalar of the box
+
+	// Find position of this point
+	float3 pos = (id + grpTID + (grpID * float3(thread_group_size_x, thread_group_size_y, thread_group_size_z)));
+
+	outputBuffer[idx].pos = pos * scale;
+
+	int maxidx = thread_group_size_x * thread_group_size_y * thread_group_size_z * group_size.x * group_size.y * group_size.z;
+
+	int faces[6];  // Edge Rules:
+	// 0=front,  1= left  2=right  3=back  4=top  5=bottom
+
+	for(int f = 0; f < 6; f++)
+		faces[f] = 0;   // default init to off -- turned on selectively later
+
+	if(mapBuffer[idx].On == 1) {
+		// NeighborCheck
+		int top = id.x + ((id.y + 1) * thread_group_size_x * group_size.x) + (id.z * thread_group_size_x * group_size.y * thread_group_size_y * group_size.z);
+		int bottom = id.x + ((id.y - 1) * thread_group_size_x * group_size.x) + (id.z * thread_group_size_x * group_size.y * thread_group_size_y * group_size.z);
+		int left = (id.x + 1) + (id.y * thread_group_size_x * group_size.x) + (id.z * thread_group_size_x * group_size.y * thread_group_size_y * group_size.z);
+		int right = (id.x - 1) + (id.y * thread_group_size_x * group_size.x) + (id.z * thread_group_size_x * group_size.y * thread_group_size_y * group_size.z);
+		int front = id.x + (id.y * thread_group_size_x * group_size.x) + ((id.z - 1) * thread_group_size_x * group_size.y * thread_group_size_y * group_size.z);
+		int back = id.x + (id.y * thread_group_size_x * group_size.x) + ((id.z + 1) * thread_group_size_x * group_size.y * thread_group_size_y * group_size.z);
+	
+		// anything above?
+		if(front >= 0 && front < maxidx && mapBuffer[front].On == 0)
+			faces[0] = 1;    // 1=on, 0=off
+
+		if(left >= 0 && left < maxidx && mapBuffer[left].On == 0)
+			faces[1] = 1;    // 1=on, 0=off
+
+		if(right >= 0 && right < maxidx && mapBuffer[right].On == 0)
+			faces[2] = 1;    // 1=on, 0=off
+
+		if(back >= 0 && back < maxidx && mapBuffer[back].On == 0)
+			faces[3] = 1;    // 1=on, 0=off
+
+		if(top >= 0 && top < maxidx && mapBuffer[top].On == 0)
+			faces[4] = 1;    // 1=on, 0=off
+
+		if(bottom >= 0 && bottom < maxidx && mapBuffer[bottom].On == 0)
+			faces[5] = 1;    // 1=on, 0=off
+	
+		// Outer Edge Case:
+		if(id.z == 0)
+			faces[0] = 1; // front
+
+		if(id.x == (thread_group_size_x * group_size.x) - 1)
+			faces[1] = 1;  // left
+
+		if(id.x == 0)
+			faces[2] = 1; // right
+
+		if(id.z == (thread_group_size_z * group_size.z) - 1)
+			faces[3] = 1;  // back
+
+		if(id.y == (thread_group_size_y * group_size.y) - 1)
+			faces[4] = 1; // top
+
+		if(id.y == 0)
+			faces[5] = 1;  // bottom
+	}
+
+	outputBuffer[idx].renderFace = faces;
+}
+
