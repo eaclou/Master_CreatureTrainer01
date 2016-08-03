@@ -140,7 +140,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
         //ResetTargetPositions(0);  // create new List<Vector3>()
 
         // Build Critter
-        critterBeingTested.RebuildCritterFromGenomeRecursive(true, true, customSettings.variableMass[0]);  //  REVISIT THIS!! UGGGGLLLYYYYYY!!!!
+        critterBeingTested.RebuildCritterFromGenomeRecursive(true, true, customSettings.variableMass[0], false);  //  REVISIT THIS!! UGGGGLLLYYYYYY!!!!
         numberOfSegments = critterBeingTested.critterSegmentList.Count;
 
         InitializeGameDataArrays();
@@ -186,8 +186,8 @@ public class MiniGameCritterWalkBasic : MiniGameBase
     }
 
     public void ResetCritter() {
-        critterBeingTested.RebuildCritterFromGenomeRecursive(false, false, customSettings.variableMass[0]); // builds critter     and segment addons  
-        critterBeingTested.RebuildCritterFromGenomeRecursive(true, true, customSettings.variableMass[0]); // builds critter     and segment addons   
+        critterBeingTested.RebuildCritterFromGenomeRecursive(false, false, customSettings.variableMass[0], false); // builds critter     and segment addons  
+        critterBeingTested.RebuildCritterFromGenomeRecursive(true, true, customSettings.variableMass[0], false); // builds critter     and segment addons   
          
         //Debug.Log("ResetCritter() " + critterBeingTested.inputChannelsList.Count.ToString());
     }

@@ -43,7 +43,9 @@ public class Critter : MonoBehaviour {
     public List<SegaddonNoiseMakerBasic> segaddonNoiseMakerBasicList;
     public List<SegaddonSticky> segaddonStickyList;
     public List<SegaddonWeaponBasic> segaddonWeaponBasicList;
-    
+
+    public Vector3 BoundingBoxMinCorner;
+    public Vector3 BoundingBoxMaxCorner;
 
     public List<PhysicMaterial> segmentPhysicMaterialList;
 
@@ -164,7 +166,7 @@ public class Critter : MonoBehaviour {
             masterCritterGenome.ResetToBlankGenome();
         }
 
-        RebuildCritterFromGenomeRecursive(false, true, 0f);
+        RebuildCritterFromGenomeRecursive(false, true, 0f, true);
     }
 
     public void UpdateCritterFromGenome() {  // only use if the genome node graph hasn't changed -- only attributes & settings!!!
@@ -396,13 +398,37 @@ public class Critter : MonoBehaviour {
         return numSegments;
     }
     */  // deprecated, use similar function within CritterGenome class
+
+    public void CheckBoundingBox(GameObject segmentTransform) {
+        Vector3 right = segmentTransform.transform.right;
+        Vector3 up = segmentTransform.transform.up;
+        Vector3 forward = segmentTransform.transform.forward;
+
+        // Check all corners:
+        CheckBoundingBoxExpand(segmentTransform.transform.position + right * segmentTransform.transform.localScale.x / 2f + up * segmentTransform.transform.localScale.y / 2f + forward * segmentTransform.transform.localScale.z / 2f);
+        CheckBoundingBoxExpand(segmentTransform.transform.position - right * segmentTransform.transform.localScale.x / 2f + up * segmentTransform.transform.localScale.y / 2f + forward * segmentTransform.transform.localScale.z / 2f);
+        CheckBoundingBoxExpand(segmentTransform.transform.position + right * segmentTransform.transform.localScale.x / 2f - up * segmentTransform.transform.localScale.y / 2f + forward * segmentTransform.transform.localScale.z / 2f);
+        CheckBoundingBoxExpand(segmentTransform.transform.position + right * segmentTransform.transform.localScale.x / 2f + up * segmentTransform.transform.localScale.y / 2f - forward * segmentTransform.transform.localScale.z / 2f);
+        CheckBoundingBoxExpand(segmentTransform.transform.position - right * segmentTransform.transform.localScale.x / 2f - up * segmentTransform.transform.localScale.y / 2f + forward * segmentTransform.transform.localScale.z / 2f);
+        CheckBoundingBoxExpand(segmentTransform.transform.position + right * segmentTransform.transform.localScale.x / 2f - up * segmentTransform.transform.localScale.y / 2f - forward * segmentTransform.transform.localScale.z / 2f);
+        CheckBoundingBoxExpand(segmentTransform.transform.position - right * segmentTransform.transform.localScale.x / 2f + up * segmentTransform.transform.localScale.y / 2f - forward * segmentTransform.transform.localScale.z / 2f);
+        CheckBoundingBoxExpand(segmentTransform.transform.position - right * segmentTransform.transform.localScale.x / 2f - up * segmentTransform.transform.localScale.y / 2f - forward * segmentTransform.transform.localScale.z / 2f);
+    }
+
+    public void CheckBoundingBoxExpand(Vector3 point) {
+        BoundingBoxMinCorner = new Vector3(Mathf.Min(BoundingBoxMinCorner.x, point.x), Mathf.Min(BoundingBoxMinCorner.y, point.y), Mathf.Min(BoundingBoxMinCorner.z, point.z));
+        BoundingBoxMaxCorner = new Vector3(Mathf.Max(BoundingBoxMaxCorner.x, point.x), Mathf.Max(BoundingBoxMaxCorner.y, point.y), Mathf.Max(BoundingBoxMaxCorner.z, point.z));
+    }
     
-    public void RebuildCritterFromGenomeRecursive(bool physicsOn, bool useSegments, float variableMass) {
+    public void RebuildCritterFromGenomeRecursive(bool physicsOn, bool useSegments, float variableMass, bool editor) {
         //Debug.Log("RebuildCritterFromGenomeRecursive: " + masterCritterGenome.CritterNodeList.Count.ToString());
-        
-        masterCritterGenome.PreBuildCritter(variableMass);
+        BoundingBoxMinCorner = Vector3.zero;
+        BoundingBoxMaxCorner = Vector3.zero;
+        // IMPROVE THIS SO IT WORKS FOR BOTH CritterConstructer AND Trainer
+        if (!editor)
+            masterCritterGenome.PreBuildCritter(variableMass);
         // Delete existing Segment GameObjects
-        if(!useSegments)
+        if(!useSegments || editor)
             DeleteSegments();
         // Is this the best way to clear the lists? from a memory standpoint...
         segaddonPhysicalAttributesList.Clear();
@@ -533,6 +559,8 @@ public class Critter : MonoBehaviour {
                 }
                 if (physicsOn) {
                     newGO.AddComponent<Rigidbody>().isKinematic = false;
+                    if(editor && currentBuildSegmentList[i].sourceNode.ID == 0)
+                        newGO.GetComponent<Rigidbody>().isKinematic = true;
 
                     //newGO.GetComponent<Rigidbody>().drag = 20f;
                     //newGO.GetComponent<Rigidbody>().angularDrag = 20f;
@@ -581,7 +609,10 @@ public class Critter : MonoBehaviour {
                         ConfigureJointSettings(newSegment, ref configJoint);  // UPDATE THIS TO USE segaddonJointMotorSettings!?!?
                     }
                 }
-                
+                // Check boundingBox:
+                //BoundingBox
+                CheckBoundingBox(newGO);                
+
                 // SEGMENT ADDONS:
                 if (physicsOn) {
                     // Check for Physical Attributes:
@@ -1116,9 +1147,7 @@ public class Critter : MonoBehaviour {
                             nextBuildSegmentList.Add(newSegmentInfoMirror);
                         }
                     }             
-                }
-
-                               
+                }                               
             }
             // After all buildNodes have been built, and their subsequent childNodes Enqueued, copy pendingChildQueue into buildNodesQueue
             currentBuildSegmentList.Clear();
@@ -1433,6 +1462,6 @@ public class Critter : MonoBehaviour {
         Debug.Log("LoadCritterGenome!!");
         masterCritterGenome = newGenome;
         masterCritterGenome.ReconstructGenomeFromLoad();
-        RebuildCritterFromGenomeRecursive(false, true, 0f);
+        RebuildCritterFromGenomeRecursive(false, true, 0f, true);
     }
 }

@@ -30,7 +30,7 @@ public class BezierCurve {
 
     public Vector3 GetVelocity(float t) {
         //return transform.TransformPoint(Bezier.GetFirstDerivative(points[0], points[1], points[2], points[3], t)) - transform.position;
-        return Bezier.GetFirstDerivative(points[0], points[1], points[2], points[3], t) - new Vector3(0f, 0f, 0f);
+        return Bezier.GetFirstDerivative(points[0], points[1], points[2], points[3], t);
     }
 
     public Vector3 GetDirection(float t) {
