@@ -22,6 +22,8 @@ public class CritterMarchingCubes : MonoBehaviour {
 
     SegmentTransform[] critterSegmentTransforms;
 
+    private Critter critter;
+
     public struct Poly {
         //Vertex A:
         public float A1, A2, A3;
@@ -34,6 +36,17 @@ public class CritterMarchingCubes : MonoBehaviour {
         public float NA1, NA2, NA3;
         public float NB1, NB2, NB3;
         public float NC1, NC2, NC3;
+        // COLORS!! The colors!!
+        public float CAR, CAG, CAB;
+        public float CBR, CBG, CBB;
+        public float CCR, CCG, CCB;
+        // Boner weights:
+        public int BoneIndexA0, BoneIndexA1;
+        public float BoneWeightA0, BoneWeightA1;
+        public int BoneIndexB0, BoneIndexB1;
+        public float BoneWeightB0, BoneWeightB1;
+        public int BoneIndexC0, BoneIndexC1;
+        public float BoneWeightC0, BoneWeightC1;
     }
 
     public struct SegmentTransform {
@@ -58,6 +71,7 @@ public class CritterMarchingCubes : MonoBehaviour {
     }
 
     public void SetCritterTransformArray(Critter sourceCritter) {
+        critter = sourceCritter;
 
         critterSegmentTransforms = new SegmentTransform[sourceCritter.critterSegmentList.Count];  // grab numSegments from Critter
 
@@ -168,7 +182,8 @@ public class CritterMarchingCubes : MonoBehaviour {
                     //_MaxBufferSize = numPolys[0];
                     if(numPolys[0] > 0) {   // only do this if there was at least 1 triangle in the test pass
                         Poly[] polyArray = new Poly[numPolys[0]];
-                        ComputeBuffer cBuffer = new ComputeBuffer(numPolys[0], 72);  // 18 floats x 4 bytes/float = 72
+                        int cBufferStride = sizeof(float) * (18 + 9 + 6) + sizeof(int) * (6);
+                        ComputeBuffer cBuffer = new ComputeBuffer(numPolys[0], cBufferStride);  // 18 floats x 4 bytes/float = 72   + COLORS! 9 x 4 = 36  = 108   + BONES! 6x4 = 24 + 6 xint...
                         cBuffer.SetData(polyArray);
 
                         CShaderBuildMC.SetBuffer(id, "buffer", cBuffer);
@@ -187,16 +202,16 @@ public class CritterMarchingCubes : MonoBehaviour {
             }
         }
 
-        //Construct mesh using received data        
-        Mesh newMesh = new Mesh();
-
+        //Construct mesh using received data 
         int vindex = 0;
                 
         // Why same number of tris as vertices?  == // because all triangles have duplicate verts - no shared vertices?
         Vector3[] vertices = new Vector3[totalNumPolys * 3];
+        Color[] colors = new Color[totalNumPolys * 3];
         int[] tris = new int[totalNumPolys * 3];
         Vector2[] uvs = new Vector2[totalNumPolys * 3];
         Vector3[] normals = new Vector3[totalNumPolys * 3];
+        BoneWeight[] weights = new BoneWeight[totalNumPolys * 3];
 
         //Parse triangles
         for(int i = 0; i < PolyArrayArray.Length; i++) {
@@ -211,6 +226,11 @@ public class CritterMarchingCubes : MonoBehaviour {
                     normals[vindex] = new Vector3(PolyArrayArray[i][ix].NA1, PolyArrayArray[i][ix].NA2, PolyArrayArray[i][ix].NA3);
                     tris[vindex] = vindex;
                     uvs[vindex] = new Vector2(vertices[vindex].z, vertices[vindex].x);
+                    colors[vindex] = new Color(PolyArrayArray[i][ix].CAR, PolyArrayArray[i][ix].CAG, PolyArrayArray[i][ix].CAB, 1.0f);
+                    weights[vindex].boneIndex0 = PolyArrayArray[i][ix].BoneIndexA0;
+                    weights[vindex].boneIndex1 = PolyArrayArray[i][ix].BoneIndexA1;
+                    weights[vindex].weight0 = PolyArrayArray[i][ix].BoneWeightA0;
+                    weights[vindex].weight1 = PolyArrayArray[i][ix].BoneWeightA1;
 
                     vindex++;
 
@@ -220,6 +240,11 @@ public class CritterMarchingCubes : MonoBehaviour {
                     normals[vindex] = new Vector3(PolyArrayArray[i][ix].NB1, PolyArrayArray[i][ix].NB2, PolyArrayArray[i][ix].NB3);
                     tris[vindex] = vindex;
                     uvs[vindex] = new Vector2(vertices[vindex].z, vertices[vindex].x);
+                    colors[vindex] = new Color(PolyArrayArray[i][ix].CBR, PolyArrayArray[i][ix].CBG, PolyArrayArray[i][ix].CBB, 1.0f);
+                    weights[vindex].boneIndex0 = PolyArrayArray[i][ix].BoneIndexB0;
+                    weights[vindex].boneIndex1 = PolyArrayArray[i][ix].BoneIndexB1;
+                    weights[vindex].weight0 = PolyArrayArray[i][ix].BoneWeightB0;
+                    weights[vindex].weight1 = PolyArrayArray[i][ix].BoneWeightB1;
 
                     vindex++;
 
@@ -229,29 +254,48 @@ public class CritterMarchingCubes : MonoBehaviour {
                     normals[vindex] = new Vector3(PolyArrayArray[i][ix].NC1, PolyArrayArray[i][ix].NC2, PolyArrayArray[i][ix].NC3);
                     tris[vindex] = vindex;
                     uvs[vindex] = new Vector2(vertices[vindex].z, vertices[vindex].x);
+                    colors[vindex] = new Color(PolyArrayArray[i][ix].CCR, PolyArrayArray[i][ix].CCG, PolyArrayArray[i][ix].CCB, 1.0f);
+                    weights[vindex].boneIndex0 = PolyArrayArray[i][ix].BoneIndexC0;
+                    weights[vindex].boneIndex1 = PolyArrayArray[i][ix].BoneIndexC1;
+                    weights[vindex].weight0 = PolyArrayArray[i][ix].BoneWeightC0;
+                    weights[vindex].weight1 = PolyArrayArray[i][ix].BoneWeightC1;
 
                     vindex++;
                 }
             }            
         }
-        
+
         //We have got all data and are ready to setup a new mesh!
-
         //newMesh.Clear();
-
+        Mesh newMesh = new Mesh();
         newMesh.vertices = vertices;
         newMesh.uv = uvs; //Unwrapping.GeneratePerTriangleUV(NewMesh);
         newMesh.triangles = tris;
         newMesh.normals = normals; //NewMesh.RecalculateNormals();
-        newMesh.RecalculateNormals();
-        newMesh.Optimize();
+        newMesh.colors = colors;
+        //newMesh.RecalculateNormals();
+        newMesh.Optimize();        
+
+        // Set up SKINNING!!!:
+        Transform[] bones = new Transform[critter.critterSegmentList.Count];
+        Matrix4x4[] bindPoses = new Matrix4x4[critter.critterSegmentList.Count];
+        // Try just using existing critter's GameObjects/Transforms:
+        for(int seg = 0; seg < critter.critterSegmentList.Count; seg++) {
+            bones[seg] = critter.critterSegmentList[seg].transform;
+            bindPoses[seg] = bones[seg].worldToLocalMatrix * transform.localToWorldMatrix;  // ?????????????????  
+            // the bind pose is the inverse of inverse transformation matrix of the bone, when the bone is in the bind pose .... unhelpful ....
+        }
+        newMesh.boneWeights = weights;
+        newMesh.bindposes = bindPoses;
+        SkinnedMeshRenderer skinnedMeshRenderer = this.GetComponent<SkinnedMeshRenderer>();
+        skinnedMeshRenderer.bones = bones;
+        skinnedMeshRenderer.sharedMesh = newMesh;
 
         //cBuffer.Dispose();
         //cBufferNumPoly.Dispose();
         //cBuffer.Release();
         cBufferSegmentTransform.Release();
-
-        this.GetComponent<MeshFilter>().sharedMesh = newMesh;
+        
         float calcTime = Time.realtimeSinceStartup - startTime;
         Debug.Log("MeshCreated! " + calcTime.ToString());
     }

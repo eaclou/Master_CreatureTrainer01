@@ -12,6 +12,16 @@ struct Poly
     float3 NA;
     float3 NB;
     float3 NC;
+	float3 COLA;
+	float3 COLB;
+	float3 COLC;
+
+	int2 BoneIndicesA;
+	float2 BoneWeightsA;
+	int2 BoneIndicesB;
+	float2 BoneWeightsB;
+	int2 BoneIndicesC;
+	float2 BoneWeightsC;
 };
 
 struct SegmentTransform
@@ -51,9 +61,9 @@ float3 RotatePoint(float3 position, float4 rotation) {
 	return (position + rotation.w * t + cross(rotation.xyz, t));
 }
 
-float DistancePointToBox(float3 pos, float3 boxPos, float3 boxScale, float4 boxRotation) {
+float DistancePointToBox(float3 pos, float3 boxPos, float3 boxScale, float4 boxRotation, float extrudeAmount) {
 
-    float3 boxCenterToPoint = pos - boxPos + float3(0.0001, 0.0001, 0.0001);  // prevent divide by 0
+    float3 boxCenterToPoint = pos - boxPos + float3(0.00001, 0.00001, 0.00001);  // prevent divide by 0
     float3 right = RotatePoint(float3(1.0, 0, 0), boxRotation);
     float3 up = RotatePoint(float3(0, 1.0, 0), boxRotation);
     float3 forward = RotatePoint(float3(0, 0, 1.0), boxRotation);
@@ -61,6 +71,7 @@ float DistancePointToBox(float3 pos, float3 boxPos, float3 boxScale, float4 boxR
     float dotRight = dot(right, boxCenterToPoint);
     float dotUp = dot(up, boxCenterToPoint);
     float dotForward = dot(forward, boxCenterToPoint);
+
 	// Cache distance amounts per box-local-dimensions:
 	float dotRightAbs = abs(dotRight);
 	float dotRightSign = dotRight / dotRightAbs;
@@ -70,11 +81,13 @@ float DistancePointToBox(float3 pos, float3 boxPos, float3 boxScale, float4 boxR
 	float dotForwardSign = dotForward / dotForwardAbs;
 
 	float minDistance = 0.001;  // prevent divide by 0 and negative distances
-	float roundness = 1; // multiplier on boxScale
+	//float roundness = 1; // multiplier on boxScale
+	//float extrudeAmount = 0.25;
+
 	// find point on box 'edge' to measure against samplepoint:
-	float distRight = min(dotRightAbs, boxScale.x * 1.0 * roundness) * dotRightSign; // amount to move in box's local X direction
-	float distUp = min(dotUpAbs, boxScale.y * 1.0 * roundness) * dotUpSign;
-    float distForward = min(dotForwardAbs, boxScale.z * 1.0 * roundness) * dotForwardSign;
+	float distRight = min(dotRightAbs, max(boxScale.x - extrudeAmount, 0.0)) * dotRightSign; // amount to move in box's local X direction
+	float distUp = min(dotUpAbs, max(boxScale.y - extrudeAmount, 0.0)) * dotUpSign;
+    float distForward = min(dotForwardAbs, max(boxScale.z - extrudeAmount, 0.0)) * dotForwardSign;
 
 	float3 offsetVector = pos - (right * distRight + up * distUp + forward * distForward + boxPos);
 
@@ -108,35 +121,67 @@ float MultiSampleNoise( float3 pPosition, float noiseScale ){
 }
 
 float SampleDensity(float3 pPosition){
-	
-	uint elements;
-	uint stride;
-	segmentTransformBuffer.GetDimensions(elements, stride);
-
 	//float noiseScale = 4.3;
-	float noiseAmplitude = 0.05;
+	//float noiseAmplitude = 0.05;
 	//float3 noiseOffset = float3(100.0, 100.0, 100.0);
 	//float density = MultiSampleNoise(pPosition.xyz, noiseScale) * noiseAmplitude;
 	//float3 uvw = float3((pPosition.x / _CellSize) - _GlobalOffsetX, (pPosition.y / _CellSize) - _GlobalOffsetY, (pPosition.z / _CellSize) - _GlobalOffsetZ);
-	float u = trunc(fmod((((pPosition.x / _CellSize) - _GlobalOffsetX) + 100.0) * 2, 16.0));
-	float v = trunc(fmod((((pPosition.y / _CellSize) - _GlobalOffsetY) + 100.0) * 2, 16.0));  //abs(((pPosition.y / _CellSize) - _GlobalOffsetY) + 0.0) * 1;
-	float w = trunc(fmod((((pPosition.z / _CellSize) - _GlobalOffsetZ) + 100.0) * 2, 16.0));  //abs(((pPosition.z / _CellSize) - _GlobalOffsetZ) + 0.0) * 1;
+	//float u = trunc(fmod((((pPosition.x / _CellSize) - _GlobalOffsetX) + 100.0) * 2, 16.0));
+	//float v = trunc(fmod((((pPosition.y / _CellSize) - _GlobalOffsetY) + 100.0) * 2, 16.0));  //abs(((pPosition.y / _CellSize) - _GlobalOffsetY) + 0.0) * 1;
+	//float w = trunc(fmod((((pPosition.z / _CellSize) - _GlobalOffsetZ) + 100.0) * 2, 16.0));  //abs(((pPosition.z / _CellSize) - _GlobalOffsetZ) + 0.0) * 1;
 	//uvw = fmod(uvw, float3(1.0, 1.0, 1.0));
 	//float density = input_volume[(pPosition + noiseOffset) * noiseScale] * noiseAmplitude;
-	float density = - 0.01;  // input_volume[float3(u, v, w)] * noiseAmplitude - noiseAmplitude * 0.95;
-	float noise = input_volume[float3(u, v, w)] * noiseAmplitude;
+	//input_volume[float3(u, v, w)] * noiseAmplitude - noiseAmplitude * 0.95;	
+	//float noise = input_volume[float3(u, v, w)] * noiseAmplitude;
 	
-	//float density = -0.05;
-	float amplitude = 0.002;
+	float density = 0.0;
+	float amplitude = 0.03;
+	uint elements;
+	uint stride;
+	segmentTransformBuffer.GetDimensions(elements, stride);
 	for(int i = 0; i < 16; i++) {
 		if(i < elements) {
-			float dist = DistancePointToBox(pPosition, segmentTransformBuffer[i].P, segmentTransformBuffer[i].S, segmentTransformBuffer[i].R) + noise + noiseAmplitude;
+			float dist = DistancePointToBox(pPosition, segmentTransformBuffer[i].P, segmentTransformBuffer[i].S, segmentTransformBuffer[i].R, 0.25);
 			//float dist = DistancePointToPoint(pPosition, segmentTransformBuffer[i].P);
 			density += amplitude / (dist * dist);
 		}
 	}
 	
 	return density;		
+}
+
+void CalculateBoneWeights(float3 pos, out int2 indices, out float2 weights) {
+	indices = int2(0,0);  // just in case, zero out values
+	weights = float2(0.0,0.0);
+
+	// BoneWeights!!!:
+	uint elements;
+	uint stride;
+	segmentTransformBuffer.GetDimensions(elements, stride);  // cache the length of xForm buffer?
+	
+	float2 boneInfluence = float2(0.0, 0.0);
+	for(int i = 0; i < 16; i++) {
+		if(i < elements) {
+			float dist = 0.9 * DistancePointToPoint(pos, segmentTransformBuffer[i].P);
+			dist += 0.1 * DistancePointToBox(pos, segmentTransformBuffer[i].P, segmentTransformBuffer[i].S, segmentTransformBuffer[i].R, 0.5);
+			float rawInfluence = 1.0 / (dist * dist);
+
+			if(rawInfluence > boneInfluence.x) {  // new top dawg:
+				boneInfluence.y = boneInfluence.x;
+				boneInfluence.x = rawInfluence;
+				indices.y = indices.x;
+				indices.x = i;
+			}
+			else {
+				if(rawInfluence > boneInfluence.y) {  // new beta wolf:
+					boneInfluence.y = rawInfluence;
+					indices.y = i;
+				}
+			}
+		}
+	}
+	float totalInfluence = boneInfluence.x + boneInfluence.y;
+	weights = float2(boneInfluence.x / totalInfluence, boneInfluence.y / totalInfluence);
 }
 
 float3 GetNormal (float x, float y, float z)
@@ -148,7 +193,7 @@ float3 GetNormal (float x, float y, float z)
 	float dy = SampleDensity(float3(x,y+_CellSize,z)) - SampleDensity(float3(x,y-_CellSize,z));
 	float dz = SampleDensity(float3(x,y,z+_CellSize)) - SampleDensity(float3(x,y,z-_CellSize));
 		
-	normal = normalize(float3(0.00001+dx,0.00001+dy,0.00001+dz));  // ?? why add 0.001? to prevent 0?
+	normal = -normalize(float3(0.00001+dx,0.00001+dy,0.00001+dz));  // ?? why add 0.001? to prevent 0?
 		
 	return normal;		
 }
@@ -157,7 +202,7 @@ float3 GetNormal (float x, float y, float z)
 void CSMain (uint3 id : SV_DispatchThreadID, uint3 grpID : SV_GroupID, uint3 grpTID : SV_GroupThreadID)
 {	
 	// For each Voxel of the chunk grid:
-	const float cap = 0.05;   // density threshold to determine if a vert of the cube is on a density boundary
+	const float cap = 0.5;   // density threshold to determine if a vert of the cube is on a density boundary
 	const float halfSize = _CellSize * 0.5;
 	const float4 cubeVerts[8] = {
 		//front face
@@ -497,24 +542,48 @@ void CSMain (uint3 id : SV_DispatchThreadID, uint3 grpID : SV_GroupID, uint3 grp
 			if(i < numpolys)
 			{
 				int4 polyEdges = edge_connect_list[marchingCase * 5 + i];
+				float tempColorScale = 0.25f;
+
+				int2 boneIndices = int2(0, 0);
+				float2 boneWeights = float2(0.0, 0.0);
+
+				uint elements;
+				uint stride;
+				segmentTransformBuffer.GetDimensions(elements, stride);  // cache the length of xForm buffer?
+				float numSegmentsFloat = elements * 1.0;
 					
 				int va = edge_to_verts[polyEdges.x].x;
 				int vb = edge_to_verts[polyEdges.x].y;
 				float amount = (cap - weights[va]) / (weights[vb] - weights[va]);
 				NewPoly.A = lerp( p + cubeVerts[va].xyz,  p + cubeVerts[vb].xyz, amount);
-				NewPoly.NA = GetNormal(NewPoly.A.x, NewPoly.A.y, NewPoly.A.z);										
+				NewPoly.NA = GetNormal(NewPoly.A.x, NewPoly.A.y, NewPoly.A.z);									
+				CalculateBoneWeights(NewPoly.A, boneIndices, boneWeights);
+				NewPoly.BoneIndicesA = boneIndices;
+				NewPoly.BoneWeightsA = boneWeights;
+				float val = boneWeights.x * (boneIndices.x / numSegmentsFloat);
+				NewPoly.COLA = NewPoly.NA;
 					
 				va = edge_to_verts[polyEdges.y].x;
 				vb = edge_to_verts[polyEdges.y].y;
 				amount = (cap - weights[va]) / (weights[vb] - weights[va]);
 				NewPoly.B = lerp( p + cubeVerts[va].xyz,  p + cubeVerts[vb].xyz, amount);
 				NewPoly.NB = GetNormal(NewPoly.B.x, NewPoly.B.y, NewPoly.B.z);
+				CalculateBoneWeights(NewPoly.B, boneIndices, boneWeights);
+				NewPoly.BoneIndicesB = boneIndices;
+				NewPoly.BoneWeightsB = boneWeights;
+				val = boneWeights.x * (boneIndices.x / numSegmentsFloat);
+				NewPoly.COLB = NewPoly.NB;
 
 				va = edge_to_verts[polyEdges.z].x;
 				vb = edge_to_verts[polyEdges.z].y;
 				amount = (cap - weights[va]) / (weights[vb] - weights[va]);
 				NewPoly.C = lerp( p + cubeVerts[va].xyz,  p + cubeVerts[vb].xyz, amount);
 				NewPoly.NC = GetNormal(NewPoly.C.x, NewPoly.C.y, NewPoly.C.z);
+				CalculateBoneWeights(NewPoly.C, boneIndices, boneWeights);
+				NewPoly.BoneIndicesC = boneIndices;
+				NewPoly.BoneWeightsC = boneWeights;
+				val = boneWeights.x * (boneIndices.x / numSegmentsFloat);
+				NewPoly.COLC = NewPoly.NC;
 
 				//Increase buffer index counter and get current one
 				InterlockedAdd(index_counter,1,Index);
