@@ -1444,8 +1444,8 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
         else {
             gizmoGroupGO.SetActive(false);  // current tool is set to View, so do not display Gizmos!
             if (isPhysicsPreview) {
-                gizmoForceShaftGO.SetActive(true);
-                gizmoForceArrowGO.SetActive(true);
+                //gizmoForceShaftGO.SetActive(true);
+                //gizmoForceArrowGO.SetActive(true);
                 gizmoGroupGO.SetActive(true);
                 gizmoMoveCoreGO.SetActive(false);
                 gizmoMoveXGO.SetActive(false);

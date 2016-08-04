@@ -94,7 +94,7 @@ public class CritterMarchingCubes : MonoBehaviour {
         // Largest boundingBox dimension determines cellResolution?
         GlobalBoundingBoxDimensions = (sourceCritter.BoundingBoxMaxCorner - sourceCritter.BoundingBoxMinCorner) * 1.15f;  // buffer amount
         GlobalBoundingBoxOffset = (sourceCritter.BoundingBoxMaxCorner + sourceCritter.BoundingBoxMinCorner) / 2f;        
-        int approxChunksPerDimension = 5;
+        int approxChunksPerDimension = 8;
         float avgRadius = (GlobalBoundingBoxDimensions.x + GlobalBoundingBoxDimensions.y + GlobalBoundingBoxDimensions.z) / 3f;
         float chunkSize = avgRadius / (float)approxChunksPerDimension;
         float cellSize = chunkSize / 8f;
@@ -133,15 +133,36 @@ public class CritterMarchingCubes : MonoBehaviour {
         CShaderSimplex.SetFloat("_NoiseB", 0.000632f);
         CShaderSimplex.SetFloat("_NoiseC", 0.000695f);
         CShaderSimplex.Dispatch(mgen_id, 1, 1, 16);  // Fill shared RenderTexture with GPU simplex Noise
+        
         //Debug.Log("Noise generation time:  " + (1000.0f * (Time.realtimeSinceStartup - startTime)).ToString() + "ms");
         //VoxelCalculator.Instance.BuildChunkMesh(DensityVolume, MF.sharedMesh);
+        
+        /*
+        int noiseTextureSize = 8;
+        Texture3D noiseTexture = new Texture3D(noiseTextureSize, noiseTextureSize, noiseTextureSize, TextureFormat.RGBA32, true);
+        Color[] cols = new Color[noiseTextureSize * noiseTextureSize * noiseTextureSize];
+        //float[] values = new float[noiseTextureSize * noiseTextureSize * noiseTextureSize];
+        int colourCount = 0;
+        for (int z = 0; z < noiseTextureSize; z++) {
+            for (int y = 0; y < noiseTextureSize; y++) {
+                for (int x = 0; x < noiseTextureSize; x++) {
+                    float noise = SimplexNoise.SimplexNoise.GetNoise(x, y, z);
+                    cols[colourCount] = new Color(noise, noise, noise, 1.0f);
+                    //values[colourCount] = SimplexNoise.SimplexNoise.GetNoise(x, y, z);
+                    colourCount++;
+                }
+            }
+        }
+        noiseTexture.SetPixels(cols);
+        noiseTexture.Apply();
+        */
 
         ComputeBuffer cBufferSegmentTransform = new ComputeBuffer(critterSegmentTransforms.Length, sizeof(float) * (3 + 3 + 4));
         cBufferSegmentTransform.SetData(critterSegmentTransforms);
         int kernelID = CShaderBuildMC.FindKernel("CSMain");
         CShaderBuildMC.SetBuffer(kernelID, "segmentTransformBuffer", cBufferSegmentTransform);
-        CShaderBuildMC.SetTexture(kernelID, "input_volume", DensityVolume);  // Noise 3D texture
-        //Debug.Log(DensityVolume.Rea.ToString());
+        CShaderBuildMC.SetTexture(kernelID, "noise_volume", DensityVolume);  // Noise 3D texture
+        //Debug.Log(DensityVolume.colorBuffer.ToString());
 
         // Figure out how many chunks are needed:
         int numChunksX = Mathf.CeilToInt(GlobalBoundingBoxDimensions.x / (cellResolution * 8f));

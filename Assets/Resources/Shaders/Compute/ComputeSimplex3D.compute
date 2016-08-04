@@ -170,24 +170,24 @@ float simplex3d(float3 ws) {
 [numthreads(16,16,1)]
 void Simplex3d (uint3 id : SV_DispatchThreadID)
 {
-	int x,y,z;
+	//int x,y,z;
 
 	//20 UUnits in 1 voxel I assume  //UVscale = 0.2??  //  ..... GO is scaled to 0.05f
-	x=id.x*20;y=id.y*20;z=id.z*20;
+	//x=id.x*20;y=id.y*20;z=id.z*20;
 	
-	x += _StartPos.x*20.0;y += _StartPos.y*20.0; z+=_StartPos.z*20.0;
+	//x += _StartPos.x*20.0;y += _StartPos.y*20.0; z+=_StartPos.z*20.0;
 	// Getting WorldPosition of noise?
-	float3 ws = float3(x,y,z);
+	//float3 ws = float3(x,y,z);
 
-	float density = (id.y - 15.0) * -0.6;
+	//float density = (id.y - 15.0) * -0.6;
 
 	// Composite multiple 'octaves' of simplex noise
-	float noiseA =  simplex3d(float3(x, y, z)* _NoiseA*_Str)*2 - 0.5;  
-	float noiseB =  simplex3d(float3(x*3, y*2, z*3)* _NoiseB*_Str)*1.5;
-	float noiseC =  simplex3d(float3(x, y*0.2, z)* _NoiseC*_Str) * 2;
+	//float noiseA =  simplex3d(float3(x, y, z)* _NoiseA*_Str)*2 - 0.5;  
+	//float noiseB =  simplex3d(float3(x*3, y*2, z*3)* _NoiseB*_Str)*1.5;
+	//float noiseC =  simplex3d(float3(x, y*0.2, z)* _NoiseC*_Str) * 2;
 
 	// Set value of 3d RenderTexture
-	Result[float3(id.x,id.y,id.z)] = saturate(density + noiseA + noiseB + noiseC); // + noiseA + noiseB + noiseC; //saturate(density+noiseA+ noiseB + noiseC / 1);
+	Result[float3(id.x,id.y,id.z)] = simplex3d(float3(id.x, id.y, id.z));     //saturate(density + noiseA + noiseB + noiseC); // + noiseA + noiseB + noiseC; //saturate(density+noiseA+ noiseB + noiseC / 1);
 
 }
 

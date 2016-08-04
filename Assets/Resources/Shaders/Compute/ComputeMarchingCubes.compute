@@ -40,7 +40,7 @@ float _GlobalOffsetZ = 0;
 float _CellSize;
 
 //input density volume
-RWTexture3D<float> input_volume;
+RWTexture3D<float> noise_volume;
 
 // input critterSegment Transform information:
 RWStructuredBuffer<SegmentTransform> segmentTransformBuffer;
@@ -104,36 +104,31 @@ float DistancePointToPoint(float3 pos, float3 boxPos) {
 	return distance;
 }
 
-float MultiSampleNoise( float3 pPosition, float noiseScale ){
-	float dist = 0.1 * _CellSize;
+float SampleVolumeNoise(float3 pPosition) {
+	float u = (pPosition.x / _CellSize + 128.0) % 16;
+	float v = (pPosition.y / _CellSize + 128.0) % 16;
+	float w = (pPosition.z / _CellSize + 128.0) % 16;
+
+	return noise_volume[float3(u, v, w)];
+}
+
+float MultiSampleVolumeNoise(float3 pPosition) {
+	int floorX = floor((pPosition.x / _CellSize + 128.0) % 16);
+	float fractX = frac((pPosition.x / _CellSize + 128.0) % 16);
+	int floorY = floor((pPosition.y / _CellSize + 128.0) % 16);
+	float fractY = frac((pPosition.y / _CellSize + 128.0) % 16);
+	int floorZ = floor((pPosition.z / _CellSize + 128.0) % 16);
+	float fractZ = frac((pPosition.z / _CellSize + 128.0) % 16);
+
+	float sum = 0.0;
+	sum += SampleVolumeNoise(float3(floorX, floorY, floorZ)) * fractX;
+	sum += SampleVolumeNoise(float3(floorX + 1, floorY, floorZ)) * (1.0 - fractX);
 	
-	float sum = input_volume[pPosition * noiseScale];
-	sum += input_volume[(pPosition + float3(1,1,1) * dist) * noiseScale];
-	sum += input_volume[(pPosition + float3(-1,1,1) * dist) * noiseScale];
-	sum += input_volume[(pPosition + float3(-1,-1,1) * dist) * noiseScale];
-	sum += input_volume[(pPosition + float3(-1,-1,-1) * dist) * noiseScale];
-	sum += input_volume[(pPosition + float3(-1,-1,1) * dist) * noiseScale];
-	sum += input_volume[(pPosition + float3(-1,1,1) * dist) * noiseScale];
-	sum += input_volume[(pPosition + float3(-1,1,-1) * dist) * noiseScale];
-	sum += input_volume[(pPosition + float3(1,-1,1) * dist) * noiseScale];
-		
-	return sum / 9;
+	return sum;
 }
 
 float SampleDensity(float3 pPosition){
-	//float noiseScale = 4.3;
-	//float noiseAmplitude = 0.05;
-	//float3 noiseOffset = float3(100.0, 100.0, 100.0);
-	//float density = MultiSampleNoise(pPosition.xyz, noiseScale) * noiseAmplitude;
-	//float3 uvw = float3((pPosition.x / _CellSize) - _GlobalOffsetX, (pPosition.y / _CellSize) - _GlobalOffsetY, (pPosition.z / _CellSize) - _GlobalOffsetZ);
-	//float u = trunc(fmod((((pPosition.x / _CellSize) - _GlobalOffsetX) + 100.0) * 2, 16.0));
-	//float v = trunc(fmod((((pPosition.y / _CellSize) - _GlobalOffsetY) + 100.0) * 2, 16.0));  //abs(((pPosition.y / _CellSize) - _GlobalOffsetY) + 0.0) * 1;
-	//float w = trunc(fmod((((pPosition.z / _CellSize) - _GlobalOffsetZ) + 100.0) * 2, 16.0));  //abs(((pPosition.z / _CellSize) - _GlobalOffsetZ) + 0.0) * 1;
-	//uvw = fmod(uvw, float3(1.0, 1.0, 1.0));
-	//float density = input_volume[(pPosition + noiseOffset) * noiseScale] * noiseAmplitude;
-	//input_volume[float3(u, v, w)] * noiseAmplitude - noiseAmplitude * 0.95;	
-	//float noise = input_volume[float3(u, v, w)] * noiseAmplitude;
-	
+		
 	float density = 0.0;
 	float amplitude = 0.03;
 	uint elements;
@@ -141,7 +136,7 @@ float SampleDensity(float3 pPosition){
 	segmentTransformBuffer.GetDimensions(elements, stride);
 	for(int i = 0; i < 16; i++) {
 		if(i < elements) {
-			float dist = DistancePointToBox(pPosition, segmentTransformBuffer[i].P, segmentTransformBuffer[i].S, segmentTransformBuffer[i].R, 0.25);
+			float dist = DistancePointToBox(pPosition, segmentTransformBuffer[i].P, segmentTransformBuffer[i].S, segmentTransformBuffer[i].R, 0.25) + SampleVolumeNoise(pPosition * 0.53) * 0.08;
 			//float dist = DistancePointToPoint(pPosition, segmentTransformBuffer[i].P);
 			density += amplitude / (dist * dist);
 		}
@@ -162,8 +157,8 @@ void CalculateBoneWeights(float3 pos, out int2 indices, out float2 weights) {
 	float2 boneInfluence = float2(0.0, 0.0);
 	for(int i = 0; i < 16; i++) {
 		if(i < elements) {
-			float dist = 0.9 * DistancePointToPoint(pos, segmentTransformBuffer[i].P);
-			dist += 0.1 * DistancePointToBox(pos, segmentTransformBuffer[i].P, segmentTransformBuffer[i].S, segmentTransformBuffer[i].R, 0.5);
+			float dist = 1.0 * DistancePointToPoint(pos, segmentTransformBuffer[i].P);
+			//dist += 0.1 * DistancePointToBox(pos, segmentTransformBuffer[i].P, segmentTransformBuffer[i].S, segmentTransformBuffer[i].R, 0.5);
 			float rawInfluence = 1.0 / (dist * dist);
 
 			if(rawInfluence > boneInfluence.x) {  // new top dawg:
@@ -560,8 +555,10 @@ void CSMain (uint3 id : SV_DispatchThreadID, uint3 grpID : SV_GroupID, uint3 grp
 				CalculateBoneWeights(NewPoly.A, boneIndices, boneWeights);
 				NewPoly.BoneIndicesA = boneIndices;
 				NewPoly.BoneWeightsA = boneWeights;
-				float val = boneWeights.x * (boneIndices.x / numSegmentsFloat);
-				NewPoly.COLA = NewPoly.NA;
+				float noiseVal = (SampleVolumeNoise(NewPoly.A) + SampleVolumeNoise(NewPoly.A * 0.437) * 2.0 + SampleVolumeNoise(NewPoly.A * 2.17) * 0.5 + SampleVolumeNoise(NewPoly.A * 0.237) * 3.0) * 0.25 + 0.75;
+				noiseVal = noiseVal * 0.5 + (NewPoly.BoneWeightsA.x * (NewPoly.BoneIndicesA.x / numSegmentsFloat)) + (NewPoly.BoneWeightsA.y * (NewPoly.BoneIndicesA.y / numSegmentsFloat)) * 0.5;
+				//NewPoly.COLA = float3(NewPoly.BoneWeightsA.x, NewPoly.BoneWeightsA.y, 0.0);
+				NewPoly.COLA = float3(noiseVal, noiseVal, noiseVal);
 					
 				va = edge_to_verts[polyEdges.y].x;
 				vb = edge_to_verts[polyEdges.y].y;
@@ -571,8 +568,11 @@ void CSMain (uint3 id : SV_DispatchThreadID, uint3 grpID : SV_GroupID, uint3 grp
 				CalculateBoneWeights(NewPoly.B, boneIndices, boneWeights);
 				NewPoly.BoneIndicesB = boneIndices;
 				NewPoly.BoneWeightsB = boneWeights;
-				val = boneWeights.x * (boneIndices.x / numSegmentsFloat);
-				NewPoly.COLB = NewPoly.NB;
+				//noiseVal = SampleVolumeNoise(float3(0, id.y, p.z)) * 0.5 + 0.5;
+				noiseVal = (SampleVolumeNoise(NewPoly.B) + SampleVolumeNoise(NewPoly.B * 0.349) + SampleVolumeNoise(NewPoly.B * 2.17) + SampleVolumeNoise(NewPoly.B * 0.237) * 3.0) * 0.25 + 0.75;				
+				noiseVal = noiseVal * 0.5 + (NewPoly.BoneWeightsA.x * (NewPoly.BoneIndicesA.x / numSegmentsFloat)) + (NewPoly.BoneWeightsA.y * (NewPoly.BoneIndicesA.y / numSegmentsFloat)) * 0.5;
+				//NewPoly.COLB = float3(NewPoly.BoneWeightsA.x, NewPoly.BoneWeightsA.y, 0.0);
+				NewPoly.COLB = float3(noiseVal, noiseVal, noiseVal);
 
 				va = edge_to_verts[polyEdges.z].x;
 				vb = edge_to_verts[polyEdges.z].y;
@@ -582,8 +582,11 @@ void CSMain (uint3 id : SV_DispatchThreadID, uint3 grpID : SV_GroupID, uint3 grp
 				CalculateBoneWeights(NewPoly.C, boneIndices, boneWeights);
 				NewPoly.BoneIndicesC = boneIndices;
 				NewPoly.BoneWeightsC = boneWeights;
-				val = boneWeights.x * (boneIndices.x / numSegmentsFloat);
-				NewPoly.COLC = NewPoly.NC;
+				//noiseVal = SampleVolumeNoise(float3(0, id.y, p.z)) * 0.5 + 0.5;
+				noiseVal = (SampleVolumeNoise(NewPoly.C) + SampleVolumeNoise(NewPoly.C * 0.349) + SampleVolumeNoise(NewPoly.C * 2.17) + SampleVolumeNoise(NewPoly.C * 0.237) * 3.0) * 0.25 + 0.75;	
+				noiseVal = noiseVal * 0.5 + (NewPoly.BoneWeightsA.x * (NewPoly.BoneIndicesA.x / numSegmentsFloat)) + (NewPoly.BoneWeightsA.y * (NewPoly.BoneIndicesA.y / numSegmentsFloat)) * 0.5;
+				//NewPoly.COLC = float3(NewPoly.BoneWeightsA.x, NewPoly.BoneWeightsA.y, 0.0);
+				NewPoly.COLC = float3(noiseVal, noiseVal, noiseVal);
 
 				//Increase buffer index counter and get current one
 				InterlockedAdd(index_counter,1,Index);
