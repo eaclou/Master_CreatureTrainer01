@@ -1670,7 +1670,9 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
             CommandSetSelected(selectedNodeID);
             critterConstructorManager.UpdateSegmentSelectionVis();
             critterConstructorManager.UpdateSegmentShaderStates();
-        }        
+        }
+
+        critterMarchingCubes.ClearCritterMesh();       
     }
 
     public void ClickSliderDimensionX(float value) {
@@ -1756,9 +1758,9 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
             RebuildCritterStatic();
         }
     }
-    public void ClickSliderRecursionForward(float value) {
+    public void ClickSliderRecursionForward(float value) {        
         if (isSegmentSelected) {
-            selectedSegment.GetComponent<CritterSegment>().sourceNode.jointLink.recursionForward = value;
+            selectedSegment.GetComponent<CritterSegment>().sourceNode.jointLink.recursionForward = value;            
             RebuildCritterStatic();
         }
     }

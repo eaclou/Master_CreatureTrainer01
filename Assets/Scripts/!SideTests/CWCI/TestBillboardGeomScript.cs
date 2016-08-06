@@ -79,7 +79,7 @@ public class TestBillboardGeomScript : MonoBehaviour {
         material.SetVector("_wind", Wind);
 
         Graphics.DrawProcedural(MeshTopology.Points, outputBuffer.count);
-        //Debug.Log("DrawProcedural! " + material.GetVector("_Size").ToString());
+        Debug.Log("DrawProcedural! " + material.GetVector("_Size").ToString());
     }
 
     void OnDestroy() {

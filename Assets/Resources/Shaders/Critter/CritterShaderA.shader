@@ -54,9 +54,9 @@
 				float3 camToWorldVector = _WorldSpaceCameraPos.xyz - posWorld.xyz;
 				o.viewDir = normalize( camToWorldVector);
 				// pos
-				i.vertex.x += sin(_Time.y + i.vertex.x * 4.78 + i.vertex.y * 7.25) * 0.025;
-				i.vertex.y += cos(_Time.z + i.vertex.y * 7.25 + i.vertex.z * 3.117) * 0.015;
-				i.vertex.z += sin(_Time.w + i.vertex.z * 2.117 + i.vertex.x * 5.78) * 0.035;
+				//i.vertex.x += sin(_Time.y + i.vertex.x * 4.78 + i.vertex.y * 7.25) * 0.025;
+				//i.vertex.y += cos(_Time.z + i.vertex.y * 7.25 + i.vertex.z * 3.117) * 0.015;
+				//i.vertex.z += sin(_Time.w + i.vertex.z * 2.117 + i.vertex.x * 5.78) * 0.035;
 				o.pos = mul( UNITY_MATRIX_MVP, i.vertex );
 				
 				
@@ -75,7 +75,8 @@
 				//float maxFogDist = 100.0;
 				//float fogAmount = clamp(0.0, 1.0, dist/maxFogDist);
 				//float4 fogColor = float4(0.04, 0.1, 0.1, 1.0);
-				o.color = (i.color * 1.25 * _Color + float4(0.5, 0.5, 0.5, 0)) * float4(diffuse, 1);
+				o.color = (i.color * 1.0 * _Color + float4(0.2, 0.2, 0.2, 0)) * float4(diffuse, 1);
+				//o.color = i.color;
 				return o;
 			}
 			
@@ -84,7 +85,8 @@
 				float viewAngle = dot(i.normalDir, i.viewDir);
 				float outlineStrength = 1.0 - pow(viewAngle, 1);
 
-				return (i.color + outlineStrength * 0.75) * (1.0 - viewAngle);
+				//return i.color;
+				return 0.5 * (i.color + outlineStrength * 0.75) * (1.0 - viewAngle) + 0.5 * i.color;
 			}
 			ENDCG
 		}

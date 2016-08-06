@@ -85,7 +85,7 @@ public class TestWeatherShaderOutput : MonoBehaviour {
         PointMaterial.SetPass(0);
         PointMaterial.SetBuffer("buf_Points", outputBuffer);
 
-        Graphics.DrawProcedural(MeshTopology.Points, VertCount);
+        //Graphics.DrawProcedural(MeshTopology.Points, VertCount);
     }
 
     private void OnDisable() {

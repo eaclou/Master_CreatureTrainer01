@@ -1,6 +1,9 @@
 #define F3 1.0/3.0 
 #define G3 1.0/6.0 
 
+float getFloat(float a) {
+	return a;
+}
 
 float simplex3d(float3 ws) {
 	//thanks to Stefan Gustavson, Linköping University, Sweden

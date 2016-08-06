@@ -6,6 +6,8 @@ public class CritterMarchingCubes : MonoBehaviour {
 
     public ComputeShader CShaderBuildMC;
     public ComputeShader CShaderSimplex;
+    public CritterDecorationsTest critterDecorationsTest;
+
     public int resolutionX = 8;
     public int resolutionY = 8;
     public int resolutionZ = 8;
@@ -23,7 +25,7 @@ public class CritterMarchingCubes : MonoBehaviour {
     SegmentTransform[] critterSegmentTransforms;
 
     private Critter critter;
-
+    
     public struct Poly {
         //Vertex A:
         public float A1, A2, A3;
@@ -49,6 +51,10 @@ public class CritterMarchingCubes : MonoBehaviour {
         public float BoneWeightC0, BoneWeightC1;
     }
 
+    public struct DecorationData {
+        public Vector3 pos;
+    }
+
     public struct SegmentTransform {
         // Position:
         public float PX, PY, PZ;
@@ -60,18 +66,13 @@ public class CritterMarchingCubes : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-        //float startTime = Time.realtimeSinceStartup;
-        //Debug.Log("TestMCMono Start()! " + startTime.ToString());
+        
 
-        //VoxelCalculator.Instance.CreateEmptyVolume(DensityVolume, _SizeZ + 4);
-        //VoxelCalculator.Instance.CreateNoiseVolume(DensityVolume, transform.position, _SizeZ + 4);
-        //VoxelCalculator.Instance.BuildChunkMesh(DensityVolume, MF.sharedMesh);
-
-        //BuildMesh();
     }
 
     public void SetCritterTransformArray(Critter sourceCritter) {
         critter = sourceCritter;
+        critterDecorationsTest.critter = sourceCritter;
 
         critterSegmentTransforms = new SegmentTransform[sourceCritter.critterSegmentList.Count];  // grab numSegments from Critter
 
@@ -94,37 +95,33 @@ public class CritterMarchingCubes : MonoBehaviour {
         // Largest boundingBox dimension determines cellResolution?
         GlobalBoundingBoxDimensions = (sourceCritter.BoundingBoxMaxCorner - sourceCritter.BoundingBoxMinCorner) * 1.15f;  // buffer amount
         GlobalBoundingBoxOffset = (sourceCritter.BoundingBoxMaxCorner + sourceCritter.BoundingBoxMinCorner) / 2f;        
-        int approxChunksPerDimension = 8;
+        int approxChunksPerDimension = 5;
         float avgRadius = (GlobalBoundingBoxDimensions.x + GlobalBoundingBoxDimensions.y + GlobalBoundingBoxDimensions.z) / 3f;
         float chunkSize = avgRadius / (float)approxChunksPerDimension;
         float cellSize = chunkSize / 8f;
-        cellResolution = cellSize;
-        //Debug.Log("GlobalBoundingBoxDimensions: " + GlobalBoundingBoxDimensions.ToString() + ", GlobalBoundingBoxOffset: " + GlobalBoundingBoxOffset.ToString() + ", avgRadius: " + avgRadius.ToString() + ", chunkSize: " + chunkSize.ToString() + ", cellSize: " + cellSize.ToString());
+        cellResolution = cellSize;        
+    }
 
-        //int numChunksX = Mathf.CeilToInt(GlobalBoundingBoxDimensions.x / (cellResolution * 8f));
-        //int numChunksY = Mathf.CeilToInt(GlobalBoundingBoxDimensions.y / (cellResolution * 8f));
-        //int numChunksZ = Mathf.CeilToInt(GlobalBoundingBoxDimensions.z / (cellResolution * 8f));
-        //Debug.Log("numChunks: (" + numChunksX.ToString() + ", " + numChunksY.ToString() + ", " + numChunksZ.ToString() + ") " + (GlobalBoundingBoxDimensions.x / cellResolution * 8f).ToString());
+    public void ClearCritterMesh() {
+
+        this.GetComponent<SkinnedMeshRenderer>().enabled = false;
     }
     
     public void BuildMesh() {
         float startTime = Time.realtimeSinceStartup;
-
+        
         // NOISE VOLUME!
         RenderTexture DensityVolume = new RenderTexture(16, 16, 0, RenderTextureFormat.RFloat, RenderTextureReadWrite.sRGB);
-        // 31 x 31 x 1 ??
         DensityVolume.volumeDepth = 16;
         DensityVolume.isVolume = true;
         DensityVolume.enableRandomWrite = true;
         DensityVolume.filterMode = FilterMode.Bilinear;
         DensityVolume.wrapMode = TextureWrapMode.Repeat;
         DensityVolume.Create();
-        //VoxelCalculator.Instance.CreateEmptyVolume(DensityVolume, _SizeZ + 4);
         int mgen_id = CShaderSimplex.FindKernel("FillEmpty");
         // uses renderTexture rather than StructuredBuffer?
         CShaderSimplex.SetTexture(mgen_id, "Result", DensityVolume);  // Links RenderTexture to the "Result" RWTexture in the compute shader?	
-        CShaderSimplex.Dispatch(mgen_id, 1, 1, 16);  // run computeShader "FillEmpty" with 1 x 1 x 31 threadGroups?
-        //VoxelCalculator.Instance.CreateNoiseVolume(DensityVolume, transform.position, _SizeZ + 4);        
+        CShaderSimplex.Dispatch(mgen_id, 1, 1, 16);  // run computeShader "FillEmpty" with 1 x 1 x 31 threadGroups?      
         mgen_id = CShaderSimplex.FindKernel("Simplex3d");
         CShaderSimplex.SetTexture(mgen_id, "Result", DensityVolume);
         CShaderSimplex.SetVector("_StartPos", new Vector4(0f, 0f, 0f, 0.0f));  // position of the Chunk GameObject
@@ -134,28 +131,6 @@ public class CritterMarchingCubes : MonoBehaviour {
         CShaderSimplex.SetFloat("_NoiseC", 0.000695f);
         CShaderSimplex.Dispatch(mgen_id, 1, 1, 16);  // Fill shared RenderTexture with GPU simplex Noise
         
-        //Debug.Log("Noise generation time:  " + (1000.0f * (Time.realtimeSinceStartup - startTime)).ToString() + "ms");
-        //VoxelCalculator.Instance.BuildChunkMesh(DensityVolume, MF.sharedMesh);
-        
-        /*
-        int noiseTextureSize = 8;
-        Texture3D noiseTexture = new Texture3D(noiseTextureSize, noiseTextureSize, noiseTextureSize, TextureFormat.RGBA32, true);
-        Color[] cols = new Color[noiseTextureSize * noiseTextureSize * noiseTextureSize];
-        //float[] values = new float[noiseTextureSize * noiseTextureSize * noiseTextureSize];
-        int colourCount = 0;
-        for (int z = 0; z < noiseTextureSize; z++) {
-            for (int y = 0; y < noiseTextureSize; y++) {
-                for (int x = 0; x < noiseTextureSize; x++) {
-                    float noise = SimplexNoise.SimplexNoise.GetNoise(x, y, z);
-                    cols[colourCount] = new Color(noise, noise, noise, 1.0f);
-                    //values[colourCount] = SimplexNoise.SimplexNoise.GetNoise(x, y, z);
-                    colourCount++;
-                }
-            }
-        }
-        noiseTexture.SetPixels(cols);
-        noiseTexture.Apply();
-        */
 
         ComputeBuffer cBufferSegmentTransform = new ComputeBuffer(critterSegmentTransforms.Length, sizeof(float) * (3 + 3 + 4));
         cBufferSegmentTransform.SetData(critterSegmentTransforms);
@@ -207,6 +182,9 @@ public class CritterMarchingCubes : MonoBehaviour {
                         ComputeBuffer cBuffer = new ComputeBuffer(numPolys[0], cBufferStride);  // 18 floats x 4 bytes/float = 72   + COLORS! 9 x 4 = 36  = 108   + BONES! 6x4 = 24 + 6 xint...
                         cBuffer.SetData(polyArray);
 
+                        //procMaterial.SetBuffer("buf_Polys", cBuffer);  // TESTING!!!!
+                        //procBufferLength = numPolys[0];
+
                         CShaderBuildMC.SetBuffer(id, "buffer", cBuffer);
                         CShaderBuildMC.SetInt("_CalcNumPolys", 0);  // Actually calc tris        
                         CShaderBuildMC.Dispatch(id, 1, 1, 1);
@@ -223,8 +201,12 @@ public class CritterMarchingCubes : MonoBehaviour {
             }
         }
 
+        
+        CritterDecorationsTest.decoration[] points = new CritterDecorationsTest.decoration[totalNumPolys];
+        
         //Construct mesh using received data 
         int vindex = 0;
+        int decindex = 0;
                 
         // Why same number of tris as vertices?  == // because all triangles have duplicate verts - no shared vertices?
         Vector3[] vertices = new Vector3[totalNumPolys * 3];
@@ -253,6 +235,10 @@ public class CritterMarchingCubes : MonoBehaviour {
                     weights[vindex].weight0 = PolyArrayArray[i][ix].BoneWeightA0;
                     weights[vindex].weight1 = PolyArrayArray[i][ix].BoneWeightA1;
 
+                    points[decindex].pos = vPos;
+                    points[decindex].normal = normals[vindex];
+                    //decorationsDataArray[vindex].pos = vPos;
+                    decindex++;
                     vindex++;
 
                     //B1,B2,B3
@@ -267,6 +253,7 @@ public class CritterMarchingCubes : MonoBehaviour {
                     weights[vindex].weight0 = PolyArrayArray[i][ix].BoneWeightB0;
                     weights[vindex].weight1 = PolyArrayArray[i][ix].BoneWeightB1;
 
+                    //decorationsDataArray[vindex].pos = vPos;
                     vindex++;
 
                     //C1,C2,C3
@@ -281,10 +268,15 @@ public class CritterMarchingCubes : MonoBehaviour {
                     weights[vindex].weight0 = PolyArrayArray[i][ix].BoneWeightC0;
                     weights[vindex].weight1 = PolyArrayArray[i][ix].BoneWeightC1;
 
+                    //decorationsDataArray[vindex].pos = vPos;
                     vindex++;
                 }
             }            
         }
+
+        critterDecorationsTest.InitializeBuffers(points);
+        //critterDecorationsTest.decorationsBuffer = new ComputeBuffer(totalNumPolys * 3, 12);
+        //critterDecorationsTest.decorationsBuffer.SetData(decorationsDataArray);
 
         //We have got all data and are ready to setup a new mesh!
         //newMesh.Clear();
@@ -311,6 +303,7 @@ public class CritterMarchingCubes : MonoBehaviour {
         SkinnedMeshRenderer skinnedMeshRenderer = this.GetComponent<SkinnedMeshRenderer>();
         skinnedMeshRenderer.bones = bones;
         skinnedMeshRenderer.sharedMesh = newMesh;
+        skinnedMeshRenderer.enabled = true;
 
         //cBuffer.Dispose();
         //cBufferNumPoly.Dispose();
@@ -327,8 +320,7 @@ public class CritterMarchingCubes : MonoBehaviour {
 	}
 
     void OnDestroy() {
-        
-        //DensityVolume.Release();        
 
+        //DensityVolume.Release(); 
     }
 }
