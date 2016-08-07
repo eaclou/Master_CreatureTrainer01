@@ -5,9 +5,9 @@
 #define thread_group_size_y 10
 #define thread_group_size_z 10
 
-#define group_size_x 10
-#define group_size_y 10
-#define group_size_z 10
+#define group_size_x 1
+#define group_size_y 1
+#define group_size_z 1
 
 struct positionStruct {
 	float3 pos;

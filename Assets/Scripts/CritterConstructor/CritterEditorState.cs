@@ -9,6 +9,7 @@ public class CritterEditorState : MonoBehaviour {
     public CritterConstructorManager critterConstructorManager;
 
     public CritterMarchingCubes critterMarchingCubes;
+    //public CritterDecorationsTest critterDecorationsTest;
 
     public static int nextNodeInnov = 0;
     public static int nextAddonInnov = 0;

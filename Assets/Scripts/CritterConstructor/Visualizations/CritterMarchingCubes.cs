@@ -105,6 +105,7 @@ public class CritterMarchingCubes : MonoBehaviour {
     public void ClearCritterMesh() {
 
         this.GetComponent<SkinnedMeshRenderer>().enabled = false;
+        critterDecorationsTest.TurnOff();
     }
     
     public void BuildMesh() {
@@ -202,7 +203,7 @@ public class CritterMarchingCubes : MonoBehaviour {
         }
 
         
-        CritterDecorationsTest.decoration[] points = new CritterDecorationsTest.decoration[totalNumPolys];
+        CritterDecorationsTest.decorationStruct[] points = new CritterDecorationsTest.decorationStruct[totalNumPolys];
         
         //Construct mesh using received data 
         int vindex = 0;
@@ -273,11 +274,7 @@ public class CritterMarchingCubes : MonoBehaviour {
                 }
             }            
         }
-
-        critterDecorationsTest.InitializeBuffers(points);
-        //critterDecorationsTest.decorationsBuffer = new ComputeBuffer(totalNumPolys * 3, 12);
-        //critterDecorationsTest.decorationsBuffer.SetData(decorationsDataArray);
-
+        
         //We have got all data and are ready to setup a new mesh!
         //newMesh.Clear();
         Mesh newMesh = new Mesh();
@@ -309,7 +306,9 @@ public class CritterMarchingCubes : MonoBehaviour {
         //cBufferNumPoly.Dispose();
         //cBuffer.Release();
         cBufferSegmentTransform.Release();
-        
+
+        critterDecorationsTest.TurnOn(points);
+
         float calcTime = Time.realtimeSinceStartup - startTime;
         Debug.Log("MeshCreated! " + calcTime.ToString());
     }

@@ -40,13 +40,24 @@
 			struct segmentTransforms {
 				float3 pos;
 				float4 rot;
+				float3 scale;
 				float4x4 xform;
+			};
+
+			struct bindPoseStruct {
+				float4x4 inverse;
+			};
+
+			struct skinningStruct {
+				int2 indices;
+				float2 weights;
 			};
 
 			// buffer containing points we want to draw:
 			StructuredBuffer<data> buf_decorations;
-
 			StructuredBuffer<segmentTransforms> buf_xforms;
+			StructuredBuffer<bindPoseStruct> buf_bindPoses;
+			StructuredBuffer<skinningStruct> buf_skinningData;
 			
 			struct fragInput {
 				float4 pos : SV_POSITION;
@@ -54,6 +65,7 @@
 				float2 uv : TEXCOORD0;
 				float4 color : COLOR0;
 				float3 viewDir : TEXCOORD2;
+				int index : TEXCOORD3;
 				UNITY_FOG_COORDS(1)
 			};
 
@@ -105,8 +117,30 @@
 				return distance;
 			}
 
-			float4 CalculateSkinning(float4 pos) {
-				int2 indices = int2(0, 0);  // just in case, zero out values
+			void CalculateSkinning(inout float4 pos, inout float3 normal, int id) {
+				
+				//return float4(pos.xyz + buf_xforms[buf_skinningData[id].indices.x].pos * 1, 1);
+				//buf_skinningData[id]
+				float4 norm4 = float4(normal, 0);  // 0 for 'direction' rather than position
+				
+				//Get position in local segment space for each Bone by using bindPose inverse Mat4x4:
+				float4 localBonePos0 = mul(buf_bindPoses[buf_skinningData[id].indices.x].inverse, pos);
+				float4 localBonePos1 = mul(buf_bindPoses[buf_skinningData[id].indices.y].inverse, pos);
+				float4 localBoneNorm0 = mul(buf_bindPoses[buf_skinningData[id].indices.x].inverse, norm4);
+				float4 localBoneNorm1 = mul(buf_bindPoses[buf_skinningData[id].indices.y].inverse, norm4);
+				// Transform this bindPose position by the CURRENT segment position:
+				float4 skinnedBonePos0 = mul(buf_xforms[buf_skinningData[id].indices.x].xform, localBonePos0);
+				float4 skinnedBonePos1 = mul(buf_xforms[buf_skinningData[id].indices.y].xform, localBonePos1);
+				float4 skinnedBoneNorm0 = mul(buf_xforms[buf_skinningData[id].indices.x].xform, localBoneNorm0);
+				float4 skinnedBoneNorm1 = mul(buf_xforms[buf_skinningData[id].indices.y].xform, localBoneNorm1);
+				// Combine positions:
+				float4 skinnedPos = skinnedBonePos0 * buf_skinningData[id].weights.x + skinnedBonePos1 * buf_skinningData[id].weights.y;
+				float4 skinnedNorm = skinnedBoneNorm0 * buf_skinningData[id].weights.x + skinnedBoneNorm1 * buf_skinningData[id].weights.y;
+				pos = skinnedPos;
+				normal = skinnedNorm.xyz;
+				//return float4(skinnedPos);
+
+				/*int2 indices = int2(0, 0);  // just in case, zero out values
 				float2 weights = float2(0.0, 0.0);
 
 				// BoneWeights!!!:
@@ -142,10 +176,12 @@
 				float3 newPos = (pos.xyz - buf_xforms[indices.x].pos, 1) + buf_xforms[indices.x].pos;
 				//float4 newPos = pos + 1.0;
 				return float4(newPos, 1);
+				*/
 			}
 
 			fragInput vert(uint id : SV_VertexID) {
 				fragInput o;
+				o.index = id;
 				o.pos = float4(buf_decorations[id].pos + _worldPos, 1.0f);
 				//  + simplex3d(buf_decorations[id].pos)
 				o.norm = buf_decorations[id].normal;
@@ -192,29 +228,35 @@
 				//}
 				
 				fragInput pIn;
+				pIn.index = p[0].index;
 				pIn.norm = p[0].norm;
 				pIn.color = p[0].color;
 				pIn.viewDir = p[0].viewDir;
 				
-				pIn.pos = CalculateSkinning(v[0]);
+				//pIn.pos = v[0];				
+				pIn.pos = v[0];
+				CalculateSkinning(pIn.pos, pIn.norm, p[0].index);
 				pIn.pos = mul(UNITY_MATRIX_VP, pIn.pos);
 				pIn.uv = float2(0, 0);
 				UNITY_TRANSFER_FOG(pIn, pIn.pos);
 				triStream.Append(pIn);
 
-				pIn.pos = CalculateSkinning(v[1]);
+				pIn.pos = v[1];
+				CalculateSkinning(pIn.pos, pIn.norm, p[0].index);
 				pIn.pos = mul(UNITY_MATRIX_VP, pIn.pos);
 				pIn.uv = float2(0, 1);
 				UNITY_TRANSFER_FOG(pIn, pIn.pos);
 				triStream.Append(pIn);
 
-				pIn.pos = CalculateSkinning(v[2]);
+				pIn.pos = v[2];
+				CalculateSkinning(pIn.pos, pIn.norm, p[0].index);
 				pIn.pos = mul(UNITY_MATRIX_VP, pIn.pos);
 				pIn.uv = float2(1, 0);
 				UNITY_TRANSFER_FOG(pIn, pIn.pos);
 				triStream.Append(pIn);
 
-				pIn.pos = CalculateSkinning(v[3]);
+				pIn.pos = v[3];
+				CalculateSkinning(pIn.pos, pIn.norm, p[0].index);
 				pIn.pos = mul(UNITY_MATRIX_VP, pIn.pos);
 				pIn.uv = float2(1, 1);
 				UNITY_TRANSFER_FOG(pIn, pIn.pos);
@@ -227,8 +269,8 @@
 				
 				
 				fixed4 col = tex2D(_Sprite, i.uv) * _Color * i.color;
-				col = 0.5 * (col + outlineStrength * 0.75) * (1.0 - viewAngle) + 0.5 * col;
-				col.a = 0.2;
+				col = 0.2 * (col + outlineStrength * 0.75) * (1.0 - viewAngle) + 0.8 * col;
+				col.a = 0.3;
 
 				UNITY_APPLY_FOG(i.fogCoord, col); // apply fog
 

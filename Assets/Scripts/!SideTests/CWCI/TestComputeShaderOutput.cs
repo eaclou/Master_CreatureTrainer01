@@ -38,7 +38,7 @@ public class TestComputeShaderOutput : MonoBehaviour {
             return;
         }
 
-        computeShader.Dispatch(CSKernel, 10, 10, 10);
+        computeShader.Dispatch(CSKernel, 1, 1, 1);
     }
 
     void ReleaseBuffers() {
@@ -61,9 +61,9 @@ public class TestComputeShaderOutput : MonoBehaviour {
         if(Debugrender) {
             Dispatch();
             PointMaterial.SetPass(0);
-            PointMaterial.SetVector("_worldPos", transform.position);
+            //PointMaterial.SetVector("_worldPos", transform.position);
 
-            Graphics.DrawProcedural(MeshTopology.Points, VertCount);
+            Graphics.DrawProcedural(MeshTopology.Quads, VertCount);
         }
     }
 

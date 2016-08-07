@@ -1,0 +1,44 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+//#include "Assets/Resources/Shaders/Inc/DistanceFuncs.cginc"
+
+struct skinningStruct
+{
+    int2 indices;
+    float2 weights;
+};
+
+struct segmentTransforms {
+	float3 pos;
+	float4 rot;
+	float4x4 xform;
+};
+
+struct data {
+	float3 pos;
+	float3 normal;
+};
+
+struct indexStruct {
+	int index;
+};
+
+// struct transforms information
+StructuredBuffer<data> buf_DecorationData;
+RWStructuredBuffer<skinningStruct> buf_SkinningData;
+StructuredBuffer<segmentTransforms> buf_SegmentData;
+RWStructuredBuffer<indexStruct> buf_IndexData;
+
+[numthreads(64,1,1)]
+void CSMain (uint grpIndex : SV_GroupIndex, uint3 id : SV_DispatchThreadID, uint3 grpID : SV_GroupID, uint3 grpTID : SV_GroupThreadID)
+{
+	// Calculate skinning information for each decoration here -- see if can share buffers between the different shaders
+	int idx = id.x; // hopefully the linear 1D index of the decorations Buffer....
+	
+	uint elementsDeco;
+	uint strideDeco;
+	buf_DecorationData.GetDimensions(elementsDeco, strideDeco);  // cache the length of xForm buffer?
+
+	buf_IndexData[idx].index = idx;
+}
