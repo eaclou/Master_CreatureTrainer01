@@ -1,6 +1,10 @@
 ﻿Shader "Custom/Critter/CritterShaderA" {
 	Properties {
-		_Color ("Color", Color) = (1,1,1,1)
+		_Tint ("Tint", Color) = (1,1,1,1)
+		_Diffuse ("Diffuse", Range(0.0, 1.0)) = 0
+		_DiffuseWrap ("DiffuseWrap", Range(0.0, 1.0)) = 0
+		_RimGlow ("RimGlow", Range(0.0, 1.0)) = 0
+		_RimPow("RimPow", Range(0.1, 10.0)) = 1
 	}
 	SubShader {
 		Tags { "RenderType"="Opaque" }
@@ -8,16 +12,20 @@
 		
 		pass {
 			CGPROGRAM
-			// Physically based Standard lighting model, and enable shadows on all light types
+			
+			#pragma target 5.0
 			#pragma vertex vert
 			#pragma fragment frag
 
-			// Use shader model 3.0 target, to get nicer looking lighting
-			//#pragma target 3.0
-
-			
+			#pragma multi_compile_fog 
+			#include "UnityCG.cginc"
+						
 			// uniforms
-			uniform fixed4 _Color;	
+			uniform fixed4 _Tint;	
+			uniform float _Diffuse;
+			uniform float _DiffuseWrap;
+			uniform float _RimGlow;
+			uniform float _RimPow;
 
 			struct vertexInput {
 				float4 vertex : POSITION; // position in object coordinates
@@ -31,11 +39,12 @@
 			
 			struct fragmentInput
 			{
-				float4 pos : SV_Position;
+				float4 pos : SV_Position;				
 				//float4 uv : TEXCOORD0;
 				float4 color : COLOR0;
 				float3 normalDir : TEXCOORD1;
 				float3 viewDir : TEXCOORD2;
+				UNITY_FOG_COORDS(0)
 			};
 
 			fragmentInput vert( vertexInput i) 
@@ -47,7 +56,8 @@
 				o.normalDir = normalize ( mul ( float4( i.normal, 0.0 ), _World2Object).xyz );
 				//float3 lightDirection = normalize(_WorldSpaceLightPos0.xyz);
 				float3 lightDirection = float3(0.2, 1.0, 0.3);
-				float3 diffuse = dot(o.normalDir, lightDirection) * 0.25 + 0.75;
+				float3 diffuse = dot(o.normalDir, lightDirection);
+				diffuse = diffuse * (1.0 - _DiffuseWrap * 0.5) + _DiffuseWrap * 0.5;
 				//world position
 				float4 posWorld = mul(_Object2World, i.vertex);				
 				//view direction
@@ -75,18 +85,24 @@
 				//float maxFogDist = 100.0;
 				//float fogAmount = clamp(0.0, 1.0, dist/maxFogDist);
 				//float4 fogColor = float4(0.04, 0.1, 0.1, 1.0);
-				o.color = (i.color * 1.0 * _Color + float4(0.2, 0.2, 0.2, 0)) * float4(diffuse, 1);
+				o.color = lerp(i.color, i.color * float4(diffuse, 1), _Diffuse);
+
+				UNITY_TRANSFER_FOG(o, o.pos);
 				//o.color = i.color;
 				return o;
 			}
 			
 			half4 frag( fragmentInput i ) : COLOR
 			{
-				float viewAngle = dot(i.normalDir, i.viewDir);
-				float outlineStrength = 1.0 - pow(viewAngle, 1);
-
+				float viewAngle = saturate(dot(i.normalDir, i.viewDir));
+				//float outlineStrength = 1.0 - pow(viewAngle, 1);
+				float outlineStrength = (1.0 - pow(viewAngle, _RimPow));
 				//return i.color;
-				return 0.5 * (i.color + outlineStrength * 0.75) * (1.0 - viewAngle) + 0.5 * i.color;
+				//float4 col = 0.5 * (i.color + outlineStrength * 0.75) * (1.0 - viewAngle) + 0.5 * i.color;
+				float4 col = i.color * _Tint;				
+				col.xyz = _RimGlow * (col.xyz + outlineStrength) + (1.0 - _RimGlow) * col.xyz;
+				UNITY_APPLY_FOG(i.fogCoord, col);
+				return col;
 			}
 			ENDCG
 		}

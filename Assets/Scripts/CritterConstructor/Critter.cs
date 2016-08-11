@@ -170,6 +170,7 @@ public class Critter : MonoBehaviour {
     }
 
     public void UpdateCritterFromGenome() {  // only use if the genome node graph hasn't changed -- only attributes & settings!!!
+        //Debug.Log("UpdateCritterFromGenome: ");
         for (int i = 0; i < critterSegmentList.Count; i++) {  // cycle through ChildNodes of currentNode
             
             //Debug.Log("dimensions: " + masterCritterGenome.CritterNodeList[i].dimensions.ToString());
@@ -200,8 +201,10 @@ public class Critter : MonoBehaviour {
         Vector3 restAngleDir = newSegment.sourceNode.jointLink.restAngleDir;
 
         // MODIFY AttachDir based on recursion Forward:
+        //Debug.Log("SetSegmentTransform " + newSegment.id.ToString() + ", recursionNumber: " + newSegment.recursionNumber.ToString());
         if (newSegment.recursionNumber > 1) {  // if segment is not the root of a recursion chain
             attachDir = Vector3.Lerp(attachDir, new Vector3(0f, 0f, 1f), newSegment.sourceNode.jointLink.recursionForward);
+            //Debug.Log("SetSegmentTransform " + newSegment.id.ToString() + ", recFor: " + newSegment.sourceNode.jointLink.recursionForward.ToString() + ", attachDir: " + attachDir.ToString());
         }
         // MODIFY AttachDir based on Mirroring!!!!!
         if (newSegment.mirrorX) {
@@ -421,7 +424,7 @@ public class Critter : MonoBehaviour {
     }
     
     public void RebuildCritterFromGenomeRecursive(bool physicsOn, bool useSegments, float variableMass, bool editor) {
-        //Debug.Log("RebuildCritterFromGenomeRecursive: " + masterCritterGenome.CritterNodeList.Count.ToString());
+        //Debug.Log("RebuildCritterFromGenomeRecursive: " + physicsOn.ToString() + ", " + useSegments.ToString() + ", " + variableMass.ToString() + ", " + editor.ToString());
         BoundingBoxMinCorner = Vector3.zero;
         BoundingBoxMaxCorner = Vector3.zero;
         // IMPROVE THIS SO IT WORKS FOR BOTH CritterConstructer AND Trainer
@@ -516,7 +519,7 @@ public class Critter : MonoBehaviour {
                 }
                 else {
                     newGO.SetActive(false);
-                }                    
+                }  
   
                 newSegment.InitGamePiece();  // create the mesh and some other initialization stuff
                 newSegment.sourceNode = currentBuildSegmentList[i].sourceNode;
@@ -595,6 +598,55 @@ public class Critter : MonoBehaviour {
                     configJoint.angularYZLimitSpring = limitSpring;
                     */
                 }
+
+                // CHECK FOR RECURSION:
+                if (currentBuildSegmentList[i].sourceNode.jointLink.numberOfRecursions > 0) { // if the node being considered has recursions:
+                    //Debug.Log("currentNode: " + currentBuildSegmentList[i].sourceNode.ID.ToString() + "newSegmentRecursion#: " + newSegment.recursionNumber.ToString() + ", parentRecursion#: " + currentBuildSegmentList[i].parentSegment.recursionNumber.ToString());
+                    if (newSegment.sourceNode == currentBuildSegmentList[i].parentSegment.sourceNode) {  // if this segment's sourceNode is the same is its parent Segment's sourceNode, then it is not the root of the recursion chain!
+                        //Debug.Log("newSegment.sourceNode == currentBuildNodeParentSegmentList[i].sourceNode!");
+
+                        // Are we at the end of a recursion chain?
+                        if (currentBuildSegmentList[i].parentSegment.recursionNumber >= currentBuildSegmentList[i].sourceNode.jointLink.numberOfRecursions) {
+                            //Debug.Log("recursion number greater than numRecursions! ( " + currentBuildSegmentList[i].parentSegment.recursionNumber.ToString() + " vs " + currentBuildSegmentList[i].sourceNode.jointLink.numberOfRecursions.ToString());
+                            newSegment.recursionNumber = currentBuildSegmentList[i].parentSegment.recursionNumber + 1; //
+                            //newSegment.scalingFactor *= currentBuildSegmentList[i].sourceNode.jointLink.recursionScalingFactor;
+                        }
+                        else {  // create new recursion instance!!
+                            BuildSegmentInfo newSegmentInfo = new BuildSegmentInfo();
+                            newSegmentInfo.sourceNode = currentBuildSegmentList[i].sourceNode;  // request a segment to be built again based on the current sourceNode
+                            newSegment.recursionNumber = currentBuildSegmentList[i].parentSegment.recursionNumber + 1;
+                            //newSegment.scalingFactor *= currentBuildSegmentList[i].sourceNode.jointLink.recursionScalingFactor; // propagate scaling factor
+                            newSegmentInfo.parentSegment = newSegment; // parent of itself (the just-built Segment)
+                            nextBuildSegmentList.Add(newSegmentInfo);
+                            // If the node also has Symmetry:
+                            if (newSegmentInfo.sourceNode.jointLink.symmetryType != CritterJointLink.SymmetryType.None) {
+                                // the child node has some type of symmetry, so add a buildOrder for a mirrored Segment:
+                                BuildSegmentInfo newSegmentInfoMirror = new BuildSegmentInfo();
+                                newSegmentInfoMirror.sourceNode = currentBuildSegmentList[i].sourceNode;  // uses same sourceNode, but tags as Mirror:
+                                newSegmentInfoMirror.isMirror = true;  // This segment is the COPY, not the original
+                                newSegmentInfoMirror.parentSegment = newSegment;  // 
+                                nextBuildSegmentList.Add(newSegmentInfoMirror);
+                            }
+                        }
+                    }
+                    else { // this is the root --- its sourceNode has recursion, and this segment is unique from its parentNode:
+                        BuildSegmentInfo newSegmentInfo = new BuildSegmentInfo();
+                        newSegmentInfo.sourceNode = currentBuildSegmentList[i].sourceNode;
+                        newSegment.recursionNumber = 1;
+                        newSegmentInfo.parentSegment = newSegment;
+                        nextBuildSegmentList.Add(newSegmentInfo);
+                        // If the node also has Symmetry:
+                        if (newSegmentInfo.sourceNode.jointLink.symmetryType != CritterJointLink.SymmetryType.None) {
+                            // the child node has some type of symmetry, so add a buildOrder for a mirrored Segment:
+                            BuildSegmentInfo newSegmentInfoMirror = new BuildSegmentInfo();
+                            newSegmentInfoMirror.sourceNode = currentBuildSegmentList[i].sourceNode;  // uses same sourceNode, but tags as Mirror:
+                            newSegmentInfoMirror.isMirror = true;  // This segment is the COPY, not the original
+                            newSegmentInfoMirror.parentSegment = newSegment;  // 
+                            nextBuildSegmentList.Add(newSegmentInfoMirror);
+                        }
+                    }
+                }
+
                 // PositionSEGMENT GameObject!!!
                 if (newSegment.id == 0) {  // if ROOT NODE:
 
@@ -1042,53 +1094,7 @@ public class Critter : MonoBehaviour {
                     
                 }
                 
-                // CHECK FOR RECURSION:
-                if (currentBuildSegmentList[i].sourceNode.jointLink.numberOfRecursions > 0) { // if the node being considered has recursions:
-                    //Debug.Log("currentNode: " + currentBuildSegmentList[i].sourceNode.ID.ToString() + "newSegmentRecursion#: " + newSegment.recursionNumber.ToString() + ", parentRecursion#: " + currentBuildSegmentList[i].parentSegment.recursionNumber.ToString());
-                    if (newSegment.sourceNode == currentBuildSegmentList[i].parentSegment.sourceNode) {  // if this segment's sourceNode is the same is its parent Segment's sourceNode, then it is not the root of the recursion chain!
-                        //Debug.Log("newSegment.sourceNode == currentBuildNodeParentSegmentList[i].sourceNode!");
-
-                        // Are we at the end of a recursion chain?
-                        if (currentBuildSegmentList[i].parentSegment.recursionNumber >= currentBuildSegmentList[i].sourceNode.jointLink.numberOfRecursions) {
-                            //Debug.Log("recursion number greater than numRecursions! ( " + currentBuildSegmentList[i].parentSegment.recursionNumber.ToString() + " vs " + currentBuildSegmentList[i].sourceNode.jointLink.numberOfRecursions.ToString());
-                            newSegment.recursionNumber = currentBuildSegmentList[i].parentSegment.recursionNumber + 1; //
-                            //newSegment.scalingFactor *= currentBuildSegmentList[i].sourceNode.jointLink.recursionScalingFactor;
-                        }
-                        else {  // create new recursion instance!!
-                            BuildSegmentInfo newSegmentInfo = new BuildSegmentInfo();
-                            newSegmentInfo.sourceNode = currentBuildSegmentList[i].sourceNode;  // request a segment to be built again based on the current sourceNode
-                            newSegment.recursionNumber = currentBuildSegmentList[i].parentSegment.recursionNumber + 1;
-                            //newSegment.scalingFactor *= currentBuildSegmentList[i].sourceNode.jointLink.recursionScalingFactor; // propagate scaling factor
-                            newSegmentInfo.parentSegment = newSegment; // parent of itself (the just-built Segment)
-                            nextBuildSegmentList.Add(newSegmentInfo);
-                            // If the node also has Symmetry:
-                            if (newSegmentInfo.sourceNode.jointLink.symmetryType != CritterJointLink.SymmetryType.None) {
-                                // the child node has some type of symmetry, so add a buildOrder for a mirrored Segment:
-                                BuildSegmentInfo newSegmentInfoMirror = new BuildSegmentInfo();
-                                newSegmentInfoMirror.sourceNode = currentBuildSegmentList[i].sourceNode;  // uses same sourceNode, but tags as Mirror:
-                                newSegmentInfoMirror.isMirror = true;  // This segment is the COPY, not the original
-                                newSegmentInfoMirror.parentSegment = newSegment;  // 
-                                nextBuildSegmentList.Add(newSegmentInfoMirror);
-                            }
-                        }
-                    }
-                    else { // this is the root --- its sourceNode has recursion, and this segment is unique from its parentNode:
-                        BuildSegmentInfo newSegmentInfo = new BuildSegmentInfo();
-                        newSegmentInfo.sourceNode = currentBuildSegmentList[i].sourceNode;
-                        newSegment.recursionNumber = 1;
-                        newSegmentInfo.parentSegment = newSegment;
-                        nextBuildSegmentList.Add(newSegmentInfo);
-                        // If the node also has Symmetry:
-                        if (newSegmentInfo.sourceNode.jointLink.symmetryType != CritterJointLink.SymmetryType.None) {
-                            // the child node has some type of symmetry, so add a buildOrder for a mirrored Segment:
-                            BuildSegmentInfo newSegmentInfoMirror = new BuildSegmentInfo();
-                            newSegmentInfoMirror.sourceNode = currentBuildSegmentList[i].sourceNode;  // uses same sourceNode, but tags as Mirror:
-                            newSegmentInfoMirror.isMirror = true;  // This segment is the COPY, not the original
-                            newSegmentInfoMirror.parentSegment = newSegment;  // 
-                            nextBuildSegmentList.Add(newSegmentInfoMirror);
-                        }
-                    }
-                }
+                
                 // Figure out how many unique Child nodes this built node has:
                 //int numberOfChildNodes = currentBuildSegmentList[i].sourceNode.attachedJointLinkList.Count; // old
                 int numberOfChildNodes = currentBuildSegmentList[i].sourceNode.attachedChildNodesIdList.Count;

@@ -8,19 +8,32 @@ public class CritterMarchingCubes : MonoBehaviour {
     public ComputeShader CShaderSimplex;
     public CritterDecorationsTest critterDecorationsTest;
 
-    public int resolutionX = 8;
-    public int resolutionY = 8;
-    public int resolutionZ = 8;
+    private int resolutionX = 8;
+    private int resolutionY = 8;
+    private int resolutionZ = 8;
     
-    public int _MaxBufferSize = 21660;
-    public int _Trilinear = 1;
-    public int _MultiSampling = 1;
+    private int _MaxBufferSize = 21660;
+    private int _Trilinear = 1;
+    private int _MultiSampling = 1;
+    private float _Scale = 1f;
+    private float cellResolution = 1f;
+    private Vector3 GlobalBoundingBoxDimensions = new Vector3(16f, 8f, 8f);
+    private Vector3 GlobalBoundingBoxOffset = new Vector3(0f, 0f, 0f);
 
-    public float _Scale = 1f;
-
-    public float cellResolution = 1f;
-    public Vector3 GlobalBoundingBoxDimensions = new Vector3(16f, 8f, 8f);
-    public Vector3 GlobalBoundingBoxOffset = new Vector3(0f, 0f, 0f);
+    public Color colorPrimary = new Color(1, 1, 1, 1);
+    public Color colorSecondary = new Color(0, 0, 0, 1);
+    public float colorNoiseScale = 1f;
+    public float colorSmlAmplitude = 1f;
+    public float colorMedAmplitude = 1f;
+    public float colorLrgAmplitude = 1f;
+    public float colorContrast = 0f;
+    public float colorThreshold = 0.5f;
+    public Vector3 skinNoiseScale = Vector3.one;
+    public float skinNoiseAmplitude = 1f;
+    public Vector3 skinLocalTaper = Vector3.zero;
+    public Vector3 skinLocalSinFreq = Vector3.one;
+    public Vector3 skinLocalSinAmp = Vector3.one;
+    // Local Segment-space modifications, sin, taper, etc.
 
     SegmentTransform[] critterSegmentTransforms;
 
@@ -125,11 +138,11 @@ public class CritterMarchingCubes : MonoBehaviour {
         CShaderSimplex.Dispatch(mgen_id, 1, 1, 16);  // run computeShader "FillEmpty" with 1 x 1 x 31 threadGroups?      
         mgen_id = CShaderSimplex.FindKernel("Simplex3d");
         CShaderSimplex.SetTexture(mgen_id, "Result", DensityVolume);
-        CShaderSimplex.SetVector("_StartPos", new Vector4(0f, 0f, 0f, 0.0f));  // position of the Chunk GameObject
-        CShaderSimplex.SetFloat("_Str", 4f);
-        CShaderSimplex.SetFloat("_NoiseA", 0.000718f);
-        CShaderSimplex.SetFloat("_NoiseB", 0.000632f);
-        CShaderSimplex.SetFloat("_NoiseC", 0.000695f);
+        //CShaderSimplex.SetVector("_StartPos", new Vector4(0f, 0f, 0f, 0.0f));  // position of the Chunk GameObject
+        //CShaderSimplex.SetFloat("_Str", 4f);
+        //CShaderSimplex.SetFloat("_NoiseA", 0.000718f);
+        //CShaderSimplex.SetFloat("_NoiseB", 0.000632f);
+        //CShaderSimplex.SetFloat("_NoiseC", 0.000695f);
         CShaderSimplex.Dispatch(mgen_id, 1, 1, 16);  // Fill shared RenderTexture with GPU simplex Noise
         
 
@@ -169,6 +182,21 @@ public class CritterMarchingCubes : MonoBehaviour {
                     CShaderBuildMC.SetFloat("_GlobalOffsetY", chunkOffset.y);
                     CShaderBuildMC.SetFloat("_GlobalOffsetZ", chunkOffset.z);
                     CShaderBuildMC.SetFloat("_CellSize", cellResolution);
+                    CShaderBuildMC.SetVector("_ColorPrimary", colorPrimary);
+                    CShaderBuildMC.SetVector("_ColorSecondary", colorSecondary);
+                    CShaderBuildMC.SetFloat("_ColorNoiseScale", colorNoiseScale);
+                    CShaderBuildMC.SetFloat("_ColorSmlAmplitude", colorSmlAmplitude);
+                    CShaderBuildMC.SetFloat("_ColorMedAmplitude", colorMedAmplitude);
+                    CShaderBuildMC.SetFloat("_ColorLrgAmplitude", colorLrgAmplitude);
+                    CShaderBuildMC.SetFloat("_ColorContrast", colorContrast);
+                    CShaderBuildMC.SetFloat("_ColorThreshold", colorThreshold);
+                    CShaderBuildMC.SetVector("_SkinNoiseScale", skinNoiseScale);
+                    CShaderBuildMC.SetFloat("_SkinNoiseAmplitude", skinNoiseAmplitude);
+                    CShaderBuildMC.SetVector("_SkinLocalTaper", skinLocalTaper);
+                    CShaderBuildMC.SetVector("_SkinLocalSinFreq", skinLocalSinFreq);
+                    CShaderBuildMC.SetVector("_SkinLocalSinAmp", skinLocalSinAmp);
+                    // Local Segment-space modifications, sin, taper, etc.
+
                     CShaderBuildMC.SetBuffer(id, "numPolyBuffer", cBufferNumPoly);
                     CShaderBuildMC.Dispatch(id, 1, 1, 1);  // calc num polys      
                     cBufferNumPoly.GetData(numPolys);  // get numPolys
@@ -238,6 +266,7 @@ public class CritterMarchingCubes : MonoBehaviour {
 
                     points[decindex].pos = vPos;
                     points[decindex].normal = normals[vindex];
+                    points[decindex].color = new Vector3(colors[vindex].r, colors[vindex].g, colors[vindex].b);
                     //decorationsDataArray[vindex].pos = vPos;
                     decindex++;
                     vindex++;

@@ -13,13 +13,13 @@
 #define G3 1.0/6.0 
 
 //Start position of this chunk
-float4 _StartPos;
+//float4 _StartPos;
 
 //Noise parameters
-float _Str;
-float _NoiseA;
-float _NoiseB;
-float _NoiseC;
+//float _Str;
+//float _NoiseA;
+//float _NoiseB;
+//float _NoiseC;
 
 // Create a RenderTexture with enableRandomWrite flag and set it
 // with cs.SetTexture
@@ -189,28 +189,6 @@ void Simplex3d (uint3 id : SV_DispatchThreadID)
 	// Set value of 3d RenderTexture
 	Result[float3(id.x,id.y,id.z)] = simplex3d(float3(id.x, id.y, id.z));     //saturate(density + noiseA + noiseB + noiseC); // + noiseA + noiseB + noiseC; //saturate(density+noiseA+ noiseB + noiseC / 1);
 
-}
-
-[numthreads(16,16,1)]
-void Plane (uint3 id : SV_DispatchThreadID)
-{
-	float Density = -1.0;
-	if (id.y > 1)
-		Density = 1.0;
-	Result[float3(id.x,id.y,id.z)] = Density;
-}
-
-[numthreads(16,16,1)]
-void Sphere (uint3 id : SV_DispatchThreadID)
-{
-	float _Brush_Size = 25.0;
- 	float3 v_center = float3(27,27,27);
-	float3 pPosition = _StartPos+id.xyz; //*20.0
-	float dist = distance(pPosition,v_center);
-	float density = _Brush_Size-dist;
-	clamp(density,-1.0,1.0);
-
-	Result[id.xyz]=lerp(Result[id.xyz], max(density,Result[id.xyz]), 0.9);
 }
 
 [numthreads(16,16,1)]

@@ -10,8 +10,19 @@ public class CritterDecorationsTest : MonoBehaviour {
     public Material procMaterial;
 
     public Texture2D sprite;
-    public Vector2 size = Vector2.one;
-    public Color color = new Color(1f, 0.6f, 0.3f, 0.03f);
+    public Vector3 size = Vector3.one;
+    public Vector3 sizeRandom = Vector3.zero;
+    public Color color = new Color(1f, 1f, 1f, 1f);
+    public float bodyColorAmount = 1f;
+    //public float orientAttitude = 1f;  // 1 = straight 'up' along vertex normal, 0 = 'flat' along shell tangent
+    public float orientForwardTangent = 0f;   // 0 = random facing direction, 1 = aligned with shell forward tangent
+    public float orientRandom = 0f;
+    public int type = 0;   // 0 = quad, 1 = scales, 2 = hair
+    public int segments = 1;
+    public float diffuse;
+    public float diffuseWrap;
+    public float rimGlow;
+    public float rimPow;
 
     ComputeBuffer outputBuffer;  // original positions of each decoration anchor
     ComputeBuffer segmentBuffer;
@@ -35,6 +46,8 @@ public class CritterDecorationsTest : MonoBehaviour {
     public struct decorationStruct {
         public Vector3 pos;
         public Vector3 normal;
+        public Vector3 tangent;
+        public Vector3 color;
     }
 
     public struct SegmentXform {
@@ -100,9 +113,21 @@ public class CritterDecorationsTest : MonoBehaviour {
         
         decorations = decorationsArray; // ???        
         
-        outputBuffer = new ComputeBuffer(decorations.Length, 24);
+        outputBuffer = new ComputeBuffer(decorations.Length, 48);
         outputBuffer.SetData(decorations);
         procMaterial.SetBuffer("buf_decorations", outputBuffer);
+        procMaterial.SetColor("_Color", color);
+        procMaterial.SetTexture("_Sprite", sprite);
+        procMaterial.SetVector("_Size", size);
+        procMaterial.SetVector("_SizeRandom", sizeRandom);
+        procMaterial.SetFloat("_BodyColorAmount", bodyColorAmount);
+        //procMaterial.SetFloat("_OrientAttitude", orientAttitude);
+        procMaterial.SetFloat("_OrientForwardTangent", orientForwardTangent);
+        procMaterial.SetFloat("_OrientRandom", orientRandom);
+        procMaterial.SetInt("_Type", type);
+        procMaterial.SetInt("_Segments", segments);
+        procMaterial.SetInt("_StaticCylinderSpherical", billboardType);
+       
         int kernelID = skinningComputeShader.FindKernel("CSMain");
         skinningComputeShader.SetBuffer(kernelID, "buf_DecorationData", outputBuffer);
 
@@ -168,17 +193,21 @@ public class CritterDecorationsTest : MonoBehaviour {
 
             procMaterial.SetPass(0);
             procMaterial.SetColor("_Color", color);
-            //procMaterial.SetBuffer("buf_decorations", outputBuffer);
-            //procMaterial.SetBuffer("buf_xforms", segmentBuffer);   // THIS IS SET WITHIN THE UPDATE XFORMS METHIOD!!
-            //segmentBuffer.GetData(critterSegmentXforms);
-            //for (int i = 0; i < segmentBuffer.count; i++) {
-                //Debug.Log("Index: " + i.ToString() + ": " + critterSegmentXforms[i].PY.ToString());
-                //Debug.Log("Index: " + indexArray[i].id.ToString() + " SkinningData! " + debugSkinningArray[i].index0.ToString() + ", " + debugSkinningArray[i].index1.ToString() + ", " + debugSkinningArray[i].weight0.ToString() + ", " + debugSkinningArray[i].weight1.ToString());
-            //}
             procMaterial.SetTexture("_Sprite", sprite);
             procMaterial.SetVector("_Size", size);
             procMaterial.SetInt("_StaticCylinderSpherical", billboardType);
-            procMaterial.SetVector("_worldPos", transform.position);
+            //procMaterial.SetVector("_worldPos", transform.position);
+            procMaterial.SetVector("_SizeRandom", sizeRandom);
+            procMaterial.SetFloat("_BodyColorAmount", bodyColorAmount);
+            //procMaterial.SetFloat("_OrientAttitude", orientAttitude);
+            procMaterial.SetFloat("_OrientForwardTangent", orientForwardTangent);
+            procMaterial.SetFloat("_OrientRandom", orientRandom);
+            procMaterial.SetInt("_Type", type);
+            procMaterial.SetInt("_Segments", segments);
+            procMaterial.SetFloat("_Diffuse", diffuse);
+            procMaterial.SetFloat("_DiffuseWrap", diffuseWrap);
+            procMaterial.SetFloat("_RimGlow", rimGlow);
+            procMaterial.SetFloat("_RimPow", rimPow);
 
             Graphics.DrawProcedural(MeshTopology.Points, outputBuffer.count);
             //Debug.Log("DrawProcedural! " + material.GetVector("_Size").ToString());

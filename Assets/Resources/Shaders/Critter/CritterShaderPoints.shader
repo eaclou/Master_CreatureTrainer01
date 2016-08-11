@@ -2,8 +2,18 @@
 	Properties{
 		_Sprite("Sprite", 2D) = "white" {}
 		_Color("Color", Color) = (1,1,1,1)
-		_Size("Size", vector) = (1,1,0,0)
-		
+		_Size("Size", vector) = (1,1,1,0)
+		_SizeRandom("SizeRandom", vector) = (0,0,0,0)
+		_BodyColorAmount("BodyColorAmount", Range(0, 1.0)) = 0.0
+		//_OrientAttitude("OrientAttitude", Range(0, 1.0)) = 1.0  // 1 = straight 'up' along vertex normal, 0 = 'flat' along shell tangent
+		_OrientForwardTangent("OrientForwardTangent", Range(-1.0, 1.0)) = 1.0   // 0 = random facing direction, 1 = aligned with shell forward tangent
+		_OrientRandom("OrientRandom", Range(0, 1.0)) = 0.0
+		_Type("Type", Int) = 0   // 0 = quad, 1 = scales, 2 = hair
+		_Segments("Segments", Int) = 1
+		_Diffuse("Diffuse", Range(0.0, 1.0)) = 0
+		_DiffuseWrap("DiffuseWrap", Range(0.0, 1.0)) = 0
+		_RimGlow("RimGlow", Range(0.0, 1.0)) = 0
+		_RimPow("RimPow", Range(0.1, 10.0)) = 1
 	}
 	SubShader{
 		Tags{ "Queue" = "Overlay+100" "RenderType" = "Transparent" }
@@ -26,15 +36,25 @@
 
 			sampler2D _Sprite;
 			float4 _Color = float4(1, 0.5f, 0.0f, 1);
-			float2 _Size = float2(1, 1);
-			float _NoiseScale = 36.0;
-			float3 _worldPos;
-			
+			float3 _Size = float3(1, 1, 1);
+			float3 _SizeRandom = float3(0,0,0);
+			float _BodyColorAmount = 1.0;
+			//float _OrientAttitude = 1.0;  // 1 = straight 'up' along vertex normal, 0 = 'flat' along shell tangent
+			float _OrientForwardTangent = 0.0;   // 0 = random facing direction, 1 = aligned with shell forward tangent
+			float _OrientRandom = 0.0;
+			int _Type = 0;   // 0 = quad, 1 = scales, 2 = hair
+			int _Segments = 1;			
 			int _StaticCylinderSpherical = 2;  // 0=static, 1=cylinder, 2=spherical
+			uniform float _Diffuse;
+			uniform float _DiffuseWrap;
+			uniform float _RimGlow;
+			uniform float _RimPow;
 
 			struct data {
 				float3 pos;
 				float3 normal;
+				float3 tangent;
+				float3 color;
 			};
 
 			struct segmentTransforms {
@@ -137,58 +157,21 @@
 				float4 skinnedPos = skinnedBonePos0 * buf_skinningData[id].weights.x + skinnedBonePos1 * buf_skinningData[id].weights.y;
 				float4 skinnedNorm = skinnedBoneNorm0 * buf_skinningData[id].weights.x + skinnedBoneNorm1 * buf_skinningData[id].weights.y;
 				pos = skinnedPos;
-				normal = skinnedNorm.xyz;
-				//return float4(skinnedPos);
-
-				/*int2 indices = int2(0, 0);  // just in case, zero out values
-				float2 weights = float2(0.0, 0.0);
-
-				// BoneWeights!!!:
-				uint elements;
-				uint stride;
-				buf_xforms.GetDimensions(elements, stride);  // cache the length of xForm buffer?
-
-				float2 boneInfluence = float2(0.0, 0.0);
-				for (int i = 0; i < 16; i++) {
-					if (i < elements) {
-						float dist = 1.0 * DistancePointToPoint(pos.xyz, buf_xforms[i].pos);
-						//dist += 0.1 * DistancePointToBox(pos, segmentTransformBuffer[i].P, segmentTransformBuffer[i].S, segmentTransformBuffer[i].R, 0.5);
-						float rawInfluence = 1.0 / (dist * dist);
-
-						if (rawInfluence > boneInfluence.x) {  // new top dawg:
-							boneInfluence.y = boneInfluence.x;
-							boneInfluence.x = rawInfluence;
-							indices.y = indices.x;
-							indices.x = i;
-						}
-						else {
-							if (rawInfluence > boneInfluence.y) {  // new beta wolf:
-								boneInfluence.y = rawInfluence;
-								indices.y = i;
-							}
-						}
-					}
-				}
-				float totalInfluence = boneInfluence.x + boneInfluence.y;
-				weights = float2(boneInfluence.x / totalInfluence, boneInfluence.y / totalInfluence);
-
-				// Transform points!
-				float3 newPos = (pos.xyz - buf_xforms[indices.x].pos, 1) + buf_xforms[indices.x].pos;
-				//float4 newPos = pos + 1.0;
-				return float4(newPos, 1);
-				*/
+				normal = skinnedNorm.xyz;				
 			}
 
 			fragInput vert(uint id : SV_VertexID) {
 				fragInput o;
 				o.index = id;
-				o.pos = float4(buf_decorations[id].pos + _worldPos, 1.0f);
-				//  + simplex3d(buf_decorations[id].pos)
+				o.pos = float4(buf_decorations[id].pos, 1.0f);
 				o.norm = buf_decorations[id].normal;
 				float3 lightDirection = float3(0.2, 1.0, 0.3);
-				float3 diffuse = dot(o.norm, lightDirection) * 0.5 + 0.5;
-				o.color = float4(diffuse, 1.0);
-				float3 camToWorldVector = _WorldSpaceCameraPos.xyz - _worldPos.xyz;
+				float3 diffuse = dot(o.norm, lightDirection);
+				diffuse = diffuse * (1.0 - _DiffuseWrap * 0.5) + _DiffuseWrap * 0.5;
+				o.color = lerp(_Color, float4(buf_decorations[id].color, _Color.a), _BodyColorAmount);
+				o.color = lerp(o.color, o.color * float4(diffuse, o.color.a), _Diffuse);
+
+				float3 camToWorldVector = _WorldSpaceCameraPos.xyz - o.pos.xyz;
 				o.viewDir = normalize(camToWorldVector);
 				return o;
 			}
@@ -197,36 +180,61 @@
 				float3 finalPos = p.xyz;
 				finalPos += offset.x * sideVector;
 				finalPos += offset.y * upVector;
+				finalPos += offset.z * cross(sideVector, upVector);
 
 				return float4(finalPos, 1);
 			}
 
-			[maxvertexcount(4)]
+			[maxvertexcount(8)]
 			void geom(point fragInput p[1], inout TriangleStream<fragInput> triStream) {
-				float2 halfS = _Size + simplex3d(p[0].pos.xyz * 16) * _Size;
-
-				float4 v[4];
+				
+				//float3 _Size = float3(1, 1, 1);
+				//float3 _SizeRandom = float3(0, 0, 0);
+				//float _BodyColorAmount = 1.0;
+				//float _OrientAttitude = 1.0;  // 1 = straight 'up' along vertex normal, 0 = 'flat' along shell tangent
+				//float _OrientForwardTangent = 0.0;   // 0 = random facing direction, 1 = aligned with shell forward tangent
+				//float _OrientRandom = 0.0;
+				//int type = 0;   // 0 = quad, 1 = scales, 2 = hair
+				//int segments = 1;
+				//int _StaticCylinderSpherical = 2;  // 0=static, 1=cylinder, 2=spherical
+				
+				float randomValue = simplex3d(p[0].pos.xyz * 128);	
+				float3 randomDir = normalize(float3(simplex3d(p[0].pos.xyz * 100), simplex3d(p[0].pos.xyz * 200), simplex3d(p[0].pos.xyz * 300)));
+				float3 halfS = _Size + (randomValue * _Size * _SizeRandom);
+				
+				float4 v[8];
 
 				//if (_StaticCylinderSpherical == 0) {
 				//	v[0] = p[0].pos.xyzw + float4(-halfS.x, -halfS.y, 0, 0);
 				//	v[1] = p[0].pos.xyzw + float4(-halfS.x, halfS.y, 0, 0);
 				//	v[2] = p[0].pos.xyzw + float4(halfS.x, -halfS.y, 0, 0);
 				//	v[3] = p[0].pos.xyzw + float4(halfS.x, halfS.y, 0, 0);
-				//}
-				//else {
-				float3 up = p[0].norm;  // normalize(float3(0, 1, 0));
-				float3 look = float3(simplex3d(p[0].pos.xyz * 10), simplex3d(p[0].pos.xyz * 20), simplex3d(p[0].pos.xyz * 30));   //p[0].norm;  // _WorldSpaceCameraPos - p[0].pos.xyz;
-				
-				look = normalize(look);
-				float3 right = normalize(cross(look, up));
-				up = normalize(cross(right, look));
+				//}	
 
-				v[0] = RotPoint(p[0].pos, float3(-halfS.x, -halfS.y, 0), right, up);
-				v[1] = RotPoint(p[0].pos, float3(-halfS.x, halfS.y, 0), right, up);
-				v[2] = RotPoint(p[0].pos, float3(halfS.x, -halfS.y, 0), right, up);
-				v[3] = RotPoint(p[0].pos, float3(halfS.x, halfS.y, 0), right, up);
-				//}
+				//float tangentSign = _OrientForwardTangent / abs(_OrientForwardTangent + 0.001); // could still divide by ZERO if = -0.001
+				float3 tangent = buf_decorations[p[0].index].tangent;
+				if (_OrientForwardTangent < 0) {
+					tangent = -tangent;
+				}
+				float3 up = lerp(p[0].norm, tangent, abs(_OrientForwardTangent));
+				up = lerp(up, randomDir, _OrientRandom);  // normalize(float3(0, 1, 0));
 				
+				float3 look = -randomDir;  // float3(simplex3d(p[0].pos.xyz * 100), simplex3d(p[0].pos.xyz * 200), simplex3d(p[0].pos.xyz * 300));   //p[0].norm;  // _WorldSpaceCameraPos - p[0].pos.xyz;
+				
+				//look = normalize(look);
+				float3 right = normalize(cross(look, up));
+				//up = normalize(cross(right, look));
+
+				v[0] = RotPoint(p[0].pos, float3(-halfS.x, 0, 0), right, up);
+				v[1] = RotPoint(p[0].pos, float3(-halfS.x, halfS.y * 2.0, 0), right, up);
+				v[2] = RotPoint(p[0].pos, float3(halfS.x, 0.0, 0), right, up);
+				v[3] = RotPoint(p[0].pos, float3(halfS.x, halfS.y * 2.0, 0), right, up);
+
+				v[4] = RotPoint(p[0].pos, float3(-halfS.x, halfS.y * 2.0, 0), right, up);
+				v[5] = RotPoint(p[0].pos, float3(-halfS.x, halfS.y * 4.0, halfS.z), right, up);
+				v[6] = RotPoint(p[0].pos, float3(halfS.x, halfS.y * 2.0, 0), right, up);
+				v[7] = RotPoint(p[0].pos, float3(halfS.x, halfS.y * 4.0, halfS.z), right, up);
+								
 				fragInput pIn;
 				pIn.index = p[0].index;
 				pIn.norm = p[0].norm;
@@ -261,16 +269,47 @@
 				pIn.uv = float2(1, 1);
 				UNITY_TRANSFER_FOG(pIn, pIn.pos);
 				triStream.Append(pIn);
+
+				triStream.RestartStrip();
+
+				pIn.pos = v[4];
+				CalculateSkinning(pIn.pos, pIn.norm, p[0].index);
+				pIn.pos = mul(UNITY_MATRIX_VP, pIn.pos);
+				pIn.uv = float2(0, 0);
+				UNITY_TRANSFER_FOG(pIn, pIn.pos);
+				triStream.Append(pIn);
+
+				pIn.pos = v[5];
+				CalculateSkinning(pIn.pos, pIn.norm, p[0].index);
+				pIn.pos = mul(UNITY_MATRIX_VP, pIn.pos);
+				pIn.uv = float2(0, 1);
+				UNITY_TRANSFER_FOG(pIn, pIn.pos);
+				triStream.Append(pIn);
+
+				pIn.pos = v[6];
+				CalculateSkinning(pIn.pos, pIn.norm, p[0].index);
+				pIn.pos = mul(UNITY_MATRIX_VP, pIn.pos);
+				pIn.uv = float2(1, 0);
+				UNITY_TRANSFER_FOG(pIn, pIn.pos);
+				triStream.Append(pIn);
+
+				pIn.pos = v[7];
+				CalculateSkinning(pIn.pos, pIn.norm, p[0].index);
+				pIn.pos = mul(UNITY_MATRIX_VP, pIn.pos);
+				pIn.uv = float2(1, 1);
+				UNITY_TRANSFER_FOG(pIn, pIn.pos);
+				triStream.Append(pIn);
 			}
 
 			float4 frag(fragInput i) : COLOR{
-				float viewAngle = dot(i.norm, i.viewDir);
-				float outlineStrength = 1.0 - pow(viewAngle, 1);
+				float viewAngle = saturate(dot(i.norm, i.viewDir));
+				float outlineStrength = (1.0 - pow(viewAngle, _RimPow));
 				
 				
-				fixed4 col = tex2D(_Sprite, i.uv) * _Color * i.color;
-				col = 0.2 * (col + outlineStrength * 0.75) * (1.0 - viewAngle) + 0.8 * col;
-				col.a = 0.3;
+				fixed4 col = tex2D(_Sprite, i.uv) * i.color;
+				//col.xyz += outlineStrength;
+				col.xyz = _RimGlow * (col.xyz + outlineStrength) + (1.0 - _RimGlow) * col.xyz;
+				//col.a = col.r * 0.3;
 
 				UNITY_APPLY_FOG(i.fogCoord, col); // apply fog
 

@@ -36,8 +36,23 @@ int _CalcNumPolys = 1;
 float _GlobalOffsetX = 0;
 float _GlobalOffsetY = 0;
 float _GlobalOffsetZ = 0;
-
 float _CellSize;
+
+float4 _ColorPrimary = float4(1,1,1,1);
+float4 _ColorSecondary = float4(0,0,0,1);
+float _ColorNoiseScale = 1;
+float _ColorSmlAmplitude = 1;
+float _ColorMedAmplitude = 1;
+float _ColorLrgAmplitude = 1;
+float _ColorContrast = 0;
+float _ColorThreshold = 0.5;
+
+float3 _SkinNoiseScale = float3(1,1,1);
+float _SkinNoiseAmplitude = 1;
+float3 _SkinLocalTaper = float3(0,0,0);
+float3 _SkinLocalSinFreq = float3(1,1,1);
+float3 _SkinLocalSinAmp = float3(1,1,1);
+// Local Segment-space modifications, sin, taper, etc.
 
 //input density volume
 RWTexture3D<float> noise_volume;
@@ -155,11 +170,17 @@ float SampleDensity(float3 pPosition){
 	uint elements;
 	uint stride;
 	segmentTransformBuffer.GetDimensions(elements, stride);
-	for(int i = 0; i < 16; i++) {
+	for(int i = 0; i < 32; i++) {
 		if(i < elements) {
-			float dist = DistancePointToBox(pPosition, segmentTransformBuffer[i].P, segmentTransformBuffer[i].S, segmentTransformBuffer[i].R, 0.25) + SampleVolumeNoise(pPosition * 0.53) * 0.0;
+			float dist = DistancePointToBox(pPosition, segmentTransformBuffer[i].P, segmentTransformBuffer[i].S, segmentTransformBuffer[i].R, 0.25) + SampleVolumeNoise(pPosition * _SkinNoiseScale) * _SkinNoiseAmplitude * 0.1;
 			float3 segmentCoords = WorldToSegmentCoords(pPosition, segmentTransformBuffer[i].P, segmentTransformBuffer[i].S, segmentTransformBuffer[i].R);
-			dist += sin(segmentCoords.z * 24.0) * 0.05 + cos((segmentCoords.z + segmentCoords.x + segmentCoords.y) * 16.0) * 0.03 - segmentCoords.z * 0.025;
+			dist += sin(segmentCoords.x * _SkinLocalSinFreq.x) * 0.1 * _SkinLocalSinAmp.x + 
+					sin(segmentCoords.y * _SkinLocalSinFreq.y) * 0.1 * _SkinLocalSinAmp.y +
+					sin(segmentCoords.z * _SkinLocalSinFreq.z) * 0.1 * _SkinLocalSinAmp.z +
+					(segmentCoords.x + segmentTransformBuffer[i].S.x * 0.5) * _SkinLocalTaper.x * 0.1 +
+					(segmentCoords.y + segmentTransformBuffer[i].S.y * 0.5) * _SkinLocalTaper.y * 0.1 +
+					(segmentCoords.z + segmentTransformBuffer[i].S.z * 0.5) * _SkinLocalTaper.z * 0.1;
+			//dist += sin(segmentCoords.z * 24.0) * 0.05 + cos((segmentCoords.z + segmentCoords.x + segmentCoords.y) * 16.0) * 0.03 - segmentCoords.z * 0.025;
 			//float dist = DistancePointToPoint(pPosition, segmentTransformBuffer[i].P);
 			density += amplitude / (dist * dist);
 		}
@@ -178,7 +199,7 @@ void CalculateBoneWeights(float3 pos, out int2 indices, out float2 weights) {
 	segmentTransformBuffer.GetDimensions(elements, stride);  // cache the length of xForm buffer?
 	
 	float2 boneInfluence = float2(0.0, 0.0);
-	for(int i = 0; i < 16; i++) {
+	for(int i = 0; i < 32; i++) {
 		if(i < elements) {
 			float dist = 1.0 * DistancePointToPoint(pos, segmentTransformBuffer[i].P);
 			//dist += 0.1 * DistancePointToBox(pos, segmentTransformBuffer[i].P, segmentTransformBuffer[i].S, segmentTransformBuffer[i].R, 0.5);
@@ -214,6 +235,15 @@ float3 GetNormal (float x, float y, float z)
 	normal = -normalize(float3(0.00001+dx,0.00001+dy,0.00001+dz));  // ?? why add 0.001? to prevent 0?
 		
 	return normal;		
+}
+
+float3 GetVertexColor(float3 pPosition) {
+	
+	float noiseVal = ((SampleVolumeNoise(pPosition * _ColorNoiseScale * 2.31) * 0.5 * _ColorSmlAmplitude) +
+					 (SampleVolumeNoise(pPosition * _ColorNoiseScale * 1.029) * _ColorMedAmplitude) +
+					 (SampleVolumeNoise(pPosition * _ColorNoiseScale * 0.467) * 2.0 * _ColorLrgAmplitude)) * 0.5 + 0.5;
+	float3 color = lerp(_ColorPrimary.rgb, _ColorSecondary.rgb, noiseVal);
+	return color;
 }
 	
 [numthreads(8,8,8)]
@@ -578,10 +608,7 @@ void CSMain (uint3 id : SV_DispatchThreadID, uint3 grpID : SV_GroupID, uint3 grp
 				CalculateBoneWeights(NewPoly.A, boneIndices, boneWeights);
 				NewPoly.BoneIndicesA = boneIndices;
 				NewPoly.BoneWeightsA = boneWeights;
-				float noiseVal = (SampleVolumeNoise(NewPoly.A * 0.25)) * 0.5 + 0.5;
-				//noiseVal = noiseVal * 0.5 + (NewPoly.BoneWeightsA.x * (NewPoly.BoneIndicesA.x / numSegmentsFloat)) + (NewPoly.BoneWeightsA.y * (NewPoly.BoneIndicesA.y / numSegmentsFloat)) * 0.5;
-				//NewPoly.COLA = float3(NewPoly.BoneWeightsA.x, NewPoly.BoneWeightsA.y, 0.0);
-				NewPoly.COLA = float3(noiseVal, noiseVal, noiseVal);
+				NewPoly.COLA = GetVertexColor(NewPoly.A);
 					
 				va = edge_to_verts[polyEdges.y].x;
 				vb = edge_to_verts[polyEdges.y].y;
@@ -590,11 +617,8 @@ void CSMain (uint3 id : SV_DispatchThreadID, uint3 grpID : SV_GroupID, uint3 grp
 				NewPoly.NB = GetNormal(NewPoly.B.x, NewPoly.B.y, NewPoly.B.z);
 				CalculateBoneWeights(NewPoly.B, boneIndices, boneWeights);
 				NewPoly.BoneIndicesB = boneIndices;
-				NewPoly.BoneWeightsB = boneWeights;				
-				noiseVal = (SampleVolumeNoise(NewPoly.B * 0.25)) * 0.5 + 0.5;				
-				//noiseVal = noiseVal * 0.5 + (NewPoly.BoneWeightsA.x * (NewPoly.BoneIndicesA.x / numSegmentsFloat)) + (NewPoly.BoneWeightsA.y * (NewPoly.BoneIndicesA.y / numSegmentsFloat)) * 0.5;
-				//NewPoly.COLB = float3(NewPoly.BoneWeightsA.x, NewPoly.BoneWeightsA.y, 0.0);
-				NewPoly.COLB = float3(noiseVal, noiseVal, noiseVal);
+				NewPoly.BoneWeightsB = boneWeights;
+				NewPoly.COLB = GetVertexColor(NewPoly.B);
 
 				va = edge_to_verts[polyEdges.z].x;
 				vb = edge_to_verts[polyEdges.z].y;
@@ -604,11 +628,7 @@ void CSMain (uint3 id : SV_DispatchThreadID, uint3 grpID : SV_GroupID, uint3 grp
 				CalculateBoneWeights(NewPoly.C, boneIndices, boneWeights);
 				NewPoly.BoneIndicesC = boneIndices;
 				NewPoly.BoneWeightsC = boneWeights;
-				//noiseVal = SampleVolumeNoise(float3(0, id.y, p.z)) * 0.5 + 0.5;
-				noiseVal = (SampleVolumeNoise(NewPoly.C * 0.25)) * 0.5 + 0.5;	
-				//noiseVal = noiseVal * 0.5 + (NewPoly.BoneWeightsA.x * (NewPoly.BoneIndicesA.x / numSegmentsFloat)) + (NewPoly.BoneWeightsA.y * (NewPoly.BoneIndicesA.y / numSegmentsFloat)) * 0.5;
-				//NewPoly.COLC = float3(NewPoly.BoneWeightsA.x, NewPoly.BoneWeightsA.y, 0.0);
-				NewPoly.COLC = float3(noiseVal, noiseVal, noiseVal);
+				NewPoly.COLC = GetVertexColor(NewPoly.C);
 
 				//Increase buffer index counter and get current one
 				InterlockedAdd(index_counter,1,Index);

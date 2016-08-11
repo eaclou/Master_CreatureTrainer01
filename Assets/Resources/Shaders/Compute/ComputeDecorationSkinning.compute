@@ -19,6 +19,8 @@ struct segmentTransforms {
 struct data {
 	float3 pos;
 	float3 normal;
+	float3 tangent;
+	float3 color;
 };
 
 struct indexStruct {
@@ -26,7 +28,7 @@ struct indexStruct {
 };
 
 // struct transforms information
-StructuredBuffer<data> buf_DecorationData;
+RWStructuredBuffer<data> buf_DecorationData;
 RWStructuredBuffer<skinningStruct> buf_SkinningData;
 StructuredBuffer<segmentTransforms> buf_SegmentData;
 RWStructuredBuffer<indexStruct> buf_IndexData;
@@ -89,7 +91,7 @@ void CSMain (uint grpIndex : SV_GroupIndex, uint3 id : SV_DispatchThreadID, uint
 	uint strideDeco;
 	buf_DecorationData.GetDimensions(elementsDeco, strideDeco);  // cache the length of xForm buffer?
 
-	//if(idx < elementsDeco) {
+	if(idx < elementsDeco) {
 		float3 pos = buf_DecorationData[idx].pos;
 
 		int2 indices = int2(0, 0);  // just in case, zero out values
@@ -105,7 +107,7 @@ void CSMain (uint grpIndex : SV_GroupIndex, uint3 id : SV_DispatchThreadID, uint
 	
 		float recordInfluence = 0.0;
 		int recordIndex = -1;
-		for (int i = 0; i < 16; i++) {		
+		for (int i = 0; i < 32; i++) {		
 			if (i < elements) {
 				dist = 1.0 * DistancePointToPoint(pos.xyz, buf_SegmentData[i].pos);
 			
@@ -141,7 +143,7 @@ void CSMain (uint grpIndex : SV_GroupIndex, uint3 id : SV_DispatchThreadID, uint
 		float totalInfluence = boneInfluence.x + boneInfluence.y;
 		weights = float2(boneInfluence.x / totalInfluence, boneInfluence.y / totalInfluence);
 			
-		// store data in buffer, try to access it in procMAterial Shader		
+		// store data in buffer, try to access it in procMaterial Shader		
 		skinningStruct skinData;
 		skinData.indices.x = indices.x;
 		skinData.indices.y = indices.y;
@@ -149,8 +151,27 @@ void CSMain (uint grpIndex : SV_GroupIndex, uint3 id : SV_DispatchThreadID, uint
 		skinData.weights.y = weights.y;
 	
 		buf_SkinningData[idx] = skinData;
-		//buf_SkinningData[idx].weights.x = dist;
-	
+
+		// Calculate Tangent:
+		// Get direction of primary segment Bone
+		float3 forwardDir0 = mul(buf_SegmentData[skinData.indices.x].xform, float4(0,0,1,0)).xyz;
+		// get direction of secondary segment Bone
+		float3 forwardDir1 = mul(buf_SegmentData[skinData.indices.y].xform, float4(0,0,1,0)).xyz;
+		// use skinning weights to avg forward direction
+		float3 forwardDir = (forwardDir0 + forwardDir1) / 2.0;
+		// compare Normal and Forward vector, use Cross to get 'Right' vector
+		float3 right = normalize(cross(forwardDir, buf_DecorationData[idx].normal));
+		// Cross 'Right' and 'Normal' Vectors to get Forward Tangent
+		float3 tangent = normalize(cross(buf_DecorationData[idx].normal, right));
+		buf_DecorationData[idx].tangent = tangent;
+
+		//float3 up = p[0].norm;  // normalize(float3(0, 1, 0));
+		//float3 look = float3(simplex3d(p[0].pos.xyz * 10), simplex3d(p[0].pos.xyz * 20), simplex3d(p[0].pos.xyz * 30));   //p[0].norm;  // _WorldSpaceCameraPos - p[0].pos.xyz;				
+		//look = normalize(look);
+		//float3 right = normalize(cross(look, up));
+		//up = normalize(cross(right, look));
+
+		//buf_SkinningData[idx].weights.x = dist;	
 		//buf_IndexData[idx].index = idx;
-	//}
+	}
 }
