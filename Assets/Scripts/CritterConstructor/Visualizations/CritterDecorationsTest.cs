@@ -18,13 +18,14 @@ public class CritterDecorationsTest : MonoBehaviour {
     public float orientForwardTangent = 0f;   // 0 = random facing direction, 1 = aligned with shell forward tangent
     public float orientRandom = 0f;
     public int type = 0;   // 0 = quad, 1 = scales, 2 = hair
-    public int segments = 1;
+    public int numRibbonSegments = 1;
     public float diffuse;
     public float diffuseWrap;
     public float rimGlow;
     public float rimPow;
 
     ComputeBuffer outputBuffer;  // original positions of each decoration anchor
+    ComputeBuffer ribbonPointBuffer;
     ComputeBuffer segmentBuffer;
 
     ComputeBuffer bindPoseBuffer;
@@ -48,6 +49,10 @@ public class CritterDecorationsTest : MonoBehaviour {
         public Vector3 normal;
         public Vector3 tangent;
         public Vector3 color;
+    }
+
+    public struct ribbonPointSruct {
+        public Vector3 pos;
     }
 
     public struct SegmentXform {
@@ -88,6 +93,7 @@ public class CritterDecorationsTest : MonoBehaviour {
         skinningBuffer.Release();
         indexBuffer.Release();
         debugBuffer.Release();
+        ribbonPointBuffer.Release();
 
         outputBuffer.Dispose();
         segmentBuffer.Dispose();
@@ -95,6 +101,7 @@ public class CritterDecorationsTest : MonoBehaviour {
         skinningBuffer.Dispose();
         indexBuffer.Dispose();
         debugBuffer.Dispose();
+        ribbonPointBuffer.Dispose();
     }
 
     public void TurnOn(decorationStruct[] decorationsArray) {
@@ -125,11 +132,15 @@ public class CritterDecorationsTest : MonoBehaviour {
         procMaterial.SetFloat("_OrientForwardTangent", orientForwardTangent);
         procMaterial.SetFloat("_OrientRandom", orientRandom);
         procMaterial.SetInt("_Type", type);
-        procMaterial.SetInt("_Segments", segments);
+        procMaterial.SetInt("_NumRibbonSegments", numRibbonSegments);
         procMaterial.SetInt("_StaticCylinderSpherical", billboardType);
+
+        ribbonPointBuffer = new ComputeBuffer(decorations.Length * (numRibbonSegments), 12);  // Create ribbon buffer
        
         int kernelID = skinningComputeShader.FindKernel("CSMain");
         skinningComputeShader.SetBuffer(kernelID, "buf_DecorationData", outputBuffer);
+        procMaterial.SetBuffer("buf_ribbonPoints", ribbonPointBuffer);  // set display shader ribbonPointsBuffer to same ComputeBuffer so it can update it at runtime
+        procMaterial.SetInt("_InitRibbonPoints", 1);
 
         indexBuffer = new ComputeBuffer(outputBuffer.count, sizeof(int));
         debugBuffer = new ComputeBuffer(outputBuffer.count, sizeof(int));
@@ -202,14 +213,17 @@ public class CritterDecorationsTest : MonoBehaviour {
             //procMaterial.SetFloat("_OrientAttitude", orientAttitude);
             procMaterial.SetFloat("_OrientForwardTangent", orientForwardTangent);
             procMaterial.SetFloat("_OrientRandom", orientRandom);
-            procMaterial.SetInt("_Type", type);
-            procMaterial.SetInt("_Segments", segments);
+            //procMaterial.SetInt("_Type", type);
+            //procMaterial.SetInt("_NumRibbonSegments", numRibbonSegments);
             procMaterial.SetFloat("_Diffuse", diffuse);
             procMaterial.SetFloat("_DiffuseWrap", diffuseWrap);
             procMaterial.SetFloat("_RimGlow", rimGlow);
             procMaterial.SetFloat("_RimPow", rimPow);
 
             Graphics.DrawProcedural(MeshTopology.Points, outputBuffer.count);
+            if(procMaterial.GetInt("_InitRibbonPoints") == 1) {
+                procMaterial.SetInt("_InitRibbonPoints", 0);
+            }
             //Debug.Log("DrawProcedural! " + material.GetVector("_Size").ToString());
         }
     }

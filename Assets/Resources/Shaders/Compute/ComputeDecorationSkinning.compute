@@ -27,6 +27,9 @@ struct indexStruct {
 	int index;
 };
 
+int _NumRibbonSegments = 1;
+float _InitHeight = 0.4;
+
 // struct transforms information
 RWStructuredBuffer<data> buf_DecorationData;
 RWStructuredBuffer<skinningStruct> buf_SkinningData;
@@ -165,13 +168,6 @@ void CSMain (uint grpIndex : SV_GroupIndex, uint3 id : SV_DispatchThreadID, uint
 		float3 tangent = normalize(cross(buf_DecorationData[idx].normal, right));
 		buf_DecorationData[idx].tangent = tangent;
 
-		//float3 up = p[0].norm;  // normalize(float3(0, 1, 0));
-		//float3 look = float3(simplex3d(p[0].pos.xyz * 10), simplex3d(p[0].pos.xyz * 20), simplex3d(p[0].pos.xyz * 30));   //p[0].norm;  // _WorldSpaceCameraPos - p[0].pos.xyz;				
-		//look = normalize(look);
-		//float3 right = normalize(cross(look, up));
-		//up = normalize(cross(right, look));
-
-		//buf_SkinningData[idx].weights.x = dist;	
-		//buf_IndexData[idx].index = idx;
+		
 	}
 }
