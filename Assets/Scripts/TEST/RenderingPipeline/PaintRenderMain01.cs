@@ -143,7 +143,7 @@ public class PaintRenderMain01 : MonoBehaviour {
 
         // START!!!
         // Canvas First:
-        canvasMaterial.SetColor("_Color", Color.white);  // initialize canvas        
+        canvasMaterial.SetColor("_Color", Color.gray);  // initialize canvas        
         canvasMaterial.SetTexture("_DepthTex", canvasDepthTex);
         canvasMaterial.SetFloat("_MaxDepth", 1.0f);
 
@@ -168,7 +168,7 @@ public class PaintRenderMain01 : MonoBehaviour {
 
         // Gesso/Primer Pass:
         gessoMaterial.SetPass(0);
-        gessoMaterial.SetColor("_Color", Color.cyan);
+        gessoMaterial.SetColor("_Color", new Color(0.19f, 0.192f, 0.194f, 1.0f));
         buf.SetGlobalTexture("_ColorReadTex", colorReadID);
         buf.SetGlobalTexture("_DepthReadTex", depthReadID);
         buf.SetRenderTarget(mrt, BuiltinRenderTextureType.CameraTarget);  // Set render Targets
