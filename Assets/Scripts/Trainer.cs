@@ -37,9 +37,16 @@ public class Trainer {
 		}
 		set {}
 	}
+    private bool renderOn = false;  // With this true, the user can play against the AI controllers
+    public bool RenderOn {
+        get {
+            return renderOn;
+        }
+        set { }
+    }
 
-	// When true (needs to be paused, between gens), any pending values in the specified panel will be used to update their corresponding data:
-	public bool applyPanelPlayers = false;   // basically, true means that the current state of the system allows changes to each of these panel's data
+    // When true (needs to be paused, between gens), any pending values in the specified panel will be used to update their corresponding data:
+    public bool applyPanelPlayers = false;   // basically, true means that the current state of the system allows changes to each of these panel's data
 	public bool applyPanelPopulation = false;
 	public bool applyPanelCrossover = true; 
 	public bool applyPanelTrials = true; 
@@ -179,6 +186,10 @@ public class Trainer {
 	public void ToggleTraining() {
 		crossoverOn = !crossoverOn;
 	}
+
+    public void ToggleRender() {
+        renderOn = !renderOn;
+    }
 
     #region OLD CODE:
     public void ToggleFastMode() {
@@ -448,6 +459,30 @@ public class Trainer {
         minigame.SetShaderTextures(networkVisualizer);
         brainNetworkGO.GetComponent<MeshFilter>().sharedMesh = networkVisualizer.BuildNewMesh(brain);
     }
+
+    private void ClearCritterMesh() {
+        gameControllerRef.trainerUI.trainerRenderManager.ClearAgent();
+    }
+
+    private void BuildCritterMesh(Critter critter) {
+        if (renderOn) {
+            if (playbackSpeed < 3f) {
+                //gameControllerRef.trainerUI.trainerRenderManager.trainerCritterMarchingCubes.SetCritterTransformArray(critter);
+                //gameControllerRef.trainerUI.trainerRenderManager.trainerCritterMarchingCubes.BuildMesh();
+                gameControllerRef.trainerUI.trainerRenderManager.InitializeNewAgent(critter);
+            }
+            else {
+                gameControllerRef.trainerUI.trainerRenderManager.ClearAgent();
+            }
+        }
+        else {
+            gameControllerRef.trainerUI.trainerRenderManager.ClearAgent();
+        }
+    }
+
+    private void UpdateCritterDataForRender(Critter critter) {
+        //gameControllerRef.trainerUI.trainerRenderManager
+    }
         
 	private void UpdatePlayingState() {  // increments current state variables, keeping track of when each should roll-over into the next round
 		
@@ -457,7 +492,12 @@ public class Trainer {
 			ProcessFitnessScoresEndRound();  // divides accumulated fitness score by time-steps, to keep it in 0-1 range and stores it in AgentScoresArray
 			playingCurMiniGameTimeStep = 0;
 			playingCurTrialRound++;  // Same agent, next round playthrough
-            
+
+            Debug.Log("CLEARGAME!");
+            // Cleanup RenderMesh and Render Thingies here: ========================================================================================
+            // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            ClearCritterMesh();
+            // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
             currentGameManager.miniGameInstance.ClearGame();
 
             if (playingCurTrialRound >= playingNumTrialRounds) {   // finished all rounds of current Trial for current Agent
@@ -597,11 +637,19 @@ public class Trainer {
             if (currentGameManager.miniGameInstance.gameEndStateReached) {  // If, after the end of its gameLoop, some endGame conditions have been met:
 				// game ended for reason other than timeOut	
 			}
-			// =================================================================================================================================================================
-			//      END OF GAME LOOP !!!!
-			// =================================================================================================================================================================
-            
-			playingCurMiniGameTimeStep++;
+
+            // ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+            // ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+            Debug.Log("Update brushstrokemanager xForms!!!!!");
+            UpdateCritterDataForRender(currentGameManager.miniGameInstance.critterBeingTested);
+            // ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+            // ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
+            // =================================================================================================================================================================
+            //      END OF GAME LOOP !!!!
+            // =================================================================================================================================================================
+
+            playingCurMiniGameTimeStep++;
 			currentGameManager.miniGameInstance.GameTimeStepCompleted();  // sets gameTicked, gameUpdatedFromPhysX to 0, increments internal curGameTimeStep
 			UpdatePlayingState ();
 			// This should check to see if the next gameTimeStep results in a rollover,
@@ -609,13 +657,17 @@ public class Trainer {
 		}
 
         if(currentGameManager.miniGameInstance.waitingForReset) {
-            //Debug.Log("CalculateOneStep() waitingForReset");
+            
             currentGameManager.miniGameInstance.gameCurrentRound = playingCurTrialRound;
             currentGameManager.miniGameInstance.Reset();
             currentGameManager.SetInputOutputArrays();
-            //currentGameManager.miniGameInstance.SetNonPhysicsGamePieceTransformsFromData();
-            //BuildBrainMesh(playerList[playingCurPlayer].masterPopulation.masterAgentArray[playingCurAgent].brain);
 
+            Debug.Log("CalculateOneStep() waitingForReset  -- critterSegmentCount: " + currentGameManager.miniGameInstance.critterBeingTested.critterSegmentList.Count.ToString());
+            // ==================================================  Create Critter MESHES
+            // &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+            // DO it here:
+            BuildCritterMesh(currentGameManager.miniGameInstance.critterBeingTested);
+            // &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
         }
         else {
             //currentGameManager.miniGameInstance.SetNonPhysicsGamePieceTransformsFromData();

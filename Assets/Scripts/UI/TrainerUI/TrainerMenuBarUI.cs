@@ -19,6 +19,7 @@ public class TrainerMenuBarUI : MonoBehaviour {
 	public Button buttonSlower;
 	public Button buttonRealTime;
 	public Button buttonFaster;
+    public Button buttonRenderToggle;
 	public Text textTimeScale;
 	public Image bgImage;
 
@@ -30,6 +31,7 @@ public class TrainerMenuBarUI : MonoBehaviour {
 	private bool playActive = false;
 	private bool fastModeActive = false;
 	private bool manualOverrideActive = false;
+    private bool renderActive = false;
 
 	public void InitializePanelWithTrainerData() {
 		DebugBot.DebugFunctionCall("TMenuBarUI; InitializePanelWithTrainerData(); ", debugFunctionCalls);
@@ -90,7 +92,7 @@ public class TrainerMenuBarUI : MonoBehaviour {
 		}
 		else {
 			manualOverrideActive = false;
-		}
+		}        
 	}
 
 	public void UpdateUIElementStates() {
@@ -151,6 +153,13 @@ public class TrainerMenuBarUI : MonoBehaviour {
 			buttonPlay.GetComponentInChildren<Text>().text = "Paused";
 		}
 		textTimeScale.text = "Time Scale: " + trainer.playbackSpeed.ToString();
+
+        if(trainer.RenderOn) {
+            buttonRenderToggle.GetComponentInChildren<Text>().text = "Render ON";
+        }
+        else {
+            buttonRenderToggle.GetComponentInChildren<Text>().text = "Render Off";
+        }
 		//Fast Mode
 		/*if(fastModeActive) {
 			buttonFastMode.interactable = true;
@@ -254,4 +263,12 @@ public class TrainerMenuBarUI : MonoBehaviour {
 		//CheckActivationCriteria();
 		UpdateUIElementStates();
 	}
+
+    public void ClickRender() {
+        DebugBot.DebugFunctionCall("TMenuBarUI; ClickRender(); ", debugFunctionCalls);
+        Trainer trainer = trainerModuleScript.gameController.masterTrainer;        
+        trainer.ToggleRender();
+        CheckActivationCriteria();
+        UpdateUIElementStates();
+    }
 }

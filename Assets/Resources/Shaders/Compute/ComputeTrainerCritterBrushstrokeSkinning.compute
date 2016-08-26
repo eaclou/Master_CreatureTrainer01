@@ -1,0 +1,164 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+//#include "Assets/Resources/Shaders/Inc/DistanceFuncs.cginc"
+
+struct skinningStruct
+{
+    int2 indices;
+    float2 weights;
+};
+
+struct segmentTransforms {
+	float3 pos;
+	float4 rot;
+	float3 scale;
+	float4x4 xform;
+};
+
+struct data {
+	float3 pos;
+	float3 normal;
+	float3 tangent;
+	float3 color;
+};
+
+// struct transforms information
+RWStructuredBuffer<data> buf_CritterBrushstrokeData;
+RWStructuredBuffer<skinningStruct> buf_SkinningData;
+StructuredBuffer<segmentTransforms> buf_SegmentData;
+
+float3 RotatePoint(float3 position, float4 rotation) {
+	float3 t = 2 * cross(rotation.xyz, position);
+	return (position + rotation.w * t + cross(rotation.xyz, t));
+}
+
+float DistancePointToBox(float3 pos, float3 boxPos, float3 boxScale, float4 boxRotation, float extrudeAmount) {
+
+	float3 boxCenterToPoint = pos - boxPos + float3(0.00001, 0.00001, 0.00001);  // prevent divide by 0
+	float3 right = RotatePoint(float3(1.0, 0, 0), boxRotation);
+	float3 up = RotatePoint(float3(0, 1.0, 0), boxRotation);
+	float3 forward = RotatePoint(float3(0, 0, 1.0), boxRotation);
+
+	float dotRight = dot(right, boxCenterToPoint);
+	float dotUp = dot(up, boxCenterToPoint);
+	float dotForward = dot(forward, boxCenterToPoint);
+
+	// Cache distance amounts per box-local-dimensions:
+	float dotRightAbs = abs(dotRight);
+	float dotRightSign = dotRight / dotRightAbs;
+	float dotUpAbs = abs(dotUp);
+	float dotUpSign = dotUp / dotUpAbs;
+	float dotForwardAbs = abs(dotForward);
+	float dotForwardSign = dotForward / dotForwardAbs;
+
+	float minDistance = 0.001;  // prevent divide by 0 and negative distances
+								//float roundness = 1; // multiplier on boxScale
+								//float extrudeAmount = 0.25;
+
+								// find point on box 'edge' to measure against samplepoint:
+	float distRight = min(dotRightAbs, max(boxScale.x - extrudeAmount, 0.0)) * dotRightSign; // amount to move in box's local X direction
+	float distUp = min(dotUpAbs, max(boxScale.y - extrudeAmount, 0.0)) * dotUpSign;
+	float distForward = min(dotForwardAbs, max(boxScale.z - extrudeAmount, 0.0)) * dotForwardSign;
+
+	float3 offsetVector = pos - (right * distRight + up * distUp + forward * distForward + boxPos);
+
+	float distance = max(minDistance, length(offsetVector));
+
+	return distance;
+}
+
+float DistancePointToPoint(float3 pos, float3 boxPos) {
+	float3 boxCenterToPoint = pos - boxPos + float3(0.0001, 0.0001, 0.0001);  // prevent divide by 0
+
+	float distance = length(boxCenterToPoint);
+
+	return distance;
+}
+
+[numthreads(64,1,1)]
+void CSMain (uint grpIndex : SV_GroupIndex, uint3 id : SV_DispatchThreadID, uint3 grpID : SV_GroupID, uint3 grpTID : SV_GroupThreadID)
+{
+	// Calculate skinning information for each decoration here -- see if can share buffers between the different shaders
+	int idx = id.x; // hopefully the linear 1D index of the decorations Buffer....
+	
+	uint elementsDeco;
+	uint strideDeco;
+	buf_CritterBrushstrokeData.GetDimensions(elementsDeco, strideDeco);  // cache the length of xForm buffer?
+
+	if(idx < elementsDeco) {
+		float3 pos = buf_CritterBrushstrokeData[idx].pos;
+
+		int2 indices = int2(0, 0);  // just in case, zero out values
+		float2 weights = float2(0.0, 0.0);
+		
+		// BoneWeights!!!:
+		uint elements;
+		uint stride;
+		buf_SegmentData.GetDimensions(elements, stride);  // cache the length of xForm buffer?
+
+		float2 boneInfluence = float2(0.0, 0.0);
+		float dist = 0.0;
+	
+		float recordInfluence = 0.0;
+		int recordIndex = -1;
+		for (int i = 0; i < 32; i++) {		
+			if (i < elements) {
+				dist = 1.0 * DistancePointToPoint(pos.xyz, buf_SegmentData[i].pos);
+			
+				float rawInfluence = 1.0 / (dist * dist);
+				int check = 0;
+				if (rawInfluence > boneInfluence.x) {  // new top dawg:				
+					//boneInfluence.y = boneInfluence.x;
+					//boneInfluence.x = rawInfluence;
+					//indices.y = indices.x;
+					//indices.x = i;
+					//leadChanges++;
+					//check++;
+
+					// No idea why this seems to make a difference - i thought structs were value-typed??????
+					boneInfluence.y = recordInfluence; // previous record
+					boneInfluence.x = rawInfluence; // new record;
+					recordInfluence = rawInfluence; // set new record
+					indices.y = recordIndex;
+					indices.x = i;
+					recordIndex = i;
+				}
+				else {
+					if (rawInfluence > boneInfluence.y) {  // new beta wolf:
+						boneInfluence.y = rawInfluence;
+						indices.y = i;
+					}
+				}
+			}
+			else {
+				break;
+			}
+		}
+		float totalInfluence = boneInfluence.x + boneInfluence.y;
+		weights = float2(boneInfluence.x / totalInfluence, boneInfluence.y / totalInfluence);
+			
+		// store data in buffer, try to access it in procMaterial Shader		
+		skinningStruct skinData;
+		skinData.indices.x = indices.x;
+		skinData.indices.y = indices.y;
+		skinData.weights.x = weights.x;
+		skinData.weights.y = weights.y;
+	
+		buf_SkinningData[idx] = skinData;
+
+		// Calculate Tangent:
+		// Get direction of primary segment Bone
+		float3 forwardDir0 = mul(buf_SegmentData[skinData.indices.x].xform, float4(0,0,1,0)).xyz;
+		// get direction of secondary segment Bone
+		float3 forwardDir1 = mul(buf_SegmentData[skinData.indices.y].xform, float4(0,0,1,0)).xyz;
+		// use skinning weights to avg forward direction
+		float3 forwardDir = (forwardDir0 + forwardDir1) / 2.0;
+		// compare Normal and Forward vector, use Cross to get 'Right' vector
+		float3 right = normalize(cross(forwardDir, buf_CritterBrushstrokeData[idx].normal));
+		// Cross 'Right' and 'Normal' Vectors to get Forward Tangent
+		float3 tangent = normalize(cross(buf_CritterBrushstrokeData[idx].normal, right));
+		buf_CritterBrushstrokeData[idx].tangent = tangent;  // This looks like the only reason buf_CritterBrushstrokeData is both ReadWrite		
+	}
+}
+

@@ -200,7 +200,7 @@ public class TestImpressionismRender02 : MonoBehaviour {
         brushtrokeMidgroundMaterial = new Material(brushstrokeWorldShader);
 
         int numStrokes = 32;
-        Vector3 dimensions = new Vector3(20f, 16f, 10f);
+        Vector3 dimensions = new Vector3(40f, 32f, 20f);
         strokeGessoArray = new strokeStruct[numStrokes * numStrokes * numStrokes];
         strokeMidgroundArray = new strokeStruct[numStrokes * numStrokes * numStrokes];
         int index = 0;

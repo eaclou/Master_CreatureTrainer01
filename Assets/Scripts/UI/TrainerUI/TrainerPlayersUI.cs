@@ -13,7 +13,7 @@ public class TrainerPlayersUI : MonoBehaviour {
 	public Button buttonApply;
 	public Button buttonCancel;
 	public Image bgImage;
-
+    
 	public int pendingNumPlayers;
 
 	public bool valuesChanged = false;
@@ -129,7 +129,7 @@ public class TrainerPlayersUI : MonoBehaviour {
 		DebugBot.DebugFunctionCall("TPlayersUI; ClickCancel(); ", debugFunctionCalls);
 		InitializePanelWithTrainerData();
 	}
-
-	#endregion
+    
+    #endregion
 
 }

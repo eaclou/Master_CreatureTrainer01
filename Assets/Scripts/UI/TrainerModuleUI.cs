@@ -29,6 +29,7 @@ public class TrainerModuleUI : MonoBehaviour {
     public GameObject panelTrainingModifiers;
 
 	public GameController gameController;
+    public TrainerRenderManager trainerRenderManager;
 
 	// Panel Scripts:
 	public TrainerPlayersUI panelPlayersScript;

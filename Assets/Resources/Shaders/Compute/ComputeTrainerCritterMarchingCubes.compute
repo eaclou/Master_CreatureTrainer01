@@ -1,0 +1,643 @@
+﻿//Boris Novikov (17.09.2013)
+//Special thanks to Johannes Gotlén for geometry shader example.
+
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+struct Poly
+{
+    float3 A;
+    float3 B;
+    float3 C;
+    float3 NA;
+    float3 NB;
+    float3 NC;
+	float3 COLA;
+	float3 COLB;
+	float3 COLC;
+
+	int2 BoneIndicesA;
+	float2 BoneWeightsA;
+	int2 BoneIndicesB;
+	float2 BoneWeightsB;
+	int2 BoneIndicesC;
+	float2 BoneWeightsC;
+};
+
+struct SegmentTransform
+{
+    float3 P;
+    float4 R;
+    float3 S;
+};
+
+int _CalcNumPolys = 1;
+
+float _GlobalOffsetX = 0;
+float _GlobalOffsetY = 0;
+float _GlobalOffsetZ = 0;
+float _CellSize;
+
+float4 _ColorPrimary = float4(1,1,1,1);
+float4 _ColorSecondary = float4(0,0,0,1);
+float _ColorNoiseScale = 1;
+float _ColorSmlAmplitude = 1;
+float _ColorMedAmplitude = 1;
+float _ColorLrgAmplitude = 1;
+float _ColorContrast = 0;
+float _ColorThreshold = 0.5;
+
+float3 _SkinNoiseScale = float3(1,1,1);
+float _SkinNoiseAmplitude = 1;
+float3 _SkinLocalTaper = float3(0,0,0);
+float3 _SkinLocalSinFreq = float3(1,1,1);
+float3 _SkinLocalSinAmp = float3(1,1,1);
+// Local Segment-space modifications, sin, taper, etc.
+
+//input density volume
+RWTexture3D<float> noise_volume;
+
+// input critterSegment Transform information:
+RWStructuredBuffer<SegmentTransform> segmentTransformBuffer;
+
+//output triangle stream (special thanks to Scrawk from Unity3d forums)
+// Somehow works by seamlessly converting 3 floats from .cs into a float3 vector here inside shader
+RWStructuredBuffer<Poly> buffer;
+
+// Holds numPolys
+RWStructuredBuffer<int> numPolyBuffer;
+
+//Counter is used to prevent multi-threaded function from writing to the same adresses
+groupshared int index_counter = 0;
+groupshared int index_numPolys = 0;
+
+float3 RotatePoint(float3 position, float4 rotation) {
+	float3 t = 2 * cross(rotation.xyz, position);
+	return (position + rotation.w * t + cross(rotation.xyz, t));
+}
+
+float DistancePointToBox(float3 pos, float3 boxPos, float3 boxScale, float4 boxRotation, float extrudeAmount) {
+
+    float3 boxCenterToPoint = pos - boxPos + float3(0.00001, 0.00001, 0.00001);  // prevent divide by 0
+    float3 right = RotatePoint(float3(1.0, 0, 0), boxRotation);
+    float3 up = RotatePoint(float3(0, 1.0, 0), boxRotation);
+    float3 forward = RotatePoint(float3(0, 0, 1.0), boxRotation);
+
+    float dotRight = dot(right, boxCenterToPoint);
+    float dotUp = dot(up, boxCenterToPoint);
+    float dotForward = dot(forward, boxCenterToPoint);
+
+	// Cache distance amounts per box-local-dimensions:
+	float dotRightAbs = abs(dotRight);
+	float dotRightSign = dotRight / dotRightAbs;
+	float dotUpAbs = abs(dotUp);
+	float dotUpSign = dotUp / dotUpAbs;
+	float dotForwardAbs = abs(dotForward);
+	float dotForwardSign = dotForward / dotForwardAbs;
+
+	float minDistance = 0.001;  // prevent divide by 0 and negative distances
+	//float roundness = 1; // multiplier on boxScale
+	//float extrudeAmount = 0.25;
+
+	// find point on box 'edge' to measure against samplepoint:
+	float distRight = min(dotRightAbs, max(boxScale.x - extrudeAmount, 0.0)) * dotRightSign; // amount to move in box's local X direction
+	float distUp = min(dotUpAbs, max(boxScale.y - extrudeAmount, 0.0)) * dotUpSign;
+    float distForward = min(dotForwardAbs, max(boxScale.z - extrudeAmount, 0.0)) * dotForwardSign;
+
+	float3 offsetVector = pos - (right * distRight + up * distUp + forward * distForward + boxPos);
+
+	float distance = max(minDistance, length(offsetVector));
+
+    return distance;
+}
+
+float DistancePointToPoint(float3 pos, float3 boxPos) {
+	float3 boxCenterToPoint = pos - boxPos + float3(0.0001, 0.0001, 0.0001);  // prevent divide by 0
+
+	float distance = length(boxCenterToPoint);
+
+	return distance;
+}
+
+float TrilinearTextureSample(float3 sampleCoords) {
+	
+	float x0 = floor(sampleCoords.x);
+	float y0 = floor(sampleCoords.y);
+	float z0 = floor(sampleCoords.z);
+
+	float xd = frac(sampleCoords.x);
+	float yd = frac(sampleCoords.y);
+	float zd = frac(sampleCoords.z);
+
+	float c00 = noise_volume[float3(x0, y0, z0)] * (1.0 - xd) + noise_volume[float3(x0 + 1.0, y0, z0)] * xd;
+	float c01 = noise_volume[float3(x0, y0, z0 + 1.0)] * (1.0 - xd) + noise_volume[float3(x0 + 1.0, y0, z0 + 1.0)] * xd;
+	float c10 = noise_volume[float3(x0, y0 + 1.0, z0)] * (1.0 - xd) + noise_volume[float3(x0 + 1.0, y0 + 1.0, z0)] * xd;
+	float c11 = noise_volume[float3(x0, y0 + 1.0, z0 + 1.0)] * (1.0 - xd) + noise_volume[float3(x0 + 1.0, y0 + 1.0, z0 + 1.0)] * xd;
+
+	float c0 = c00 * (1.0 - yd) + c10 * yd;
+	float c1 = c01 * (1.0 - yd) + c11 * yd;
+	
+	float c = c0 * (1.0 - zd) + c1 * zd;
+	return c;
+}
+
+float SampleVolumeNoise(float3 pPosition) {
+	float u = (pPosition.x / _CellSize + 1024.0) % 16;
+	float v = (pPosition.y / _CellSize + 1024.0) % 16;
+	float w = (pPosition.z / _CellSize + 1024.0) % 16;
+
+	//return noise_volume[float3(u, v, w)];
+	return TrilinearTextureSample(float3(u, v, w));
+}
+
+float3 WorldToSegmentCoords(float3 worldPos, float3 boxPos, float3 boxScale, float4 boxRotation)  {
+	float3 boxCenterToPoint = worldPos - boxPos + float3(0.00001, 0.00001, 0.00001);  // prevent divide by 0
+    float3 right = RotatePoint(float3(1.0, 0, 0), boxRotation);
+    float3 up = RotatePoint(float3(0, 1.0, 0), boxRotation);
+    float3 forward = RotatePoint(float3(0, 0, 1.0), boxRotation);
+
+    float dimRight = dot(right, boxCenterToPoint) * boxScale.x * 0.5;
+    float dimUp = dot(up, boxCenterToPoint) * boxScale.y * 0.5;
+    float dimForward = dot(forward, boxCenterToPoint) * boxScale.z * 0.5;
+
+	return float3(dimRight, dimUp, dimForward);
+}
+
+float SampleDensity(float3 pPosition){
+		
+	float density = 0.0;
+	float amplitude = 0.03;
+	uint elements;
+	uint stride;
+	segmentTransformBuffer.GetDimensions(elements, stride);
+	for(int i = 0; i < 32; i++) {
+		if(i < elements) {
+			float dist = DistancePointToBox(pPosition, segmentTransformBuffer[i].P, segmentTransformBuffer[i].S, segmentTransformBuffer[i].R, 0.25) + SampleVolumeNoise(pPosition * _SkinNoiseScale) * _SkinNoiseAmplitude * 0.1;
+			float3 segmentCoords = WorldToSegmentCoords(pPosition, segmentTransformBuffer[i].P, segmentTransformBuffer[i].S, segmentTransformBuffer[i].R);
+			dist += sin(segmentCoords.x * _SkinLocalSinFreq.x) * 0.1 * _SkinLocalSinAmp.x + 
+					sin(segmentCoords.y * _SkinLocalSinFreq.y) * 0.1 * _SkinLocalSinAmp.y +
+					sin(segmentCoords.z * _SkinLocalSinFreq.z) * 0.1 * _SkinLocalSinAmp.z +
+					(segmentCoords.x + segmentTransformBuffer[i].S.x * 0.5) * _SkinLocalTaper.x * 0.1 +
+					(segmentCoords.y + segmentTransformBuffer[i].S.y * 0.5) * _SkinLocalTaper.y * 0.1 +
+					(segmentCoords.z + segmentTransformBuffer[i].S.z * 0.5) * _SkinLocalTaper.z * 0.1;
+			//dist += sin(segmentCoords.z * 24.0) * 0.05 + cos((segmentCoords.z + segmentCoords.x + segmentCoords.y) * 16.0) * 0.03 - segmentCoords.z * 0.025;
+			//float dist = DistancePointToPoint(pPosition, segmentTransformBuffer[i].P);
+			density += amplitude / (dist * dist);
+		}
+	}
+	
+	return density;		
+}
+
+void CalculateBoneWeights(float3 pos, out int2 indices, out float2 weights) {
+	indices = int2(0,0);  // just in case, zero out values
+	weights = float2(0.0,0.0);
+
+	// BoneWeights!!!:
+	uint elements;
+	uint stride;
+	segmentTransformBuffer.GetDimensions(elements, stride);  // cache the length of xForm buffer?
+	
+	float2 boneInfluence = float2(0.0, 0.0);
+	for(int i = 0; i < 32; i++) {
+		if(i < elements) {
+			float dist = 1.0 * DistancePointToPoint(pos, segmentTransformBuffer[i].P);
+			//dist += 0.1 * DistancePointToBox(pos, segmentTransformBuffer[i].P, segmentTransformBuffer[i].S, segmentTransformBuffer[i].R, 0.5);
+			float rawInfluence = 1.0 / (dist * dist);
+
+			if(rawInfluence > boneInfluence.x) {  // new top dawg:
+				boneInfluence.y = boneInfluence.x;
+				boneInfluence.x = rawInfluence;
+				indices.y = indices.x;
+				indices.x = i;
+			}
+			else {
+				if(rawInfluence > boneInfluence.y) {  // new beta wolf:
+					boneInfluence.y = rawInfluence;
+					indices.y = i;
+				}
+			}
+		}
+	}
+	float totalInfluence = boneInfluence.x + boneInfluence.y;
+	weights = float2(boneInfluence.x / totalInfluence, boneInfluence.y / totalInfluence);
+}
+
+float3 GetNormal (float x, float y, float z)
+{
+	float3 normal = float3(0.0,0.0,0.0);
+		
+	// just sample texture neighbors to figure out Normal?
+	float dx = SampleDensity(float3(x+_CellSize,y,z)) - SampleDensity(float3(x-_CellSize,y,z));
+	float dy = SampleDensity(float3(x,y+_CellSize,z)) - SampleDensity(float3(x,y-_CellSize,z));
+	float dz = SampleDensity(float3(x,y,z+_CellSize)) - SampleDensity(float3(x,y,z-_CellSize));
+		
+	normal = -normalize(float3(0.00001+dx,0.00001+dy,0.00001+dz));  // ?? why add 0.001? to prevent 0?
+		
+	return normal;		
+}
+
+float3 GetVertexColor(float3 pPosition) {
+	
+	float noiseVal = ((SampleVolumeNoise(pPosition * _ColorNoiseScale * 2.31) * 0.5 * _ColorSmlAmplitude) +
+					 (SampleVolumeNoise(pPosition * _ColorNoiseScale * 1.029) * _ColorMedAmplitude) +
+					 (SampleVolumeNoise(pPosition * _ColorNoiseScale * 0.467) * 2.0 * _ColorLrgAmplitude)) * 0.5 + 0.5;
+	float3 color = lerp(_ColorPrimary.rgb, _ColorSecondary.rgb, noiseVal);
+	return color;
+}
+	
+[numthreads(8,8,8)]
+void CSMain (uint3 id : SV_DispatchThreadID, uint3 grpID : SV_GroupID, uint3 grpTID : SV_GroupThreadID)
+{	
+	// For each Voxel of the chunk grid:
+	const float cap = 0.5;   // density threshold to determine if a vert of the cube is on a density boundary
+	const float halfSize = _CellSize * 0.5;
+	const float4 cubeVerts[8] = {
+		//front face
+		float4(-halfSize, -halfSize, -halfSize, 1) ,		//LB   0
+		float4(-halfSize,  halfSize, -halfSize,	1) ,		//LT   1
+		float4( halfSize,  halfSize, -halfSize, 1) ,		//RT   2
+		float4( halfSize, -halfSize, -halfSize, 1) ,		//RB   3
+		//back
+		float4(-halfSize, -halfSize,  halfSize, 1),		// LB  4
+		float4(-halfSize,  halfSize,  halfSize, 1),		// LT  5
+		float4( halfSize,  halfSize,  halfSize, 1),		// RT  6
+		float4( halfSize, -halfSize,  halfSize, 1)		// RB  7
+	};		
+
+	const int2 edge_to_verts[12] = {
+		int2(0,1), //0
+		int2(1,2), //1
+		int2(2,3), //2
+		int2(3,0), //3
+		int2(4,5), //4
+		int2(5,6), //5
+		int2(6,7), //6
+		int2(7,4), //7
+		int2(4,0), //8
+		int2(5,1), //9
+		int2(6,2), //10
+		int2(7,3) //11
+	};
+	const int case_to_numpolys[256] = {
+		0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,2,1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,3,
+		1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,3,2,3,3,2,3,4,4,3,3,4,4,3,4,5,5,2,
+		1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,3,2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,4,
+		2,3,3,4,3,4,2,3,3,4,4,5,4,5,3,2,3,4,4,3,4,5,3,2,4,5,5,4,5,2,4,1, 
+		1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,3,2,3,3,4,3,4,4,5,3,2,4,3,4,3,5,2, 
+		2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,4,3,4,4,3,4,5,5,4,4,3,5,2,5,4,2,1, 
+		2,3,3,4,3,4,4,5,3,4,4,5,2,3,3,2,3,4,4,5,4,5,5,2,4,3,5,4,3,2,4,1, 
+		3,4,4,5,4,5,3,4,4,5,5,2,3,4,2,1,2,3,3,2,3,4,2,1,3,2,4,1,2,1,1,0
+	};
+	//   256*5 = 1280 entries
+	const int4 edge_connect_list[1280] = { 
+		int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(0,  8,  3, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(0,  1,  9, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(1,  8,  3, -1),  int4(9,  8,  1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(1,  2, 10, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(0,  8,  3, -1),  int4(1,  2, 10, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(9,  2, 10, -1),  int4(0,  2,  9, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(2,  8,  3, -1),  int4(2, 10,  8, -1), int4(10,  9,  8, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(3, 11,  2, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(0, 11,  2, -1),  int4(8, 11,  0, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(1,  9,  0, -1),  int4(2,  3, 11, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(1, 11,  2, -1),  int4(1,  9, 11, -1),  int4(9,  8, 11, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(3, 10,  1, -1), int4(11, 10,  3, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(0, 10,  1, -1),  int4(0,  8, 10, -1),  int4(8, 11, 10, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(3,  9,  0, -1),  int4(3, 11,  9, -1), int4(11, 10,  9, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(9,  8, 10, -1), int4(10,  8, 11, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(4,  7,  8, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(4,  3,  0, -1),  int4(7,  3,  4, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(0,  1,  9, -1),  int4(8,  4,  7, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(4,  1,  9, -1),  int4(4,  7,  1, -1),  int4(7,  3,  1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(1,  2, 10, -1),  int4(8,  4,  7, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(3,  4,  7, -1),  int4(3,  0,  4, -1),  int4(1,  2, 10, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(9,  2, 10, -1),  int4(9,  0,  2, -1),  int4(8,  4,  7, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(2, 10,  9, -1),  int4(2,  9,  7, -1),  int4(2,  7,  3, -1),  int4(7,  9,  4, -1), int4(-1, -1, -1, -1),
+		int4(8,  4,  7, -1),  int4(3, 11,  2, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(11,  4,  7, -1), int4(11,  2,  4, -1),  int4(2,  0,  4, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(9,  0,  1, -1),  int4(8,  4,  7, -1),  int4(2,  3, 11, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(4,  7, 11, -1),  int4(9,  4, 11, -1),  int4(9, 11,  2, -1),  int4(9,  2,  1, -1), int4(-1, -1, -1, -1),
+		int4(3, 10,  1, -1),  int4(3, 11, 10, -1),  int4(7,  8,  4, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(1, 11, 10, -1),  int4(1,  4, 11, -1),  int4(1,  0,  4, -1),  int4(7, 11,  4, -1), int4(-1, -1, -1, -1),
+		int4(4,  7,  8, -1),  int4(9,  0, 11, -1),  int4(9, 11, 10, -1), int4(11,  0,  3, -1), int4(-1, -1, -1, -1),
+		int4(4,  7, 11, -1),  int4(4, 11,  9, -1),  int4(9, 11, 10, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(9,  5,  4, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(9,  5,  4, -1),  int4(0,  8,  3, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(0,  5,  4, -1),  int4(1,  5,  0, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(8,  5,  4, -1),  int4(8,  3,  5, -1),  int4(3,  1,  5, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(1,  2, 10, -1),  int4(9,  5,  4, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(3,  0,  8, -1),  int4(1,  2, 10, -1),  int4(4,  9,  5, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(5,  2, 10, -1),  int4(5,  4,  2, -1),  int4(4,  0,  2, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(2, 10,  5, -1),  int4(3,  2,  5, -1),  int4(3,  5,  4, -1),  int4(3,  4,  8, -1), int4(-1, -1, -1, -1),
+		int4(9,  5,  4, -1),  int4(2,  3, 11, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(0, 11,  2, -1),  int4(0,  8, 11, -1),  int4(4,  9,  5, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(0,  5,  4, -1),  int4(0,  1,  5, -1),  int4(2,  3, 11, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(2,  1,  5, -1),  int4(2,  5,  8, -1),  int4(2,  8, 11, -1),  int4(4,  8,  5, -1), int4(-1, -1, -1, -1),
+		int4(10,  3, 11, -1), int4(10,  1,  3, -1),  int4(9,  5,  4, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(4,  9,  5, -1),  int4(0,  8,  1, -1),  int4(8, 10,  1, -1),  int4(8, 11, 10, -1), int4(-1, -1, -1, -1),
+		int4(5,  4,  0, -1),  int4(5,  0, 11, -1),  int4(5, 11, 10, -1), int4(11,  0,  3, -1), int4(-1, -1, -1, -1),
+		int4(5,  4,  8, -1),  int4(5,  8, 10, -1), int4(10,  8, 11, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(9,  7,  8, -1),  int4(5,  7,  9, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(9,  3,  0, -1),  int4(9,  5,  3, -1),  int4(5,  7,  3, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(0,  7,  8, -1),  int4(0,  1,  7, -1),  int4(1,  5,  7, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(1,  5,  3, -1),  int4(3,  5,  7, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(9,  7,  8, -1),  int4(9,  5,  7, -1), int4(10,  1,  2, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(10,  1,  2, -1),  int4(9,  5,  0, -1),  int4(5,  3,  0, -1),  int4(5,  7,  3, -1), int4(-1, -1, -1, -1),
+		int4(8,  0,  2, -1),  int4(8,  2,  5, -1),  int4(8,  5,  7, -1), int4(10,  5,  2, -1), int4(-1, -1, -1, -1),
+		int4(2, 10,  5, -1),  int4(2,  5,  3, -1),  int4(3,  5,  7, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(7,  9,  5, -1),  int4(7,  8,  9, -1),  int4(3, 11,  2, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(9,  5,  7, -1),  int4(9,  7,  2, -1),  int4(9,  2,  0, -1),  int4(2,  7, 11, -1), int4(-1, -1, -1, -1),
+		int4(2,  3, 11, -1),  int4(0,  1,  8, -1),  int4(1,  7,  8, -1),  int4(1,  5,  7, -1), int4(-1, -1, -1, -1),
+		int4(11,  2,  1, -1), int4(11,  1,  7, -1),  int4(7,  1,  5, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(9,  5,  8, -1),  int4(8,  5,  7, -1), int4(10,  1,  3, -1), int4(10,  3, 11, -1), int4(-1, -1, -1, -1),
+		int4(5,  7,  0, -1),  int4(5,  0,  9, -1),  int4(7, 11,  0, -1),  int4(1,  0, 10, -1), int4(11, 10,  0, -1),
+		int4(11, 10,  0, -1), int4(11,  0,  3, -1), int4(10,  5,  0, -1),  int4(8,  0,  7, -1),  int4(5,  7,  0, -1),
+		int4(11, 10,  5, -1),  int4(7, 11,  5, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(10,  6,  5, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(0,  8,  3, -1),  int4(5, 10,  6, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(9,  0,  1, -1),  int4(5, 10,  6, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(1,  8,  3, -1),  int4(1,  9,  8, -1),  int4(5, 10,  6, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(1,  6,  5, -1),  int4(2,  6,  1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(1,  6,  5, -1),  int4(1,  2,  6, -1),  int4(3,  0,  8, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(9,  6,  5, -1),  int4(9,  0,  6, -1),  int4(0,  2,  6, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(5,  9,  8, -1),  int4(5,  8,  2, -1),  int4(5,  2,  6, -1),  int4(3,  2,  8, -1), int4(-1, -1, -1, -1),
+		int4(2,  3, 11, -1), int4(10,  6,  5, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(11,  0,  8, -1), int4(11,  2,  0, -1), int4(10,  6,  5, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(0,  1,  9, -1),  int4(2,  3, 11, -1),  int4(5, 10,  6, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(5, 10,  6, -1),  int4(1,  9,  2, -1),  int4(9, 11,  2, -1),  int4(9,  8, 11, -1), int4(-1, -1, -1, -1),
+		int4(6,  3, 11, -1),  int4(6,  5,  3, -1),  int4(5,  1,  3, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(0,  8, 11, -1),  int4(0, 11,  5, -1),  int4(0,  5,  1, -1),  int4(5, 11,  6, -1), int4(-1, -1, -1, -1),
+		int4(3, 11,  6, -1),  int4(0,  3,  6, -1),  int4(0,  6,  5, -1),  int4(0,  5,  9, -1), int4(-1, -1, -1, -1),
+		int4(6,  5,  9, -1),  int4(6,  9, 11, -1), int4(11,  9,  8, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(5, 10,  6, -1),  int4(4,  7,  8, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(4,  3,  0, -1),  int4(4,  7,  3, -1),  int4(6,  5, 10, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(1,  9,  0, -1),  int4(5, 10,  6, -1),  int4(8,  4,  7, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(10,  6,  5, -1),  int4(1,  9,  7, -1),  int4(1,  7,  3, -1),  int4(7,  9,  4, -1), int4(-1, -1, -1, -1),
+		int4(6,  1,  2, -1),  int4(6,  5,  1, -1),  int4(4,  7,  8, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(1,  2,  5, -1),  int4(5,  2,  6, -1),  int4(3,  0,  4, -1),  int4(3,  4,  7, -1), int4(-1, -1, -1, -1),
+		int4(8,  4,  7, -1),  int4(9,  0,  5, -1),  int4(0,  6,  5, -1),  int4(0,  2,  6, -1), int4(-1, -1, -1, -1),
+		int4(7,  3,  9, -1),  int4(7,  9,  4, -1),  int4(3,  2,  9, -1),  int4(5,  9,  6, -1),  int4(2,  6,  9, -1),
+		int4(3, 11,  2, -1),  int4(7,  8,  4, -1), int4(10,  6,  5, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(5, 10,  6, -1),  int4(4,  7,  2, -1),  int4(4,  2,  0, -1),  int4(2,  7, 11, -1), int4(-1, -1, -1, -1),
+		int4(0,  1,  9, -1),  int4(4,  7,  8, -1),  int4(2,  3, 11, -1),  int4(5, 10,  6, -1), int4(-1, -1, -1, -1),
+		int4(9,  2,  1, -1),  int4(9, 11,  2, -1),  int4(9,  4, 11, -1),  int4(7, 11,  4, -1),  int4(5, 10,  6, -1),
+		int4(8,  4,  7, -1),  int4(3, 11,  5, -1),  int4(3,  5,  1, -1),  int4(5, 11,  6, -1), int4(-1, -1, -1, -1),
+		int4(5,  1, 11, -1),  int4(5, 11,  6, -1),  int4(1,  0, 11, -1),  int4(7, 11,  4, -1),  int4(0,  4, 11, -1),
+		int4(0,  5,  9, -1),  int4(0,  6,  5, -1),  int4(0,  3,  6, -1), int4(11,  6,  3, -1),  int4(8,  4,  7, -1),
+		int4(6,  5,  9, -1),  int4(6,  9, 11, -1),  int4(4,  7,  9, -1),  int4(7, 11,  9, -1), int4(-1, -1, -1, -1),
+		int4(10,  4,  9, -1),  int4(6,  4, 10, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(4, 10,  6, -1),  int4(4,  9, 10, -1),  int4(0,  8,  3, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(10,  0,  1, -1), int4(10,  6,  0, -1),  int4(6,  4,  0, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(8,  3,  1, -1),  int4(8,  1,  6, -1),  int4(8,  6,  4, -1),  int4(6,  1, 10, -1), int4(-1, -1, -1, -1),
+		int4(1,  4,  9, -1),  int4(1,  2,  4, -1),  int4(2,  6,  4, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(3,  0,  8, -1),  int4(1,  2,  9, -1),  int4(2,  4,  9, -1),  int4(2,  6,  4, -1), int4(-1, -1, -1, -1),
+		int4(0,  2,  4, -1),  int4(4,  2,  6, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(8,  3,  2, -1),  int4(8,  2,  4, -1),  int4(4,  2,  6, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(10,  4,  9, -1), int4(10,  6,  4, -1), int4(11,  2,  3, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(0,  8,  2, -1),  int4(2,  8, 11, -1),  int4(4,  9, 10, -1),  int4(4, 10,  6, -1), int4(-1, -1, -1, -1),
+		int4(3, 11,  2, -1),  int4(0,  1,  6, -1),  int4(0,  6,  4, -1),  int4(6,  1, 10, -1), int4(-1, -1, -1, -1),
+		int4(6,  4,  1, -1),  int4(6,  1, 10, -1),  int4(4,  8,  1, -1),  int4(2,  1, 11, -1),  int4(8, 11,  1, -1),
+		int4(9,  6,  4, -1),  int4(9,  3,  6, -1),  int4(9,  1,  3, -1), int4(11,  6,  3, -1), int4(-1, -1, -1, -1),
+		int4(8, 11,  1, -1),  int4(8,  1,  0, -1), int4(11,  6,  1, -1),  int4(9,  1,  4, -1),  int4(6,  4,  1, -1),
+		int4(3, 11,  6, -1),  int4(3,  6,  0, -1),  int4(0,  6,  4, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(6,  4,  8, -1), int4(11,  6,  8, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(7, 10,  6, -1),  int4(7,  8, 10, -1),  int4(8,  9, 10, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(0,  7,  3, -1),  int4(0, 10,  7, -1),  int4(0,  9, 10, -1),  int4(6,  7, 10, -1), int4(-1, -1, -1, -1),
+		int4(10,  6,  7, -1),  int4(1, 10,  7, -1),  int4(1,  7,  8, -1),  int4(1,  8,  0, -1), int4(-1, -1, -1, -1),
+		int4(10,  6,  7, -1), int4(10,  7,  1, -1),  int4(1,  7,  3, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(1,  2,  6, -1),  int4(1,  6,  8, -1),  int4(1,  8,  9, -1),  int4(8,  6,  7, -1), int4(-1, -1, -1, -1),
+		int4(2,  6,  9, -1),  int4(2,  9,  1, -1),  int4(6,  7,  9, -1),  int4(0,  9,  3, -1),  int4(7,  3,  9, -1),
+		int4(7,  8,  0, -1),  int4(7,  0,  6, -1),  int4(6,  0,  2, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(7,  3,  2, -1),  int4(6,  7,  2, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(2,  3, 11, -1), int4(10,  6,  8, -1), int4(10,  8,  9, -1),  int4(8,  6,  7, -1), int4(-1, -1, -1, -1),
+		int4(2,  0,  7, -1),  int4(2,  7, 11, -1),  int4(0,  9,  7, -1),  int4(6,  7, 10, -1),  int4(9, 10,  7, -1),
+		int4(1,  8,  0, -1),  int4(1,  7,  8, -1),  int4(1, 10,  7, -1),  int4(6,  7, 10, -1),  int4(2,  3, 11, -1),
+		int4(11,  2,  1, -1), int4(11,  1,  7, -1), int4(10,  6,  1, -1),  int4(6,  7,  1, -1), int4(-1, -1, -1, -1),
+		int4(8,  9,  6, -1),  int4(8,  6,  7, -1),  int4(9,  1,  6, -1), int4(11,  6,  3, -1),  int4(1,  3,  6, -1),
+		int4(0,  9,  1, -1), int4(11,  6,  7, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(7,  8,  0, -1),  int4(7,  0,  6, -1),  int4(3, 11,  0, -1), int4(11,  6,  0, -1), int4(-1, -1, -1, -1),
+		int4(7, 11,  6, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(7,  6, 11, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(3,  0,  8, -1), int4(11,  7,  6, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(0,  1,  9, -1), int4(11,  7,  6, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(8,  1,  9, -1),  int4(8,  3,  1, -1), int4(11,  7,  6, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(10,  1,  2, -1),  int4(6, 11,  7, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(1,  2, 10, -1),  int4(3,  0,  8, -1),  int4(6, 11,  7, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(2,  9,  0, -1),  int4(2, 10,  9, -1),  int4(6, 11,  7, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(6, 11,  7, -1),  int4(2, 10,  3, -1), int4(10,  8,  3, -1), int4(10,  9,  8, -1), int4(-1, -1, -1, -1),
+		int4(7,  2,  3, -1),  int4(6,  2,  7, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(7,  0,  8, -1),  int4(7,  6,  0, -1),  int4(6,  2,  0, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(2,  7,  6, -1),  int4(2,  3,  7, -1),  int4(0,  1,  9, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(1,  6,  2, -1),  int4(1,  8,  6, -1),  int4(1,  9,  8, -1),  int4(8,  7,  6, -1), int4(-1, -1, -1, -1),
+		int4(10,  7,  6, -1), int4(10,  1,  7, -1),  int4(1,  3,  7, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(10,  7,  6, -1),  int4(1,  7, 10, -1),  int4(1,  8,  7, -1),  int4(1,  0,  8, -1), int4(-1, -1, -1, -1),
+		int4(0,  3,  7, -1),  int4(0,  7, 10, -1),  int4(0, 10,  9, -1),  int4(6, 10,  7, -1), int4(-1, -1, -1, -1),
+		int4(7,  6, 10, -1),  int4(7, 10,  8, -1),  int4(8, 10,  9, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(6,  8,  4, -1), int4(11,  8,  6, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(3,  6, 11, -1),  int4(3,  0,  6, -1),  int4(0,  4,  6, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(8,  6, 11, -1),  int4(8,  4,  6, -1),  int4(9,  0,  1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(9,  4,  6, -1),  int4(9,  6,  3, -1),  int4(9,  3,  1, -1), int4(11,  3,  6, -1), int4(-1, -1, -1, -1),
+		int4(6,  8,  4, -1),  int4(6, 11,  8, -1),  int4(2, 10,  1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(1,  2, 10, -1),  int4(3,  0, 11, -1),  int4(0,  6, 11, -1),  int4(0,  4,  6, -1), int4(-1, -1, -1, -1),
+		int4(4, 11,  8, -1),  int4(4,  6, 11, -1),  int4(0,  2,  9, -1),  int4(2, 10,  9, -1), int4(-1, -1, -1, -1),
+		int4(10,  9,  3, -1), int4(10,  3,  2, -1),  int4(9,  4,  3, -1), int4(11,  3,  6, -1),  int4(4,  6,  3, -1),
+		int4(8,  2,  3, -1),  int4(8,  4,  2, -1),  int4(4,  6,  2, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(0,  4,  2, -1),  int4(4,  6,  2, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(1,  9,  0, -1),  int4(2,  3,  4, -1),  int4(2,  4,  6, -1),  int4(4,  3,  8, -1), int4(-1, -1, -1, -1),
+		int4(1,  9,  4, -1),  int4(1,  4,  2, -1),  int4(2,  4,  6, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(8,  1,  3, -1),  int4(8,  6,  1, -1),  int4(8,  4,  6, -1),  int4(6, 10,  1, -1), int4(-1, -1, -1, -1),
+		int4(10,  1,  0, -1), int4(10,  0,  6, -1),  int4(6,  0,  4, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(4,  6,  3, -1),  int4(4,  3,  8, -1),  int4(6, 10,  3, -1),  int4(0,  3,  9, -1), int4(10,  9,  3, -1),
+		int4(10,  9,  4, -1),  int4(6, 10,  4, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(4,  9,  5, -1),  int4(7,  6, 11, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(0,  8,  3, -1),  int4(4,  9,  5, -1), int4(11,  7,  6, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(5,  0,  1, -1),  int4(5,  4,  0, -1),  int4(7,  6, 11, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(11,  7,  6, -1),  int4(8,  3,  4, -1),  int4(3,  5,  4, -1),  int4(3,  1,  5, -1), int4(-1, -1, -1, -1),
+		int4(9,  5,  4, -1), int4(10,  1,  2, -1),  int4(7,  6, 11, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(6, 11,  7, -1),  int4(1,  2, 10, -1),  int4(0,  8,  3, -1),  int4(4,  9,  5, -1), int4(-1, -1, -1, -1),
+		int4(7,  6, 11, -1),  int4(5,  4, 10, -1),  int4(4,  2, 10, -1),  int4(4,  0,  2, -1), int4(-1, -1, -1, -1),
+		int4(3,  4,  8, -1),  int4(3,  5,  4, -1),  int4(3,  2,  5, -1), int4(10,  5,  2, -1), int4(11,  7,  6, -1),
+		int4(7,  2,  3, -1),  int4(7,  6,  2, -1),  int4(5,  4,  9, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(9,  5,  4, -1),  int4(0,  8,  6, -1),  int4(0,  6,  2, -1),  int4(6,  8,  7, -1), int4(-1, -1, -1, -1),
+		int4(3,  6,  2, -1),  int4(3,  7,  6, -1),  int4(1,  5,  0, -1),  int4(5,  4,  0, -1), int4(-1, -1, -1, -1),
+		int4(6,  2,  8, -1),  int4(6,  8,  7, -1),  int4(2,  1,  8, -1),  int4(4,  8,  5, -1),  int4(1,  5,  8, -1),
+		int4(9,  5,  4, -1), int4(10,  1,  6, -1),  int4(1,  7,  6, -1),  int4(1,  3,  7, -1), int4(-1, -1, -1, -1),
+		int4(1,  6, 10, -1),  int4(1,  7,  6, -1),  int4(1,  0,  7, -1),  int4(8,  7,  0, -1),  int4(9,  5,  4, -1),
+		int4(4,  0, 10, -1),  int4(4, 10,  5, -1),  int4(0,  3, 10, -1),  int4(6, 10,  7, -1),  int4(3,  7, 10, -1),
+		int4(7,  6, 10, -1),  int4(7, 10,  8, -1),  int4(5,  4, 10, -1),  int4(4,  8, 10, -1), int4(-1, -1, -1, -1),
+		int4(6,  9,  5, -1),  int4(6, 11,  9, -1), int4(11,  8,  9, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(3,  6, 11, -1),  int4(0,  6,  3, -1),  int4(0,  5,  6, -1),  int4(0,  9,  5, -1), int4(-1, -1, -1, -1),
+		int4(0, 11,  8, -1),  int4(0,  5, 11, -1),  int4(0,  1,  5, -1),  int4(5,  6, 11, -1), int4(-1, -1, -1, -1),
+		int4(6, 11,  3, -1),  int4(6,  3,  5, -1),  int4(5,  3,  1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(1,  2, 10, -1),  int4(9,  5, 11, -1),  int4(9, 11,  8, -1), int4(11,  5,  6, -1), int4(-1, -1, -1, -1),
+		int4(0, 11,  3, -1),  int4(0,  6, 11, -1),  int4(0,  9,  6, -1),  int4(5,  6,  9, -1),  int4(1,  2, 10, -1),
+		int4(11,  8,  5, -1), int4(11,  5,  6, -1),  int4(8,  0,  5, -1), int4(10,  5,  2, -1),  int4(0,  2,  5, -1),
+		int4(6, 11,  3, -1),  int4(6,  3,  5, -1),  int4(2, 10,  3, -1), int4(10,  5,  3, -1), int4(-1, -1, -1, -1),
+		int4(5,  8,  9, -1),  int4(5,  2,  8, -1),  int4(5,  6,  2, -1),  int4(3,  8,  2, -1), int4(-1, -1, -1, -1),
+		int4(9,  5,  6, -1),  int4(9,  6,  0, -1),  int4(0,  6,  2, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(1,  5,  8, -1),  int4(1,  8,  0, -1),  int4(5,  6,  8, -1),  int4(3,  8,  2, -1),  int4(6,  2,  8, -1),
+		int4(1,  5,  6, -1),  int4(2,  1,  6, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(1,  3,  6, -1),  int4(1,  6, 10, -1),  int4(3,  8,  6, -1),  int4(5,  6,  9, -1),  int4(8,  9,  6, -1),
+		int4(10,  1,  0, -1), int4(10,  0,  6, -1),  int4(9,  5,  0, -1),  int4(5,  6,  0, -1), int4(-1, -1, -1, -1),
+		int4(0,  3,  8, -1),  int4(5,  6, 10, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(10,  5,  6, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(11,  5, 10, -1),  int4(7,  5, 11, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(11,  5, 10, -1), int4(11,  7,  5, -1),  int4(8,  3,  0, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(5, 11,  7, -1),  int4(5, 10, 11, -1),  int4(1,  9,  0, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(10,  7,  5, -1), int4(10, 11,  7, -1),  int4(9,  8,  1, -1),  int4(8,  3,  1, -1), int4(-1, -1, -1, -1),
+		int4(11,  1,  2, -1), int4(11,  7,  1, -1),  int4(7,  5,  1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(0,  8,  3, -1),  int4(1,  2,  7, -1),  int4(1,  7,  5, -1),  int4(7,  2, 11, -1), int4(-1, -1, -1, -1),
+		int4(9,  7,  5, -1),  int4(9,  2,  7, -1),  int4(9,  0,  2, -1),  int4(2, 11,  7, -1), int4(-1, -1, -1, -1),
+		int4(7,  5,  2, -1),  int4(7,  2, 11, -1),  int4(5,  9,  2, -1),  int4(3,  2,  8, -1),  int4(9,  8,  2, -1),
+		int4(2,  5, 10, -1),  int4(2,  3,  5, -1),  int4(3,  7,  5, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(8,  2,  0, -1),  int4(8,  5,  2, -1),  int4(8,  7,  5, -1), int4(10,  2,  5, -1), int4(-1, -1, -1, -1),
+		int4(9,  0,  1, -1),  int4(5, 10,  3, -1),  int4(5,  3,  7, -1),  int4(3, 10,  2, -1), int4(-1, -1, -1, -1),
+		int4(9,  8,  2, -1),  int4(9,  2,  1, -1),  int4(8,  7,  2, -1), int4(10,  2,  5, -1),  int4(7,  5,  2, -1),
+		int4(1,  3,  5, -1),  int4(3,  7,  5, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(0,  8,  7, -1),  int4(0,  7,  1, -1),  int4(1,  7,  5, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(9,  0,  3, -1),  int4(9,  3,  5, -1),  int4(5,  3,  7, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(9,  8,  7, -1),  int4(5,  9,  7, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(5,  8,  4, -1),  int4(5, 10,  8, -1), int4(10, 11,  8, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(5,  0,  4, -1),  int4(5, 11,  0, -1),  int4(5, 10, 11, -1), int4(11,  3,  0, -1), int4(-1, -1, -1, -1),
+		int4(0,  1,  9, -1),  int4(8,  4, 10, -1),  int4(8, 10, 11, -1), int4(10,  4,  5, -1), int4(-1, -1, -1, -1),
+		int4(10, 11,  4, -1), int4(10,  4,  5, -1), int4(11,  3,  4, -1),  int4(9,  4,  1, -1),  int4(3,  1,  4, -1),
+		int4(2,  5,  1, -1),  int4(2,  8,  5, -1),  int4(2, 11,  8, -1),  int4(4,  5,  8, -1), int4(-1, -1, -1, -1),
+		int4(0,  4, 11, -1),  int4(0, 11,  3, -1),  int4(4,  5, 11, -1),  int4(2, 11,  1, -1),  int4(5,  1, 11, -1),
+		int4(0,  2,  5, -1),  int4(0,  5,  9, -1),  int4(2, 11,  5, -1),  int4(4,  5,  8, -1), int4(11,  8,  5, -1),
+		int4(9,  4,  5, -1),  int4(2, 11,  3, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(2,  5, 10, -1),  int4(3,  5,  2, -1),  int4(3,  4,  5, -1),  int4(3,  8,  4, -1), int4(-1, -1, -1, -1),
+		int4(5, 10,  2, -1),  int4(5,  2,  4, -1),  int4(4,  2,  0, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(3, 10,  2, -1),  int4(3,  5, 10, -1),  int4(3,  8,  5, -1),  int4(4,  5,  8, -1),  int4(0,  1,  9, -1),
+		int4(5, 10,  2, -1),  int4(5,  2,  4, -1),  int4(1,  9,  2, -1),  int4(9,  4,  2, -1), int4(-1, -1, -1, -1),
+		int4(8,  4,  5, -1),  int4(8,  5,  3, -1),  int4(3,  5,  1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(0,  4,  5, -1),  int4(1,  0,  5, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(8,  4,  5, -1),  int4(8,  5,  3, -1),  int4(9,  0,  5, -1),  int4(0,  3,  5, -1), int4(-1, -1, -1, -1),
+		int4(9,  4,  5, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(4, 11,  7, -1),  int4(4,  9, 11, -1),  int4(9, 10, 11, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(0,  8,  3, -1),  int4(4,  9,  7, -1),  int4(9, 11,  7, -1),  int4(9, 10, 11, -1), int4(-1, -1, -1, -1),
+		int4(1, 10, 11, -1),  int4(1, 11,  4, -1),  int4(1,  4,  0, -1),  int4(7,  4, 11, -1), int4(-1, -1, -1, -1),
+		int4(3,  1,  4, -1),  int4(3,  4,  8, -1),  int4(1, 10,  4, -1),  int4(7,  4, 11, -1), int4(10, 11,  4, -1),
+		int4(4, 11,  7, -1),  int4(9, 11,  4, -1),  int4(9,  2, 11, -1),  int4(9,  1,  2, -1), int4(-1, -1, -1, -1),
+		int4(9,  7,  4, -1),  int4(9, 11,  7, -1),  int4(9,  1, 11, -1),  int4(2, 11,  1, -1),  int4(0,  8,  3, -1),
+		int4(11,  7,  4, -1), int4(11,  4,  2, -1),  int4(2,  4,  0, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(11,  7,  4, -1), int4(11,  4,  2, -1),  int4(8,  3,  4, -1),  int4(3,  2,  4, -1), int4(-1, -1, -1, -1),
+		int4(2,  9, 10, -1),  int4(2,  7,  9, -1),  int4(2,  3,  7, -1),  int4(7,  4,  9, -1), int4(-1, -1, -1, -1),
+		int4(9, 10,  7, -1),  int4(9,  7,  4, -1), int4(10,  2,  7, -1),  int4(8,  7,  0, -1),  int4(2,  0,  7, -1),
+		int4(3,  7, 10, -1),  int4(3, 10,  2, -1),  int4(7,  4, 10, -1),  int4(1, 10,  0, -1),  int4(4,  0, 10, -1),
+		int4(1, 10,  2, -1),  int4(8,  7,  4, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(4,  9,  1, -1),  int4(4,  1,  7, -1),  int4(7,  1,  3, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(4,  9,  1, -1),  int4(4,  1,  7, -1),  int4(0,  8,  1, -1),  int4(8,  7,  1, -1), int4(-1, -1, -1, -1),
+		int4(4,  0,  3, -1),  int4(7,  4,  3, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(4,  8,  7, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(9, 10,  8, -1), int4(10, 11,  8, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(3,  0,  9, -1),  int4(3,  9, 11, -1), int4(11,  9, 10, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(0,  1, 10, -1),  int4(0, 10,  8, -1),  int4(8, 10, 11, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(3,  1, 10, -1), int4(11,  3, 10, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(1,  2, 11, -1),  int4(1, 11,  9, -1),  int4(9, 11,  8, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(3,  0,  9, -1),  int4(3,  9, 11, -1),  int4(1,  2,  9, -1),  int4(2, 11,  9, -1), int4(-1, -1, -1, -1),
+		int4(0,  2, 11, -1),  int4(8,  0, 11, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(3,  2, 11, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(2,  3,  8, -1),  int4(2,  8, 10, -1), int4(10,  8,  9, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(9, 10,  2, -1),  int4(0,  9,  2, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(2,  3,  8, -1),  int4(2,  8, 10, -1),  int4(0,  1,  8, -1),  int4(1, 10,  8, -1), int4(-1, -1, -1, -1),
+		int4(1, 10,  2, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(1,  3,  8, -1),  int4(9,  1,  8, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(0,  9,  1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(0,  3,  8, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1),
+		int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1), int4(-1, -1, -1, -1)
+	};	
+			
+	Poly NewPoly;
+		
+	int Index;
+		
+	// grpID, grpTID	
+				
+	//float3 p = grpID * 8 + float3(grpTID.x, grpTID.y, grpTID.z);
+	float3 p = id * _CellSize;
+	p.x += _GlobalOffsetX;
+	p.y += _GlobalOffsetY;
+	p.z += _GlobalOffsetZ;
+	
+	float weights[8];				
+	weights[0] = SampleDensity(p + cubeVerts[0].xyz);
+	weights[1] = SampleDensity(p + cubeVerts[1].xyz);
+	weights[2] = SampleDensity(p + cubeVerts[2].xyz);
+	weights[3] = SampleDensity(p + cubeVerts[3].xyz);
+	weights[4] = SampleDensity(p + cubeVerts[4].xyz);
+	weights[5] = SampleDensity(p + cubeVerts[5].xyz);
+	weights[6] = SampleDensity(p + cubeVerts[6].xyz);
+	weights[7] = SampleDensity(p + cubeVerts[7].xyz);			
+	
+	int marchingCase = 
+	(weights[7] > cap) * 128 + 
+	(weights[6] > cap) * 64 +
+	(weights[5] > cap) * 32 +
+	(weights[4] > cap) * 16 +
+	(weights[3] > cap) * 8 +
+	(weights[2] > cap) * 4 +
+	(weights[1] > cap) * 2 +
+	(weights[0] > cap) * 1;
+			
+	int numpolys = case_to_numpolys[marchingCase];	
+	InterlockedAdd(numPolyBuffer[0],numpolys);	
+	
+	if(_CalcNumPolys < 0.5) {
+		for( int i = 0; i < 5; i++ )
+		{		
+			if(i < numpolys)
+			{
+				int4 polyEdges = edge_connect_list[marchingCase * 5 + i];
+				float tempColorScale = 0.25f;
+
+				int2 boneIndices = int2(0, 0);
+				float2 boneWeights = float2(0.0, 0.0);
+
+				uint elements;
+				uint stride;
+				segmentTransformBuffer.GetDimensions(elements, stride);  // cache the length of xForm buffer?
+				float numSegmentsFloat = elements * 1.0;
+					
+				int va = edge_to_verts[polyEdges.x].x;
+				int vb = edge_to_verts[polyEdges.x].y;
+				float amount = (cap - weights[va]) / (weights[vb] - weights[va]);
+				NewPoly.A = lerp( p + cubeVerts[va].xyz,  p + cubeVerts[vb].xyz, amount);
+				NewPoly.NA = GetNormal(NewPoly.A.x, NewPoly.A.y, NewPoly.A.z);									
+				CalculateBoneWeights(NewPoly.A, boneIndices, boneWeights);
+				NewPoly.BoneIndicesA = boneIndices;
+				NewPoly.BoneWeightsA = boneWeights;
+				NewPoly.COLA = GetVertexColor(NewPoly.A);
+					
+				va = edge_to_verts[polyEdges.y].x;
+				vb = edge_to_verts[polyEdges.y].y;
+				amount = (cap - weights[va]) / (weights[vb] - weights[va]);
+				NewPoly.B = lerp( p + cubeVerts[va].xyz,  p + cubeVerts[vb].xyz, amount);
+				NewPoly.NB = GetNormal(NewPoly.B.x, NewPoly.B.y, NewPoly.B.z);
+				CalculateBoneWeights(NewPoly.B, boneIndices, boneWeights);
+				NewPoly.BoneIndicesB = boneIndices;
+				NewPoly.BoneWeightsB = boneWeights;
+				NewPoly.COLB = GetVertexColor(NewPoly.B);
+
+				va = edge_to_verts[polyEdges.z].x;
+				vb = edge_to_verts[polyEdges.z].y;
+				amount = (cap - weights[va]) / (weights[vb] - weights[va]);
+				NewPoly.C = lerp( p + cubeVerts[va].xyz,  p + cubeVerts[vb].xyz, amount);
+				NewPoly.NC = GetNormal(NewPoly.C.x, NewPoly.C.y, NewPoly.C.z);
+				CalculateBoneWeights(NewPoly.C, boneIndices, boneWeights);
+				NewPoly.BoneIndicesC = boneIndices;
+				NewPoly.BoneWeightsC = boneWeights;
+				NewPoly.COLC = GetVertexColor(NewPoly.C);
+
+				//Increase buffer index counter and get current one
+				InterlockedAdd(index_counter,1,Index);
+					
+				//Append new poly to buffer
+				buffer[Index] = NewPoly;
+					
+			}
+		}
+	}		
+}
+

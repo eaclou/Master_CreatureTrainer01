@@ -2,16 +2,16 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class CritterMarchingCubes : MonoBehaviour {
+public class TrainerCritterMarchingCubes : MonoBehaviour {
 
     public ComputeShader CShaderBuildMC;
     public ComputeShader CShaderSimplex;
-    public CritterDecorationsTest critterDecorationsTest;
+    //public CritterDecorationsTest critterDecorationsTest;
 
     private int resolutionX = 8;
     private int resolutionY = 8;
     private int resolutionZ = 8;
-    
+
     private int _MaxBufferSize = 21660;
     private int _Trilinear = 1;
     private int _MultiSampling = 1;
@@ -37,8 +37,14 @@ public class CritterMarchingCubes : MonoBehaviour {
 
     SegmentTransform[] critterSegmentTransforms;
 
+    //outputBuffer = new ComputeBuffer(decorations.Length, 48);
+    //outputBuffer.SetData(decorations);
+    public DecorationData[] critterPointsDataArray;
+    public ComputeBuffer critterPointsBuffer;
+
     private Critter critter;
-    
+    private Mesh critterMesh;
+
     public struct Poly {
         //Vertex A:
         public float A1, A2, A3;
@@ -78,17 +84,17 @@ public class CritterMarchingCubes : MonoBehaviour {
     }
 
     // Use this for initialization
-    void Start () {
-        
+    void Start() {
+
     }
 
     public void SetCritterTransformArray(Critter sourceCritter) {
         critter = sourceCritter;
-        critterDecorationsTest.critter = sourceCritter;
+        //critterDecorationsTest.critter = sourceCritter;
 
         critterSegmentTransforms = new SegmentTransform[sourceCritter.critterSegmentList.Count];  // grab numSegments from Critter
 
-        for(int i = 0; i < sourceCritter.critterSegmentList.Count; i++) {
+        for (int i = 0; i < sourceCritter.critterSegmentList.Count; i++) {
             SegmentTransform segmentTransform;
             segmentTransform.PX = sourceCritter.critterSegmentList[i].transform.position.x;
             segmentTransform.PY = sourceCritter.critterSegmentList[i].transform.position.y;
@@ -106,23 +112,40 @@ public class CritterMarchingCubes : MonoBehaviour {
 
         // Largest boundingBox dimension determines cellResolution?
         GlobalBoundingBoxDimensions = (sourceCritter.BoundingBoxMaxCorner - sourceCritter.BoundingBoxMinCorner) * 1.15f;  // buffer amount
-        GlobalBoundingBoxOffset = (sourceCritter.BoundingBoxMaxCorner + sourceCritter.BoundingBoxMinCorner) / 2f;        
-        int approxChunksPerDimension = 5;
+        GlobalBoundingBoxOffset = (sourceCritter.BoundingBoxMaxCorner + sourceCritter.BoundingBoxMinCorner) / 2f;
+        int approxChunksPerDimension = 3;
         float avgRadius = (GlobalBoundingBoxDimensions.x + GlobalBoundingBoxDimensions.y + GlobalBoundingBoxDimensions.z) / 3f;
         float chunkSize = avgRadius / (float)approxChunksPerDimension;
         float cellSize = chunkSize / 8f;
-        cellResolution = cellSize;        
+        cellResolution = cellSize;
     }
 
     public void ClearCritterMesh() {
 
         this.GetComponent<SkinnedMeshRenderer>().enabled = false;
-        critterDecorationsTest.TurnOff();
+        ShowSegmentCubes();
+        //critterDecorationsTest.TurnOff();
     }
-    
+
+    private void ShowSegmentCubes() {
+        if(critter != null) {
+            for (int i = 0; i < critter.critterSegmentList.Count; i++) {
+                critter.critterSegmentList[i].GetComponent<MeshRenderer>().enabled = true;
+            }
+        }        
+    }
+
+    private void HideSegmentCubes() {
+        if (critter != null) {
+            for (int i = 0; i < critter.critterSegmentList.Count; i++) {
+                critter.critterSegmentList[i].GetComponent<MeshRenderer>().enabled = false;
+            }
+        }
+    }
+
     public void BuildMesh() {
         float startTime = Time.realtimeSinceStartup;
-        
+
         // NOISE VOLUME!
         RenderTexture DensityVolume = new RenderTexture(16, 16, 0, RenderTextureFormat.RFloat, RenderTextureReadWrite.sRGB);
         DensityVolume.volumeDepth = 16;
@@ -139,14 +162,12 @@ public class CritterMarchingCubes : MonoBehaviour {
         CShaderSimplex.SetTexture(mgen_id, "Result", DensityVolume);
         CShaderSimplex.Dispatch(mgen_id, 1, 1, 16);  // Fill shared RenderTexture with GPU simplex Noise
         
-
         ComputeBuffer cBufferSegmentTransform = new ComputeBuffer(critterSegmentTransforms.Length, sizeof(float) * (3 + 3 + 4));
         cBufferSegmentTransform.SetData(critterSegmentTransforms);
         int kernelID = CShaderBuildMC.FindKernel("CSMain");
         CShaderBuildMC.SetBuffer(kernelID, "segmentTransformBuffer", cBufferSegmentTransform);
         CShaderBuildMC.SetTexture(kernelID, "noise_volume", DensityVolume);  // Noise 3D texture
-        //Debug.Log(DensityVolume.colorBuffer.ToString());
-
+        
         // Figure out how many chunks are needed:
         int numChunksX = Mathf.CeilToInt(GlobalBoundingBoxDimensions.x / (cellResolution * 8f));
         int numChunksY = Mathf.CeilToInt(GlobalBoundingBoxDimensions.y / (cellResolution * 8f));
@@ -160,9 +181,9 @@ public class CritterMarchingCubes : MonoBehaviour {
 
         // Get each chunk!
         int chunkIndex = 0;
-        for(int x = 0; x < numChunksX; x++) {
-            for(int y = 0; y < numChunksY; y++) {
-                for(int z = 0; z < numChunksZ; z++) {
+        for (int x = 0; x < numChunksX; x++) {
+            for (int y = 0; y < numChunksY; y++) {
+                for (int z = 0; z < numChunksZ; z++) {
                     // Figure out chunk offset amount:
                     Vector3 chunkOffset = new Vector3(cellResolution * 8f * x, cellResolution * 8f * y, cellResolution * 8f * z) + GlobalBoundingBoxOffset - (GlobalBoundingBoxDimensions / 2f);
 
@@ -197,13 +218,13 @@ public class CritterMarchingCubes : MonoBehaviour {
                     //Debug.Log("Chunk: " + (z + (numChunksZ * y) + (numChunksZ * numChunksY * x)).ToString() + ", cBufferNumPoly.GetData(numPolys): " + numPolys[0].ToString() + ", chunkOffset: " + chunkOffset.ToString());
                     totalNumPolys += numPolys[0];
                     numPolysArray[chunkIndex] = numPolys[0];
-                                        
-                    if(numPolys[0] > 0) {   // only do this if there was at least 1 triangle in the test pass
+
+                    if (numPolys[0] > 0) {   // only do this if there was at least 1 triangle in the test pass
                         Poly[] polyArray = new Poly[numPolys[0]];
                         int cBufferStride = sizeof(float) * (18 + 9 + 6) + sizeof(int) * (6);
                         ComputeBuffer cBuffer = new ComputeBuffer(numPolys[0], cBufferStride);  // 18 floats x 4 bytes/float = 72   + COLORS! 9 x 4 = 36  = 108   + BONES! 6x4 = 24 + 6 xint...
                         cBuffer.SetData(polyArray);
-                        
+
                         CShaderBuildMC.SetBuffer(id, "buffer", cBuffer);
                         CShaderBuildMC.SetInt("_CalcNumPolys", 0);  // Actually calc tris        
                         CShaderBuildMC.Dispatch(id, 1, 1, 1);
@@ -220,13 +241,13 @@ public class CritterMarchingCubes : MonoBehaviour {
             }
         }
 
-        
-        CritterDecorationsTest.decorationStruct[] points = new CritterDecorationsTest.decorationStruct[totalNumPolys];
+        // OLD: // CritterDecorationsTest.decorationStruct[] points = new CritterDecorationsTest.decorationStruct[totalNumPolys];
+        critterPointsDataArray = new DecorationData[totalNumPolys];  // first try brushstrokes
+
         
         //Construct mesh using received data 
         int vindex = 0;
         int decindex = 0;
-                
         // Why same number of tris as vertices?  == // because all triangles have duplicate verts - no shared vertices?
         Vector3[] vertices = new Vector3[totalNumPolys * 3];
         Color[] colors = new Color[totalNumPolys * 3];
@@ -236,8 +257,8 @@ public class CritterMarchingCubes : MonoBehaviour {
         BoneWeight[] weights = new BoneWeight[totalNumPolys * 3];
 
         //Parse triangles
-        for(int i = 0; i < PolyArrayArray.Length; i++) {
-            if(numPolysArray[i] > 0) {  // only do this if there was at least 1 triangle in the test pass
+        for (int i = 0; i < PolyArrayArray.Length; i++) {
+            if (numPolysArray[i] > 0) {  // only do this if there was at least 1 triangle in the test pass
                 for (int ix = 0; ix < numPolysArray[i]; ix++) {
 
                     Vector3 vPos;
@@ -254,10 +275,12 @@ public class CritterMarchingCubes : MonoBehaviour {
                     weights[vindex].weight0 = PolyArrayArray[i][ix].BoneWeightA0;
                     weights[vindex].weight1 = PolyArrayArray[i][ix].BoneWeightA1;
 
-                    points[decindex].pos = vPos;
-                    points[decindex].normal = normals[vindex];
-                    points[decindex].color = new Vector3(colors[vindex].r, colors[vindex].g, colors[vindex].b);
-                    
+                    critterPointsDataArray[decindex].pos = vPos;
+                    // OLD:
+                    //points[decindex].pos = vPos;
+                    //points[decindex].normal = normals[vindex];
+                    //points[decindex].color = new Vector3(colors[vindex].r, colors[vindex].g, colors[vindex].b);
+
                     decindex++;
                     vindex++;
 
@@ -286,49 +309,60 @@ public class CritterMarchingCubes : MonoBehaviour {
                     weights[vindex].boneIndex1 = PolyArrayArray[i][ix].BoneIndexC1;
                     weights[vindex].weight0 = PolyArrayArray[i][ix].BoneWeightC0;
                     weights[vindex].weight1 = PolyArrayArray[i][ix].BoneWeightC1;
-                    
+
                     vindex++;
                 }
-            }            
+            }
         }
-        
+
         //We have got all data and are ready to setup a new mesh!
-        Mesh newMesh = new Mesh();
-        newMesh.vertices = vertices;
-        newMesh.uv = uvs; //Unwrapping.GeneratePerTriangleUV(NewMesh);
-        newMesh.triangles = tris;
-        newMesh.normals = normals; //NewMesh.RecalculateNormals();
-        newMesh.colors = colors;
-        newMesh.Optimize();        
+        if(critterMesh == null) {
+            critterMesh = new Mesh();
+        }
+        else {
+            critterMesh.Clear();
+        }
+        //Mesh newMesh = new Mesh();
+        critterMesh.vertices = vertices;
+        critterMesh.uv = uvs; //Unwrapping.GeneratePerTriangleUV(NewMesh);
+        critterMesh.triangles = tris;
+        critterMesh.normals = normals; //NewMesh.RecalculateNormals();
+        critterMesh.colors = colors;
+        critterMesh.Optimize();
 
         // Set up SKINNING!!!:
         Transform[] bones = new Transform[critter.critterSegmentList.Count];
         Matrix4x4[] bindPoses = new Matrix4x4[critter.critterSegmentList.Count];
         // Try just using existing critter's GameObjects/Transforms:
-        for(int seg = 0; seg < critter.critterSegmentList.Count; seg++) {
+        for (int seg = 0; seg < critter.critterSegmentList.Count; seg++) {
             bones[seg] = critter.critterSegmentList[seg].transform;
             bindPoses[seg] = bones[seg].worldToLocalMatrix * transform.localToWorldMatrix;  // ?????????????????  
             // the bind pose is the inverse of inverse transformation matrix of the bone, when the bone is in the bind pose .... unhelpful ....
         }
-        newMesh.boneWeights = weights;
-        newMesh.bindposes = bindPoses;
+        critterMesh.boneWeights = weights;
+        critterMesh.bindposes = bindPoses;
         SkinnedMeshRenderer skinnedMeshRenderer = this.GetComponent<SkinnedMeshRenderer>();
         skinnedMeshRenderer.bones = bones;
-        skinnedMeshRenderer.sharedMesh = newMesh;
+        skinnedMeshRenderer.sharedMesh = critterMesh;
         skinnedMeshRenderer.enabled = true;
-                
+
         cBufferSegmentTransform.Release();
 
-        critterDecorationsTest.TurnOn(points);
+        critterPointsBuffer = new ComputeBuffer(critterPointsDataArray.Length, sizeof(float) * 3);
+        critterPointsBuffer.SetData(critterPointsDataArray);
+        Debug.Log("BuildMesh count: " + critterPointsDataArray.Length.ToString() + ", 0: " + critterPointsDataArray[0].pos.ToString() + ", 500: " + critterPointsDataArray[500].pos.ToString());
+        // OLD: //critterDecorationsTest.TurnOn(points);
 
         float calcTime = Time.realtimeSinceStartup - startTime;
-        Debug.Log("MeshCreated! " + calcTime.ToString());
+        //Debug.Log("MeshCreated! " + calcTime.ToString());
+
+        HideSegmentCubes();
     }
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
+
+    // Update is called once per frame
+    void Update() {
+
+    }
 
     void OnDestroy() {
 
