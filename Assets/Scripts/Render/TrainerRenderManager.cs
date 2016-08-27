@@ -49,7 +49,8 @@ public class TrainerRenderManager : MonoBehaviour {
     private ComputeBuffer quadPointsBuffer;
     private ComputeBuffer gessoStrokesBuffer;
     private ComputeBuffer backgroundStrokesBuffer;
-    private ComputeBuffer critterStrokesBuffer;
+    //private ComputeBuffer critterStrokesBuffer;  // The ComputeBuffers for this will be stored in the TrainerCritterBrushstrokeManager subclass
+    // That class will store the buffers and have functions to update them, but will be affecting the 'brushstrokeCritterMaterial' that lives here!
     private ComputeBuffer decorationsStrokesBuffer;
 
     private strokeStruct[] strokeGessoArray;
@@ -109,6 +110,7 @@ public class TrainerRenderManager : MonoBehaviour {
         // Use brushstrokeManager Here:
         // Update Critter xForms  -- or do this through Trainer so it's sync'ed with FixedUpdate?
         // 
+        trainerCritterBrushstrokeManager.UpdateBuffersAndMaterial(ref brushstrokeCritterMaterial);
         // &&&&&&&&&&#$$$$$$$$$$%&#$%&#$%&#$%&#$%^&#%^&#^&#^&#&^#&%^&##################%^&#%^&#%^&#%^&#^&#%^&#$%!#$%!#%$@&%^*($^()$*@$#%!%!%!$#%!
         // &&&&&&&&&&#$$$$$$$$$$%&#$%&#$%&#$%&#$%^&#%^&#^&#^&#&^#&%^&##################%^&#%^&#%^&#%^&#^&#%^&#$%!#$%!#%$@&%^*($^()$*@$#%!%!%!$#%!
         // &&&&&&&&&&#$$$$$$$$$$%&#$%&#$%&#$%&#$%^&#%^&#^&#^&#&^#&%^&##################%^&#%^&#%^&#%^&#^&#%^&#$%!#$%!#%$@&%^*($^()$*@$#%!%!%!$#%!
@@ -171,12 +173,21 @@ public class TrainerRenderManager : MonoBehaviour {
             brushstrokeCritterMaterial.SetVector("_Size", brushSizeCritter);
             brushstrokeCritterMaterial.SetFloat("_PaintThickness", paintThicknessCritter);
             brushstrokeCritterMaterial.SetFloat("_PaintReach", paintReachCritter);
-            brushstrokeCritterMaterial.SetFloat("_UseSourceColor", 0.0f);  // 1.0 will use Unity's scene render as color, 0.0 will just use brushTintColor
+            brushstrokeCritterMaterial.SetFloat("_UseSourceColor", 1.0f);  // 1.0 will use Unity's scene render as color, 0.0 will just use brushTintColor
             brushstrokeCritterMaterial.SetTexture("_BrushTex", brushstrokeCritterTexture);
 
+            brushstrokeCritterMaterial.SetPass(0);
+            //strokeMaterial.SetBuffer("strokeDataBuffer", strokeBuffer);
+            brushstrokeCritterMaterial.SetBuffer("quadPointsBuffer", quadPointsBuffer);
+            cmdBuffer.SetGlobalTexture("_CanvasColorReadTex", colorReadID);
+            cmdBuffer.SetGlobalTexture("_CanvasDepthReadTex", depthReadID);
+            cmdBuffer.SetRenderTarget(mrt, BuiltinRenderTextureType.CameraTarget);  // Set render Targets
+            cmdBuffer.SetGlobalTexture("_BrushColorReadTex", renderedSceneID); // Copy the Contents of FrameBuffer into brushstroke material so it knows what color it should be
+            cmdBuffer.DrawProcedural(Matrix4x4.identity, brushstrokeCritterMaterial, 0, MeshTopology.Triangles, 6, trainerCritterBrushstrokeManager.critterBrushstrokesArray.Length);   // Apply brushstrokes
+            cmdBuffer.Blit(colorWriteID, colorReadID);
+            cmdBuffer.Blit(depthWriteID, depthReadID);
             // Won't be able to use the function until I switch from using Geometry Shader to instancing!!!
-            //AddPaintLayer(mrt, renderedSceneID, colorReadID, depthReadID, critterStrokesBuffer, brushstrokeCritterMaterial);
-            
+            //AddPaintLayer(mrt, renderedSceneID, colorReadID, depthReadID, critterStrokesBuffer, brushstrokeCritterMaterial);            
         }
 
         // DISPLAY TO SCREEN:
@@ -209,8 +220,10 @@ public class TrainerRenderManager : MonoBehaviour {
         // &&&&&&&&&&#$$$$$$$$$$%&#$%&#$%&#$%&#$%^&#%^&#^&#^&#&^#&%^&##################%^&#%^&#%^&#%^&#^&#%^&#$%!#$%!#%$@&%^*($^()$*@$#%!%!%!$#%!
 
         trainerCritterMarchingCubes.SetCritterTransformArray(critter);
-        trainerCritterMarchingCubes.BuildMesh();
-        critterStrokesBuffer = trainerCritterMarchingCubes.critterPointsBuffer;
+        trainerCritterBrushstrokeManager.critter = critter;
+        trainerCritterMarchingCubes.BuildMesh(ref trainerCritterBrushstrokeManager);  // This call also initializes trainerCritterBrushstrokeManager's buffers
+        trainerCritterBrushstrokeManager.InitializeMaterialBuffers(ref brushstrokeCritterMaterial);  // Then those buffers are set to the actual Material here (needed reference to this class)
+        //critterStrokesBuffer = trainerCritterMarchingCubes.critterPointsBuffer;
                 
         isActiveAgent = true;
 
@@ -236,10 +249,10 @@ public class TrainerRenderManager : MonoBehaviour {
         trainerCritterMarchingCubes.ClearCritterMesh();
         isActiveAgent = false;
 
-        if (critterStrokesBuffer != null) {
-            critterStrokesBuffer.Release();
-            critterStrokesBuffer.Dispose();
-        }
+        //if (critterStrokesBuffer != null) {
+        //    critterStrokesBuffer.Release();
+        //    critterStrokesBuffer.Dispose();
+        //}
     }
 
     void InitializeOnStartup() {
@@ -316,10 +329,10 @@ public class TrainerRenderManager : MonoBehaviour {
             backgroundStrokesBuffer.Release();
             backgroundStrokesBuffer.Dispose();
         }
-        if (critterStrokesBuffer != null) {
-            critterStrokesBuffer.Release();
-            critterStrokesBuffer.Dispose();
-        }
+        //if (critterStrokesBuffer != null) {
+        //    critterStrokesBuffer.Release();
+        //    critterStrokesBuffer.Dispose();
+        //}
         if (decorationsStrokesBuffer != null) {
             decorationsStrokesBuffer.Release();
             decorationsStrokesBuffer.Dispose();

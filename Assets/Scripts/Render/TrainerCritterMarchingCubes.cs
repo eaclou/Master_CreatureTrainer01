@@ -39,7 +39,7 @@ public class TrainerCritterMarchingCubes : MonoBehaviour {
 
     //outputBuffer = new ComputeBuffer(decorations.Length, 48);
     //outputBuffer.SetData(decorations);
-    public DecorationData[] critterPointsDataArray;
+    public TrainerRenderManager.strokeStruct[] critterPointsDataArray;
     public ComputeBuffer critterPointsBuffer;
 
     private Critter critter;
@@ -143,7 +143,7 @@ public class TrainerCritterMarchingCubes : MonoBehaviour {
         }
     }
 
-    public void BuildMesh() {
+    public void BuildMesh(ref TrainerCritterBrushstrokeManager trainerCritterBrushstrokeManagerRef) {
         float startTime = Time.realtimeSinceStartup;
 
         // NOISE VOLUME!
@@ -242,8 +242,7 @@ public class TrainerCritterMarchingCubes : MonoBehaviour {
         }
 
         // OLD: // CritterDecorationsTest.decorationStruct[] points = new CritterDecorationsTest.decorationStruct[totalNumPolys];
-        critterPointsDataArray = new DecorationData[totalNumPolys];  // first try brushstrokes
-
+        critterPointsDataArray = new TrainerRenderManager.strokeStruct[totalNumPolys];  // first try brushstrokes
         
         //Construct mesh using received data 
         int vindex = 0;
@@ -348,8 +347,10 @@ public class TrainerCritterMarchingCubes : MonoBehaviour {
 
         cBufferSegmentTransform.Release();
 
-        critterPointsBuffer = new ComputeBuffer(critterPointsDataArray.Length, sizeof(float) * 3);
-        critterPointsBuffer.SetData(critterPointsDataArray);
+
+        trainerCritterBrushstrokeManagerRef.TurnOn(critterPointsDataArray);  // Initializes Buffers for Brushstroke
+        //critterPointsBuffer = new ComputeBuffer(critterPointsDataArray.Length, sizeof(float) * 3);
+        //critterPointsBuffer.SetData(critterPointsDataArray);
         Debug.Log("BuildMesh count: " + critterPointsDataArray.Length.ToString() + ", 0: " + critterPointsDataArray[0].pos.ToString() + ", 500: " + critterPointsDataArray[500].pos.ToString());
         // OLD: //critterDecorationsTest.TurnOn(points);
 

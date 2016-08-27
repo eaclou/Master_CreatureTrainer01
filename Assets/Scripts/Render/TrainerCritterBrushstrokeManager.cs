@@ -23,28 +23,31 @@ public class TrainerCritterBrushstrokeManager : MonoBehaviour {
     public float rimGlow;
     public float rimPow;
 
-    ComputeBuffer outputBuffer;  // original positions of each decoration anchor
-    ComputeBuffer segmentBuffer;
+    ComputeBuffer initPositionsBuffer;  // original positions of each decoration anchor
+    ComputeBuffer segmentBuffer;  // critter segment XForms
+    ComputeBuffer bindPoseBuffer;    // critter segment inverse xForm bindpose matrices 
+    ComputeBuffer skinningBuffer;    // skinning data for each point
 
-    ComputeBuffer bindPoseBuffer;
+    public SegmentXform[] critterSegmentXforms;
     bindPoseStruct[] bindPosesArray;
-    ComputeBuffer skinningBuffer;
-    
+    //public decorationStruct[] decorations;
+    public TrainerRenderManager.strokeStruct[] critterBrushstrokesArray;
+
+
     public bool isOn = false;
 
     [Range(0, 2)]
     [Tooltip("Billboard type 0 = static, 1 = cylindrical, 2 = spherical")]
     public int billboardType = 2;
 
-    public SegmentXform[] critterSegmentXforms;
-    public decorationStruct[] decorations;
+    
 
-    public struct decorationStruct {
-        public Vector3 pos;
-        public Vector3 normal;
-        public Vector3 tangent;
-        public Vector3 color;
-    }    
+    //public struct decorationStruct {
+    //    public Vector3 pos;
+    //    public Vector3 normal;
+    //    public Vector3 tangent;
+    //    public Vector3 color;
+    //}    
 
     public struct SegmentXform {
         // Position:
@@ -72,20 +75,20 @@ public class TrainerCritterBrushstrokeManager : MonoBehaviour {
     }
 
     void ReleaseBuffers() {
-        outputBuffer.Release();
+        initPositionsBuffer.Release();
         segmentBuffer.Release();
         bindPoseBuffer.Release();
         skinningBuffer.Release();
 
-        outputBuffer.Dispose();
+        initPositionsBuffer.Dispose();
         segmentBuffer.Dispose();
         bindPoseBuffer.Dispose();
         skinningBuffer.Dispose();
     }
 
-    public void TurnOn(decorationStruct[] decorationsArray) {
+    public void TurnOn(TrainerRenderManager.strokeStruct[] brushstrokeArray) {
 
-        InitializeBuffers(decorationsArray);
+        InitializeBuffers(brushstrokeArray);
 
         isOn = true;
     }
@@ -95,12 +98,12 @@ public class TrainerCritterBrushstrokeManager : MonoBehaviour {
         ReleaseBuffers();
     }
 
-    public void InitializeBuffers(decorationStruct[] decorationsArray) {
+    public void InitializeBuffers(TrainerRenderManager.strokeStruct[] brushstrokeArray) {
 
-        decorations = decorationsArray; // ???        
+        critterBrushstrokesArray = brushstrokeArray; // ???   This Array actually 'lives' inside TrainerCritterMarchingCubes instance...     
 
-        outputBuffer = new ComputeBuffer(decorations.Length, 48);
-        outputBuffer.SetData(decorations);
+        initPositionsBuffer = new ComputeBuffer(critterBrushstrokesArray.Length, 12);
+        initPositionsBuffer.SetData(critterBrushstrokesArray);
         //procMaterial.SetBuffer("buf_decorations", outputBuffer);
         //procMaterial.SetColor("_Color", color);
         //procMaterial.SetTexture("_Sprite", sprite);
@@ -114,9 +117,9 @@ public class TrainerCritterBrushstrokeManager : MonoBehaviour {
         //procMaterial.SetInt("_StaticCylinderSpherical", billboardType);
         
         int kernelID = skinningComputeShader.FindKernel("CSMain");
-        skinningComputeShader.SetBuffer(kernelID, "buf_DecorationData", outputBuffer);
+        skinningComputeShader.SetBuffer(kernelID, "buf_CritterBrushstrokeData", initPositionsBuffer);
         
-        skinningBuffer = new ComputeBuffer(outputBuffer.count, sizeof(float) * 2 + sizeof(int) * 2);
+        skinningBuffer = new ComputeBuffer(initPositionsBuffer.count, sizeof(float) * 2 + sizeof(int) * 2);
 
         bindPosesArray = new bindPoseStruct[critter.critterSegmentList.Count];
         bindPoseBuffer = new ComputeBuffer(critter.critterSegmentList.Count, sizeof(float) * 16);
@@ -125,6 +128,48 @@ public class TrainerCritterBrushstrokeManager : MonoBehaviour {
         critterSegmentXforms = new SegmentXform[critter.critterSegmentList.Count];  // grab numSegments from Critter
 
         InitBindPose();
+    }
+
+    // Need to set material buffers that only need to be set once at the beginning (all except segmentX-Forms)
+    public void InitializeMaterialBuffers(ref Material brushstrokeCritterMaterialRef) {
+        brushstrokeCritterMaterialRef.SetBuffer("strokeDataBuffer", initPositionsBuffer);
+        //procMaterial.SetColor("_Color", color);
+        //procMaterial.SetTexture("_Sprite", sprite);
+        //procMaterial.SetVector("_Size", size);
+        //procMaterial.SetVector("_SizeRandom", sizeRandom);
+        //procMaterial.SetFloat("_BodyColorAmount", bodyColorAmount);
+        //procMaterial.SetFloat("_OrientForwardTangent", orientForwardTangent);
+        //procMaterial.SetFloat("_OrientRandom", orientRandom);
+        //procMaterial.SetInt("_Type", type);
+        //procMaterial.SetInt("_NumRibbonSegments", numRibbonSegments);
+        //procMaterial.SetInt("_StaticCylinderSpherical", billboardType);
+        brushstrokeCritterMaterialRef.SetBuffer("buf_skinningData", skinningBuffer);  // Link same buffer to display Shader!
+        brushstrokeCritterMaterialRef.SetBuffer("buf_bindPoses", bindPoseBuffer);  // set buffer within display Shader to same ComputeBuffer  (then just pray it works)
+        brushstrokeCritterMaterialRef.SetBuffer("buf_xforms", segmentBuffer);
+    }
+
+    public void UpdateBuffersAndMaterial(ref Material brushstrokeCritterMaterialRef) {
+        if (initPositionsBuffer != null && isOn) {
+            UpdateXforms();
+
+            brushstrokeCritterMaterialRef.SetPass(0);
+            brushstrokeCritterMaterialRef.SetBuffer("buf_xforms", segmentBuffer);
+            //brushstrokeCritterMaterialRef.SetColor("_Color", color);
+            //brushstrokeCritterMaterialRef.SetTexture("_Sprite", sprite);
+            //brushstrokeCritterMaterialRef.SetVector("_Size", size);
+            //brushstrokeCritterMaterialRef.SetInt("_StaticCylinderSpherical", billboardType);
+            //brushstrokeCritterMaterialRef.SetVector("_SizeRandom", sizeRandom);
+            //brushstrokeCritterMaterialRef.SetFloat("_BodyColorAmount", bodyColorAmount);
+            //brushstrokeCritterMaterialRef.SetFloat("_OrientForwardTangent", orientForwardTangent);
+            //brushstrokeCritterMaterialRef.SetFloat("_OrientRandom", orientRandom);
+            //brushstrokeCritterMaterialRef.SetFloat("_Diffuse", diffuse);
+            //brushstrokeCritterMaterialRef.SetFloat("_DiffuseWrap", diffuseWrap);
+            //brushstrokeCritterMaterialRef.SetFloat("_RimGlow", rimGlow);
+            //brushstrokeCritterMaterialRef.SetFloat("_RimPow", rimPow);
+
+            //Graphics.DrawProcedural(MeshTopology.Points, outputBuffer.count);            
+            //Debug.Log("DrawProcedural! " + material.GetVector("_Size").ToString());
+        }
     }
 
     public void InitBindPose() {
