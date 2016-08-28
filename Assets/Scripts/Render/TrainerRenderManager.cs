@@ -25,11 +25,12 @@ public class TrainerRenderManager : MonoBehaviour {
 
     private Material brushstrokeGessoMaterial;
     private Material brushstrokeBackgroundMaterial;
-    private Material brushstrokeCritterMaterial;
+    public Material brushstrokeCritterMaterial;
     private Material brushstrokeDecorationsMaterial;
 
     public Color canvasColor = new Color(1f, 1f, 1f, 1f);
     public Color brushstrokeGessoTint = new Color(0.8f, 0.7f, 0.6f, 1f);
+    public Color brushstrokeBackgroundTint = new Color(1f, 1f, 1f, 1f);
     public Color brushstrokeCritterTint = new Color(1f, 1f, 1f, 1f);
 
     public Vector2 brushSizeGesso = Vector2.one;
@@ -67,10 +68,12 @@ public class TrainerRenderManager : MonoBehaviour {
 
     public struct strokeStruct {
         public Vector3 pos;
+        public Vector3 col;
+        public Vector3 normal;
     }
 
     private bool isActiveAgent = false;
-
+    
     // Use this for initialization
     void Start() {
         InitializeOnStartup();
@@ -78,7 +81,7 @@ public class TrainerRenderManager : MonoBehaviour {
     
     // Update is called once per frame
     void Update() {
-
+               
     }
 
     // Whenever any camera will render us, add a command buffer to do the work on it
@@ -157,7 +160,7 @@ public class TrainerRenderManager : MonoBehaviour {
         cmdBuffer.Blit(depthWriteID, depthReadID);  // Try transferring Height values here
 
         // BackgroundLayer:
-        brushstrokeBackgroundMaterial.SetColor("_Tint", Color.white); // brushstrokeBackgroundTint);  // Setup Material Properties:
+        brushstrokeBackgroundMaterial.SetColor("_Tint", brushstrokeBackgroundTint); // brushstrokeBackgroundTint);  // Setup Material Properties:
         brushstrokeBackgroundMaterial.SetVector("_Size", brushSizeBackground);
         brushstrokeBackgroundMaterial.SetFloat("_PaintThickness", paintThicknessBackground);
         brushstrokeBackgroundMaterial.SetFloat("_PaintReach", paintReachBackground);
@@ -173,9 +176,9 @@ public class TrainerRenderManager : MonoBehaviour {
             brushstrokeCritterMaterial.SetVector("_Size", brushSizeCritter);
             brushstrokeCritterMaterial.SetFloat("_PaintThickness", paintThicknessCritter);
             brushstrokeCritterMaterial.SetFloat("_PaintReach", paintReachCritter);
-            brushstrokeCritterMaterial.SetFloat("_UseSourceColor", 1.0f);  // 1.0 will use Unity's scene render as color, 0.0 will just use brushTintColor
+            brushstrokeCritterMaterial.SetFloat("_UseSourceColor", 0.0f);  // 1.0 will use Unity's scene render as color, 0.0 will just use brushTintColor
             brushstrokeCritterMaterial.SetTexture("_BrushTex", brushstrokeCritterTexture);
-
+            
             brushstrokeCritterMaterial.SetPass(0);
             //strokeMaterial.SetBuffer("strokeDataBuffer", strokeBuffer);
             brushstrokeCritterMaterial.SetBuffer("quadPointsBuffer", quadPointsBuffer);
@@ -266,31 +269,43 @@ public class TrainerRenderManager : MonoBehaviour {
         brushstrokeDecorationsMaterial = new Material(brushWorldSpaceShader);
 
         // GESSO BUFFER:
-        int gessoRes = 16;
+        int gessoRes = 12;
         Vector3[] gesso1 = PointCloudSphericalShell.GetPointsSphericalShell(50f, gessoRes, 1f);
         Vector3[] gesso2 = PointCloudSphericalShell.GetPointsSphericalShell(50f, gessoRes, 1f);
         Vector3[] gesso3 = PointCloudSphericalShell.GetPointsSphericalShell(50f, gessoRes, 1f);        
         strokeGessoArray = new strokeStruct[gesso1.Length + gesso2.Length + gesso3.Length];
         for(int i = 0; i < gesso1.Length; i++) {
             strokeGessoArray[i].pos = gesso1[i];
+            strokeGessoArray[i].col = new Vector3(1f, 1f, 1f);
+            strokeGessoArray[i].normal = -gesso1[i].normalized;
             strokeGessoArray[i + gesso1.Length].pos = gesso2[i];
+            strokeGessoArray[i + gesso1.Length].col = new Vector3(1f, 1f, 1f);
+            strokeGessoArray[i + gesso1.Length].normal = -gesso2[i].normalized;
             strokeGessoArray[i + gesso1.Length + gesso2.Length].pos = gesso3[i];
+            strokeGessoArray[i + gesso1.Length + gesso2.Length].col = new Vector3(1f, 1f, 1f);
+            strokeGessoArray[i + gesso1.Length + gesso2.Length].normal = -gesso3[i].normalized;
         }
-        gessoStrokesBuffer = new ComputeBuffer(strokeGessoArray.Length, sizeof(float) * 3);
+        gessoStrokesBuffer = new ComputeBuffer(strokeGessoArray.Length, sizeof(float) * (3 + 3 + 3));
         gessoStrokesBuffer.SetData(strokeGessoArray);
 
         // BACKGROUND BUFFER:
-        int backgroundRes = 16;
+        int backgroundRes = 24;
         Vector3[] background1 = PointCloudSphericalShell.GetPointsSphericalShell(50f, backgroundRes, 1f);
         Vector3[] background2 = PointCloudSphericalShell.GetPointsSphericalShell(50f, backgroundRes, 1f);
         Vector3[] background3 = PointCloudSphericalShell.GetPointsSphericalShell(50f, backgroundRes, 1f);
         strokeBackgroundArray = new strokeStruct[background1.Length + background2.Length + background3.Length];
         for (int i = 0; i < background1.Length; i++) {
             strokeBackgroundArray[i].pos = background1[i];
+            strokeBackgroundArray[i].col = new Vector3(1f, 1f, 1f);
+            strokeBackgroundArray[i].normal = -background1[i].normalized;
             strokeBackgroundArray[i + background1.Length].pos = background2[i];
+            strokeBackgroundArray[i + background1.Length].col = new Vector3(1f, 1f, 1f);
+            strokeBackgroundArray[i + background1.Length].normal = -background2[i].normalized;
             strokeBackgroundArray[i + background1.Length + background2.Length].pos = background3[i];
+            strokeBackgroundArray[i + background1.Length + background2.Length].col = new Vector3(1f, 1f, 1f);
+            strokeBackgroundArray[i + background1.Length + background2.Length].normal = -background3[i].normalized;
         }
-        backgroundStrokesBuffer = new ComputeBuffer(strokeBackgroundArray.Length, sizeof(float) * 3);
+        backgroundStrokesBuffer = new ComputeBuffer(strokeBackgroundArray.Length, sizeof(float) * (3 + 3 + 3));
         backgroundStrokesBuffer.SetData(strokeBackgroundArray);
 
         // Experimental!

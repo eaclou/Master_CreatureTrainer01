@@ -18,9 +18,8 @@ struct segmentTransforms {
 
 struct data {
 	float3 pos;
-	//float3 normal;
-	//float3 tangent;
-	//float3 color;
+	float3 color;
+	float3 normal;	
 };
 
 // struct transforms information

@@ -15,7 +15,7 @@
 	{
 		//Tags { "RenderType"="Opaque" }
 		//LOD 100
-		Tags{ "RenderType" = "Transparant" }
+		Tags{ "RenderType" = "Transparent" }
 		ZTest Off
 		ZWrite Off
 		Cull Off
@@ -32,6 +32,8 @@
 
 			struct strokeData {
 				float3 pos;
+				float3 color;
+				float3 normal;
 			};
 
 			sampler2D _BrushTex;

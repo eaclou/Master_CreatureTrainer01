@@ -9,11 +9,7 @@
 		//_OrientForwardTangent("OrientForwardTangent", Range(-1.0, 1.0)) = 1.0   // 0 = random facing direction, 1 = aligned with shell forward tangent
 		//_OrientRandom("OrientRandom", Range(0, 1.0)) = 0.0
 		//_Type("Type", Int) = 0   // 0 = quad, 1 = scales, 2 = hair
-		//_Segments("Segments", Int) = 1
-		//_Diffuse("Diffuse", Range(0.0, 1.0)) = 0
-		//_DiffuseWrap("DiffuseWrap", Range(0.0, 1.0)) = 0
-		//_RimGlow("RimGlow", Range(0.0, 1.0)) = 0
-		//_RimPow("RimPow", Range(0.1, 10.0)) = 1
+		//_Segments("Segments", Int) = 1		
 		//_InitRibbonPoints("InitRibbonPoints", Int) = 1
 
 		_BrushTex("Brush Texture", 2D) = "white" {}
@@ -23,7 +19,12 @@
 		_PaintReach("Paint Reach", Range(0,1)) = 0.1   // This specifies how 'far' down the canvasDepth the paint will be applied
 													   // i.e. paintReach=1 means full coverage of the canvas, paintReach=0.1 means paint will only be applied where the canvasDepth is >0.9 normalized...
 													   // This will likely change later
-		_UseSourceColor("_UseSourceColor", Range(0,1)) = 1.0
+		_UseSourceColor("_UseSourceColor", Range(0,1)) = 0.0
+
+		_Diffuse("Diffuse", Range(0.0, 1.0)) = 1
+		_DiffuseWrap("DiffuseWrap", Range(0.0, 1.0)) = 0
+		_RimGlow("RimGlow", Range(0.0, 1.0)) = 0.4
+		_RimPow("RimPow", Range(0.1, 10.0)) = 0.5
 	}
 	SubShader{
 		//Tags{ "Queue" = "Overlay+100" "RenderType" = "Transparent" }
@@ -33,10 +34,10 @@
 		//Cull off
 		//ZWrite off
 			// ^^^^ OLD
-		Tags{ "RenderType" = "Transparant" }
+		Tags{ "RenderType" = "Transparent" }
 		ZTest Off
 		ZWrite Off
-		Cull Off
+		Cull Back
 		Blend SrcAlpha OneMinusSrcAlpha
 
 		pass {
@@ -61,42 +62,14 @@
 			//float _OrientRandom = 0.0;
 			//int _Type = 0;   // 0 = quad, 1 = scales, 2 = hair
 			//int _NumRibbonSegments = 1;			
-			//int _StaticCylinderSpherical = 2;  // 0=static, 1=cylinder, 2=spherical
-			//uniform float _Diffuse;
-			//uniform float _DiffuseWrap;
-			//uniform float _RimGlow;
-			//uniform float _RimPow;
+			//int _StaticCylinderSpherical = 2;  // 0=static, 1=cylinder, 2=spherical			
 			//int _InitRibbonPoints = 1;
-
-			//struct data {
-			//	float3 pos;
-				//float3 normal;
-				//float3 tangent;
-				//float3 color;
-			//};
 
 			struct strokeData {
 				float3 pos;
+				float3 tint;
+				float3 normal;
 			};
-
-			sampler2D _BrushTex;
-			float4 _BrushTex_ST;
-			float4 _Tint;
-			float2 _Size;
-			float _PaintThickness;
-			float _PaintReach;
-			float _UseSourceColor;
-			StructuredBuffer<strokeData> strokeDataBuffer;
-			StructuredBuffer<float3> quadPointsBuffer;
-
-			// Stores result of Unity's Rendering:
-			sampler2D _BrushColorReadTex;
-			sampler2D _CanvasColorReadTex;
-			sampler2D _CanvasDepthReadTex;
-
-			//struct ribbonPoints {
-			//	float3 pos;
-			//};
 
 			struct segmentTransforms {
 				float3 pos;
@@ -114,29 +87,51 @@
 				float2 weights;
 			};
 
-			// buffer containing points we want to draw:
-			//StructuredBuffer<strokeData> buf_InitCritterBrushstrokeData;
-			//RWStructuredBuffer<ribbonPoints> buf_CritterBrushstrokeData;
-			StructuredBuffer<segmentTransforms> buf_xforms;
-			StructuredBuffer<bindPoseStruct> buf_bindPoses;
-			StructuredBuffer<skinningStruct> buf_skinningData;
-			
 			/*struct fragInput {
-				float4 pos : SV_POSITION;
-				float3 norm : NORMAL;
-				float2 uv : TEXCOORD0;
-				float4 color : COLOR0;
-				float3 viewDir : TEXCOORD2;
-				int index : TEXCOORD3;
-				//UNITY_FOG_COORDS(1)
+			float4 pos : SV_POSITION;
+			float3 norm : NORMAL;
+			float2 uv : TEXCOORD0;
+			float4 color : COLOR0;
+			float3 viewDir : TEXCOORD2;
+			int index : TEXCOORD3;
+			//UNITY_FOG_COORDS(1)
 			};*/
 			struct v2f
 			{
-				float4 pos : SV_POSITION;
+				float4 pos : SV_POSITION;				
+				float3 normal : NORMAL;
 				float2 localUV : TEXCOORD0;  // uv of the brushstroke quad itself, particle texture
 				float2 screenUV : TEXCOORD1;  // uv in screenspace of the frag -- for sampling from renderBuffers
-				float2 centerUV : TEXCOORD2;  // uv of just the centerPoint of the brushstroke, in screenspace so it can sample from colorBuffer		
+				float2 centerUV : TEXCOORD2;  // uv of just the centerPoint of the brushstroke, in screenspace so it can sample from colorBuffer
+				float3 viewDir : TEXCOORD5;
+				float4 uncolor : TEXCOORD3;
+				int index : TEXCOORD4;
+				//float4 blah : TEXCOORD5;
 			};
+
+			sampler2D _BrushTex;
+			float4 _BrushTex_ST;
+			float4 _Tint;
+			float2 _Size;
+			float _PaintThickness;
+			float _PaintReach;
+			float _UseSourceColor;
+			uniform float _Diffuse;
+			uniform float _DiffuseWrap;
+			uniform float _RimGlow;
+			uniform float _RimPow;
+			
+			StructuredBuffer<strokeData> strokeDataBuffer;
+			StructuredBuffer<float3> quadPointsBuffer;
+			StructuredBuffer<segmentTransforms> buf_xforms;
+			StructuredBuffer<bindPoseStruct> buf_bindPoses;
+			StructuredBuffer<skinningStruct> buf_skinningData;
+
+			// Stores result of Unity's Rendering:
+			sampler2D _BrushColorReadTex;
+			sampler2D _CanvasColorReadTex;
+			sampler2D _CanvasDepthReadTex;
+			
 
 			float3 RotatePoint(float3 position, float4 rotation) {
 				float3 t = 2 * cross(rotation.xyz, position);
@@ -186,34 +181,34 @@
 				return distance;
 			}
 
-			void CalculateSkinning(inout float4 pos, inout float3 normal, inout float3 tangent, int id) {
+			void CalculateSkinning(inout float4 pos, inout float3 normal, int id) {
 				
 				//return float4(pos.xyz + buf_xforms[buf_skinningData[id].indices.x].pos * 1, 1);
 				//buf_skinningData[id]
 				float4 norm4 = float4(normal, 0);  // 0 for 'direction' rather than position
-				float4 tan4 = float4(tangent, 0);  // 0 for 'direction' rather than position
+				//float4 tan4 = float4(tangent, 0);  // 0 for 'direction' rather than position
 				
 				//Get position in local segment space for each Bone by using bindPose inverse Mat4x4:
 				float4 localBonePos0 = mul(buf_bindPoses[buf_skinningData[id].indices.x].inverse, pos);
 				float4 localBonePos1 = mul(buf_bindPoses[buf_skinningData[id].indices.y].inverse, pos);
 				float4 localBoneNorm0 = mul(buf_bindPoses[buf_skinningData[id].indices.x].inverse, norm4);
 				float4 localBoneNorm1 = mul(buf_bindPoses[buf_skinningData[id].indices.y].inverse, norm4);
-				float4 localBoneTan0 = mul(buf_bindPoses[buf_skinningData[id].indices.x].inverse, tan4);
-				float4 localBoneTan1 = mul(buf_bindPoses[buf_skinningData[id].indices.y].inverse, tan4);
+				//float4 localBoneTan0 = mul(buf_bindPoses[buf_skinningData[id].indices.x].inverse, tan4);
+				//float4 localBoneTan1 = mul(buf_bindPoses[buf_skinningData[id].indices.y].inverse, tan4);
 				// Transform this bindPose position by the CURRENT segment position:
 				float4 skinnedBonePos0 = mul(buf_xforms[buf_skinningData[id].indices.x].xform, localBonePos0);
 				float4 skinnedBonePos1 = mul(buf_xforms[buf_skinningData[id].indices.y].xform, localBonePos1);
 				float4 skinnedBoneNorm0 = mul(buf_xforms[buf_skinningData[id].indices.x].xform, localBoneNorm0);
 				float4 skinnedBoneNorm1 = mul(buf_xforms[buf_skinningData[id].indices.y].xform, localBoneNorm1);
-				float4 skinnedBoneTan0 = mul(buf_xforms[buf_skinningData[id].indices.x].xform, localBoneTan0);
-				float4 skinnedBoneTan1 = mul(buf_xforms[buf_skinningData[id].indices.y].xform, localBoneTan1);
+				//float4 skinnedBoneTan0 = mul(buf_xforms[buf_skinningData[id].indices.x].xform, localBoneTan0);
+				//float4 skinnedBoneTan1 = mul(buf_xforms[buf_skinningData[id].indices.y].xform, localBoneTan1);
 				// Combine positions:
 				float4 skinnedPos = skinnedBonePos0 * buf_skinningData[id].weights.x + skinnedBonePos1 * buf_skinningData[id].weights.y;
 				float4 skinnedNorm = skinnedBoneNorm0 * buf_skinningData[id].weights.x + skinnedBoneNorm1 * buf_skinningData[id].weights.y;
-				float4 skinnedTan = skinnedBoneTan0 * buf_skinningData[id].weights.x + skinnedBoneTan1 * buf_skinningData[id].weights.y;
+				//float4 skinnedTan = skinnedBoneTan0 * buf_skinningData[id].weights.x + skinnedBoneTan1 * buf_skinningData[id].weights.y;
 				pos = skinnedPos;
 				normal = skinnedNorm.xyz;	
-				tangent = skinnedTan.xyz;
+				//tangent = skinnedTan.xyz;
 			}
 
 			/*fragInput vert(uint id : SV_VertexID) {
@@ -235,16 +230,31 @@
 			v2f vert(uint id : SV_VertexID, uint inst : SV_InstanceID)
 			{
 				v2f o;
+				
+				o.index = inst;  // needed to sample brushstrokeData buffer in fragment shader
+				
+				float4 worldPosition = float4(strokeDataBuffer[inst].pos, 1.0);				
+				float3 tempNormal = strokeDataBuffer[inst].normal;				
+				
+				CalculateSkinning(worldPosition, tempNormal, inst);
+				
+				o.normal = tempNormal;
+				float3 camToWorldVector = worldPosition.xyz - _WorldSpaceCameraPos.xyz;
+				o.viewDir = normalize(camToWorldVector);
+				float3 right = normalize(cross(o.viewDir, tempNormal));
+				float3 up = normalize(cross(o.viewDir, right));
+				float3 quadPoint = quadPointsBuffer[id];				
 
-				//Only transform world pos by view matrix
-				//To Create a billboarding effect
-				float4 worldPosition = float4(strokeDataBuffer[inst].pos, 1.0);
-				float3 tempNormal = float3(0, 0, 1);
-				float3 tempTangent = float3(1, 0, 0);
-				CalculateSkinning(worldPosition, tempNormal, tempTangent, inst);
-				float3 quadPoint = quadPointsBuffer[id];
-
-				o.pos = mul(UNITY_MATRIX_P, mul(UNITY_MATRIX_V, worldPosition) + float4(quadPoint * float3(_Size, 1.0), 0.0));
+				// Purely Camera-Facing:
+				//o.pos = mul(UNITY_MATRIX_P, mul(UNITY_MATRIX_V, worldPosition) + float4(quadPoint * float3(_Size, 1.0), 0.0));
+				//float3 vertexOffset = (right * quadPoint.x * _Size.x) + (up * quadPoint.y * _Size.y);
+				//o.pos = mul(UNITY_MATRIX_P, mul(UNITY_MATRIX_V, worldPosition + float4(vertexOffset, 0.0)));
+				
+				//float3 vertexOffset = float3(quadPoint.x * _Size.x, quadPoint.y * _Size.y, 0.0);
+				float3 vertexOffset = (right * quadPoint.x * _Size.x) + (up * quadPoint.y * _Size.y);
+				worldPosition.xyz += vertexOffset;
+				o.pos = mul(UNITY_MATRIX_VP, worldPosition);
+				
 				float4 screenUV = ComputeScreenPos(o.pos);
 				o.screenUV = screenUV.xy / screenUV.w;
 
@@ -256,6 +266,17 @@
 				//Shift coordinates for uvs
 				o.localUV = quadPointsBuffer[id] + 0.5f;
 
+				// COLOR:
+				float3 lightDirection = float3(0.2, 1.0, 0.3);
+				float3 diffuse = dot(o.normal, lightDirection);
+				diffuse = diffuse * (1.0 - _DiffuseWrap * 0.5) + _DiffuseWrap * 0.5;
+				o.uncolor = float4(strokeDataBuffer[inst].tint.rgb, _Tint.a);
+				o.uncolor = lerp(o.uncolor, o.uncolor * float4(diffuse, o.uncolor.a), _Diffuse);
+				//o.blah = strokeDataBuffer[inst].color;
+				//o.color = float4(strokeDataBuffer[inst].color.x, diffuse.yz, 1.0);
+				//float4 broke = float4(strokeDataBuffer[inst].tint, 1);
+				//o.viewDir = broke.xyz;
+				//o.uncolor = broke;
 				return o;
 			}
 
@@ -373,7 +394,12 @@
 				float fade = 0.1;
 				float value = smoothstep(threshold - fade, threshold + fade, depth);
 				//float paintDepth = 0.25;
-				float3 brushHue = lerp(float3(1.0, 1.0, 1.0) * _Tint.rgb, buffer0.rgb * _Tint.rgb, _UseSourceColor);  // use own paint color or use SceneRenderColor?
+				//float3 lightDirection = float3(0.2, 1.0, 0.3);
+				//float3 diffuse = dot(i.normal, lightDirection);
+				//diffuse = diffuse * (1.0 - _DiffuseWrap * 0.5) + _DiffuseWrap * 0.5;
+				//float4 temp = float4(strokeDataBuffer[i.index].tint.rgb, _Tint.a);
+				//temp = lerp(temp, temp * float4(diffuse, temp.a), _Diffuse);
+				float3 brushHue = lerp(i.uncolor * _Tint.rgb, buffer0.rgb * _Tint.rgb, _UseSourceColor);  // use own paint color or use SceneRenderColor?
 				col = lerp(col, float4(brushHue, 1.0), value);
 
 				//col.rgb = brushHue;
@@ -382,6 +408,14 @@
 				depth.rgb += brush.y * _PaintThickness;
 				depth.a *= brush.x * _Tint.a;
 				outDepth = depth;  // no change to depth for now...
+				//col = i.uncolor;
+
+				float viewAngle = saturate(dot(i.normal, i.viewDir));
+				float outlineStrength = (1.0 - pow(viewAngle, _RimPow));
+				//float4 col = 0.5 * (i.color + outlineStrength * 0.75) * (1.0 - viewAngle) + 0.5 * i.color;
+				//float4 col = i.color * _Tint;
+				col.xyz = _RimGlow * (col.xyz + outlineStrength) + (1.0 - _RimGlow) * col.xyz;
+
 				outColor = col;
 			}
 

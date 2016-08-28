@@ -102,7 +102,7 @@ public class TrainerCritterBrushstrokeManager : MonoBehaviour {
 
         critterBrushstrokesArray = brushstrokeArray; // ???   This Array actually 'lives' inside TrainerCritterMarchingCubes instance...     
 
-        initPositionsBuffer = new ComputeBuffer(critterBrushstrokesArray.Length, 12);
+        initPositionsBuffer = new ComputeBuffer(critterBrushstrokesArray.Length, sizeof(float) * (3 + 3 + 3));  // pos = 3, color = 4, normal = 3
         initPositionsBuffer.SetData(critterBrushstrokesArray);
         //procMaterial.SetBuffer("buf_decorations", outputBuffer);
         //procMaterial.SetColor("_Color", color);

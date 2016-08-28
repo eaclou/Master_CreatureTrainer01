@@ -275,6 +275,8 @@ public class TrainerCritterMarchingCubes : MonoBehaviour {
                     weights[vindex].weight1 = PolyArrayArray[i][ix].BoneWeightA1;
 
                     critterPointsDataArray[decindex].pos = vPos;
+                    critterPointsDataArray[decindex].col = new Vector3(colors[vindex].r, colors[vindex].g, colors[vindex].b);
+                    critterPointsDataArray[decindex].normal = normals[vindex];
                     // OLD:
                     //points[decindex].pos = vPos;
                     //points[decindex].normal = normals[vindex];
@@ -344,6 +346,7 @@ public class TrainerCritterMarchingCubes : MonoBehaviour {
         skinnedMeshRenderer.bones = bones;
         skinnedMeshRenderer.sharedMesh = critterMesh;
         skinnedMeshRenderer.enabled = true;
+        skinnedMeshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
 
         cBufferSegmentTransform.Release();
 
@@ -351,7 +354,7 @@ public class TrainerCritterMarchingCubes : MonoBehaviour {
         trainerCritterBrushstrokeManagerRef.TurnOn(critterPointsDataArray);  // Initializes Buffers for Brushstroke
         //critterPointsBuffer = new ComputeBuffer(critterPointsDataArray.Length, sizeof(float) * 3);
         //critterPointsBuffer.SetData(critterPointsDataArray);
-        Debug.Log("BuildMesh count: " + critterPointsDataArray.Length.ToString() + ", 0: " + critterPointsDataArray[0].pos.ToString() + ", 500: " + critterPointsDataArray[500].pos.ToString());
+        //Debug.Log("BuildMesh count: " + critterPointsDataArray.Length.ToString() + ", 0: " + critterPointsDataArray[0].pos.ToString() + ", 500: " + critterPointsDataArray[500].pos.ToString());
         // OLD: //critterDecorationsTest.TurnOn(points);
 
         float calcTime = Time.realtimeSinceStartup - startTime;

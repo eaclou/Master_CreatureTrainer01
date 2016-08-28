@@ -59,7 +59,7 @@
 				float3 diffuse = dot(o.normalDir, lightDirection);
 				diffuse = diffuse * (1.0 - _DiffuseWrap * 0.5) + _DiffuseWrap * 0.5;
 				//world position
-				float4 posWorld = mul(_Object2World, i.vertex);				
+				float4 posWorld = mul(_Object2World, i.vertex);
 				//view direction
 				float3 camToWorldVector = _WorldSpaceCameraPos.xyz - posWorld.xyz;
 				o.viewDir = normalize( camToWorldVector);
@@ -67,7 +67,7 @@
 				//i.vertex.x += sin(_Time.y + i.vertex.x * 4.78 + i.vertex.y * 7.25) * 0.025;
 				//i.vertex.y += cos(_Time.z + i.vertex.y * 7.25 + i.vertex.z * 3.117) * 0.015;
 				//i.vertex.z += sin(_Time.w + i.vertex.z * 2.117 + i.vertex.x * 5.78) * 0.035;
-				o.pos = mul( UNITY_MATRIX_MVP, i.vertex );
+				o.pos = mul( UNITY_MATRIX_MVP, i.vertex);
 				
 				
 				// DEBUG options - sets color to other variables

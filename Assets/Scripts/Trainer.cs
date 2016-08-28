@@ -640,7 +640,7 @@ public class Trainer {
 
             // ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
             // ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-            Debug.Log("Update brushstrokemanager xForms!!!!!");
+            //Debug.Log("Update brushstrokemanager xForms!!!!!");
             UpdateCritterDataForRender(currentGameManager.miniGameInstance.critterBeingTested);
             // ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
             // ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -692,9 +692,11 @@ public class Trainer {
                         currentBrain.BrainMasterFunction(ref currentGameManager.brainInput, ref currentGameManager.brainOutput);
                         // Run the game for one timeStep: (Note that this will only modify non-physX variables -- the actual movement and physX sim happens just afterward -- so keep that in mind)
                         currentGameManager.miniGameInstance.Tick();
+                        // Update Critter X-Forms for Rendering purposes:
+                        gameControllerRef.trainerUI.trainerRenderManager.trainerCritterBrushstrokeManager.UpdateBuffersAndMaterial(ref gameControllerRef.trainerUI.trainerRenderManager.brushstrokeCritterMaterial);
 
                         // Luxuries at Low Speeds: Visualizations & Data read-outs
-                        if(playbackSpeed < 6f) {                            
+                        if (playbackSpeed < 6f) {                            
                             // Update Data text view:
                             gameControllerRef.trainerUI.panelDataViewScript.populationRef = playerList[playingCurPlayer].masterPopulation;
                             gameControllerRef.trainerUI.panelDataViewScript.minigameRef = currentGameManager.miniGameInstance;
