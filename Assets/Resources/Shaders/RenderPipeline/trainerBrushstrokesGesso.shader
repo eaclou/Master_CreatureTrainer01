@@ -1,16 +1,21 @@
-﻿Shader "Unlit/trainerBrushstrokesScreen"
+﻿Shader "Unlit/trainerBrushstrokesGesso"
 {
 	Properties
 	{
 		_BrushTex("Brush Texture", 2D) = "white" {}
 		_Tint("Color", Color) = (1,1,1,1)
 		_Size("Size", vector) = (1,1,0,0)
+		_PaintThickness("Paint Thickness", Range(0,1)) = 0.25
+		_PaintReach("Paint Reach", Range(0,1)) = 0.1   // This specifies how 'far' down the canvasDepth the paint will be applied
+													   // i.e. paintReach=1 means full coverage of the canvas, paintReach=0.1 means paint will only be applied where the canvasDepth is >0.9 normalized...
+													   // This will likely change later
+		_UseSourceColor("_UseSourceColor", Range(0,1)) = 1.0
 	}
 	SubShader
 	{
 		//Tags { "RenderType"="Opaque" }
 		//LOD 100
-		Tags{ "RenderType" = "Transparant" }
+		Tags{ "RenderType" = "Transparent" }
 		ZTest Off
 		ZWrite Off
 		Cull Off
@@ -27,12 +32,21 @@
 
 			struct strokeData {
 				float3 pos;
+				float3 color;
+				float3 normal;
+				float3 tangent;
+				float3 prevPos;
+				float2 dimensions;
+				int strokeType;
 			};
 
 			sampler2D _BrushTex;
 			float4 _BrushTex_ST;
 			float4 _Tint;
 			float2 _Size;
+			float _PaintThickness;
+			float _PaintReach;
+			float _UseSourceColor;
 			StructuredBuffer<strokeData> strokeDataBuffer;
 			StructuredBuffer<float3> quadPointsBuffer;
 
@@ -40,7 +54,6 @@
 			sampler2D _BrushColorReadTex;
 			sampler2D _CanvasColorReadTex;
 			sampler2D _CanvasDepthReadTex;
-
 
 			struct v2f
 			{
@@ -79,16 +92,21 @@
 				half4 buffer0 = tex2D(_BrushColorReadTex, i.centerUV);  //  Color of brushtroke source				
 				fixed4 depth = tex2D(_CanvasDepthReadTex, i.screenUV);  // Read Depth:				
 				fixed4 col = tex2D(_CanvasColorReadTex, i.screenUV);  // Read Canvas Color:
-				fixed4 strokeColor = tex2D(_BrushTex, i.localUV) * _Tint;  // Read brushstroke Texture/Tint
-				float threshold = 0.35;
+				fixed4 brush = tex2D(_BrushTex, i.localUV);  // Read Brush Texture
+				float threshold = 1.0 - _PaintReach;
 				float fade = 0.1;
 				float value = smoothstep(threshold - fade, threshold + fade, depth);
 				//float paintDepth = 0.25;
-				col = lerp(col, float4(buffer0.xyz, 1.0) * strokeColor, value);
+				float3 brushHue = lerp(float3(1.0, 1.0, 1.0) * _Tint.rgb, buffer0.rgb * _Tint.rgb, _UseSourceColor);  // use own paint color or use SceneRenderColor?
+				col = lerp(col, float4(brushHue, 1.0), value);
 
+				//col.rgb = brushHue;
+				col.a *= brush.x * _Tint.a;
+				depth.a = 1.0;
+				depth.rgb += brush.y * _PaintThickness;
+				depth.a *= brush.x * _Tint.a;
 				outDepth = depth;  // no change to depth for now...
 				outColor = col;
-								
 			}
 			ENDCG
 		}

@@ -28,7 +28,7 @@ using System;
  * integral inputs). If you're using it for bumpmaps or similar, feel
  * free to change it - and the final scale factor is 76 (as opposed to 32).
  */
-
+/*
 namespace SimplexNoise {
     public class NoiseGen {
         public double XScale = 0.02;
@@ -222,3 +222,4 @@ namespace SimplexNoise {
         }
     }
 }
+*/

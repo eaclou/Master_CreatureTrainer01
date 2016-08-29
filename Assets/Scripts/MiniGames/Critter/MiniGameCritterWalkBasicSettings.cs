@@ -43,7 +43,7 @@ public class MiniGameCritterWalkBasicSettings : MiniGameSettingsBase {
         minScoreDistance[0] = 1f;
         maxScoreDistance[0] = 0.75f;
         targetRadius[0] = 0.01f;
-        groundPositionY[0] = -50f;
+        groundPositionY[0] = -10f;
         angleSensorSensitivity[0] = 1f;
         initForceMin[0] = 0f;
         initForceMax[0] = 0.5f;

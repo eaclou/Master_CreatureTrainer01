@@ -34,6 +34,10 @@
 				float3 pos;
 				float3 color;
 				float3 normal;
+				float3 tangent;
+				float3 prevPos;
+				float2 dimensions;
+				int strokeType;
 			};
 
 			sampler2D _BrushTex;
@@ -56,29 +60,48 @@
 				float4 pos : SV_POSITION;
 				float2 localUV : TEXCOORD0;  // uv of the brushstroke quad itself, particle texture
 				float2 screenUV : TEXCOORD1;  // uv in screenspace of the frag -- for sampling from renderBuffers
-				float2 centerUV : TEXCOORD2;  // uv of just the centerPoint of the brushstroke, in screenspace so it can sample from colorBuffer		
+				float2 centerUV : TEXCOORD2;  // uv of just the centerPoint of the brushstroke, in screenspace so it can sample from colorBuffer
+				float4 color : COLOR0;
 			};
 
 			v2f vert(uint id : SV_VertexID, uint inst : SV_InstanceID)
 			{
 				v2f o;
 
+				float4 worldPosition = float4(strokeDataBuffer[inst].pos, 1.0);
+				float3 tempNormal = strokeDataBuffer[inst].normal;
+				float3 tempTangent = strokeDataBuffer[inst].tangent;
+				float3 camToWorldVector = _WorldSpaceCameraPos.xyz - worldPosition.xyz;
+				float3 viewDir = normalize(camToWorldVector);
+				float3 side = normalize(cross(viewDir, tempTangent));
+				float3 forward = normalize(cross(viewDir, side));
+				float3 quadPoint = quadPointsBuffer[id];
+				float3 vertexOffset = (forward * quadPoint.x * _Size.x * strokeDataBuffer[inst].dimensions.y) + (side * quadPoint.y * _Size.y * strokeDataBuffer[inst].dimensions.x);
+				worldPosition.xyz += vertexOffset;
+				//if (dot(o.viewDir, o.normal) > 0.0) {  // if normal is facing away from camera, make triangles degenerate so they won't render backfaces
+					
+				//}
+				o.pos = mul(UNITY_MATRIX_VP, worldPosition);
+
+				// v v v OLD OLD BELOW!!!
 				//Only transform world pos by view matrix
 				//To Create a billboarding effect
-				float3 worldPosition = strokeDataBuffer[inst].pos;
-				float3 quadPoint = quadPointsBuffer[id];
+				//float3 worldPosition = strokeDataBuffer[inst].pos;
+				//float3 quadPoint = quadPointsBuffer[id];
 
-				o.pos = mul(UNITY_MATRIX_P, mul(UNITY_MATRIX_V, float4(worldPosition, 1.0f)) + float4(quadPoint * float3(_Size, 1.0), 0.0f));
+				//o.pos = mul(UNITY_MATRIX_P, mul(UNITY_MATRIX_V, float4(worldPosition, 1.0f)) + float4(quadPoint * float3(_Size, 1.0), 0.0f));
 				float4 screenUV = ComputeScreenPos(o.pos);
 				o.screenUV = screenUV.xy / screenUV.w;
 
 				// Magic to get proper UV's for sampling from GBuffers:
-				float4 pos = mul(UNITY_MATRIX_VP, float4(worldPosition, 1));
+				float4 pos = mul(UNITY_MATRIX_VP, float4(strokeDataBuffer[inst].pos, 1.0));
 				float4 centerUV = ComputeScreenPos(pos);
 				o.centerUV = centerUV.xy / centerUV.w;
 
 				//Shift coordinates for uvs
 				o.localUV = quadPointsBuffer[id] + 0.5f;
+
+				o.color = float4(strokeDataBuffer[inst].color.rgb, _Tint.a);
 				
 				return o;
 			}
@@ -93,7 +116,7 @@
 				float fade = 0.1;
 				float value = smoothstep(threshold - fade, threshold + fade, depth);
 				//float paintDepth = 0.25;
-				float3 brushHue = lerp(float3(1.0, 1.0, 1.0) * _Tint.rgb, buffer0.rgb * _Tint.rgb, _UseSourceColor);  // use own paint color or use SceneRenderColor?
+				float3 brushHue = lerp(i.color.rgb * _Tint.rgb, buffer0.rgb * _Tint.rgb, _UseSourceColor);  // use own paint color or use SceneRenderColor?
 				col = lerp(col, float4(brushHue, 1.0), value);
 				
 				//col.rgb = brushHue;
@@ -102,6 +125,7 @@
 				depth.rgb += brush.y * _PaintThickness;
 				depth.a *= brush.x * _Tint.a;
 				outDepth = depth;  // no change to depth for now...
+				//col = float4(buffer0.rgb, _Tint.a);
 				outColor = col;
 			}
 		ENDCG

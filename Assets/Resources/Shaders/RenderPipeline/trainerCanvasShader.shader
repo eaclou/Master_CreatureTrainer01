@@ -3,7 +3,7 @@
 	Properties
 	{
 		_Color ("Color", Color) = (1,1,1,1)
-		_DepthTex ("DepthTex", 2D) = "white" {}
+		_DepthTex ("DepthTex", 2D) = "black" {}
 		_MaxDepth ("MaxDepth", Range(0,1)) = 1
 	}
 	SubShader

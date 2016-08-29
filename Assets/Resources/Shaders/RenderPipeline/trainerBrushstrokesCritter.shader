@@ -37,7 +37,7 @@
 		Tags{ "RenderType" = "Transparent" }
 		ZTest Off
 		ZWrite Off
-		Cull Back
+		Cull Off
 		Blend SrcAlpha OneMinusSrcAlpha
 
 		pass {
@@ -67,8 +67,12 @@
 
 			struct strokeData {
 				float3 pos;
-				float3 tint;
+				float3 color;
 				float3 normal;
+				float3 tangent;
+				float3 prevPos;
+				float2 dimensions;
+				int strokeType;
 			};
 
 			struct segmentTransforms {
@@ -181,34 +185,34 @@
 				return distance;
 			}
 
-			void CalculateSkinning(inout float4 pos, inout float3 normal, int id) {
+			void CalculateSkinning(inout float4 pos, inout float3 normal, inout float3 tangent, int id) {
 				
 				//return float4(pos.xyz + buf_xforms[buf_skinningData[id].indices.x].pos * 1, 1);
 				//buf_skinningData[id]
 				float4 norm4 = float4(normal, 0);  // 0 for 'direction' rather than position
-				//float4 tan4 = float4(tangent, 0);  // 0 for 'direction' rather than position
+				float4 tan4 = float4(tangent, 0);  // 0 for 'direction' rather than position
 				
 				//Get position in local segment space for each Bone by using bindPose inverse Mat4x4:
 				float4 localBonePos0 = mul(buf_bindPoses[buf_skinningData[id].indices.x].inverse, pos);
 				float4 localBonePos1 = mul(buf_bindPoses[buf_skinningData[id].indices.y].inverse, pos);
 				float4 localBoneNorm0 = mul(buf_bindPoses[buf_skinningData[id].indices.x].inverse, norm4);
 				float4 localBoneNorm1 = mul(buf_bindPoses[buf_skinningData[id].indices.y].inverse, norm4);
-				//float4 localBoneTan0 = mul(buf_bindPoses[buf_skinningData[id].indices.x].inverse, tan4);
-				//float4 localBoneTan1 = mul(buf_bindPoses[buf_skinningData[id].indices.y].inverse, tan4);
+				float4 localBoneTan0 = mul(buf_bindPoses[buf_skinningData[id].indices.x].inverse, tan4);
+				float4 localBoneTan1 = mul(buf_bindPoses[buf_skinningData[id].indices.y].inverse, tan4);
 				// Transform this bindPose position by the CURRENT segment position:
 				float4 skinnedBonePos0 = mul(buf_xforms[buf_skinningData[id].indices.x].xform, localBonePos0);
 				float4 skinnedBonePos1 = mul(buf_xforms[buf_skinningData[id].indices.y].xform, localBonePos1);
 				float4 skinnedBoneNorm0 = mul(buf_xforms[buf_skinningData[id].indices.x].xform, localBoneNorm0);
 				float4 skinnedBoneNorm1 = mul(buf_xforms[buf_skinningData[id].indices.y].xform, localBoneNorm1);
-				//float4 skinnedBoneTan0 = mul(buf_xforms[buf_skinningData[id].indices.x].xform, localBoneTan0);
-				//float4 skinnedBoneTan1 = mul(buf_xforms[buf_skinningData[id].indices.y].xform, localBoneTan1);
+				float4 skinnedBoneTan0 = mul(buf_xforms[buf_skinningData[id].indices.x].xform, localBoneTan0);
+				float4 skinnedBoneTan1 = mul(buf_xforms[buf_skinningData[id].indices.y].xform, localBoneTan1);
 				// Combine positions:
 				float4 skinnedPos = skinnedBonePos0 * buf_skinningData[id].weights.x + skinnedBonePos1 * buf_skinningData[id].weights.y;
 				float4 skinnedNorm = skinnedBoneNorm0 * buf_skinningData[id].weights.x + skinnedBoneNorm1 * buf_skinningData[id].weights.y;
-				//float4 skinnedTan = skinnedBoneTan0 * buf_skinningData[id].weights.x + skinnedBoneTan1 * buf_skinningData[id].weights.y;
+				float4 skinnedTan = skinnedBoneTan0 * buf_skinningData[id].weights.x + skinnedBoneTan1 * buf_skinningData[id].weights.y;
 				pos = skinnedPos;
 				normal = skinnedNorm.xyz;	
-				//tangent = skinnedTan.xyz;
+				tangent = skinnedTan.xyz;
 			}
 
 			/*fragInput vert(uint id : SV_VertexID) {
@@ -234,15 +238,17 @@
 				o.index = inst;  // needed to sample brushstrokeData buffer in fragment shader
 				
 				float4 worldPosition = float4(strokeDataBuffer[inst].pos, 1.0);				
-				float3 tempNormal = strokeDataBuffer[inst].normal;				
+				float3 tempNormal = strokeDataBuffer[inst].normal;	
+				float3 tempTangent = strokeDataBuffer[inst].tangent;
 				
-				CalculateSkinning(worldPosition, tempNormal, inst);
+				CalculateSkinning(worldPosition, tempNormal, tempTangent, inst);
 				
 				o.normal = tempNormal;
-				float3 camToWorldVector = worldPosition.xyz - _WorldSpaceCameraPos.xyz;
+				//o.tangent = tempTangent;
+				float3 camToWorldVector = _WorldSpaceCameraPos.xyz - worldPosition.xyz;
 				o.viewDir = normalize(camToWorldVector);
-				float3 right = normalize(cross(o.viewDir, tempNormal));
-				float3 up = normalize(cross(o.viewDir, right));
+				float3 side = normalize(cross(o.viewDir, tempTangent));
+				float3 forward = normalize(cross(o.viewDir, side));
 				float3 quadPoint = quadPointsBuffer[id];				
 
 				// Purely Camera-Facing:
@@ -251,8 +257,11 @@
 				//o.pos = mul(UNITY_MATRIX_P, mul(UNITY_MATRIX_V, worldPosition + float4(vertexOffset, 0.0)));
 				
 				//float3 vertexOffset = float3(quadPoint.x * _Size.x, quadPoint.y * _Size.y, 0.0);
-				float3 vertexOffset = (right * quadPoint.x * _Size.x) + (up * quadPoint.y * _Size.y);
-				worldPosition.xyz += vertexOffset;
+				float3 vertexOffset = (forward * quadPoint.x * _Size.x * strokeDataBuffer[inst].dimensions.y) + (side * quadPoint.y * _Size.y * strokeDataBuffer[inst].dimensions.x);
+				
+				if (dot(o.viewDir, o.normal) > 0.0) {  // if normal is facing away from camera, make triangles degenerate so they won't render backfaces
+					worldPosition.xyz += vertexOffset;
+				}
 				o.pos = mul(UNITY_MATRIX_VP, worldPosition);
 				
 				float4 screenUV = ComputeScreenPos(o.pos);
@@ -270,7 +279,7 @@
 				float3 lightDirection = float3(0.2, 1.0, 0.3);
 				float3 diffuse = dot(o.normal, lightDirection);
 				diffuse = diffuse * (1.0 - _DiffuseWrap * 0.5) + _DiffuseWrap * 0.5;
-				o.uncolor = float4(strokeDataBuffer[inst].tint.rgb, _Tint.a);
+				o.uncolor = float4(strokeDataBuffer[inst].color.rgb, _Tint.a);
 				o.uncolor = lerp(o.uncolor, o.uncolor * float4(diffuse, o.uncolor.a), _Diffuse);
 				//o.blah = strokeDataBuffer[inst].color;
 				//o.color = float4(strokeDataBuffer[inst].color.x, diffuse.yz, 1.0);
@@ -410,7 +419,7 @@
 				outDepth = depth;  // no change to depth for now...
 				//col = i.uncolor;
 
-				float viewAngle = saturate(dot(i.normal, i.viewDir));
+				float viewAngle = saturate(dot(i.viewDir, i.normal));
 				float outlineStrength = (1.0 - pow(viewAngle, _RimPow));
 				//float4 col = 0.5 * (i.color + outlineStrength * 0.75) * (1.0 - viewAngle) + 0.5 * i.color;
 				//float4 col = i.color * _Tint;

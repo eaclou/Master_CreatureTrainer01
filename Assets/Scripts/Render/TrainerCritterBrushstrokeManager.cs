@@ -5,19 +5,8 @@ public class TrainerCritterBrushstrokeManager : MonoBehaviour {
 
     public Critter critter;
     public ComputeShader skinningComputeShader;
-    //public Shader geomShader;
-    //public Material procMaterial;
-
-    public Texture2D sprite;
-    public Vector3 size = Vector3.one;
-    public Vector3 sizeRandom = Vector3.zero;
-    public Color color = new Color(1f, 1f, 1f, 1f);
-    public float bodyColorAmount = 1f;
-    //public float orientAttitude = 1f;  // 1 = straight 'up' along vertex normal, 0 = 'flat' along shell tangent
-    public float orientForwardTangent = 0f;   // 0 = random facing direction, 1 = aligned with shell forward tangent
-    public float orientRandom = 0f;
-    public int type = 0;   // 0 = quad, 1 = scales, 2 = hair
-    public int numRibbonSegments = 1;
+        
+    public Vector3 sizeRandom = Vector3.zero;    
     public float diffuse;
     public float diffuseWrap;
     public float rimGlow;
@@ -102,7 +91,7 @@ public class TrainerCritterBrushstrokeManager : MonoBehaviour {
 
         critterBrushstrokesArray = brushstrokeArray; // ???   This Array actually 'lives' inside TrainerCritterMarchingCubes instance...     
 
-        initPositionsBuffer = new ComputeBuffer(critterBrushstrokesArray.Length, sizeof(float) * (3 + 3 + 3));  // pos = 3, color = 4, normal = 3
+        initPositionsBuffer = new ComputeBuffer(critterBrushstrokesArray.Length, sizeof(float) * (3 + 3 + 3 + 3 + 3 + 2) + sizeof(int) * 1);  // pos = 3, color = 4, normal = 3
         initPositionsBuffer.SetData(critterBrushstrokesArray);
         //procMaterial.SetBuffer("buf_decorations", outputBuffer);
         //procMaterial.SetColor("_Color", color);

@@ -277,6 +277,10 @@ public class TrainerCritterMarchingCubes : MonoBehaviour {
                     critterPointsDataArray[decindex].pos = vPos;
                     critterPointsDataArray[decindex].col = new Vector3(colors[vindex].r, colors[vindex].g, colors[vindex].b);
                     critterPointsDataArray[decindex].normal = normals[vindex];
+                    //critterPointsDataArray[decindex].tangent = ;  // Tangent is calculated during initial Skinning (when determining weights)
+                    critterPointsDataArray[decindex].prevPos = vPos;
+                    critterPointsDataArray[decindex].dimensions = new Vector2(1f,1f);
+                    critterPointsDataArray[decindex].brushType = 0;  // default
                     // OLD:
                     //points[decindex].pos = vPos;
                     //points[decindex].normal = normals[vindex];

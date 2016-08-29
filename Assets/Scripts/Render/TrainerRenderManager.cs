@@ -14,7 +14,7 @@ public class TrainerRenderManager : MonoBehaviour {
     private Material canvasMaterial;
 
     public Shader brushWorldSpaceShader;
-    public Shader brushScreenSpaceShader;
+    public Shader brushGessoShader;
     public Shader brushCritterShader;
 
     public Texture canvasDepthTexture;
@@ -29,7 +29,7 @@ public class TrainerRenderManager : MonoBehaviour {
     private Material brushstrokeDecorationsMaterial;
 
     public Color canvasColor = new Color(1f, 1f, 1f, 1f);
-    public Color brushstrokeGessoTint = new Color(0.8f, 0.7f, 0.6f, 1f);
+    public Color brushstrokeGessoTint = new Color(1f, 1f, 1f, 1f);
     public Color brushstrokeBackgroundTint = new Color(1f, 1f, 1f, 1f);
     public Color brushstrokeCritterTint = new Color(1f, 1f, 1f, 1f);
 
@@ -42,6 +42,7 @@ public class TrainerRenderManager : MonoBehaviour {
     public float paintReachGesso = 1f;
     public float paintThicknessBackground = 0.25f;
     public float paintReachBackground = 1f;
+    public float backgroundFramebufferColor = 1f;
     public float paintThicknessCritter = 0.25f;
     public float paintReachCritter = 1f;
     public float paintThicknessDecorations = 0.25f;
@@ -67,9 +68,13 @@ public class TrainerRenderManager : MonoBehaviour {
     private Mesh fullscreenQuadMesh;  // is this still needed?
 
     public struct strokeStruct {
-        public Vector3 pos;
-        public Vector3 col;
-        public Vector3 normal;
+        public Vector3 pos;  // pivot point of stroke
+        public Vector3 col;   // base color of stroke
+        public Vector3 normal;   // 3d facing direction of stroke
+        public Vector3 tangent;  // direction of stroke in 3-dimensional space
+        public Vector3 prevPos;   // previousPosition, to help with velocity
+        public Vector2 dimensions;  // brush Width/Height
+        public int brushType;  // type of brushStroke -- 0 = default, 1 = flat-press, 2 = dot, 3 = splatter? -- maps to TextureUV (different rows are different strokeTypes, columns are variations)
     }
 
     private bool isActiveAgent = false;
@@ -164,7 +169,7 @@ public class TrainerRenderManager : MonoBehaviour {
         brushstrokeBackgroundMaterial.SetVector("_Size", brushSizeBackground);
         brushstrokeBackgroundMaterial.SetFloat("_PaintThickness", paintThicknessBackground);
         brushstrokeBackgroundMaterial.SetFloat("_PaintReach", paintReachBackground);
-        brushstrokeBackgroundMaterial.SetFloat("_UseSourceColor", 1.0f);  // 1.0 will use Unity's scene render as color, 0.0 will just use brushTintColor
+        brushstrokeBackgroundMaterial.SetFloat("_UseSourceColor", backgroundFramebufferColor);  // 1.0 will use Unity's scene render as color, 0.0 will just use brushTintColor
         brushstrokeBackgroundMaterial.SetTexture("_BrushTex", brushstrokeBackgroundTexture);
         AddPaintLayer(mrt, renderedSceneID, colorReadID, depthReadID, backgroundStrokesBuffer, brushstrokeBackgroundMaterial);
         cmdBuffer.Blit(colorWriteID, colorReadID);
@@ -178,7 +183,12 @@ public class TrainerRenderManager : MonoBehaviour {
             brushstrokeCritterMaterial.SetFloat("_PaintReach", paintReachCritter);
             brushstrokeCritterMaterial.SetFloat("_UseSourceColor", 0.0f);  // 1.0 will use Unity's scene render as color, 0.0 will just use brushTintColor
             brushstrokeCritterMaterial.SetTexture("_BrushTex", brushstrokeCritterTexture);
-            
+            // Some render settings from brushstrokeManager:
+            brushstrokeCritterMaterial.SetFloat("_Diffuse", trainerCritterBrushstrokeManager.diffuse);
+            brushstrokeCritterMaterial.SetFloat("_DiffuseWrap", trainerCritterBrushstrokeManager.diffuseWrap);
+            brushstrokeCritterMaterial.SetFloat("_RimGlow", trainerCritterBrushstrokeManager.rimGlow);
+            brushstrokeCritterMaterial.SetFloat("_RimPow", trainerCritterBrushstrokeManager.rimPow);
+
             brushstrokeCritterMaterial.SetPass(0);
             //strokeMaterial.SetBuffer("strokeDataBuffer", strokeBuffer);
             brushstrokeCritterMaterial.SetBuffer("quadPointsBuffer", quadPointsBuffer);
@@ -263,7 +273,7 @@ public class TrainerRenderManager : MonoBehaviour {
         
         // Create Materials        
         canvasMaterial = new Material(canvasShader);
-        brushstrokeGessoMaterial = new Material(brushWorldSpaceShader);
+        brushstrokeGessoMaterial = new Material(brushGessoShader);
         brushstrokeBackgroundMaterial = new Material(brushWorldSpaceShader);
         brushstrokeCritterMaterial = new Material(brushCritterShader);
         brushstrokeDecorationsMaterial = new Material(brushWorldSpaceShader);
@@ -285,7 +295,7 @@ public class TrainerRenderManager : MonoBehaviour {
             strokeGessoArray[i + gesso1.Length + gesso2.Length].col = new Vector3(1f, 1f, 1f);
             strokeGessoArray[i + gesso1.Length + gesso2.Length].normal = -gesso3[i].normalized;
         }
-        gessoStrokesBuffer = new ComputeBuffer(strokeGessoArray.Length, sizeof(float) * (3 + 3 + 3));
+        gessoStrokesBuffer = new ComputeBuffer(strokeGessoArray.Length, sizeof(float) * (3 + 3 + 3 + 3 + 3 + 2) + sizeof(int) * 1);  // col=3f, pos=3f, nml=3f, tan=3f, prevP=3f, dim=2f, type=1i
         gessoStrokesBuffer.SetData(strokeGessoArray);
 
         // BACKGROUND BUFFER:
@@ -294,18 +304,62 @@ public class TrainerRenderManager : MonoBehaviour {
         Vector3[] background2 = PointCloudSphericalShell.GetPointsSphericalShell(50f, backgroundRes, 1f);
         Vector3[] background3 = PointCloudSphericalShell.GetPointsSphericalShell(50f, backgroundRes, 1f);
         strokeBackgroundArray = new strokeStruct[background1.Length + background2.Length + background3.Length];
+
+        float skyNoiseFrequency = 0.02f;
+        float groundPos = -10f;
         for (int i = 0; i < background1.Length; i++) {
-            strokeBackgroundArray[i].pos = background1[i];
-            strokeBackgroundArray[i].col = new Vector3(1f, 1f, 1f);
-            strokeBackgroundArray[i].normal = -background1[i].normalized;
+
+            NoiseSample noiseSample = NoisePrime.Simplex3D(background1[i], skyNoiseFrequency);
+            //background1[i].y = Mathf.Max(groundPos, background1[i].y);
+            strokeBackgroundArray[i].pos = background1[i];            
+            strokeBackgroundArray[i].col = new Vector3(noiseSample.value, noiseSample.value, noiseSample.value);
+            if(background1[i].y < groundPos) {
+                strokeBackgroundArray[i].pos.y = groundPos;
+                strokeBackgroundArray[i].normal = new Vector3(0f,1f,0f);
+            }
+            else {
+                strokeBackgroundArray[i].normal = -background1[i].normalized;
+            }            
+            //Vector3 cross = Vector3.Cross(strokeBackgroundArray[i].normal, noiseSample.derivative);
+            strokeBackgroundArray[i].tangent = Vector3.Cross(strokeBackgroundArray[i].normal, noiseSample.derivative);
+            strokeBackgroundArray[i].prevPos = background1[i];
+            strokeBackgroundArray[i].dimensions = new Vector2(1f, 1f);
+
+            noiseSample = NoisePrime.Simplex3D(background2[i], skyNoiseFrequency);
+            //background2[i].y = Mathf.Max(groundPos, background2[i].y);
             strokeBackgroundArray[i + background1.Length].pos = background2[i];
-            strokeBackgroundArray[i + background1.Length].col = new Vector3(1f, 1f, 1f);
-            strokeBackgroundArray[i + background1.Length].normal = -background2[i].normalized;
+            strokeBackgroundArray[i + background1.Length].col = new Vector3(noiseSample.value, noiseSample.value, noiseSample.value);
+            if (background2[i].y < groundPos) {
+                strokeBackgroundArray[i + background1.Length].pos.y = groundPos;
+                strokeBackgroundArray[i + background1.Length].normal = new Vector3(0f, 1f, 0f);
+            }
+            else {
+                strokeBackgroundArray[i + background1.Length].normal = -background2[i].normalized;
+            }
+            //strokeBackgroundArray[i + background1.Length].normal = -background2[i].normalized;
+            //cross = Vector3.Cross(strokeBackgroundArray[i].normal, noiseSample.derivative);
+            strokeBackgroundArray[i + background1.Length].tangent = Vector3.Cross(strokeBackgroundArray[i + background1.Length].normal, noiseSample.derivative);
+            strokeBackgroundArray[i + background1.Length].prevPos = background2[i];
+            strokeBackgroundArray[i + background1.Length].dimensions = new Vector2(1f, 1f);
+
+            noiseSample = NoisePrime.Simplex3D(background3[i], skyNoiseFrequency);
+            //background3[i].y = Mathf.Max(groundPos, background3[i].y);
             strokeBackgroundArray[i + background1.Length + background2.Length].pos = background3[i];
-            strokeBackgroundArray[i + background1.Length + background2.Length].col = new Vector3(1f, 1f, 1f);
-            strokeBackgroundArray[i + background1.Length + background2.Length].normal = -background3[i].normalized;
+            strokeBackgroundArray[i + background1.Length + background2.Length].col = new Vector3(noiseSample.value, noiseSample.value, noiseSample.value);
+            if (background3[i].y < groundPos) {
+                strokeBackgroundArray[i + background1.Length + background2.Length].pos.y = groundPos;
+                strokeBackgroundArray[i + background1.Length + background2.Length].normal = new Vector3(0f, 1f, 0f);
+            }
+            else {
+                strokeBackgroundArray[i + background1.Length + background2.Length].normal = -background1[i].normalized;
+            }
+            //strokeBackgroundArray[i + background1.Length + background2.Length].normal = -background3[i].normalized;
+            //cross = Vector3.Cross(strokeBackgroundArray[i].normal, noiseSample.derivative);
+            strokeBackgroundArray[i + background1.Length + background2.Length].tangent = Vector3.Cross(strokeBackgroundArray[i + background1.Length + background2.Length].normal, noiseSample.derivative);
+            strokeBackgroundArray[i + background1.Length + background2.Length].prevPos = background3[i];
+            strokeBackgroundArray[i + background1.Length + background2.Length].dimensions = new Vector2(1f, 1f);
         }
-        backgroundStrokesBuffer = new ComputeBuffer(strokeBackgroundArray.Length, sizeof(float) * (3 + 3 + 3));
+        backgroundStrokesBuffer = new ComputeBuffer(strokeBackgroundArray.Length, sizeof(float) * (3 + 3 + 3 + 3 + 3 + 2) + sizeof(int) * 1);
         backgroundStrokesBuffer.SetData(strokeBackgroundArray);
 
         // Experimental!
