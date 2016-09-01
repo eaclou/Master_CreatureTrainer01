@@ -1,0 +1,97 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+
+//#pragma exclude_renderers d3d9
+
+#pragma kernel CSMain
+
+
+#include "Assets/Resources/Shaders/Inc/SimplexShared.cginc"
+
+#define numThreadsX 16
+#define numThreadsY 1
+#define numThreadsZ 16
+
+struct strokeData {
+	float3 pos;
+	float3 color;
+	float3 normal;
+	float3 tangent;
+	float3 prevPos;
+	float2 dimensions;
+	int strokeType;
+};
+
+struct meshData {
+    float3 pos;
+	float3 normal;
+	float2 uv;
+	float4 color;
+};
+
+float _GridSideLength = 1.0;
+float _NoiseFrequency = 1.0;
+float _NoiseAmplitude = 1.0;
+
+int _NumGroupsX = 1;
+int _NumGroupsZ = 1;
+//float3 _AnchorPosition = float3(0, 0, 0);
+
+RWStructuredBuffer<strokeData> buf_StrokeData;
+RWStructuredBuffer<meshData> buf_MeshData;
+
+float SampleNoise(float3 pos) {
+	return simplex3d(pos);
+}
+
+[numthreads(numThreadsX, numThreadsY, numThreadsZ)]
+void CSMain (uint3 grpID : SV_GroupID, uint3 id : SV_DispatchThreadID, uint3 grpTID : SV_GroupThreadID, uint grpIdx : SV_GroupIndex)
+{
+	// Create Low-Poly Mesh (let c# construct triangles -- only send back vertex data since we can assume it's a regular grid)
+	// Create a bunch of higher-detail brushstroke data based on the same SimplexNoise so it follows the contours of the low-poly mesh
+	// Worry about LOD later - for now, create brushstrokes evenly distributed around entire grid
+	// Then i'll have to estimate how many brushstrokes will be needed before filling the buffer -- or leave empty space in buffer?
+
+	//void CSMainGrid (uint3 grpID : SV_GroupID, uint3 id : SV_DispatchThreadID, uint3 grpTID : SV_GroupThreadID, uint grpIdx : SV_GroupIndex)
+
+	float2 sideLengths = float2(_GridSideLength / (numThreadsX - 1.0), _GridSideLength / (numThreadsZ - 1.0));
+	float xPos = (_GridSideLength / -2.0) + grpTID.x * sideLengths.x;
+	float zPos = (_GridSideLength / -2.0) + grpTID.z * sideLengths.y;
+	float3 vertexPos = float3(xPos, 0.0, zPos);
+
+	meshData data;
+	data.pos = vertexPos;
+	data.pos.y += SampleNoise(data.pos * _NoiseFrequency) * _NoiseAmplitude;
+	data.normal = float3(0.0, 1.0, 0.0);
+	data.uv = float2(grpTID.x / numThreadsX, grpTID.z / numThreadsZ);
+	data.color = float4(grpID.x / (float)2.0, 0, 0, 1);
+	buf_MeshData[(grpTID.z * numThreadsX) + grpTID.x] = data;
+
+	strokeData brush;
+	float xStart = vertexPos.x;
+	float xIncrement = sideLengths.x / (float)_NumGroupsX;  // add one so
+	float brushX = xStart + (xIncrement * grpID.x);
+	float zStart = vertexPos.z;
+	float zIncrement = sideLengths.y / (float)_NumGroupsZ;  // add one so
+	float brushZ = zStart + (zIncrement * grpID.z);
+	brush.pos = float3(brushX, 0.0, brushZ);
+
+	//float sampleC = SampleNoise(brush.pos * _NoiseFrequency);  // center
+	//float sampleL = SampleNoise((brush.pos - float3(xIncrement, 0, 0)) * _NoiseFrequency);  // left
+	//float sampleR = SampleNoise((brush.pos + float3(xIncrement, 0, 0)) * _NoiseFrequency);  // right
+	//float sampleD = SampleNoise((brush.pos - float3(0, 0, zIncrement)) * _NoiseFrequency);  // down
+	//float sampleU = SampleNoise((brush.pos + float3(0, 0, zIncrement)) * _NoiseFrequency);  // up
+	//float ddx = ((sampleR - sampleC) + (sampleC - sampleL)) / 2.0;  // avg???
+	//float ddz = ((sampleU - sampleC) + (sampleC - sampleD)) / 2.0;  // avg???
+	
+	brush.pos.y += simplex3d(brush.pos * _NoiseFrequency) * _NoiseAmplitude;
+	brush.color = float3(1, 1, 1);
+	brush.normal = float3(0.0, 1.0, 0.0);
+	brush.tangent = normalize(float3(1.0, 0.0, 0.0));
+	brush.prevPos = brush.pos;
+	brush.dimensions = float2(1.0, 1.0);
+	brush.strokeType = 0;
+	int numThreadsPerGroup = (numThreadsZ * numThreadsX);  // 4
+	int numThreadsBeforeThisGroup = numThreadsPerGroup * grpID.z * _NumGroupsX + numThreadsPerGroup * grpID.x;
+	buf_StrokeData[numThreadsBeforeThisGroup + (grpTID.z * numThreadsX) + grpTID.x] = brush;
+
+}

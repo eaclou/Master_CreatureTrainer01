@@ -7,14 +7,18 @@ public class TrainerRenderManager : MonoBehaviour {
 
     public TrainerCritterMarchingCubes trainerCritterMarchingCubes;
     public TrainerCritterBrushstrokeManager trainerCritterBrushstrokeManager;
+    public TrainerTerrainManager trainerTerrainManager;
+
+    public ComputeShader terrainGeneratorCompute;
     
     public Camera mainCamera;
-    public Cubemap skyboxTexture;
+    //public Cubemap skyboxTexture;
 
     public Shader canvasShader;
     private Material canvasMaterial;
 
     public Shader brushWorldSpaceShader;
+    public Shader brushTerrainShader;
     public Shader brushGessoShader;
     public Shader brushCritterShader;
 
@@ -60,6 +64,7 @@ public class TrainerRenderManager : MonoBehaviour {
     private ComputeBuffer gessoStrokesBuffer;
     private ComputeBuffer backgroundStrokesBuffer;
     private ComputeBuffer terrainStrokesBuffer;
+    private ComputeBuffer terrainMeshBuffer;
     //private ComputeBuffer critterStrokesBuffer;  // The ComputeBuffers for this will be stored in the TrainerCritterBrushstrokeManager subclass
     // That class will store the buffers and have functions to update them, but will be affecting the 'brushstrokeCritterMaterial' that lives here!
     private ComputeBuffer decorationsStrokesBuffer;
@@ -87,14 +92,21 @@ public class TrainerRenderManager : MonoBehaviour {
         public int brushType;  // type of brushStroke -- 0 = default, 1 = flat-press, 2 = dot, 3 = splatter? -- maps to TextureUV (different rows are different strokeTypes, columns are variations)
     }
 
+    public struct meshData {
+        public Vector3 pos;
+        public Vector3 normal;
+        public Vector2 uv;
+        public Color color;
+    };
+
     private bool isActiveAgent = false;
 
     public float skyNoiseFrequency = 0.02f;
     private Vector3 skyNoiseOffset = new Vector3(0f, 0f, 0f);
     public Vector3 skyNoiseScroll = new Vector3(0f, 0f, 0f);
-    public float groundNoiseFrequency = 0.1f;
-    public float groundNoiseAmplitude = 1f;
-    public float groundSpreadExponent = 3f;
+    public float terrainNoiseFrequency = 0.1f;
+    public float terrainNoiseAmplitude = 2f;
+    public float terrainSize = 32f;
 
     public Gradient skyColorGradient;
     public Gradient terrainColorGradient;
@@ -249,16 +261,9 @@ public class TrainerRenderManager : MonoBehaviour {
     }
 
     public void InitializeNewAgent(Critter critter) {
-        // &&&&&&&&&&#$$$$$$$$$$%&#$%&#$%&#$%&#$%^&#%^&#^&#^&#&^#&%^&##################%^&#%^&#%^&#%^&#^&#%^&#$%!#$%!#%$@&%^*($^()$*@$#%!%!%!$#%!
-        // &&&&&&&&&&#$$$$$$$$$$%&#$%&#$%&#$%&#$%^&#%^&#^&#^&#&^#&%^&##################%^&#%^&#%^&#%^&#^&#%^&#$%!#$%!#%$@&%^*($^()$*@$#%!%!%!$#%!
-        // &&&&&&&&&&#$$$$$$$$$$%&#$%&#$%&#$%&#$%^&#%^&#^&#^&#&^#&%^&##################%^&#%^&#%^&#%^&#^&#%^&#$%!#$%!#%$@&%^*($^()$*@$#%!%!%!$#%!
+        
         // Use brushstrokeManager Here:
-        // Populate Critter Brushstroke Points Initial Positions Buffer
-        // Compute Skinning Data (Weights & Indices)  so that it's ready for the renderShader to transform each brushstroke properly
-        //trainerCritterBrushstrokeManager.critter = critter; // set critter so it can update xForms??? -- might be unnecessary if I do this from Trainer class
-        // &&&&&&&&&&#$$$$$$$$$$%&#$%&#$%&#$%&#$%^&#%^&#^&#^&#&^#&%^&##################%^&#%^&#%^&#%^&#^&#%^&#$%!#$%!#%$@&%^*($^()$*@$#%!%!%!$#%!
-        // &&&&&&&&&&#$$$$$$$$$$%&#$%&#$%&#$%&#$%^&#%^&#^&#^&#&^#&%^&##################%^&#%^&#%^&#%^&#^&#%^&#$%!#$%!#%$@&%^*($^()$*@$#%!%!%!$#%!
-        // &&&&&&&&&&#$$$$$$$$$$%&#$%&#$%&#$%&#$%^&#%^&#^&#^&#&^#&%^&##################%^&#%^&#%^&#%^&#^&#%^&#$%!#$%!#%$@&%^*($^()$*@$#%!%!%!$#%!
+        // Populate Critter Brushstroke Points Initial Positions Buffer        
 
         trainerCritterMarchingCubes.SetCritterTransformArray(critter);
         trainerCritterBrushstrokeManager.critter = critter;
@@ -266,34 +271,13 @@ public class TrainerRenderManager : MonoBehaviour {
         trainerCritterBrushstrokeManager.InitializeMaterialBuffers(ref brushstrokeCritterMaterial);  // Then those buffers are set to the actual Material here (needed reference to this class)
         //critterStrokesBuffer = trainerCritterMarchingCubes.critterPointsBuffer;
                 
-        isActiveAgent = true;
-
-
-        
-
-        /*
-        // Need to Setup Arrays and ComputeBuffers HERE!!!
-        // Make sure this is called when a new agent is created, since the vertCounts could be different & break shit!
-        
-        strokeCritterArray = new strokeStruct[numStrokes];
-        strokeDecorationsArray = new strokeStruct[numStrokes];
-
-        // DO I NEED TO RELEASE these commandBuffers before re-creating them?
-        critterStrokesBuffer = new ComputeBuffer(strokeCritterArray.Length, sizeof(float) * 3);
-        critterStrokesBuffer.SetData(strokeCritterArray);
-        decorationsStrokesBuffer = new ComputeBuffer(strokeDecorationsArray.Length, sizeof(float) * 3);
-        decorationsStrokesBuffer.SetData(strokeDecorationsArray);
-        */
+        isActiveAgent = true;        
     }
 
     public void ClearAgent() {
         trainerCritterMarchingCubes.ClearCritterMesh();
         isActiveAgent = false;
-
-        //if (critterStrokesBuffer != null) {
-        //    critterStrokesBuffer.Release();
-        //    critterStrokesBuffer.Dispose();
-        //}
+        
     }
 
     void InitializeOnStartup() {
@@ -303,7 +287,7 @@ public class TrainerRenderManager : MonoBehaviour {
         canvasMaterial = new Material(canvasShader);
         brushstrokeGessoMaterial = new Material(brushGessoShader);
         brushstrokeBackgroundMaterial = new Material(brushWorldSpaceShader);
-        brushstrokeTerrainMaterial = new Material(brushWorldSpaceShader);
+        brushstrokeTerrainMaterial = new Material(brushTerrainShader);
         brushstrokeCritterMaterial = new Material(brushCritterShader);
         brushstrokeDecorationsMaterial = new Material(brushWorldSpaceShader);
 
@@ -370,11 +354,9 @@ public class TrainerRenderManager : MonoBehaviour {
         backgroundStrokesBuffer = new ComputeBuffer(strokeBackgroundArray.Length, sizeof(float) * (3 + 3 + 3 + 3 + 3 + 2) + sizeof(int) * 1);
         backgroundStrokesBuffer.SetData(strokeBackgroundArray);
 
-        // TERRAIN BUFFER:
+        /*// TERRAIN BUFFER:
         int terrainCount = 20000;
         Vector3[] terrain1 = new Vector3[terrainCount]; //PointCloudSphericalShell.GetPointsSphericalShell(2f, backgroundRes, 1f);
-        //Vector3[] terrain2 = PointCloudSphericalShell.GetPointsSphericalShell(4f, backgroundRes, 1f);
-        //Vector3[] terrain3 = PointCloudSphericalShell.GetPointsSphericalShell(8f, backgroundRes, 1f);
         strokeTerrainArray = new strokeStruct[terrain1.Length];
 
         float groundPos = -5f;
@@ -399,6 +381,9 @@ public class TrainerRenderManager : MonoBehaviour {
         }
         terrainStrokesBuffer = new ComputeBuffer(strokeTerrainArray.Length, sizeof(float) * (3 + 3 + 3 + 3 + 3 + 2) + sizeof(int) * 1);
         terrainStrokesBuffer.SetData(strokeTerrainArray);
+        */
+
+        InitTerrain();
 
         //Create quad buffer for brushtroke billboard
         quadPointsBuffer = new ComputeBuffer(6, sizeof(float) * 3);
@@ -414,6 +399,78 @@ public class TrainerRenderManager : MonoBehaviour {
         // Create master commandBuffer that makes the magic happen
         cmdBuffer = new CommandBuffer();
         cmdBuffer.name = "cmdBuffer";
+    }
+
+    private void InitTerrain() {
+        int meshGridSize = 16;
+        int numTerrainMeshVertices = meshGridSize * meshGridSize;
+        terrainMeshBuffer = new ComputeBuffer(numTerrainMeshVertices, sizeof(float) * (3 + 3 + 2 + 4));
+        int numStrokesPerVertX = 8;
+        int numStrokesPerVertZ = 8;
+        int numTerrainStrokes = meshGridSize * meshGridSize * numStrokesPerVertX * numStrokesPerVertZ;
+        terrainStrokesBuffer = new ComputeBuffer(numTerrainStrokes, sizeof(float) * (3 + 3 + 3 + 3 + 3 + 2) + sizeof(int) * 1);
+
+        //terrainGeneratorCompute = new ComputeShader();
+        int kernel_id = terrainGeneratorCompute.FindKernel("CSMain");
+        terrainGeneratorCompute.SetFloat("_GridSideLength", terrainSize);
+        terrainGeneratorCompute.SetFloat("_NoiseFrequency", terrainNoiseFrequency);
+        terrainGeneratorCompute.SetFloat("_NoiseAmplitude", terrainNoiseAmplitude);
+        terrainGeneratorCompute.SetInt("_NumGroupsX", numStrokesPerVertX);
+        terrainGeneratorCompute.SetInt("_NumGroupsZ", numStrokesPerVertZ);
+        terrainGeneratorCompute.SetBuffer(kernel_id, "buf_StrokeData", terrainStrokesBuffer);
+        terrainGeneratorCompute.SetBuffer(kernel_id, "buf_MeshData", terrainMeshBuffer);
+
+        meshData[] meshDataArray = new meshData[numTerrainMeshVertices];  // memory to receive data from computeshader
+        terrainGeneratorCompute.Dispatch(kernel_id, numStrokesPerVertX, 1, numStrokesPerVertZ);  // fill buffers
+
+        terrainMeshBuffer.GetData(meshDataArray);  // download mesh Data
+
+        // generate Mesh from data:
+        //Construct mesh using received data         
+        // Why same number of tris as vertices?  == // because all triangles have duplicate verts - no shared vertices?
+        Vector3[] vertices = new Vector3[numTerrainMeshVertices];
+        Color[] colors = new Color[numTerrainMeshVertices];
+        int[] tris = new int[2 * (meshGridSize - 1) * (meshGridSize - 1) * 3];
+        Vector2[] uvs = new Vector2[numTerrainMeshVertices];
+        Vector3[] normals = new Vector3[numTerrainMeshVertices];
+
+        for(int i = 0; i < numTerrainMeshVertices; i++) {
+            vertices[i] = meshDataArray[i].pos;
+            normals[i] = meshDataArray[i].normal;
+            uvs[i] = meshDataArray[i].uv;
+            colors[i] = meshDataArray[i].color;            
+        }
+        // Figure out triangles:
+        int index = 0;
+        int numSquares = meshGridSize - 1;
+        for (int y = 0; y < numSquares; y++) {
+            for(int x = 0; x < numSquares; x++) {
+                // trying clockwise first:
+                tris[index] = ((y + 1) * meshGridSize) + x;
+                tris[index + 1] = (y * meshGridSize) + x + 1;
+                tris[index + 2] = (y * meshGridSize) + x;
+
+                tris[index + 3] = ((y + 1) * meshGridSize) + x;
+                tris[index + 4] = ((y + 1) * meshGridSize) + x + 1;
+                tris[index + 5] = (y * meshGridSize) + x + 1;
+
+                index = index + 6;
+            }
+        }
+
+        Mesh terrainMesh = new Mesh();
+        terrainMesh.vertices = vertices;
+        terrainMesh.uv = uvs; //Unwrapping.GeneratePerTriangleUV(NewMesh);
+        terrainMesh.triangles = tris;
+        terrainMesh.normals = normals; //NewMesh.RecalculateNormals();        
+        terrainMesh.colors = colors;
+        terrainMesh.RecalculateNormals();
+        terrainMesh.RecalculateBounds();
+
+        trainerTerrainManager.GetComponent<MeshFilter>().sharedMesh = terrainMesh;
+
+        terrainMeshBuffer.Release();
+        terrainMeshBuffer.Dispose();
     }
 
     private void UpdateSkyTangents() {
@@ -438,7 +495,7 @@ public class TrainerRenderManager : MonoBehaviour {
         backgroundStrokesBuffer.SetData(strokeBackgroundArray);
 
 
-        float groundPos = -5f;
+        /*float groundPos = -5f;
         for (int i = 0; i < strokeTerrainArray.Length; i++) {
             //strokeTerrainArray[i].pos = UnityEngine.Random.insideUnitSphere * groundSpreadExponent;
             //strokeTerrainArray[i].pos *= strokeTerrainArray[i].pos.sqrMagnitude;
@@ -459,6 +516,7 @@ public class TrainerRenderManager : MonoBehaviour {
 
         }        
         terrainStrokesBuffer.SetData(strokeTerrainArray);
+        */
     }
 
     void Cleanup() {
