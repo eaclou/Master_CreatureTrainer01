@@ -76,7 +76,7 @@
 				float3 side = normalize(cross(viewDir, tempTangent));
 				float3 forward = normalize(cross(viewDir, side));
 				float3 quadPoint = quadPointsBuffer[id];
-				float3 vertexOffset = (forward * quadPoint.x * _Size.x * strokeDataBuffer[inst].dimensions.y) + (side * quadPoint.y * _Size.y * strokeDataBuffer[inst].dimensions.x);
+				float3 vertexOffset = (forward * quadPoint.x * _Size.x * strokeDataBuffer[inst].dimensions.x) + (side * quadPoint.y * _Size.y * strokeDataBuffer[inst].dimensions.y);
 				worldPosition.xyz += vertexOffset;
 				//if (dot(o.viewDir, o.normal) > 0.0) {  // if normal is facing away from camera, make triangles degenerate so they won't render backfaces
 					
