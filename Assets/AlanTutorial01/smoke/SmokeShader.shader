@@ -1,4 +1,6 @@
-﻿// Alan Zucconi: http://www.alanzucconi.com/?p=4565
+﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+
+// Alan Zucconi: http://www.alanzucconi.com/?p=4565
 Shader "Hidden/Smoke"
 {
 	Properties
@@ -55,7 +57,7 @@ Shader "Hidden/Smoke"
 				vertOutput o;
 				o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
 				o.uv = v.texcoord;
-				o.wPos = mul(_Object2World, v.vertex).xyz;
+				o.wPos = mul(unity_ObjectToWorld, v.vertex).xyz;
 				return o;
 			}
 

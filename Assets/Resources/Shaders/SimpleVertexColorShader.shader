@@ -1,4 +1,7 @@
-﻿Shader "Custom/SimpleVertexColorShader" {
+﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+// Upgrade NOTE: replaced '_World2Object' with 'unity_WorldToObject'
+
+Shader "Custom/SimpleVertexColorShader" {
 	Properties {
 		_Color ("Color", Color) = (1,1,1,1)
 	}
@@ -44,9 +47,9 @@
 				//o.color = _Color;
 				
 				//normal dir
-				o.normalDir = normalize ( mul ( float4( i.normal, 0.0 ), _World2Object).xyz );				
+				o.normalDir = normalize ( mul ( float4( i.normal, 0.0 ), unity_WorldToObject).xyz );				
 				//world position
-				float4 posWorld = mul(_Object2World, i.vertex);				
+				float4 posWorld = mul(unity_ObjectToWorld, i.vertex);				
 				//view direction
 				float3 camToWorldVector = _WorldSpaceCameraPos.xyz - posWorld.xyz;
 				o.viewDir = normalize( camToWorldVector);

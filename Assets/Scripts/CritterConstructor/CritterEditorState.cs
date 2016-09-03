@@ -140,7 +140,7 @@ public class CritterEditorState : MonoBehaviour {
 
     private void UpdateGravityStrength() { // !!
         Time.timeScale = 3.3f;
-        Physics.solverIterationCount = 12;
+        Physics.defaultSolverIterations = 12;
         float currentTime = Time.fixedTime;
         float gravityMaxAmplitude = 4f;
         float lerpFrequency = 2.6f;

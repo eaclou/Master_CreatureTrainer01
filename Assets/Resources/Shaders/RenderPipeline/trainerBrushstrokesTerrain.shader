@@ -73,8 +73,17 @@
 				float3 tempTangent = strokeDataBuffer[inst].tangent;
 				float3 camToWorldVector = _WorldSpaceCameraPos.xyz - worldPosition.xyz;
 				float3 viewDir = normalize(camToWorldVector);
-				float3 side = normalize(cross(viewDir, tempTangent));
-				float3 forward = normalize(cross(viewDir, side));
+
+				// Flows along Gradient
+				//float3 side = normalize(cross(viewDir, tempTangent));
+				//float3 forward = normalize(cross(viewDir, side));
+
+				// Flows along Iso-Line:
+				//float3 temp = normalize(cross(viewDir, tempNormal));
+				float3 forward = normalize(cross(viewDir, tempNormal));
+				float3 side = normalize(cross(viewDir, forward));
+				
+
 				float3 quadPoint = quadPointsBuffer[id];
 				float3 vertexOffset = (forward * quadPoint.x * _Size.x * strokeDataBuffer[inst].dimensions.x) + (side * quadPoint.y * _Size.y * strokeDataBuffer[inst].dimensions.y);
 				worldPosition.xyz += vertexOffset;

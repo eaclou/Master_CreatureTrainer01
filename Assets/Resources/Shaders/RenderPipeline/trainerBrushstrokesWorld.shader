@@ -1,4 +1,4 @@
-﻿Shader "Unlit/trainerBrushstrokesWorld"
+﻿Shader "Unlit/trainerBrushstrokesWorld"  // Sky shader, basically
 {
 	Properties
 	{

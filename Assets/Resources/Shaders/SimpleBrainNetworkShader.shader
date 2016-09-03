@@ -1,4 +1,7 @@
-﻿Shader "Custom/SimpleBrainNetworkShader" {
+﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+// Upgrade NOTE: replaced '_World2Object' with 'unity_WorldToObject'
+
+Shader "Custom/SimpleBrainNetworkShader" {
 	Properties {
 		_Color ("Color", Color) = (1,1,1,1)
 	}
@@ -51,13 +54,13 @@
 				o.color = _Color;
 				
 				//normal dir
-				o.normalDir = normalize ( mul ( float4( i.normal, 0.0 ), _World2Object).xyz );		
-				float3 normalDirection = normalize(mul(float4(i.normal, 1.0), _World2Object).xyz);
+				o.normalDir = normalize ( mul ( float4( i.normal, 0.0 ), unity_WorldToObject).xyz );		
+				float3 normalDirection = normalize(mul(float4(i.normal, 1.0), unity_WorldToObject).xyz);
 				//float3 lightDirection = normalize(_WorldSpaceLightPos0.xyz);
 				float3 lightDirection = float3(0.2, 1.0, 0.3);
 				float3 diffuse = _LightColor0.xyz * max(0.0, dot(normalDirection, lightDirection)) * _Color;
 				//world position
-				float4 posWorld = mul(_Object2World, i.vertex);				
+				float4 posWorld = mul(unity_ObjectToWorld, i.vertex);				
 				//view direction
 				float3 camToWorldVector = _WorldSpaceCameraPos.xyz - posWorld.xyz;
 				//o.viewDir = normalize( camToWorldVector);

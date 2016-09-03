@@ -49,6 +49,7 @@ public class TrainerRenderManager : MonoBehaviour {
 
     public float paintThicknessGesso = 0.25f;
     public float paintReachGesso = 1f;
+    public float gessoFramebufferColor = 0.5f;
     public float paintThicknessBackground = 0.25f;
     public float paintReachBackground = 1f;    
     public float backgroundFramebufferColor = 1f;
@@ -104,9 +105,11 @@ public class TrainerRenderManager : MonoBehaviour {
     public float skyNoiseFrequency = 0.02f;
     private Vector3 skyNoiseOffset = new Vector3(0f, 0f, 0f);
     public Vector3 skyNoiseScroll = new Vector3(0f, 0f, 0f);
+    public float skyColorNoise = 0.5f;
     public float terrainNoiseFrequency = 0.1f;
     public float terrainNoiseAmplitude = 2f;
     public float terrainSize = 32f;
+    public float terrainAltitude = -5f;
 
     public Gradient skyColorGradient;
     public Gradient terrainColorGradient;
@@ -186,7 +189,7 @@ public class TrainerRenderManager : MonoBehaviour {
         brushstrokeGessoMaterial.SetVector("_Size", brushSizeGesso);
         brushstrokeGessoMaterial.SetFloat("_PaintThickness", paintThicknessGesso);
         brushstrokeGessoMaterial.SetFloat("_PaintReach", paintReachGesso);
-        brushstrokeGessoMaterial.SetFloat("_UseSourceColor", 0.0f);  // 1.0 will use Unity's scene render as color, 0.0 will just use brushTintColor
+        brushstrokeGessoMaterial.SetFloat("_UseSourceColor", gessoFramebufferColor);  // 1.0 will use Unity's scene render as color, 0.0 will just use brushTintColor
         //cmdBuffer.SetGlobalFloat("_UseSourceColor", 1.0f);
         brushstrokeGessoMaterial.SetTexture("_BrushTex", brushstrokeGessoTexture);
         AddPaintLayer(mrt, renderedSceneID, colorReadID, depthReadID, gessoStrokesBuffer, brushstrokeGessoMaterial);
@@ -292,7 +295,7 @@ public class TrainerRenderManager : MonoBehaviour {
         brushstrokeDecorationsMaterial = new Material(brushWorldSpaceShader);
 
         // GESSO BUFFER:
-        int gessoRes = 12;
+        int gessoRes = 16;
         Vector3[] gesso1 = PointCloudSphericalShell.GetPointsSphericalShell(50f, gessoRes, 1f);
         Vector3[] gesso2 = PointCloudSphericalShell.GetPointsSphericalShell(55f, gessoRes, 1f);
         Vector3[] gesso3 = PointCloudSphericalShell.GetPointsSphericalShell(60f, gessoRes, 1f);        
@@ -312,28 +315,35 @@ public class TrainerRenderManager : MonoBehaviour {
         gessoStrokesBuffer.SetData(strokeGessoArray);
 
         // BACKGROUND BUFFER:
-        int backgroundRes = 20;
-        Vector3[] background1 = PointCloudSphericalShell.GetPointsSphericalShell(50f, backgroundRes, 1f);
-        Vector3[] background2 = PointCloudSphericalShell.GetPointsSphericalShell(55f, backgroundRes, 1f);
-        Vector3[] background3 = PointCloudSphericalShell.GetPointsSphericalShell(60f, backgroundRes, 1f);
+        int backgroundRes = 24;
+        Vector3[] background1 = PointCloudSphericalShell.GetPointsSphericalShell(100f, backgroundRes, 1f);
+        Vector3[] background2 = PointCloudSphericalShell.GetPointsSphericalShell(110f, backgroundRes, 1f);
+        Vector3[] background3 = PointCloudSphericalShell.GetPointsSphericalShell(120f, backgroundRes, 1f);
         strokeBackgroundArray = new strokeStruct[background1.Length + background2.Length + background3.Length];
         
         //float groundPos = -10f;
         for (int i = 0; i < background1.Length; i++) {
-            background1[i].y = Mathf.Abs(background1[i].y);
+            float colorNoiseFrequency = 1000f;
+            
+            background1[i].y = Mathf.Abs(background1[i].y) + terrainAltitude;
+            NoiseSample colorNoiseSample = NoisePrime.Simplex3D(background1[i], skyNoiseFrequency * colorNoiseFrequency);
+            float colorNoise = colorNoiseSample.value * 0.5f + 0.5f;
             NoiseSample noiseSample = NoisePrime.Simplex3D(background1[i], skyNoiseFrequency);            
             strokeBackgroundArray[i].pos = background1[i];            
-            strokeBackgroundArray[i].col = new Vector3(noiseSample.value, noiseSample.value, noiseSample.value);
+            strokeBackgroundArray[i].col = new Vector3(colorNoise, colorNoise, colorNoise);
             strokeBackgroundArray[i].normal = -background1[i].normalized;       
             //Vector3 cross = Vector3.Cross(strokeBackgroundArray[i].normal, noiseSample.derivative);
             strokeBackgroundArray[i].tangent = Vector3.Cross(strokeBackgroundArray[i].normal, noiseSample.derivative);
             strokeBackgroundArray[i].prevPos = background1[i];
             strokeBackgroundArray[i].dimensions = new Vector2(1f, noiseSample.derivative.magnitude);
 
-            background2[i].y = Mathf.Abs(background2[i].y);
+
+            background2[i].y = Mathf.Abs(background2[i].y) + terrainAltitude;
+            colorNoiseSample = NoisePrime.Simplex3D(background1[i], skyNoiseFrequency * colorNoiseFrequency);
+            colorNoise = colorNoiseSample.value * 0.5f + 0.5f;
             noiseSample = NoisePrime.Simplex3D(background2[i], skyNoiseFrequency);
             strokeBackgroundArray[i + background1.Length].pos = background2[i];
-            strokeBackgroundArray[i + background1.Length].col = new Vector3(noiseSample.value, noiseSample.value, noiseSample.value);           
+            strokeBackgroundArray[i + background1.Length].col = new Vector3(colorNoise, colorNoise, colorNoise);           
             strokeBackgroundArray[i + background1.Length].normal = -background2[i].normalized;
             //strokeBackgroundArray[i + background1.Length].normal = -background2[i].normalized;
             //cross = Vector3.Cross(strokeBackgroundArray[i].normal, noiseSample.derivative);
@@ -341,10 +351,12 @@ public class TrainerRenderManager : MonoBehaviour {
             strokeBackgroundArray[i + background1.Length].prevPos = background2[i];
             strokeBackgroundArray[i + background1.Length].dimensions = new Vector2(1f, noiseSample.derivative.magnitude);
 
-            background3[i].y = Mathf.Abs(background3[i].y);
+            background3[i].y = Mathf.Abs(background3[i].y) + terrainAltitude;
+            colorNoiseSample = NoisePrime.Simplex3D(background1[i], skyNoiseFrequency * colorNoiseFrequency);
+            colorNoise = colorNoiseSample.value * 0.5f + 0.5f;
             noiseSample = NoisePrime.Simplex3D(background3[i], skyNoiseFrequency);            
             strokeBackgroundArray[i + background1.Length + background2.Length].pos = background3[i];
-            strokeBackgroundArray[i + background1.Length + background2.Length].col = new Vector3(noiseSample.value, noiseSample.value, noiseSample.value);            
+            strokeBackgroundArray[i + background1.Length + background2.Length].col = new Vector3(colorNoise, colorNoise, colorNoise);            
             strokeBackgroundArray[i + background1.Length + background2.Length].normal = -background1[i].normalized;            
             //cross = Vector3.Cross(strokeBackgroundArray[i].normal, noiseSample.derivative);
             strokeBackgroundArray[i + background1.Length + background2.Length].tangent = Vector3.Cross(strokeBackgroundArray[i + background1.Length + background2.Length].normal, noiseSample.derivative);
@@ -405,8 +417,8 @@ public class TrainerRenderManager : MonoBehaviour {
         int meshGridSize = 16;
         int numTerrainMeshVertices = meshGridSize * meshGridSize;
         terrainMeshBuffer = new ComputeBuffer(numTerrainMeshVertices, sizeof(float) * (3 + 3 + 2 + 4));
-        int numStrokesPerVertX = 8;
-        int numStrokesPerVertZ = 8;
+        int numStrokesPerVertX = 16;
+        int numStrokesPerVertZ = 16;
         int numTerrainStrokes = meshGridSize * meshGridSize * numStrokesPerVertX * numStrokesPerVertZ;
         terrainStrokesBuffer = new ComputeBuffer(numTerrainStrokes, sizeof(float) * (3 + 3 + 3 + 3 + 3 + 2) + sizeof(int) * 1);
 
@@ -415,6 +427,7 @@ public class TrainerRenderManager : MonoBehaviour {
         terrainGeneratorCompute.SetFloat("_GridSideLength", terrainSize);
         terrainGeneratorCompute.SetFloat("_NoiseFrequency", terrainNoiseFrequency);
         terrainGeneratorCompute.SetFloat("_NoiseAmplitude", terrainNoiseAmplitude);
+        terrainGeneratorCompute.SetFloat("_GroundHeight", terrainAltitude);
         terrainGeneratorCompute.SetInt("_NumGroupsX", numStrokesPerVertX);
         terrainGeneratorCompute.SetInt("_NumGroupsZ", numStrokesPerVertZ);
         terrainGeneratorCompute.SetBuffer(kernel_id, "buf_StrokeData", terrainStrokesBuffer);
@@ -445,7 +458,7 @@ public class TrainerRenderManager : MonoBehaviour {
         int numSquares = meshGridSize - 1;
         for (int y = 0; y < numSquares; y++) {
             for(int x = 0; x < numSquares; x++) {
-                // trying clockwise first:
+                // counterclockwise winding order:
                 tris[index] = ((y + 1) * meshGridSize) + x;
                 tris[index + 1] = (y * meshGridSize) + x + 1;
                 tris[index + 2] = (y * meshGridSize) + x;
@@ -468,6 +481,7 @@ public class TrainerRenderManager : MonoBehaviour {
         terrainMesh.RecalculateBounds();
 
         trainerTerrainManager.GetComponent<MeshFilter>().sharedMesh = terrainMesh;
+        trainerTerrainManager.GetComponent<MeshCollider>().sharedMesh = terrainMesh;
 
         terrainMeshBuffer.Release();
         terrainMeshBuffer.Dispose();
@@ -480,8 +494,12 @@ public class TrainerRenderManager : MonoBehaviour {
             //float size = Vector3.Dot(noiseSample.derivative.normalized, strokeBackgroundArray[i].normal);
             noiseSample.value = noiseSample.value * 0.5f + 0.5f;
             //strokeBackgroundArray[i].pos = background1[i];
+            float colorNoiseFrequency = 1000f;
+            NoiseSample colorNoiseSample = NoisePrime.Simplex3D(strokeBackgroundArray[i].pos, skyNoiseFrequency * colorNoiseFrequency);
+            float colorNoise = (colorNoiseSample.value * 0.5f + 0.5f);
+            
             Color color = skyColorGradient.Evaluate(Vector3.Dot(strokeBackgroundArray[i].pos.normalized, Vector3.up));
-            strokeBackgroundArray[i].col = new Vector3(color.r, color.g, color.b);
+            strokeBackgroundArray[i].col = new Vector3(Mathf.Lerp(color.r, colorNoise, skyColorNoise), Mathf.Lerp(color.g, colorNoise, skyColorNoise), Mathf.Lerp(color.b, colorNoise, skyColorNoise));
             //strokeBackgroundArray[i].col = new Vector3(noiseSample.value, noiseSample.value, noiseSample.value);
             //strokeBackgroundArray[i].normal = -background1[i].normalized;
             //Vector3 cross = Vector3.Cross(strokeBackgroundArray[i].normal, noiseSample.derivative);

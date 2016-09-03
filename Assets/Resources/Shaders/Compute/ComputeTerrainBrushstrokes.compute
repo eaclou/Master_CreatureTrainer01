@@ -31,6 +31,7 @@ struct meshData {
 float _GridSideLength = 1.0;
 float _NoiseFrequency = 1.0;
 float _NoiseAmplitude = 1.0;
+float _GroundHeight = 1.0;
 
 int _NumGroupsX = 1;
 int _NumGroupsZ = 1;
@@ -56,14 +57,16 @@ void CSMain (uint3 grpID : SV_GroupID, uint3 id : SV_DispatchThreadID, uint3 grp
 	float2 sideLengths = float2(_GridSideLength / (numThreadsX - 1.0), _GridSideLength / (numThreadsZ - 1.0));
 	float xPos = (_GridSideLength / -2.0) + grpTID.x * sideLengths.x;
 	float zPos = (_GridSideLength / -2.0) + grpTID.z * sideLengths.y;
-	float3 vertexPos = float3(xPos, 0.0, zPos);
+	float3 vertexPos = float3(xPos, _GroundHeight, zPos);
 
 	meshData data;
 	data.pos = vertexPos;
-	data.pos.y += SampleNoise(data.pos * _NoiseFrequency) * _NoiseAmplitude;
+	float noiseAmount = SampleNoise(data.pos * _NoiseFrequency);
+	data.pos.y += noiseAmount * _NoiseAmplitude;
 	data.normal = float3(0.0, 1.0, 0.0);
 	data.uv = float2(grpTID.x / numThreadsX, grpTID.z / numThreadsZ);
-	data.color = float4(grpID.x / (float)2.0, 0, 0, 1);
+	float val = noiseAmount * 0.5 + 0.5;
+	data.color = float4(val, val, val, 1);
 	buf_MeshData[(grpTID.z * numThreadsX) + grpTID.x] = data;
 
 	strokeData brush;
@@ -73,24 +76,34 @@ void CSMain (uint3 grpID : SV_GroupID, uint3 id : SV_DispatchThreadID, uint3 grp
 	float zStart = vertexPos.z;
 	float zIncrement = sideLengths.y / (float)_NumGroupsZ;  // add one so
 	float brushZ = zStart + (zIncrement * grpID.z);
-	brush.pos = float3(brushX, 0.0, brushZ);
-
-	//float sampleC = SampleNoise(brush.pos * _NoiseFrequency);  // center
-	//float sampleL = SampleNoise((brush.pos - float3(xIncrement, 0, 0)) * _NoiseFrequency);  // left
-	//float sampleR = SampleNoise((brush.pos + float3(xIncrement, 0, 0)) * _NoiseFrequency);  // right
-	//float sampleD = SampleNoise((brush.pos - float3(0, 0, zIncrement)) * _NoiseFrequency);  // down
-	//float sampleU = SampleNoise((brush.pos + float3(0, 0, zIncrement)) * _NoiseFrequency);  // up
-	//float ddx = ((sampleR - sampleC) + (sampleC - sampleL)) / 2.0;  // avg???
-	//float ddz = ((sampleU - sampleC) + (sampleC - sampleD)) / 2.0;  // avg???
 	
-	brush.pos.y += simplex3d(brush.pos * _NoiseFrequency) * _NoiseAmplitude;
-	brush.color = float3(1, 1, 1);
-	brush.normal = float3(0.0, 1.0, 0.0);
-	brush.tangent = normalize(float3(1.0, 0.0, 0.0));
+	brush.pos = float3(brushX, 0.0, brushZ);
+	float3 offsetFrequency = 1000.0;
+	float3 offset = float3(simplex3d(brush.pos * offsetFrequency), 0.0, -simplex3d(brush.pos * offsetFrequency));
+	brush.pos.x += offset.x * xIncrement * 1.0; // randomization
+	brush.pos.z += offset.z * zIncrement * 1.0;
+
+	float sampleC = SampleNoise(brush.pos * _NoiseFrequency);  // center
+	float sampleL = SampleNoise((brush.pos - float3(xIncrement * 0.25, 0, 0)) * _NoiseFrequency);  // left
+	float sampleR = SampleNoise((brush.pos + float3(xIncrement * 0.25, 0, 0)) * _NoiseFrequency);  // right
+	float sampleD = SampleNoise((brush.pos - float3(0, xIncrement * 0.25, 0)) * _NoiseFrequency);  // down
+	float sampleU = SampleNoise((brush.pos + float3(0, xIncrement * 0.25, 0)) * _NoiseFrequency);  // up
+	float sampleB = SampleNoise((brush.pos - float3(0, 0, zIncrement * 0.25)) * _NoiseFrequency);  // back
+	float sampleF = SampleNoise((brush.pos + float3(0, 0, zIncrement * 0.25)) * _NoiseFrequency);  // forward
+	float ddx = ((sampleR - sampleC) + (sampleC - sampleL)) / 2.0;  // avg???
+	float ddy = ((sampleU - sampleC) + (sampleC - sampleD)) / 2.0;  // avg???
+	float ddz = ((sampleF - sampleC) + (sampleC - sampleB)) / 2.0;  // avg???
+	
+	brush.pos.y = _GroundHeight + sampleC * _NoiseAmplitude;
+	float noiseCol = SampleNoise(brush.pos * _NoiseFrequency * 1500) * 0.5 + 0.5;
+	brush.color = float3(noiseCol, noiseCol, noiseCol);
+	//brush.normal = float3(-ddx, 1.0, ddz);
+	brush.tangent = normalize(float3(ddx, ddy, ddz));
+	brush.normal = normalize(float3(-brush.tangent.x, 1.0, -brush.tangent.z));
 	brush.prevPos = brush.pos;
 	brush.dimensions = float2(1.0, 1.0);
 	brush.strokeType = 0;
-	int numThreadsPerGroup = (numThreadsZ * numThreadsX);  // 4
+	int numThreadsPerGroup = (numThreadsZ * numThreadsX);
 	int numThreadsBeforeThisGroup = numThreadsPerGroup * grpID.z * _NumGroupsX + numThreadsPerGroup * grpID.x;
 	buf_StrokeData[numThreadsBeforeThisGroup + (grpTID.z * numThreadsX) + grpTID.x] = brush;
 
