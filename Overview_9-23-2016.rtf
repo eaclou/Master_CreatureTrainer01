@@ -1,0 +1,44 @@
+{\rtf1\ansi\ansicpg1252\deff0\deflang1033{\fonttbl{\f0\fnil\fcharset0 Calibri;}}
+{\*\generator Msftedit 5.41.21.2510;}\viewkind4\uc1\pard\sa200\sl276\slmult1\lang9\f0\fs22 Latest Update: Overview of the project in its current state\par
+\par
+Summary:\par
+An artificial evolution simulator where virtual creatures learn to perform basic behaviors like swimming or walking in a 3-dimensional physically-simulated environment.\par
+A creature is composed of blocks connected by joints. It can have a variety of sensors which provide information about the environment and the current state of its body, as well as effectors such as muscles to bend its joints. In this way, it is able to perform actions based on the current conditions of its environment.\par
+In order to 'learn' how to perform a particular behavior, a group of copies of a creature (with slight variations) are placed in an environment for a certain amount of time. The ones which perform the best based on the desired behavior are then mixed and copied to form a new group of copies which are then tested again. The poorest performers are discarded. In this way, similar to Natural Selection, (except decidedly artificial in this case) the most fit individuals pass on their attributes to the next generation and the species as a whole improves.\par
+The project is currently split into two modules: the Creature Editor and the Creature Trainer. The Creature Editor allows the user to design their own creature body, choosing where to place limbs, adjusting body proportions, and adding sensors and effectors. The Creature Trainer can load in creatures designed in the Editor and train them to learn certain behaviors by rewarding or penalizing actions, like average speed. The Trainer has a large number of settings which allow the user to adjust things like the speed of evolution, the environmental conditions, which actions to reward, and the amount of variation between individuals.\par
+\par
+Creature Editor:\par
+\par
+This module allows the user to design their own creature body template. All creatures have a 'Root' segment which is the base of their bodies. New segments can be added and attached to an existing segment and a joint will automatically be created between them. All segments can be resized in each dimension, length, width, and height. They can also be positioned anywhere on their parent segment, as well as given an initial orientation relative to that parent segment.\par
+In addition to basic proportions and connections, a segment can be mirrored to create a copy of itself (and any segments attached to it). Editing one of the mirror copies will also affect the other, so the user doesn't have to manually build two identical copies. This is a more efficient way to make arms or legs that have bi-lateral symmetry, like the human body. \par
+In a similar vein to mirror symmetry, a segment can be 'recursed' (adds a copy of itself onto itself) a number of times to create a chain of similar segments, for things like segmented tentacles. Segments which are attached to the recursed segment are also copied, so you could create something like a centipede very efficiently. There is also an option to scale each successive segment by an amount so that as the chain gets longer, each segment gets progressively smaller.\par
+'Add-ons' are the way that sensors and effectors can be added to a creature. The primary ones are joint motors (which allow the creature to bend its limbs) joint angle sensors (tells creature how much a joint is currently bent) and value inputs (gives the creature an external input like a clock). However, there are a bunch more such as position sensors to tell the creature where it is relative to a target location, gravity sensors to give the direction of force of gravity, thrusters which exert a force on the segment in some direction, range-finder to tell if there is a solid object in the way, noise-makers, noise-detectors, physical attributes like the friction or bounciness of a segment, and physical constraints which can be used to simulate 2D creatures (prevents movement in the third dimension).\par
+The Preview Physics button temporarily pins the creature's root segment in place and applies a turbulent force to the rest of the body in order to show the current range of motion of the creature.\par
+Creatures can be saved and loaded for future editing or for use in the Creature Trainer module. \par
+\par
+\par
+Creature Trainer:\par
+The Creature Trainer allows a user to load a creature body template and train it to learn a behavior. It is composed of a bunch of modules split into panels:\par
+-The Player Panel\par
+Not currently implemented\par
+-The Menu Bar\par
+This is where you start -- you can load a previous training session, or create a new 'population' of creatures based on a template from the Creature Editor by pressing the 'Menu' button. There are also buttons to display text information about the current training, view the current creature being tested, pause the session, or change the speed of training. To create a new population you need to set the number of creatures, or 'agents' (defaults to 50) and select a body template.\par
+-The Trials Panel\par
+Multiple trials are not currently implemented, but this is where a new training environment is created, as well as some settings controlling the duration of training.\par
+-The Fitness Function Panel\par
+This panel controls how the creatures are scored after each round of testing. The 'weight' slider determines how important each fitness component is. This way you can customize the desired behavior by choosing how much importance to assign to each. For example, by turning off all components except for 'average speed', the creatures will try to maximize the average speed of their centers-of-mass.\par
+-The Minigame Settings Panel\par
+This is where environmental and global settings can be changed, for example, the strength of gravity, viscosity of water, ground elevation, and target position, as well as multipliers on all creatures' joint speeds.\par
+-The Mutation Panel\par
+This panel has four tabs: Mutation, Crossover, Species, and Body. It also has global settings for survival rate, breeding rate, and on/off toggles for mutation, crossover, and speciation. Survival rate is the percentage of the population that is copied as-is into the next generation, while breeding rate is the proportion of the population that is eligible to pass their "genes" onto the next generation of creatures.\par
+The mutation tab controls how much random variation is added to the population each generation. The sliders on this tab refer to different aspects of the "brains" of the creatures; how their inputs (sensors) are wired to their outputs (effectors).\par
+The crossover tab only has one option slider, which controls whether a brain connection should always be inherited from the more-fit parent, or if it is sometimes inherited randomly from the less-fit parent.\par
+The species tab has options to split the population up into groups of similar creatures, which tend to only breed with other members of the same species. By using this, a single population can have a number of distinct sub-populations that have different behaviors, allowing a population to explore multiple potential strategies simultaneously.\par
+The body tab is similar to the mutation tab except that it controls the variation of the creatures' bodies rather than their brains. Creatures can be designed by hand in the creature editor, but they can also undergo random mutation duration a training session by utilizing this tab. This way it is possible for a population to simultanously change its body topology while learning how to move efficiently. You can also save the mutated creature body and load it back into the creature editor for further editing.\par
+-The Graph Panel\par
+Shows the overall score of the population over the course of the training session.\par
+-Training Modifiers Panel\par
+Provides some simple utilities to automatically control things like mutation rates, and training durations over the course of generations. For example, you can have the overall mutation rate slowly decline towards 0 over 100 generations.\par
+\par
+}
+ 

@@ -151,6 +151,7 @@ public class CritterGenome {
     public void AddNewNode(CritterNode parentNode, Vector3 attachDir, Vector3 restAngleDir, int id, int inno) {
         CritterNode newCritterNode = new CritterNode(id, inno);
         newCritterNode.jointLink.parentNodeID = parentNode.ID;
+        //newCritterNode.jointLink.jointType = CritterJointLink.JointType. // Need to change this so the jointType can vary -- right now it's only HingeX!
         newCritterNode.jointLink.thisNodeID = newCritterNode.ID;
         newCritterNode.jointLink.numberOfRecursions = 0;
         Vector3 newSegmentDimensions = parentNode.dimensions;
@@ -567,7 +568,7 @@ public class CritterGenome {
             for (int i = 0; i < currentBuildSegmentList.Count; i++) {
                 numSegments++;
                 nextSegmentID++;
-
+                
                 // PhysicalAttributes no inputs/outputs
                 #region INPUTS
                 // Joint Angle Sensors:
@@ -578,18 +579,18 @@ public class CritterGenome {
                         if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeX) {
                             if (jointAngleSensorList[j].measureVel[0]) {  // ALSO MEASURES ANGULAR VELOCITY:
                                 numInputs++;
-                                GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                                GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                                 inputNodeList.Add(newNodeNEAT1);
                                 currentBrainNodeID++;
 
                                 numInputs++;
-                                GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
+                                GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 1);
                                 inputNodeList.Add(newNodeNEAT2);
                                 currentBrainNodeID++;
                             }
                             else {  // Only Angle, no velocity:
                                 numInputs++;
-                                GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                                GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                                 inputNodeList.Add(newNodeNEAT);
                                 currentBrainNodeID++;
                             }
@@ -597,18 +598,18 @@ public class CritterGenome {
                         else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeY) {
                             if (jointAngleSensorList[j].measureVel[0]) {
                                 numInputs++;
-                                GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                                GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                                 inputNodeList.Add(newNodeNEAT1);
                                 currentBrainNodeID++;
 
                                 numInputs++;
-                                GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
+                                GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 1);
                                 inputNodeList.Add(newNodeNEAT2);
                                 currentBrainNodeID++;
                             }
                             else {
                                 numInputs++;
-                                GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                                GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                                 inputNodeList.Add(newNodeNEAT);
                                 currentBrainNodeID++;
                             }
@@ -616,18 +617,18 @@ public class CritterGenome {
                         else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeZ) {
                             if (jointAngleSensorList[j].measureVel[0]) {
                                 numInputs++;
-                                GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                                GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                                 inputNodeList.Add(newNodeNEAT1);
                                 currentBrainNodeID++;
 
                                 numInputs++;
-                                GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
+                                GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 1);
                                 inputNodeList.Add(newNodeNEAT2);
                                 currentBrainNodeID++;
                             }
                             else {
                                 numInputs++;
-                                GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                                GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                                 inputNodeList.Add(newNodeNEAT);
                                 currentBrainNodeID++;
                             }
@@ -635,33 +636,33 @@ public class CritterGenome {
                         else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.DualXY) {
                             if (jointAngleSensorList[j].measureVel[0]) {
                                 numInputs++;
-                                GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                                GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                                 inputNodeList.Add(newNodeNEAT1);
                                 currentBrainNodeID++;
 
                                 numInputs++;
-                                GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
+                                GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 1);
                                 inputNodeList.Add(newNodeNEAT2);
                                 currentBrainNodeID++;
 
                                 numInputs++;
-                                GeneNodeNEAT newNodeNEAT3 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 2);
+                                GeneNodeNEAT newNodeNEAT3 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 2);
                                 inputNodeList.Add(newNodeNEAT3);
                                 currentBrainNodeID++;
 
                                 numInputs++;
-                                GeneNodeNEAT newNodeNEAT4 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 3);
+                                GeneNodeNEAT newNodeNEAT4 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 3);
                                 inputNodeList.Add(newNodeNEAT4);
                                 currentBrainNodeID++;
                             }
                             else {
                                 numInputs++;
-                                GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                                GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                                 inputNodeList.Add(newNodeNEAT1);
                                 currentBrainNodeID++;
 
                                 numInputs++;
-                                GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
+                                GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, jointAngleSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 1);
                                 inputNodeList.Add(newNodeNEAT2);
                                 currentBrainNodeID++;
                             }
@@ -671,131 +672,131 @@ public class CritterGenome {
                 List<AddonContactSensor> contactSensorList = CheckForAddonContactSensor(currentBuildSegmentList[i].sourceNode.ID);
                 for(int j = 0; j < contactSensorList.Count; j++) {
                     numInputs++;
-                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, contactSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, contactSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                     inputNodeList.Add(newNodeNEAT);
                     currentBrainNodeID++;
                 }                
                 List<AddonRaycastSensor> raycastSensorList = CheckForAddonRaycastSensor(currentBuildSegmentList[i].sourceNode.ID);
                 for (int j = 0; j < raycastSensorList.Count; j++) {
                     numInputs++;
-                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, raycastSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, raycastSensorList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                     inputNodeList.Add(newNodeNEAT);
                     currentBrainNodeID++;
                 }
                 List<AddonCompassSensor1D> compassSensor1DList = CheckForAddonCompassSensor1D(currentBuildSegmentList[i].sourceNode.ID);
                 for (int j = 0; j < compassSensor1DList.Count; j++) {
                     numInputs++;
-                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, compassSensor1DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, compassSensor1DList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                     inputNodeList.Add(newNodeNEAT);
                     currentBrainNodeID++;
                 }
                 List<AddonCompassSensor3D> compassSensor3DList = CheckForAddonCompassSensor3D(currentBuildSegmentList[i].sourceNode.ID);
                 for (int j = 0; j < compassSensor3DList.Count; j++) {
                     numInputs++;
-                    GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, compassSensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, compassSensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                     inputNodeList.Add(newNodeNEAT1);
                     currentBrainNodeID++;
 
                     numInputs++;
-                    GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, compassSensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
+                    GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, compassSensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 1);
                     inputNodeList.Add(newNodeNEAT2);
                     currentBrainNodeID++;
 
                     numInputs++;
-                    GeneNodeNEAT newNodeNEAT3 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, compassSensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 2);
+                    GeneNodeNEAT newNodeNEAT3 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, compassSensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 2);
                     inputNodeList.Add(newNodeNEAT3);
                     currentBrainNodeID++;
                 }
                 List<AddonPositionSensor1D> positionSensor1DList = CheckForAddonPositionSensor1D(currentBuildSegmentList[i].sourceNode.ID);
                 for (int j = 0; j < positionSensor1DList.Count; j++) {
                     numInputs++;
-                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, positionSensor1DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, positionSensor1DList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                     inputNodeList.Add(newNodeNEAT);
                     currentBrainNodeID++;
                 }
                 List<AddonPositionSensor3D> positionSensor3DList = CheckForAddonPositionSensor3D(currentBuildSegmentList[i].sourceNode.ID);
                 for (int j = 0; j < positionSensor3DList.Count; j++) {
                     numInputs++;
-                    GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, positionSensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, positionSensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                     inputNodeList.Add(newNodeNEAT1);
                     currentBrainNodeID++;
 
                     numInputs++;
-                    GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, positionSensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
+                    GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, positionSensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 1);
                     inputNodeList.Add(newNodeNEAT2);
                     currentBrainNodeID++;
 
                     numInputs++;
-                    GeneNodeNEAT newNodeNEAT3 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, positionSensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 2);
+                    GeneNodeNEAT newNodeNEAT3 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, positionSensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 2);
                     inputNodeList.Add(newNodeNEAT3);
                     currentBrainNodeID++;
                 }
                 List<AddonRotationSensor1D> rotationSensor1DList = CheckForAddonRotationSensor1D(currentBuildSegmentList[i].sourceNode.ID);
                 for (int j = 0; j < rotationSensor1DList.Count; j++) {
                     numInputs++;
-                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, rotationSensor1DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, rotationSensor1DList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                     inputNodeList.Add(newNodeNEAT);
                     currentBrainNodeID++;
                 }
                 List<AddonRotationSensor3D> rotationSensor3DList = CheckForAddonRotationSensor3D(currentBuildSegmentList[i].sourceNode.ID);
                 for (int j = 0; j < rotationSensor3DList.Count; j++) {
                     numInputs++;
-                    GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, rotationSensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, rotationSensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                     inputNodeList.Add(newNodeNEAT1);
                     currentBrainNodeID++;
 
                     numInputs++;
-                    GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, rotationSensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
+                    GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, rotationSensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 1);
                     inputNodeList.Add(newNodeNEAT2);
                     currentBrainNodeID++;
 
                     numInputs++;
-                    GeneNodeNEAT newNodeNEAT3 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, rotationSensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 2);
+                    GeneNodeNEAT newNodeNEAT3 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, rotationSensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 2);
                     inputNodeList.Add(newNodeNEAT3);
                     currentBrainNodeID++;
                 }
                 List<AddonVelocitySensor1D> velocitySensor1DList = CheckForAddonVelocitySensor1D(currentBuildSegmentList[i].sourceNode.ID);
                 for (int j = 0; j < velocitySensor1DList.Count; j++) {
                     numInputs++;
-                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, velocitySensor1DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, velocitySensor1DList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                     inputNodeList.Add(newNodeNEAT);
                     currentBrainNodeID++;
                 }
                 List<AddonVelocitySensor3D> velocitySensor3DList = CheckForAddonVelocitySensor3D(currentBuildSegmentList[i].sourceNode.ID);
                 for (int j = 0; j < velocitySensor3DList.Count; j++) {
                     numInputs++;
-                    GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, velocitySensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, velocitySensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                     inputNodeList.Add(newNodeNEAT1);
                     currentBrainNodeID++;
 
                     numInputs++;
-                    GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, velocitySensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
+                    GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, velocitySensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 1);
                     inputNodeList.Add(newNodeNEAT2);
                     currentBrainNodeID++;
 
                     numInputs++;
-                    GeneNodeNEAT newNodeNEAT3 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, velocitySensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 2);
+                    GeneNodeNEAT newNodeNEAT3 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, velocitySensor3DList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 2);
                     inputNodeList.Add(newNodeNEAT3);
                     currentBrainNodeID++;
                 }
                 List<AddonAltimeter> altimeterList = CheckForAddonAltimeter(currentBuildSegmentList[i].sourceNode.ID);
                 for (int j = 0; j < altimeterList.Count; j++) {
                     numInputs++;
-                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, altimeterList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, altimeterList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                     inputNodeList.Add(newNodeNEAT);
                     currentBrainNodeID++;
                 }
                 List<AddonEarBasic> earBasicList = CheckForAddonEarBasic(currentBuildSegmentList[i].sourceNode.ID);
                 for (int j = 0; j < earBasicList.Count; j++) {
                     numInputs++;
-                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, earBasicList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, earBasicList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                     inputNodeList.Add(newNodeNEAT);
                     currentBrainNodeID++;
                 }
                 List<AddonGravitySensor> gravitySensorList = CheckForAddonGravitySensor(currentBuildSegmentList[i].sourceNode.ID);
                 for (int j = 0; j < gravitySensorList.Count; j++) {
                     numInputs++;
-                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, gravitySensorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, gravitySensorList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                     inputNodeList.Add(newNodeNEAT);
                     currentBrainNodeID++;
                 }
@@ -803,7 +804,7 @@ public class CritterGenome {
                 for (int j = 0; j < oscillatorInputList.Count; j++) {
                     numInputs++;
                     //Debug.Log("Oscillator: nodeIndex: " + currentBrainNodeID.ToString() + ", " + new Int3(oscillatorInputList[j].innov, currentBuildSegmentList[i].recursionNumber, 0).ToString());
-                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, oscillatorInputList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, oscillatorInputList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                     inputNodeList.Add(newNodeNEAT);
                     currentBrainNodeID++;                    
                 }
@@ -811,7 +812,7 @@ public class CritterGenome {
                 for (int j = 0; j < valueInputList.Count; j++) {
                     numInputs++;
                     //Debug.Log("Value: nodeIndex: " + currentBrainNodeID.ToString() + ", " + new Int3(valueInputList[j].innov, currentBuildSegmentList[i].recursionNumber, 0).ToString());
-                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, valueInputList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, valueInputList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                     inputNodeList.Add(newNodeNEAT);
                     currentBrainNodeID++;                    
                 }
@@ -819,7 +820,7 @@ public class CritterGenome {
                 List<AddonTimerInput> timerInputList = CheckForAddonTimerInput(currentBuildSegmentList[i].sourceNode.ID);
                 for (int j = 0; j < timerInputList.Count; j++) {
                     numInputs++;
-                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, timerInputList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.In, TransferFunctions.TransferFunction.Linear, timerInputList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                     inputNodeList.Add(newNodeNEAT);
                     currentBrainNodeID++;
                 }                
@@ -831,30 +832,30 @@ public class CritterGenome {
                     for (int j = 0; j < jointMotorList.Count; j++) {
                         if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeX) {
                             numOutputs++;
-                            GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, jointMotorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                            GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, jointMotorList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                             outputNodeList.Add(newNodeNEAT);
                             currentBrainNodeID++;
                         }
                         else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeY) {
                             numOutputs++;
-                            GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, jointMotorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                            GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, jointMotorList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                             outputNodeList.Add(newNodeNEAT);
                             currentBrainNodeID++;
                         }
                         else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeZ) {
                             numOutputs++;
-                            GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, jointMotorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                            GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, jointMotorList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                             outputNodeList.Add(newNodeNEAT);
                             currentBrainNodeID++;
                         }
                         else if (currentBuildSegmentList[i].sourceNode.jointLink.jointType == CritterJointLink.JointType.DualXY) {
                             numOutputs++;
-                            GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, jointMotorList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                            GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, jointMotorList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                             outputNodeList.Add(newNodeNEAT1);
                             currentBrainNodeID++;
 
                             numOutputs++;
-                            GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, jointMotorList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
+                            GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, jointMotorList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 1);
                             outputNodeList.Add(newNodeNEAT2);
                             currentBrainNodeID++;
                         }
@@ -879,48 +880,48 @@ public class CritterGenome {
                 List<AddonThrusterEffector1D> thrusterEffector1DList = CheckForAddonThrusterEffector1D(currentBuildSegmentList[i].sourceNode.ID);
                 for (int j = 0; j < thrusterEffector1DList.Count; j++) {
                     numOutputs++;
-                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, thrusterEffector1DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, thrusterEffector1DList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                     outputNodeList.Add(newNodeNEAT);
                     currentBrainNodeID++;
                 }
                 List<AddonThrusterEffector3D> thrusterEffector3DList = CheckForAddonThrusterEffector3D(currentBuildSegmentList[i].sourceNode.ID);
                 for (int j = 0; j < thrusterEffector3DList.Count; j++) {
                     numOutputs++;
-                    GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, thrusterEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, thrusterEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                     outputNodeList.Add(newNodeNEAT1);
                     currentBrainNodeID++;
 
                     numOutputs++;
-                    GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, thrusterEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
+                    GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, thrusterEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 1);
                     outputNodeList.Add(newNodeNEAT2);
                     currentBrainNodeID++;
 
                     numOutputs++;
-                    GeneNodeNEAT newNodeNEAT3 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, thrusterEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 2);
+                    GeneNodeNEAT newNodeNEAT3 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, thrusterEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 2);
                     outputNodeList.Add(newNodeNEAT3);
                     currentBrainNodeID++;
                 }
                 List<AddonTorqueEffector1D> torqueEffector1DList = CheckForAddonTorqueEffector1D(currentBuildSegmentList[i].sourceNode.ID);
                 for (int j = 0; j < torqueEffector1DList.Count; j++) {
                     numOutputs++;
-                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, torqueEffector1DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, torqueEffector1DList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                     outputNodeList.Add(newNodeNEAT);
                     currentBrainNodeID++;
                 }
                 List<AddonTorqueEffector3D> torqueEffector3DList = CheckForAddonTorqueEffector3D(currentBuildSegmentList[i].sourceNode.ID);
                 for (int j = 0; j < torqueEffector3DList.Count; j++) {
                     numOutputs++;
-                    GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, torqueEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT1 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, torqueEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                     outputNodeList.Add(newNodeNEAT1);
                     currentBrainNodeID++;
 
                     numOutputs++;
-                    GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, torqueEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 1);
+                    GeneNodeNEAT newNodeNEAT2 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, torqueEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 1);
                     outputNodeList.Add(newNodeNEAT2);
                     currentBrainNodeID++;
 
                     numOutputs++;
-                    GeneNodeNEAT newNodeNEAT3 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, torqueEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, 2);
+                    GeneNodeNEAT newNodeNEAT3 = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, torqueEffector3DList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 2);
                     outputNodeList.Add(newNodeNEAT3);
                     currentBrainNodeID++;
                 }
@@ -931,21 +932,21 @@ public class CritterGenome {
                 List<AddonNoiseMakerBasic> noiseMakerBasicList = CheckForAddonNoiseMakerBasic(currentBuildSegmentList[i].sourceNode.ID);
                 for (int j = 0; j < noiseMakerBasicList.Count; j++) {
                     numOutputs++;
-                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, noiseMakerBasicList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, noiseMakerBasicList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                     outputNodeList.Add(newNodeNEAT);
                     currentBrainNodeID++;
                 }
                 List<AddonSticky> stickyList = CheckForAddonSticky(currentBuildSegmentList[i].sourceNode.ID);
                 for (int j = 0; j < stickyList.Count; j++) {
                     numOutputs++;
-                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, stickyList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, stickyList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                     outputNodeList.Add(newNodeNEAT);
                     currentBrainNodeID++;
                 }
                 List<AddonWeaponBasic> weaponBasicList = CheckForAddonWeaponBasic(currentBuildSegmentList[i].sourceNode.ID);
                 for (int j = 0; j < weaponBasicList.Count; j++) {
                     numOutputs++;
-                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, weaponBasicList[j].innov, currentBuildSegmentList[i].recursionNumber, 0);
+                    GeneNodeNEAT newNodeNEAT = new GeneNodeNEAT(currentBrainNodeID, GeneNodeNEAT.GeneNodeType.Out, TransferFunctions.TransferFunction.RationalSigmoid, weaponBasicList[j].innov, currentBuildSegmentList[i].recursionNumber, currentBuildSegmentList[i].isMirror, 0);
                     outputNodeList.Add(newNodeNEAT);
                     currentBrainNodeID++;
                 }
@@ -958,6 +959,7 @@ public class CritterGenome {
                         BuildSegmentInfo newSegmentInfo = new BuildSegmentInfo();
                         newSegmentInfo.sourceNode = currentBuildSegmentList[i].sourceNode;  // request a segment to be built again based on the current sourceNode
                         newSegmentInfo.recursionNumber = currentBuildSegmentList[i].recursionNumber + 1;  // increment num recursions
+                        newSegmentInfo.isMirror = currentBuildSegmentList[i].isMirror;
                         nextBuildSegmentList.Add(newSegmentInfo);
                         //Debug.Log("newSegmentInfo recursion# " + newSegmentInfo.recursionNumber.ToString() + ", currentBuildList[i].recNum: " + currentBuildSegmentList[i].recursionNumber.ToString());
                         // If the node also has Symmetry:
@@ -989,6 +991,7 @@ public class CritterGenome {
                                 // Only build segment if it is on the end of a recursion chain:
                                 BuildSegmentInfo newSegmentInfo = new BuildSegmentInfo();
                                 newSegmentInfo.sourceNode = CritterNodeList[childID];
+                                newSegmentInfo.isMirror = currentBuildSegmentList[i].isMirror;
                                 //newSegmentInfo.parentSegment = newSegment;
                                 nextBuildSegmentList.Add(newSegmentInfo);
 
@@ -1006,6 +1009,7 @@ public class CritterGenome {
                             // It only attaches to End nodes, but is parented to a Non-recursive segment, so proceed normally!!!
                             BuildSegmentInfo newSegmentInfo = new BuildSegmentInfo();
                             newSegmentInfo.sourceNode = CritterNodeList[childID];
+                            newSegmentInfo.isMirror = currentBuildSegmentList[i].isMirror;
                             //newSegmentInfo.parentSegment = newSegment;
                             nextBuildSegmentList.Add(newSegmentInfo);
 
@@ -1022,6 +1026,7 @@ public class CritterGenome {
                     else {  // proceed normally:
                         BuildSegmentInfo newSegmentInfo = new BuildSegmentInfo();
                         newSegmentInfo.sourceNode = CritterNodeList[childID];
+                        newSegmentInfo.isMirror = currentBuildSegmentList[i].isMirror;
                         //newSegmentInfo.parentSegment = newSegment;
                         nextBuildSegmentList.Add(newSegmentInfo);
 

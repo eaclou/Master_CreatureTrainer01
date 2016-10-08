@@ -37,7 +37,7 @@ public class Trainer {
 		}
 		set {}
 	}
-    private bool renderOn = false;  // With this true, the user can play against the AI controllers
+    private bool renderOn = false;
     public bool RenderOn {
         get {
             return renderOn;
@@ -466,14 +466,15 @@ public class Trainer {
 
     private void BuildCritterMesh(Critter critter) {
         if (renderOn) {
-            if (playbackSpeed < 3f) {
+            gameControllerRef.trainerUI.trainerRenderManager.InitializeNewAgent(critter);
+            //if (playbackSpeed < 3f) {
                 //gameControllerRef.trainerUI.trainerRenderManager.trainerCritterMarchingCubes.SetCritterTransformArray(critter);
                 //gameControllerRef.trainerUI.trainerRenderManager.trainerCritterMarchingCubes.BuildMesh();
-                gameControllerRef.trainerUI.trainerRenderManager.InitializeNewAgent(critter);
-            }
-            else {
-                gameControllerRef.trainerUI.trainerRenderManager.ClearAgent();
-            }
+                //gameControllerRef.trainerUI.trainerRenderManager.InitializeNewAgent(critter);
+            //}
+            //else {
+                //gameControllerRef.trainerUI.trainerRenderManager.ClearAgent();
+            //}
         }
         else {
             gameControllerRef.trainerUI.trainerRenderManager.ClearAgent();
@@ -493,7 +494,7 @@ public class Trainer {
 			playingCurMiniGameTimeStep = 0;
 			playingCurTrialRound++;  // Same agent, next round playthrough
 
-            Debug.Log("CLEARGAME!");
+            //Debug.Log("CLEARGAME!");
             // Cleanup RenderMesh and Render Thingies here: ========================================================================================
             // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
             ClearCritterMesh();
@@ -662,7 +663,7 @@ public class Trainer {
             currentGameManager.miniGameInstance.Reset();
             currentGameManager.SetInputOutputArrays();
 
-            Debug.Log("CalculateOneStep() waitingForReset  -- critterSegmentCount: " + currentGameManager.miniGameInstance.critterBeingTested.critterSegmentList.Count.ToString());
+            //Debug.Log("CalculateOneStep() waitingForReset  -- critterSegmentCount: " + currentGameManager.miniGameInstance.critterBeingTested.critterSegmentList.Count.ToString());
             // ==================================================  Create Critter MESHES
             // &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
             // DO it here:
@@ -693,7 +694,9 @@ public class Trainer {
                         // Run the game for one timeStep: (Note that this will only modify non-physX variables -- the actual movement and physX sim happens just afterward -- so keep that in mind)
                         currentGameManager.miniGameInstance.Tick();
                         // Update Critter X-Forms for Rendering purposes:
-                        gameControllerRef.trainerUI.trainerRenderManager.trainerCritterBrushstrokeManager.UpdateBuffersAndMaterial(ref gameControllerRef.trainerUI.trainerRenderManager.brushstrokeCritterMaterial);
+                        if(renderOn) {
+                            gameControllerRef.trainerUI.trainerRenderManager.trainerCritterBrushstrokeManager.UpdateBuffersAndMaterial(ref gameControllerRef.trainerUI.trainerRenderManager.brushstrokeCritterMaterial);
+                        }                        
 
                         // Luxuries at Low Speeds: Visualizations & Data read-outs
                         if (playbackSpeed < 6f) {                            

@@ -1017,7 +1017,10 @@ public class CrossoverManager {
             Vector3 attachDir = Vector3.Slerp(new Vector3(0f, 0f, 1f), UnityEngine.Random.onUnitSphere, UnityEngine.Random.Range(0f, 1f)); //ConvertWorldSpaceToAttachDir(selectedSegment, rightClickWorldPosition);
             int nextID = bodyGenome.CritterNodeList.Count;
             bodyGenome.AddNewNode(bodyGenome.CritterNodeList[nodesToAddTo[i]], attachDir, new Vector3(0f, 0f, 0f), nextID, GetNextNodeInnov());
-            
+
+            // Init joint type:
+            bodyGenome.CritterNodeList[bodyGenome.CritterNodeList.Count - 1].jointLink.jointType = (CritterJointLink.JointType)Mathf.RoundToInt(UnityEngine.Random.Range(1, 4));
+
             // Auto-Add-ons: -- New Segment starts with a joint angle sensor and joint Motor by default:
             AddonJointAngleSensor newJointAngleSensor = new AddonJointAngleSensor(nextID, GetNextAddonInnov());
             bodyGenome.addonJointAngleSensorList.Add(newJointAngleSensor);
@@ -1720,7 +1723,7 @@ public class CrossoverManager {
                     // once childLinkList is built -- use nodes of the moreFit parent:
                     for (int i = 0; i < parentNodeListArray[moreFitParent].Count; i++) { 
                         // iterate through all nodes in the parent List and copy them into fresh new geneNodes:
-                        GeneNodeNEAT clonedNode = new GeneNodeNEAT(parentNodeListArray[moreFitParent][i].id, parentNodeListArray[moreFitParent][i].nodeType, parentNodeListArray[moreFitParent][i].activationFunction, parentNodeListArray[moreFitParent][i].sourceAddonInno, parentNodeListArray[moreFitParent][i].sourceAddonRecursionNum, parentNodeListArray[moreFitParent][i].sourceAddonChannelNum);
+                        GeneNodeNEAT clonedNode = new GeneNodeNEAT(parentNodeListArray[moreFitParent][i].id, parentNodeListArray[moreFitParent][i].nodeType, parentNodeListArray[moreFitParent][i].activationFunction, parentNodeListArray[moreFitParent][i].sourceAddonInno, parentNodeListArray[moreFitParent][i].sourceAddonRecursionNum, false, parentNodeListArray[moreFitParent][i].sourceAddonChannelNum);
                         childNodeList.Add(clonedNode);
                     }
 
@@ -1865,7 +1868,7 @@ public class CrossoverManager {
                     //===============================================================================================
                     for (int i = 0; i < parentNodeListArray[0].Count; i++) {
                         // iterate through all nodes in the parent List and copy them into fresh new geneNodes:
-                        GeneNodeNEAT clonedNode = new GeneNodeNEAT(parentNodeListArray[0][i].id, parentNodeListArray[0][i].nodeType, parentNodeListArray[0][i].activationFunction, parentNodeListArray[0][i].sourceAddonInno, parentNodeListArray[0][i].sourceAddonRecursionNum, parentNodeListArray[0][i].sourceAddonChannelNum);
+                        GeneNodeNEAT clonedNode = new GeneNodeNEAT(parentNodeListArray[0][i].id, parentNodeListArray[0][i].nodeType, parentNodeListArray[0][i].activationFunction, parentNodeListArray[0][i].sourceAddonInno, parentNodeListArray[0][i].sourceAddonRecursionNum, false, parentNodeListArray[0][i].sourceAddonChannelNum);
                         childNodeList.Add(clonedNode);
                     }
                     for (int j = 0; j < parentLinkListArray[0].Count; j++) {
@@ -2032,7 +2035,7 @@ public class CrossoverManager {
                             newSpeciesBreedingPool.AddNewAgent(newChildAgent);  // add this agent to breeding pool
                             childSpeciesPoolsList.Add(newSpeciesBreedingPool);  // add new speciesPool to the population's list of all active species
 
-                            Debug.Log(" NEW CHILD (" + newChildIndex.ToString() + ") SortAgentIntoBreedingPool NO MATCH!!! -- creating new BreedingPool " + newSpeciesBreedingPool.speciesID.ToString() + ", newChildAgentSpeciesID: " + newChildAgent.speciesID.ToString());
+                            //Debug.Log(" NEW CHILD (" + newChildIndex.ToString() + ") SortAgentIntoBreedingPool NO MATCH!!! -- creating new BreedingPool " + newSpeciesBreedingPool.speciesID.ToString() + ", newChildAgentSpeciesID: " + newChildAgent.speciesID.ToString());
                         }
                     }
                     else {  // joins parent species automatically:
@@ -2072,7 +2075,7 @@ public class CrossoverManager {
             }
             else {
                 if (childSpeciesPoolsList[listIndex].agentList.Count == 0) {  // if empty:
-                    Debug.Log("Species " + childSpeciesPoolsList[listIndex].speciesID.ToString() + " WENT EXTINCT!!! --- childSpeciesPoolsList[" + listIndex.ToString() + "] old Count: " + childSpeciesPoolsList.Count.ToString() + ", s: " + s.ToString());
+                    //Debug.Log("Species " + childSpeciesPoolsList[listIndex].speciesID.ToString() + " WENT EXTINCT!!! --- childSpeciesPoolsList[" + listIndex.ToString() + "] old Count: " + childSpeciesPoolsList.Count.ToString() + ", s: " + s.ToString());
                     childSpeciesPoolsList.RemoveAt(listIndex);
                     //s--;  // see if this works                    
                 }

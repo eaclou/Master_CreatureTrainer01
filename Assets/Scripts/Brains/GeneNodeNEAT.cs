@@ -25,12 +25,15 @@ public class GeneNodeNEAT {
         this.activationFunction = function;
     }
 
-    public GeneNodeNEAT(int id, GeneNodeType nodeType, TransferFunctions.TransferFunction function, int inno, int recurse, int channelNum) {
+    public GeneNodeNEAT(int id, GeneNodeType nodeType, TransferFunctions.TransferFunction function, int inno, int recurse, bool mirror, int channelNum) {
         this.id = id;
         this.nodeType = nodeType;
         this.activationFunction = function;
         sourceAddonInno = inno;
         sourceAddonRecursionNum = recurse;
+        if (mirror) {
+            sourceAddonRecursionNum += 10;
+        }
         sourceAddonChannelNum = channelNum;
     }
 }

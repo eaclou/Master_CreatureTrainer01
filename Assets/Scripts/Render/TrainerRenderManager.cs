@@ -5,6 +5,7 @@ using UnityEngine.Rendering;
 
 public class TrainerRenderManager : MonoBehaviour {
 
+    public TrainerModuleUI trainerUI;
     public TrainerCritterMarchingCubes trainerCritterMarchingCubes;
     public TrainerCritterBrushstrokeManager trainerCritterBrushstrokeManager;
     public TrainerTerrainManager trainerTerrainManager;
@@ -16,6 +17,8 @@ public class TrainerRenderManager : MonoBehaviour {
 
     public Shader canvasShader;
     private Material canvasMaterial;
+    public Shader paintShader;
+    private Material paintMaterial;
 
     public Shader brushWorldSpaceShader;
     public Shader brushTerrainShader;
@@ -60,6 +63,7 @@ public class TrainerRenderManager : MonoBehaviour {
     public float paintReachCritter = 1f;
     public float paintThicknessDecorations = 0.25f;
     public float paintReachDecorations = 1f;
+    public float paintRelief = 1f;
 
     private ComputeBuffer quadPointsBuffer;
     private ComputeBuffer gessoStrokesBuffer;
@@ -126,6 +130,18 @@ public class TrainerRenderManager : MonoBehaviour {
 
     // Whenever any camera will render us, add a command buffer to do the work on it
     public void OnWillRenderObject() {   // REQUIRES THIS OBJ TO HAVE MESHRENDERER COMPONENT!!!!
+
+        if(trainerUI.gameController.masterTrainer != null) {
+            cmdBuffer.Clear();
+
+            if (trainerUI.gameController.masterTrainer.RenderOn) {
+                RenderStuff();
+            }
+        }        
+    }
+
+    public void RenderStuff() {
+
         var act = gameObject.activeInHierarchy && enabled;
         if (!act) {
             Cleanup();
@@ -136,24 +152,22 @@ public class TrainerRenderManager : MonoBehaviour {
         if (!cam)
             return;
         
-        cmdBuffer.Clear();
-
         // Did we already add the command buffer on this camera? Nothing to do then.
         if (m_Cameras.ContainsKey(cam)) {
             //return;
         }
         else {
-            if(cam == mainCamera) {
+            if (cam == mainCamera) {
                 cam.AddCommandBuffer(CameraEvent.AfterSkybox, cmdBuffer);
                 m_Cameras[cam] = cmdBuffer;  // fill in dictionary entry for this Camera
-            }            
+            }
         }
 
         // Use brushstrokeManager Here:
         // Update Critter xForms  -- or do this through Trainer so it's sync'ed with FixedUpdate?
         UpdateSkyTangents();
         trainerCritterBrushstrokeManager.UpdateBuffersAndMaterial(ref brushstrokeCritterMaterial);
-        
+
 
         // START!!!
         // Canvas First:
@@ -182,7 +196,7 @@ public class TrainerRenderManager : MonoBehaviour {
         // Copy results into Read buffers for next pass:
         cmdBuffer.Blit(colorWriteID, colorReadID);
         cmdBuffer.Blit(depthWriteID, depthReadID);
-                
+
         // GessoLayer:  // Re-Implement This when I figure out how to create the brushstrokes buffer properly!!!!
         //brushtrokeWorldMaterial.SetPass(0);
         brushstrokeGessoMaterial.SetColor("_Tint", brushstrokeGessoTint);  // Setup Material Properties:
@@ -247,7 +261,13 @@ public class TrainerRenderManager : MonoBehaviour {
         }
 
         // DISPLAY TO SCREEN:
-        cmdBuffer.Blit(colorWriteID, BuiltinRenderTextureType.CameraTarget);   // copy canvas target into main displayTarget so it is what the player sees
+        cmdBuffer.SetGlobalTexture("_CanvasColorReadTex", colorReadID);
+        int testDownResID = Shader.PropertyToID("_TestDownRes");
+        cmdBuffer.GetTemporaryRT(testDownResID, -1, -1, 0, FilterMode.Bilinear);
+        cmdBuffer.Blit(depthReadID, testDownResID);
+        cmdBuffer.SetGlobalTexture("_CanvasDepthReadTex", testDownResID);
+        paintMaterial.SetFloat("_Relief", paintRelief);
+        cmdBuffer.Blit(colorWriteID, BuiltinRenderTextureType.CameraTarget, paintMaterial);   // copy canvas target into main displayTarget so it is what the player sees
         
     }
 
@@ -288,6 +308,7 @@ public class TrainerRenderManager : MonoBehaviour {
         
         // Create Materials        
         canvasMaterial = new Material(canvasShader);
+        paintMaterial = new Material(paintShader);
         brushstrokeGessoMaterial = new Material(brushGessoShader);
         brushstrokeBackgroundMaterial = new Material(brushWorldSpaceShader);
         brushstrokeTerrainMaterial = new Material(brushTerrainShader);

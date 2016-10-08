@@ -639,6 +639,9 @@ public class MiniGameCritterWalkBasic : MiniGameBase
                     //drive.maximumForce = motor.motorForce[0] * customSettings.jointMotorForce[0];  // game option is a global multiplier on force/speed
                     critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularXDrive = drive;
                     Vector3 targetVel = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity;
+
+                    float prevTarget = targetVel.x;
+
                     targetVel.x = motor.targetAngularX[0] * customSettings.jointMotorSpeed[0]; // game option is a global multiplier on force/speed
                     critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity = targetVel;
 
@@ -646,7 +649,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
                     //Debug.Log("targetRot: " + targetRot.ToString());
                     //critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetRotation = targetRot;
 
-                    fitEnergySpent[0] += Mathf.Abs(motor.targetAngularX[0]);
+                    fitEnergySpent[0] += Mathf.Abs(targetVel.x - prevTarget);
                 }
                 else if (critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<CritterSegment>().sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeY) {
                     JointDrive drive = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularYZDrive;
@@ -655,10 +658,13 @@ public class MiniGameCritterWalkBasic : MiniGameBase
                     //drive.maximumForce = motor.motorForce[0] * customSettings.jointMotorForce[0];  // game option is a global multiplier on force/speed
                     critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularYZDrive = drive;
                     Vector3 targetVel = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity;
+
+                    float prevTarget = targetVel.y;
+
                     targetVel.y = motor.targetAngularY[0] * motor.motorSpeed[0] * customSettings.jointMotorSpeed[0]; // game option is a global multiplier on force/speed
                     critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity = targetVel;
 
-                    fitEnergySpent[0] += Mathf.Abs(motor.targetAngularY[0]);
+                    fitEnergySpent[0] += Mathf.Abs(targetVel.y - prevTarget);
                 }
                 else if (critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<CritterSegment>().sourceNode.jointLink.jointType == CritterJointLink.JointType.HingeZ) {
                     JointDrive drive = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularYZDrive;
@@ -667,10 +673,13 @@ public class MiniGameCritterWalkBasic : MiniGameBase
                     //drive.maximumForce = motor.motorForce[0] * customSettings.jointMotorForce[0];  // game option is a global multiplier on force/speed
                     critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularYZDrive = drive;
                     Vector3 targetVel = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity;
+
+                    float prevTarget = targetVel.z;
+
                     targetVel.z = motor.targetAngularZ[0] * motor.motorSpeed[0] * customSettings.jointMotorSpeed[0]; // game option is a global multiplier on force/speed
                     critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity = targetVel;
 
-                    fitEnergySpent[0] += Mathf.Abs(motor.targetAngularZ[0]);
+                    fitEnergySpent[0] += Mathf.Abs(targetVel.z - prevTarget);
                 }
                 else if (critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<CritterSegment>().sourceNode.jointLink.jointType == CritterJointLink.JointType.DualXY) {
                     JointDrive drive = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularXDrive;
@@ -679,6 +688,10 @@ public class MiniGameCritterWalkBasic : MiniGameBase
                     //drive.maximumForce = motor.motorForce[0] * customSettings.jointMotorForce[0];  // game option is a global multiplier on force/speed
                     critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().angularXDrive = drive;
                     Vector3 targetVel = critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity;
+
+                    float prevTargetX = targetVel.x;
+                    float prevTargetY = targetVel.y;
+
                     targetVel.x = motor.targetAngularX[0] * motor.motorSpeed[0] * customSettings.jointMotorSpeed[0]; // game option is a global multiplier on force/speed
                     //critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity = targetVel;
 
@@ -689,8 +702,8 @@ public class MiniGameCritterWalkBasic : MiniGameBase
                     targetVel.y = motor.targetAngularY[0] * motor.motorSpeed[0] * customSettings.jointMotorSpeed[0]; // game option is a global multiplier on force/speed
                     critterBeingTested.critterSegmentList[motor.segmentID].GetComponent<ConfigurableJoint>().targetAngularVelocity = targetVel;
 
-                    fitEnergySpent[0] += Mathf.Abs(motor.targetAngularX[0]);
-                    fitEnergySpent[0] += Mathf.Abs(motor.targetAngularY[0]);
+                    fitEnergySpent[0] += Mathf.Abs(targetVel.x - prevTargetX);
+                    fitEnergySpent[0] += Mathf.Abs(targetVel.y - prevTargetY);
                 }
             }
             else {
@@ -875,7 +888,7 @@ public class MiniGameCritterWalkBasic : MiniGameBase
                 Debug.Log("PHYS-X EXPLOSION! velocity.magnitude > 30f: " + gameCurrentTimeStep.ToString() + ", w: " + w.ToString());
                 agentBodyGenomeBeingTested.degenerate = true;
             }
-            if (gameCurrentTimeStep < 1) {
+            if (gameCurrentTimeStep < 2) {
                 if (critterBeingTested.critterSegmentList[w].GetComponent<CritterSegment>().colliding) {
                     fitCustomBody[0] = -1000;
                     gameEndStateReached = true;

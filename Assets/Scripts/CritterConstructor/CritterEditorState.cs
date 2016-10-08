@@ -1655,7 +1655,7 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
             critterConstructorManager.UpdateSegmentShaderStates();
         }
 
-        ClickRemesh();
+        //ClickRemesh();
     }
     public void PreviewPhysicsExit() {
         critterConstructorManager.masterCritter.RebuildCritterFromGenomeRecursive(false, true, 0f, true);
@@ -1673,7 +1673,7 @@ def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll= False, clampA0 = False
             critterConstructorManager.UpdateSegmentShaderStates();
         }
 
-        critterMarchingCubes.ClearCritterMesh();       
+        //critterMarchingCubes.ClearCritterMesh();       
     }
 
     public void ClickSliderDimensionX(float value) {

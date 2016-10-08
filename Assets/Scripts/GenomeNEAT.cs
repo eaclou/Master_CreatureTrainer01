@@ -163,7 +163,7 @@ public class GenomeNEAT {
 
             if (nodeNEATList[i].nodeType == GeneNodeNEAT.GeneNodeType.Hid) {
                 //Debug.Log("AdjustBrainAfterBodyChange HID NODE: nextNodeIndexID: " + (nextNodeIndexID).ToString());
-                GeneNodeNEAT clonedNode = new GeneNodeNEAT(nextNodeIndexID, nodeNEATList[i].nodeType, nodeNEATList[i].activationFunction, nodeNEATList[i].sourceAddonInno, nodeNEATList[i].sourceAddonRecursionNum, nodeNEATList[i].sourceAddonChannelNum);
+                GeneNodeNEAT clonedNode = new GeneNodeNEAT(nextNodeIndexID, nodeNEATList[i].nodeType, nodeNEATList[i].activationFunction, nodeNEATList[i].sourceAddonInno, nodeNEATList[i].sourceAddonRecursionNum, false, nodeNEATList[i].sourceAddonChannelNum);
                 newBrainNodeList.Add(clonedNode);
                 nextNodeIndexID++;
             }
@@ -505,7 +505,7 @@ public class GenomeNEAT {
         if(linkNEATList.Count > 0) {
             int linkID = (int)UnityEngine.Random.Range(0f, (float)linkNEATList.Count);
             linkNEATList[linkID].enabled = false;  // disable old connection
-            GeneNodeNEAT newHiddenNode = new GeneNodeNEAT(nodeNEATList.Count, GeneNodeNEAT.GeneNodeType.Hid, TransferFunctions.TransferFunction.RationalSigmoid, inno, 0, 0);
+            GeneNodeNEAT newHiddenNode = new GeneNodeNEAT(nodeNEATList.Count, GeneNodeNEAT.GeneNodeType.Hid, TransferFunctions.TransferFunction.RationalSigmoid, inno, 0, false, 0);
             nodeNEATList.Add(newHiddenNode);
             // add new node between old connection
             // create two new connections
@@ -628,10 +628,10 @@ public class GenomeNEAT {
                 weightComponent = Mathf.Lerp(weightDeltaTotal / largestWeightDelta, weightDeltaTotal / Mathf.Max((float)matchingGenes, 1f) / largestWeightDelta, normWeight);
             // OLD //distance = excessComponent + disjointComponent + weightComponent;
             distance = neuronGenes * (neuronCoefficient / totalPie) + linkGenes * (linkCoefficient / totalPie) + weightComponent * (weightCoefficient / totalPie);
-            Debug.Log("MeasureGeneticDistance! neuronGenes: " + (neuronGenes).ToString() + " (" + genomeA.nodeNEATList.Count.ToString() + "," + genomeB.nodeNEATList.Count.ToString() + 
-                "), linkGenes: " + (linkGenes).ToString() + " (" + genomeA.linkNEATList.Count.ToString() + "," + genomeB.linkNEATList.Count.ToString() +                
-                "), weight: " + weightComponent.ToString() + ", largestWeightDelta: " + largestWeightDelta.ToString() + ", weightDeltaTotal: " + weightDeltaTotal.ToString() + "weightMatches: " + matchingGenes.ToString() +
-                ", distance: " + distance.ToString());
+            //Debug.Log("MeasureGeneticDistance! neuronGenes: " + (neuronGenes).ToString() + " (" + genomeA.nodeNEATList.Count.ToString() + "," + genomeB.nodeNEATList.Count.ToString() + 
+            //    "), linkGenes: " + (linkGenes).ToString() + " (" + genomeA.linkNEATList.Count.ToString() + "," + genomeB.linkNEATList.Count.ToString() +                
+            //    "), weight: " + weightComponent.ToString() + ", largestWeightDelta: " + largestWeightDelta.ToString() + ", weightDeltaTotal: " + weightDeltaTotal.ToString() + "weightMatches: " + matchingGenes.ToString() +
+            //    ", distance: " + distance.ToString());
             //Debug.Log("MeasureGeneticDistance! disjoint: " + (disjointGenes).ToString() + ", excess: " + (excessGenes).ToString() + ", weight: " + (weightDeltaTotal / Mathf.Max((float)matchingGenes, 1f)).ToString() + ", distance: " + distance.ToString());
         }
         // else stays 0f;

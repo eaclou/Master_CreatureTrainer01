@@ -69,7 +69,7 @@ Shader "Custom/CritterSegmentBasic" {
 				o.pos = mul( UNITY_MATRIX_MVP, i.vertex );
 				float3 normalDirection = normalize(mul(float4(i.normal, 1.0), unity_WorldToObject).xyz);
 				//float3 lightDirection = normalize(_WorldSpaceLightPos0.xyz);
-				float3 lightDirection = _WorldSpaceLightPos0.xyz;
+				float3 lightDirection = -_WorldSpaceLightPos0.xyz;
 				float3 diffuse = _LightColor0.xyz * max(0.0, dot(normalDirection, lightDirection)) * _Color;
 				float4 posWorld = mul(unity_ObjectToWorld, i.vertex);
 				//view direction
@@ -235,6 +235,7 @@ Shader "Custom/CritterSegmentBasic" {
 
 				//i.color = lerp(diffuse, i.color, 0.5);
 				//i.color += float4(brightness, brightness, brightness, 0.0);
+				
 				return i.color;
 			}
 			ENDCG

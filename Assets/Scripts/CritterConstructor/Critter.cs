@@ -567,7 +567,7 @@ public class Critter : MonoBehaviour {
 
 
                     if(editor) {  // TEMPORARY!!!! if editor && physX, build critterMesh so hide segments!
-                        newGO.GetComponent<MeshRenderer>().enabled = false;
+                        //newGO.GetComponent<MeshRenderer>().enabled = false;
                     }
                     //newGO.GetComponent<Rigidbody>().drag = 20f;
                     //newGO.GetComponent<Rigidbody>().angularDrag = 20f;

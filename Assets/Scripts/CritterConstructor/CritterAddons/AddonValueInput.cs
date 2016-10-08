@@ -14,7 +14,7 @@ public class AddonValueInput {
     }
 
     public AddonValueInput(int id, int inno) {
-        Debug.Log("Constructor AddonValueInput(" + id.ToString() + ") inno: " + inno.ToString());
+        //Debug.Log("Constructor AddonValueInput(" + id.ToString() + ") inno: " + inno.ToString());
         critterNodeID = id;
         innov = inno;
         value = new float[1];
